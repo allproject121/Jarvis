@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JARVIS VIP</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0f; color: #00f0ff; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+.container { max-width: 800px; margin: 0 auto; padding: 10px; }
+.header { text-align: center; padding: 15px 0; border-bottom: 1px solid rgba(0,240,255,0.2); margin-bottom: 10px; }
+.header h1 { font-size: 20px; letter-spacing: 4px; text-shadow: 0 0 20px rgba(0,240,255,0.5); }
+.header .sub { font-size: 11px; opacity: 0.6; letter-spacing: 2px; }
+.status-bar { display: flex; justify-content: space-between; padding: 8px 5px; font-size: 11px; background: rgba(0,240,255,0.05); border-radius: 8px; margin-bottom: 8px; }
+.status-bar .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+.dot.green { background: #0f0; box-shadow: 0 0 8px #0f0; }
+.dot.red { background: #f00; box-shadow: 0 0 8px #f00; }
+.dot.yellow { background: #ff0; box-shadow: 0 0 8px #ff0; }
+.chat-box { height: calc(100vh - 320px); min-height: 250px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid rgba(0,240,255,0.1); margin-bottom: 8px; }
+.msg { margin-bottom: 12px; padding: 10px 14px; border-radius: 12px; max-width: 85%; animation: slideIn 0.3s ease; line-height: 1.5; font-size: 14px; }
+.msg.user { background: rgba(0,240,255,0.1); margin-left: auto; border-bottom-right-radius: 4px; color: #fff; }
+.msg.jarvis { background: rgba(255,255,255,0.05); margin-right: auto; border-bottom-left-radius: 4px; color: #00f0ff; border-left: 3px solid #00f0ff; }
+.msg.ai { background: rgba(255,200,0,0.08); margin-right: auto; border-bottom-left-radius: 4px; color: #ffd700; border-left: 3px solid #ffd700; }
+.msg .label { font-size: 10px; opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+.msg .time { font-size: 10px; opacity: 0.3; text-align: right; margin-top: 4px; }
+.input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.input-row input { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(0,240,255,0.3); color: #fff; padding: 12px 15px; border-radius: 25px; font-size: 14px; outline: none; }
+.input-row input:focus { border-color: #00f0ff; }
+.input-row button { background: rgba(0,240,255,0.2); border: 1px solid rgba(0,240,255,0.3); color: #00f0ff; padding: 10px 18px; border-radius: 25px; font-size: 18px; cursor: pointer; white-space: nowrap; }
+.input-row button:active { background: rgba(0,240,255,0.4); }
+.quick-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.quick-actions button { background: rgba(0,240,255,0.08); border: 1px solid rgba(0,240,255,0.15); color: #00f0ff; padding: 6px 12px; border-radius: 15px; font-size: 11px; cursor: pointer; }
+.quick-actions button:active { background: rgba(0,240,255,0.2); }
+.feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; margin-top: 8px; }
+.feature-grid button { background: rgba(0,240,255,0.05); border: 1px solid rgba(0,240,255,0.1); color: #aaa; padding: 8px; border-radius: 8px; font-size: 11px; cursor: pointer; text-align: center; }
+.feature-grid button:active { background: rgba(0,240,255,0.15); color: #00f0ff; }
+.feature-grid button .icon { font-size: 18px; display: block; margin-bottom: 3px; }
+.settings-panel { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 100; padding: 20px; overflow-y: auto; }
+.settings-panel.open { display: block; }
+.settings-panel .close { float: right; background: none; border: none; color: #f00; font-size: 24px; cursor: pointer; }
+.settings-panel h2 { color: #00f0ff; margin-bottom: 20px; text-align: center; }
+.settings-group { margin-bottom: 15px; }
+.settings-group label { display: block; color: #ffd700; font-size: 12px; margin-bottom: 5px; }
+.settings-group input, .settings-group select { width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(0,240,255,0.2); color: #fff; border-radius: 8px; font-size: 14px; }
+.settings-group .hint { font-size: 10px; opacity: 0.4; margin-top: 3px; }
+.btn-primary { width: 100%; padding: 12px; background: #00f0ff; color: #000; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 8px; }
+.btn-secondary { width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-size: 13px; cursor: pointer; }
+#voiceBtn { transition: all 0.3s; }
+#voiceBtn.listening { background: rgba(255,0,0,0.4); border-color: #f00; color: #f00; animation: pulse 1s infinite; }
+@keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+.typing { display: inline-flex; gap: 4px; }
+.typing span { width: 6px; height: 6px; background: #00f0ff; border-radius: 50%; animation: bounce 1.4s infinite; }
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>✦ J.A.R.V.I.S ✦</h1>
+    <div class="sub">Just A Rather Very Intelligent System | Mark XXXVI VIP</div>
+  </div>
+
+  <div class="status-bar" id="statusBar">
+    <span><span class="dot green" id="bridgeDot"></span>Bridge: <span id="bridgeStatus">CHECKING</span></span>
+    <span><span class="dot" id="aiDot"></span>AI: <span id="aiStatus">LOCAL</span></span>
+    <span><span class="dot" id="micDot"></span>Mic: <span id="micStatus">OFF</span></span>
+  </div>
+
+  <div class="chat-box" id="chatBox">
+    <div class="msg jarvis">
+      <div class="label">JARVIS</div>
+      Welcome back, Sir! Main aapki seva mein hazir hoon. Kya help kar sakta hoon?
+      <div class="time">just now</div>
+    </div>
+  </div>
+
+  <div class="input-row">
+    <input type="text" id="textInput" placeholder="Type message or say 'Jarvis'..." autocomplete="off">
+    <button id="voiceBtn" onclick="toggleVoice()" title="Voice Input">🎤</button>
+    <button onclick="sendText()" title="Send">➤</button>
+  </div>
+
+  <div class="quick-actions">
+    <button onclick="sendQuick('time kya hai')">🕐 Time</button>
+    <button onclick="sendQuick('mujhe motivate karo')">🔥 Motivate</button>
+    <button onclick="sendQuick('joke sunao')">😂 Joke</button>
+    <button onclick="sendQuick('who are you')">🤖 About</button>
+    <button onclick="toggleSettings()">⚙ Settings</button>
+    <button onclick="clearChat()">🗑 Clear</button>
+  </div>
+
+  <div class="feature-grid">
+    <button onclick="sendQuick('wifi on karo')"><span class="icon">📶</span>WiFi On</button>
+    <button onclick="sendQuick('wifi off karo')"><span class="icon">📶</span>WiFi Off</button>
+    <button onclick="sendQuick('bluetooth on karo')"><span class="icon">🔷</span>BT On</button>
+    <button onclick="sendQuick('bluetooth off karo')"><span class="icon">🔷</span>BT Off</button>
+    <button onclick="sendQuick('flashlight on karo')"><span class="icon">🔦</span>Flash On</button>
+    <button onclick="sendQuick('flashlight off karo')"><span class="icon">🔦</span>Flash Off</button>
+    <button onclick="sendQuick('volume up karo')"><span class="icon">🔊</span>Vol Up</button>
+    <button onclick="sendQuick('volume down karo')"><span class="icon">🔉</span>Vol Dn</button>
+    <button onclick="sendQuick('brightness up karo')"><span class="icon">☀️</span>Bright Up</button>
+    <button onclick="sendQuick('brightness down karo')"><span class="icon">🌙</span>Bright Dn</button>
+    <button onclick="sendQuick('silent mode karo')"><span class="icon">🔇</span>Silent</button>
+    <button onclick="sendQuick('vibrate mode karo')"><span class="icon">📳</span>Vibrate</button>
+    <button onclick="sendQuick('system status')"><span class="icon">📊</span>Status</button>
+    <button onclick="sendQuick('battery status')"><span class="icon">🔋</span>Battery</button>
+    <button onclick="sendQuick('device info batao')"><span class="icon">📱</span>Device</button>
+    <button onclick="sendQuick('aaj kya date hai')"><span class="icon">📅</span>Date</button>
+    <button onclick="sendQuick('whatsapp kholo')"><span class="icon">💬</span>WhatsApp</button>
+    <button onclick="showWhatsAppDialog()"><span class="icon">✉️</span>WA Msg</button>
+    <button onclick="sendQuick('youtube kholo')"><span class="icon">▶️</span>YouTube</button>
+    <button onclick="sendQuick('camera kholo')"><span class="icon">📷</span>Camera</button>
+    <button onclick="sendQuick('home jao')"><span class="icon">🏠</span>Home</button>
+    <button onclick="sendQuick('back jao')"><span class="icon">🔙</span>Back</button>
+    <button onclick="sendQuick('recent apps dikhao')"><span class="icon">📋</span>Recents</button>
+    <button onclick="sendQuick('screenshot lo')"><span class="icon">📸</span>Screenshot</button>
+    <button onclick="sendQuick('lock screen karo')"><span class="icon">🔒</span>Lock</button>
+    <button onclick="sendQuick('screen content batao')"><span class="icon">📄</span>Screen</button>
+    <button onclick="sendQuick('scroll down karo')"><span class="icon">↓</span>Scroll Dn</button>
+    <button onclick="sendQuick('scroll up karo')"><span class="icon">↑</span>Scroll Up</button>
+    <button onclick="sendQuick('dnd on karo')"><span class="icon">🔕</span>DND On</button>
+    <button onclick="sendQuick('dnd off karo')"><span class="icon">🔔</span>DND Off</button>
+    <button onclick="sendQuick('airplane mode on karo')"><span class="icon">✈️</span>Airplane</button>
+  </div>
+</div>
+
+<div class="settings-panel" id="settingsPanel">
+  <button class="close" onclick="toggleSettings()">✕</button>
+  <h2>⚙ VIP CONFIGURATION</h2>
+
+  <div class="settings-group">
+    <label>AI PROVIDER</label>
+    <select id="aiProvider" onchange="updateUrl()">
+      <option value="groq">Groq Cloud (Free & Fast)</option>
+      <option value="openai">OpenAI (ChatGPT)</option>
+    </select>
+    <div class="hint">Get free API key from console.groq.com</div>
+  </div>
+
+  <div class="settings-group">
+    <label>API KEY</label>
+    <input type="password" id="apiKey" placeholder="gsk_... or sk-..." oninput="saveSettings()">
+  </div>
+
+  <div class="settings-group">
+    <label>API URL</label>
+    <input type="text" id="apiUrl" readonly style="opacity:0.6;">
+  </div>
+
+  <div class="settings-group">
+    <label>MODEL</label>
+    <select id="aiModel" onchange="saveSettings()">
+      <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Best)</option>
+      <option value="mixtral-8x7b-32768">Mixtral 8x7B (Fast)</option>
+      <option value="llama-3.1-8b-instant">Llama 3.1 8B (Instant)</option>
+      <option value="gemma2-9b-it">Gemma 2 9B (Light)</option>
+    </select>
+  </div>
+
+  <button class="btn-primary" onclick="testConnection()">🔌 TEST CONNECTION</button>
+  <button class="btn-secondary" onclick="saveSettings(); toggleSettings(); alert('Settings saved!');">💾 SAVE & CLOSE</button>
+  <button class="btn-secondary" onclick="clearChat()">🗑 CLEAR CHAT</button>
+  <button class="btn-secondary" onclick="if(confirm('Clear all memory?')){try{Android.learn('reset','true')}catch(e){}alert('Memory cleared!');}">🧠 CLEAR MEMORY</button>
+</div>
+
+<div id="whatsappDialog" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:200;padding:20px;">
+  <h2 style="color:#25D366;text-align:center;margin-bottom:20px;">💬 WhatsApp Message</h2>
+  <div class="settings-group"><label>Contact Name</label><input type="text" id="waContact" placeholder="Ali, Ahmed, etc..."></div>
+  <div class="settings-group"><label>Message</label><input type="text" id="waMessage" placeholder="Aap ka message..."></div>
+  <button class="btn-primary" style="background:#25D366;" onclick="sendWhatsApp()">📤 SEND VIA WHATSAPP</button>
+  <button class="btn-secondary" onclick="document.getElementById('whatsappDialog').style.display='none'">CANCEL</button>
+</div>
+
+<script>
+let isListening = false;
+let recognition = null;
+let isAIMode = false;
+
+function checkBridge() {
+  const available = typeof Android !== 'undefined';
+  document.getElementById('bridgeStatus').textContent = available ? 'ONLINE' : 'OFFLINE';
+  document.getElementById('bridgeDot').className = 'dot ' + (available ? 'green' : 'red');
+  if (available) {
+    try {
+      const aiStatus = JSON.parse(Android.getAIStatus());
+      isAIMode = aiStatus.hasKey;
+      document.getElementById('aiStatus').textContent = isAIMode ? 'AI: ' + aiStatus.model : 'LOCAL MODE';
+      document.getElementById('aiDot').className = 'dot ' + (isAIMode ? 'green' : 'yellow');
+    } catch(e) {
+      document.getElementById('aiStatus').textContent = 'LOCAL';
+    }
+    loadSettings();
+  }
+}
+
+function addMessage(sender, text, isAI = false) {
+  const box = document.getElementById('chatBox');
+  const msg = document.createElement('div');
+  const now = new Date();
+  const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  msg.className = 'msg ' + (sender === 'You' ? 'user' : (isAI ? 'ai' : 'jarvis'));
+  msg.innerHTML = '<div class="label">' + sender + '</div>' + text.replace(/\n/g, '<br>') + '<div class="time">' + timeStr + '</div>';
+  box.appendChild(msg);
+  box.scrollTop = box.scrollHeight;
+}
+
+function showTyping() {
+  const box = document.getElementById('chatBox');
+  const typing = document.createElement('div');
+  typing.className = 'msg jarvis';
+  typing.id = 'typingIndicator';
+  typing.innerHTML = '<div class="label">JARVIS</div><div class="typing"><span></span><span></span><span></span></div>';
+  box.appendChild(typing);
+  box.scrollTop = box.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typingIndicator');
+  if (el) el.remove();
+}
+
+function sendText() {
+  const input = document.getElementById('textInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  processCommand(text);
+}
+
+function sendQuick(text) {
+  processCommand(text);
+}
+
+function processCommand(text) {
+  addMessage('You', text);
+  showTyping();
+
+  setTimeout(() => {
+    hideTyping();
+    try {
+      if (typeof Android !== 'undefined') {
+        const lower = text.toLowerCase();
+
+        // Check for AI mode - only for questions
+        if (isAIMode && (lower.includes('what') || lower.includes('who') || lower.includes('why') || lower.includes('how') || 
+            lower.includes('explain') || lower.includes('meaning') || lower.includes('kya') || lower.includes('kaun') ||
+            lower.includes('kyu') || lower.includes('kaise') || lower.includes('batao') || lower.startsWith('ai '))) {
+          const response = Android.askWebViewAI(text);
+          addMessage('JARVIS AI', response, true);
+          if (isAIMode && Android.askWebViewAI) Android.speak(response);
+          return;
+        }
+
+        // Handle device commands
+        let response = '';
+
+        if (lower.includes('wifi') || lower.includes('wi fi')) {
+          if (lower.includes('on')) { Android.setWifiEnabled(true); response = 'WiFi on ho gaya Sir!'; }
+          else if (lower.includes('off')) { Android.setWifiEnabled(false); response = 'WiFi off ho gaya Sir!'; }
+          else { Android.toggleWifi(); response = 'WiFi toggle ho gaya Sir!'; }
+        }
+        else if (lower.includes('bluetooth') || lower.includes('blue')) {
+          if (lower.includes('on')) { Android.setBluetoothEnabled(true); response = 'Bluetooth on!'; }
+          else if (lower.includes('off')) { Android.setBluetoothEnabled(false); response = 'Bluetooth off!'; }
+          else { Android.setBluetoothEnabled(!Android.isBluetoothEnabled()); response = 'Bluetooth toggle!'; }
+        }
+        else if (lower.includes('flashlight') || lower.includes('flash') || lower.includes('light') || lower.includes('torch')) {
+          const on = !lower.includes('off') && !lower.includes('band');
+          Android.toggleFlashlight(on);
+          response = 'Flashlight ' + (on ? 'on' : 'off') + ' Sir!';
+        }
+        else if (lower.includes('volume up') || lower.includes('awaz badhao') || lower.includes('volume badhao')) {
+          Android.volumeUp(); response = 'Volume up Sir!';
+        }
+        else if (lower.includes('volume down') || lower.includes('awaz kam') || lower.includes('volume kam')) {
+          Android.volumeDown(); response = 'Volume down Sir!';
+        }
+        else if (lower.includes('mute') || lower.includes('chup')) {
+          Android.mute(); response = 'Mute ho gaya Sir!';
+        }
+        else if (lower.includes('brightness up') || lower.includes('roshni badhao')) {
+          Android.setBrightness(Android.getBrightness() + 30); response = 'Brightness up!';
+        }
+        else if (lower.includes('brightness down') || lower.includes('roshni kam')) {
+          Android.setBrightness(Android.getBrightness() - 30); response = 'Brightness down!';
+        }
+        else if (lower.includes('brightness max') || lower.includes('full brightness')) {
+          Android.setBrightness(255); response = 'Brightness full!';
+        }
+        else if (lower.includes('silent') || lower.includes('silence')) {
+          Android.setRingerMode('silent'); response = 'Silent mode on Sir!';
+        }
+        else if (lower.includes('vibrate')) {
+          Android.setRingerMode('vibrate'); response = 'Vibrate mode on Sir!';
+        }
+        else if (lower.includes('normal mode') || lower.includes('ring mode')) {
+          Android.setRingerMode('normal'); response = 'Normal mode on Sir!';
+        }
+        else if (lower.includes('dnd on') || lower.includes('do not disturb on')) {
+          Android.startDndMode(); response = 'DND on Sir!';
+        }
+        else if (lower.includes('dnd off') || lower.includes('do not disturb off')) {
+          Android.stopDndMode(); response = 'DND off Sir!';
+        }
+        else if (lower.includes('airplane') || lower.includes('flight mode')) {
+          Android.setAirplaneMode(true); response = 'Airplane mode on!';
+        }
+        else if (lower.includes('screenshot') || lower.includes('screen shot')) {
+          Android.takeScreenshotAccessibility(); response = 'Screenshot le raha hoon Sir!';
+        }
+        else if (lower.includes('lock') || lower.includes('phone lock')) {
+          Android.lockScreen(); response = 'Phone lock kar raha hoon Sir!';
+        }
+        else if (lower.includes('home') || lower.includes('bahar') || lower.includes('home screen')) {
+          Android.accessibilityAction('HOME'); response = 'Ji Sir!';
+        }
+        else if (lower.includes('back') || lower.includes('piche') || lower.includes('wapis')) {
+          Android.accessibilityAction('BACK'); response = 'Ji Sir!';
+        }
+        else if (lower.includes('recent') || lower.includes('recents')) {
+          Android.accessibilityAction('RECENTS'); response = 'Recent apps Sir!';
+        }
+        else if (lower.includes('scroll down') || lower.includes('neeche')) {
+          Android.accessibilityAction('SCROLL_DOWN'); response = 'Scrolling down Sir!';
+        }
+        else if (lower.includes('scroll up') || lower.includes('upar')) {
+          Android.accessibilityAction('SCROLL_UP'); response = 'Scrolling up Sir!';
+        }
+        else if (lower.includes('swipe left') || lower.includes('left')) {
+          Android.accessibilityAction('SWIPE_LEFT'); response = 'Swiping left!';
+        }
+        else if (lower.includes('swipe right') || lower.includes('right')) {
+          Android.accessibilityAction('SWIPE_RIGHT'); response = 'Swiping right!';
+        }
+        else if (lower.includes('notification') && (lower.includes('open') || lower.includes('kholo'))) {
+          Android.openNotifications(); response = 'Notifications Sir!';
+        }
+        else if (lower.includes('quick settings') || lower.includes('quick panel')) {
+          Android.openQuickSettings(); response = 'Quick settings Sir!';
+        }
+        else if (lower.includes('split screen') || lower.includes('split')) {
+          Android.openSplitScreen(); response = 'Split screen Sir!';
+        }
+        else if (lower.includes('system status') || lower.includes('status')) {
+          response = Android.getQuickStatus();
+          try { const s = JSON.parse(response); response = 'Battery: ' + s.battery + ' | WiFi: ' + (s.wifi ? 'ON' : 'OFF') + ' | BT: ' + (s.bluetooth ? 'ON' : 'OFF') + ' | Volume: ' + s.volume + ' | Brightness: ' + s.brightness; } catch(e) {}
+        }
+        else if (lower.includes('battery') || lower.includes('power')) {
+          response = Android.getBatteryInfo();
+          try { const b = JSON.parse(response); response = 'Battery: ' + b.level + '% | Charging: ' + (b.charging ? 'Yes' : 'No') + ' | Temp: ' + b.temperature + '°C | Health: ' + b.health; } catch(e) {}
+        }
+        else if (lower.includes('device info') || lower.includes('device')) {
+          response = Android.getDeviceInfo();
+          try { const d = JSON.parse(response); response = 'Device: ' + d.manufacturer + ' ' + d.model + ' | Android: ' + d.androidVersion + ' | SDK: ' + d.sdkInt; } catch(e) {}
+        }
+        else if (lower.includes('ram') || lower.includes('memory')) {
+          response = Android.getRamInfo();
+          try { const r = JSON.parse(response); response = 'RAM: ' + r.used + 'MB used / ' + r.total + 'MB total (' + r.percentUsed + '%)'; } catch(e) {}
+        }
+        else if (lower.includes('time') && !lower.includes('timer') && !lower.includes('alarm')) {
+          response = Android.getCurrentTime();
+          response = 'Sir, abhi ' + response + ' baj rahe hain.';
+        }
+        else if (lower.includes('date')) {
+          response = 'Sir, aaj ' + Android.getCurrentDate() + ' hai.';
+        }
+        else if (lower.includes('joke') || lower.includes('hasao') || lower.includes('chutkula')) {
+          response = Android.generateJoke();
+        }
+        else if (lower.includes('motivate') || lower.includes('inspire') || lower.includes('hosla')) {
+          response = Android.generateMotivation();
+        }
+        else if (lower.includes('quote')) {
+          response = Android.generateQuote();
+        }
+        else if (lower.includes('open') || lower.includes('kholo') || lower.includes('chalao')) {
+          const app = text.replace(/open|kholo|chalao|launch|kar do|app/gi, '').trim();
+          if (app) { Android.openApp(app); response = 'Ji Sir, ' + app + ' khol raha hoon.'; }
+          else response = 'Sir, kaunsi app kholun?';
+        }
+        else if (lower.includes('close') || lower.includes('band')) {
+          Android.accessibilityAction('HOME'); response = 'Ji Sir, sab band!';
+        }
+        else if (lower.includes('camera') || lower.includes('photo')) {
+          Android.openCamera(); response = 'Camera khol raha hoon Sir!';
+        }
+        else if (lower.includes('youtube') && (lower.includes('search') || lower.includes('dhoond'))) {
+          const q = text.replace(/youtube|search|dhoond|dhoondo|kar do/gi, '').trim();
+          if (q) { Android.youtubeSearch(q); response = 'YouTube par ' + q + ' search kar raha hoon!'; }
+          else { Android.openApp('YouTube'); response = 'YouTube khol raha hoon!'; }
+        }
+        else if (lower.includes('youtube')) {
+          Android.openApp('YouTube'); response = 'YouTube khol raha hoon!';
+        }
+        else if (lower.includes('whatsapp') && (lower.includes('send') || lower.includes('bhej') || lower.includes('message') && lower.includes('to') || lower.includes('ko'))) {
+          showWhatsAppDialog(); response = 'WhatsApp message bhejne ke liye details bharo Sir!';
+        }
+        else if (lower.includes('whatsapp') || lower.includes('message')) {
+          Android.openApp('WhatsApp'); response = 'WhatsApp khol raha hoon Sir!';
+        }
+        else if (lower.includes('google') || lower.includes('search kar')) {
+          const q = text.replace(/google|search|search kar|dhoond|dhoondo|kar do/gi, '').trim();
+          if (q) { Android.webSearch(q); response = q + ' search kar raha hoon!'; }
+          else response = 'Sir, kya search karun?';
+        }
+        else if (lower.includes('alarm') || lower.includes('alarm laga')) {
+          const match = text.match(/(\d+)/g);
+          const h = match ? parseInt(match[0]) : 7;
+          const m = match && match.length > 1 ? parseInt(match[1]) : 0;
+          Android.setAlarm(h, m, 'Jarvis Alarm');
+          response = 'Alarm set kar diya ' + h + ':' + (m < 10 ? '0' : '') + m + ' ke liye Sir!';
+        }
+        else if (lower.includes('timer')) {
+          const match = text.match(/(\d+)/g);
+          const secs = match ? parseInt(match[0]) * 60 : 60;
+          Android.setTimer(secs, 'Jarvis Timer');
+          response = 'Timer set kar diya Sir!';
+        }
+        else if (lower.includes('note') && (lower.includes('likh') || lower.includes('write'))) {
+          const note = text.replace(/note|likh|likho|write|kar do/gi, '').trim();
+          if (note) { Android.learn('note_' + Date.now(), note); response = 'Note save ho gaya Sir!'; }
+          else response = 'Sir, kya likhna hai?';
+        }
+        else if (lower.includes('call') || lower.includes('phone')) {
+          Android.openDialer(); response = 'Dialer khol raha hoon Sir!';
+        }
+        else if (lower.includes('email') || lower.includes('mail')) {
+          Android.sendEmail('', 'Subject', text.replace(/email|mail|send|bhej/gi, '').trim());
+          response = 'Email bhej raha hoon Sir!';
+        }
+        else if (lower.includes('sms') || lower.includes('text message')) {
+          Android.sendSMS('', text.replace(/sms|text|message|bhej/gi, '').trim());
+          response = 'SMS bhej raha hoon Sir!';
+        }
+        else if (lower.includes('calculate') || lower.includes('hisab') || lower.includes('math') || /[\d\+\-\*\/]/.test(lower)) {
+          const expr = text.replace(/calculate|hisab|math|kar do|karo/gi, '').trim();
+          if (expr) { const result = Android.calculate(expr); response = expr + ' = ' + result; }
+          else response = 'Sir, kya calculate karun?';
+        }
+        else if (lower.includes('hello') || lower.includes('hi')) {
+          response = Android.basicChat('hello');
+        }
+        else if (lower.includes('who are you') || lower.includes('kaun ho') || lower.includes('introduce')) {
+          response = Android.basicChat('who are you');
+        }
+        else if (lower.includes('thank') || lower.includes('shukriya') || lower.includes('thanks')) {
+          response = Android.basicChat('thank you');
+        }
+        else if (lower.includes('bye') || lower.includes('alvida') || lower.includes('goodbye')) {
+          response = Android.basicChat('bye');
+        }
+        else if (lower.includes('screen content') || lower.includes('screen par')) {
+          const content = Android.getScreenContent();
+          response = content ? 'Screen par: ' + content : 'Screen par kuch text nahi mila Sir.';
+        }
+        else if (lower.includes('click') || lower.includes('tap') || lower.includes('daba')) {
+          const target = text.replace(/click|tap|par|daba|do/gi, '').trim();
+          if (target) { const found = Android.findElementOnScreen(target); response = found; }
+          else response = 'Sir, kis par click karun?';
+        }
+        else if (lower.includes('fact') || lower.includes('know') || lower.includes('pata hai')) {
+          const fact = text.replace(/fact|know|pata hai|kya|tum/gi, '').trim();
+          if (fact) { Android.learn('custom_fact', fact); response = 'Ji Sir, maine yaad kar liya!'; }
+          else response = 'Sir, kya bataun?';
+        }
+        else if (isAIMode) {
+          // Use AI for any remaining query
+          const aiResponse = Android.askWebViewAI(text);
+          addMessage('JARVIS AI', aiResponse, true);
+          Android.speak(aiResponse);
+          return;
+        }
+        else {
+          response = Android.basicChat(text);
+        }
+
+        addMessage('JARVIS', response);
+        try { Android.speak(response); } catch(e) {}
+      } else {
+        addMessage('JARVIS', 'Android bridge not connected. Running in demo mode.', false);
+      }
+    } catch(e) {
+      hideTyping();
+      addMessage('JARVIS', 'Error: ' + e.message, false);
+    }
+  }, 300);
+}
+
+function toggleVoice() {
+  if (isListening) { stopVoice(); return; }
+  startVoice();
+}
+
+function startVoice() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('Voice recognition not supported in this browser. Please use Chrome.');
+    return;
+  }
+  
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+
+  recognition.onstart = function() {
+    isListening = true;
+    document.getElementById('voiceBtn').classList.add('listening');
+    document.getElementById('voiceBtn').textContent = '🔴';
+    document.getElementById('micStatus').textContent = 'LISTENING';
+    document.getElementById('micDot').className = 'dot red';
+  };
+
+  recognition.onresult = function(event) {
+    const text = event.results[0][0].transcript;
+    document.getElementById('textInput').value = text;
+    document.getElementById('voiceBtn').classList.remove('listening');
+    document.getElementById('voiceBtn').textContent = '🎤';
+    document.getElementById('micStatus').textContent = 'OFF';
+    document.getElementById('micDot').className = 'dot';
+    isListening = false;
+    processCommand(text);
+  };
+
+  recognition.onerror = function(event) {
+    console.error('Speech error:', event.error);
+    document.getElementById('voiceBtn').classList.remove('listening');
+    document.getElementById('voiceBtn').textContent = '🎤';
+    document.getElementById('micStatus').textContent = 'ERROR';
+    document.getElementById('micDot').className = 'dot red';
+    isListening = false;
+    if (event.error === 'no-speech') {
+      setTimeout(startVoice, 500);
+    }
+  };
+
+  recognition.onend = function() {
+    document.getElementById('voiceBtn').classList.remove('listening');
+    document.getElementById('voiceBtn').textContent = '🎤';
+    document.getElementById('micStatus').textContent = 'OFF';
+    document.getElementById('micDot').className = 'dot';
+    isListening = false;
+  };
+
+  recognition.start();
+}
+
+function stopVoice() {
+  if (recognition) {
+    recognition.stop();
+    recognition = null;
+  }
+  isListening = false;
+  document.getElementById('voiceBtn').classList.remove('listening');
+  document.getElementById('voiceBtn').textContent = '🎤';
+  document.getElementById('micStatus').textContent = 'OFF';
+  document.getElementById('micDot').className = 'dot';
+}
+
+function clearChat() {
+  document.getElementById('chatBox').innerHTML = '';
+  addMessage('JARVIS', 'Chat cleared Sir. Main ready hoon!');
+}
+
+function toggleSettings() {
+  const panel = document.getElementById('settingsPanel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    try {
+      if (typeof Android !== 'undefined') {
+        const savedKey = Android.recall('ai_api_key') || '';
+        const savedUrl = Android.recall('ai_api_url') || '';
+        const savedModel = Android.recall('ai_model') || '';
+        if (savedKey) document.getElementById('apiKey').value = savedKey;
+        if (savedUrl) document.getElementById('apiUrl').value = savedUrl;
+        if (savedModel) {
+          const sel = document.getElementById('aiModel');
+          for (let i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value === savedModel) sel.selectedIndex = i;
+          }
+        }
+      }
+    } catch(e) {}
+  }
+}
+
+function saveSettings() {
+  const key = document.getElementById('apiKey').value;
+  const provider = document.getElementById('aiProvider').value;
+  const model = document.getElementById('aiModel').value;
+  const urls = {groq: 'https://api.groq.com/openai/v1/chat/completions', openai: 'https://api.openai.com/v1/chat/completions'};
+  const url = urls[provider] || urls.groq;
+  
+  document.getElementById('apiUrl').value = url;
+  
+  try {
+    if (typeof Android !== 'undefined') {
+      Android.setAIConfig(key, url, model);
+      const status = JSON.parse(Android.getAIStatus());
+      isAIMode = status.hasKey;
+      document.getElementById('aiStatus').textContent = isAIMode ? 'AI: ' + status.model : 'LOCAL MODE';
+      document.getElementById('aiDot').className = 'dot ' + (isAIMode ? 'green' : 'yellow');
+    }
+  } catch(e) {
+    console.error('Save error:', e);
+  }
+  
+  if (key) localStorage.setItem('jarvis_ai_key', key);
+}
+
+function updateUrl() {
+  const provider = document.getElementById('aiProvider').value;
+  const urls = {groq: 'https://api.groq.com/openai/v1/chat/completions', openai: 'https://api.openai.com/v1/chat/completions'};
+  document.getElementById('apiUrl').value = urls[provider] || urls.groq;
+  saveSettings();
+}
+
+function testConnection() {
+  const key = document.getElementById('apiKey').value;
+  if (!key) { alert('Please enter an API key first!'); return; }
+  saveSettings();
+  addMessage('JARVIS', 'Testing AI connection...');
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    try {
+      if (typeof Android !== 'undefined') {
+        const response = Android.askWebViewAI('Just say "Hello, I am JARVIS. Connection test successful!" in 5 words');
+        addMessage('JARVIS AI', response, true);
+      } else {
+        addMessage('JARVIS', 'Bridge not available. Save API key in app settings.', false);
+      }
+    } catch(e) {
+      addMessage('JARVIS', 'Connection failed: ' + e.message, false);
+    }
+  }, 2000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  checkBridge();
+  
+  document.getElementById('textInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') sendText();
+  });
+
+  // Background wake word detection
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    startBackgroundListening();
+  }
+});
+
+function showWhatsAppDialog() {
+  document.getElementById('whatsappDialog').style.display = 'block';
+  document.getElementById('waContact').focus();
+}
+
+function sendWhatsApp() {
+  const contact = document.getElementById('waContact').value.trim();
+  const message = document.getElementById('waMessage').value.trim();
+  if (!contact || !message) { alert('Sir, contact aur message dono bharo!'); return; }
+  document.getElementById('whatsappDialog').style.display = 'none';
+  addMessage('You', 'Send WhatsApp to ' + contact + ': ' + message);
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    try {
+      if (typeof Android !== 'undefined') {
+        const result = Android.sendWhatsApp(contact, message);
+        addMessage('JARVIS', result);
+      } else {
+        addMessage('JARVIS', 'WhatsApp automation requires accessibility service. Please enable JARVIS Core Brain in Accessibility Settings.');
+      }
+    } catch(e) {
+      addMessage('JARVIS', 'WhatsApp error: ' + e.message);
+    }
+  }, 500);
+  document.getElementById('waContact').value = '';
+  document.getElementById('waMessage').value = '';
+}
+
+function startBackgroundListening() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return;
+
+  const bgRecognition = new SpeechRecognition();
+  bgRecognition.continuous = true;
+  bgRecognition.lang = 'en-US';
+  bgRecognition.interimResults = true;
+
+  bgRecognition.onresult = function(event) {
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        const text = event.results[i][0].transcript.toLowerCase();
+        if (text.includes('jarvis') || text.includes('jervis')) {
+          document.getElementById('micStatus').textContent = 'WAKE!';
+          document.getElementById('micDot').className = 'dot yellow';
+          const cmd = text.replace(/jarvis|jervis/gi, '').trim();
+          if (cmd) {
+            processCommand(cmd);
+          } else {
+            document.getElementById('textInput').focus();
+          }
+        }
+      }
+    }
+  };
+
+  bgRecognition.onend = function() {
+    setTimeout(startBackgroundListening, 100);
+  };
+
+  bgRecognition.onerror = function() {
+    setTimeout(startBackgroundListening, 1000);
+  };
+
+  try { bgRecognition.start(); } catch(e) {}
+}
+</script>
+</body>
+</html>

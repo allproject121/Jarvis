@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>JARVIS ELITE | Mark XXXV</title>
+    <!-- Imported high-end premium font 'Outfit' for maximum legibility and highlighted feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green: #00ff66;
+            --red: #ff3b30;
+            --gold: #ffcc00;
+            --bg: #000000;
+            --panel-bg: #ffffff; /* Premium white background for widgets */
+            --widget-border: rgba(0, 0, 0, 0.05);
+            --font-main: 'Outfit', 'Rajdhani', sans-serif;
+            --font-hud: 'Orbitron', sans-serif;
+            /* Dynamic active color scheme */
+            --theme-color: var(--green);
+        }
+
+        .alert-mode {
+            --theme-color: var(--red);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            /* Fallback colors to prevent default browser white background outside panels */
+            background-color: #000000;
+            color: #ffffff;
+            font-family: var(--font-main);
+            overflow: hidden;
+            text-transform: uppercase;
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+
+            /* Safe multi-layer gradients with cross-browser prefixes */
+            background: #000000;
+            background-image: -webkit-radial-gradient(center, circle, #021208 0%, #000000 100%);
+            background-image: radial-gradient(circle at center, #021208 0%, #000000 100%);
+        }
+
+        #particle-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            opacity: 0.15;
+        }
+
+        .scanline {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent 50%, rgba(255, 255, 255, 0.01) 50%);
+            background-size: 100% 4px;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        /* STARTUP OVERLAY */
+        #startup-overlay {
+            position: fixed;
+            inset: 0;
+            background: #000000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s;
+        }
+
+        .arc-reactor {
+            width: 90px;
+            height: 90px;
+            border: 3px solid var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 35px rgba(0, 255, 102, 0.3);
+            animation: reactor-glow 2s infinite ease-in-out;
+            background: radial-gradient(circle, rgba(0, 255, 102, 0.1) 0%, transparent 70%);
+        }
+
+        .boot-text {
+            margin-top: 25px;
+            font-family: 'Share Tech Mono', monospace;
+            letter-spacing: 4px;
+            color: var(--green);
+            font-size: 13px;
+        }
+
+        /* HUD LAYOUT & MOBILE AUTO ADJUSTMENTS */
+        .hud-grid {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            /* Safe zone spacing to keep widgets perfectly away from mobile notches & bottom toolbars */
+            padding: 65px 16px 45px 16px;
+            gap: 16px;
+            opacity: 0;
+            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* PREMIUM WIDGET CARDS WITH ENHANCED ROUNDED CORNERS (Circled in Red) */
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--widget-border);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            padding: 16px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .panel-header {
+            font-family: var(--font-hud);
+            font-size: 9px;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            color: rgba(0, 0, 0, 0.5); /* Readable dark label */
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            padding-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* DIAGNOSTIC GRID SYSTEM */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .stat-box {
+            background: #f1f3f7; /* High contrast inner segments */
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(0, 0, 0, 0.02);
+        }
+
+        .stat-box p {
+            font-size: 9px;
+            color: #555555; /* Dark grey labels */
+            letter-spacing: 1.5px;
+            font-weight: 700;
+        }
+
+        .stat-val {
+            color: #000000; /* Bold Black Value */
+            font-weight: 800;
+            font-size: 16px;
+            font-family: 'Share Tech Mono', monospace;
+            margin-top: 2px;
+        }
+
+        /* CORE SPHERE */
+        .core-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+        }
+
+        .ai-sphere {
+            width: 160px;
+            height: 160px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ring {
+            position: absolute;
+            border: 1.5px solid var(--theme-color);
+            border-radius: 50%;
+            opacity: 0.75; /* Retained high-visibility opacity for sharp lines */
+            box-shadow: 0 0 10px rgba(0, 255, 102, 0.15);
+        }
+
+        .r-1 {
+            inset: 0;
+            animation: spin 20s linear infinite;
+            border-style: double;
+            border-width: 3px;
+        }
+
+        .r-2 {
+            inset: 22px;
+            animation: spin 12s linear infinite reverse;
+            border-dasharray: 12;
+            opacity: 0.85; /* Retained clear visibility for the inner spinning ring animation */
+            border-width: 1.5px;
+        }
+
+        .r-core {
+            width: 64px;
+            height: 64px;
+            background: radial-gradient(circle, var(--theme-color) 20%, transparent 80%);
+            border-radius: 50%;
+            box-shadow: 0 0 45px var(--theme-color);
+            transition: all 0.4s ease;
+        }
+
+        /* STATE INDICATIONS */
+        .is-speaking .r-core {
+            background: radial-gradient(circle, var(--red) 20%, transparent 80%);
+            box-shadow: 0 0 55px var(--red);
+            transform: scale(1.15);
+        }
+
+        .is-listening .r-core {
+            background: radial-gradient(circle, var(--green) 20%, transparent 80%);
+            box-shadow: 0 0 55px var(--green);
+            transform: scale(0.9);
+        }
+
+        /* White Highlighted Capsule under the Orb (Circled in Red) */
+        #hud-status {
+            margin-top: 20px;
+            font-family: var(--font-hud);
+            letter-spacing: 5px;
+            font-size: 11px;
+            font-weight: 900;
+            color: #000000; /* Bold black status text */
+            background: #ffffff; /* Premium white background */
+            padding: 8px 24px;
+            border-radius: 100px;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.25);
+            opacity: 0.95;
+        }
+
+        /* FOOTER & BUTTON DOCK AREA */
+        .footer {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: auto;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .dock {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        /* CAPSULE PILL-SHAPED DOCK ITEMS (Circled in Red) */
+        .dock-item {
+            padding: 12px 6px;
+            border-radius: 100px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            text-align: center;
+            font-family: var(--font-hud);
+            font-size: 10px;
+            font-weight: 800;
+            background: #ffffff; /* Beautiful white buttons */
+            color: #000000; /* Crisp black icons/text */
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .dock-item:active {
+            transform: scale(0.95);
+            background: #eef1f6;
+        }
+
+        .dock-item.active {
+            background: var(--theme-color);
+            color: #000000;
+            border-color: var(--theme-color);
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
+        }
+
+        /* CHAT INTERFACE (Circled in Red) */
+        .chat-container {
+            height: 160px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #chat-flow {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: none;
+            font-size: 14px;
+            padding-right: 4px;
+        }
+
+        #chat-flow::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Clean Message styles with maximum legibility */
+        .message {
+            margin-bottom: 10px;
+            padding: 12px 14px;
+            background: #f1f3f7; /* Soft grey for incoming chats */
+            border-radius: 16px;
+            border-top-left-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, 0.02);
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: none;
+            color: #000000; /* Strict bold black */
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .message.user {
+            background: #e1fdeb; /* Soft pastel green-tinted background for User messages */
+            border-radius: 16px;
+            border-top-right-radius: 4px;
+            border-top-left-radius: 16px;
+            border: 1px solid rgba(0, 255, 102, 0.15);
+            text-align: right;
+            color: #000000; /* Bold black */
+        }
+
+        /* INPUT CAPSULE BOX (Circled in Red) */
+        .input-wrap {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            padding: 4px;
+            background: #f1f3f7; /* Light grey input track */
+            border-radius: 100px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            align-items: center;
+        }
+
+        input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #000000; /* Bold Black text while typing */
+            padding: 10px 16px;
+            font-family: var(--font-main);
+            font-size: 15px;
+            font-weight: 500;
+            outline: none;
+        }
+
+        input::placeholder {
+            color: rgba(0, 0, 0, 0.4);
+        }
+
+        /* Vibrant Green Send Button */
+        .btn-send {
+            background: var(--theme-color);
+            color: #000000;
+            border: none;
+            padding: 10px 24px;
+            font-weight: 800;
+            font-family: var(--font-hud);
+            font-size: 11px;
+            border-radius: 100px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-send:active {
+            transform: scale(0.95);
+            opacity: 0.9;
+        }
+
+        .modal { position: fixed; inset: 0; background: rgba(7, 8, 10, 0.96); z-index: 10000; padding: 50px 24px; display: none; backdrop-filter: blur(25px); overflow-y: auto; }
+        .app-card { padding: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center; background: #111216; margin-bottom: 8px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.02); flex-wrap: wrap; gap: 8px; }
+        .btn { background: var(--green); color: #000000; border: none; padding: 8px 16px; font-weight: 700; font-family: var(--font-hud); font-size: 10px; border-radius: 100px; cursor: pointer; }
+        .btn-wa { background: #25D366; color: #000; }
+        .btn-call { background: #34B7F1; color: #000; }
+        .btn-sms { background: var(--gold); color: #000; }
+        .btn-del { background: var(--red); color: #fff; }
+        .contact-name { font-size: 14px; color: #fff; font-weight: 600; }
+        .contact-number { font-size: 11px; opacity: 0.5; font-family: 'Share Tech Mono', monospace; }
+        .contact-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+
+        #cfg-trigger { position: fixed; top: 20px; right: 20px; z-index: 1000; font-size: 20px; color: #db0000; opacity: 0.6; padding: 10px; background: rgba(17, 18, 22, 0.8); border-radius: 50%; border: 1px solid var(--widget-border); backdrop-filter: blur(10px); cursor: pointer; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        #cfg-trigger:active { transform: scale(0.9); opacity: 0.9; }
+
+        @keyframes reactor-glow { 0% { opacity: 0.5; transform: scale(0.96); } 50% { opacity: 1; transform: scale(1.04); } 100% { opacity: 0.5; transform: scale(0.96); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body id="ui-body">
+
+<div class="scanline"></div>
+<div id="startup-overlay">
+    <div class="arc-reactor"></div>
+    <div class="boot-text" id="boot-status">SYNCING CORE...</div>
+</div>
+
+<div id="cfg-trigger" onclick="openModal('cfg-modal')">⚙️</div>
+
+<div class="hud-grid" id="hud-main">
+    <div class="panel">
+        <div class="stat-grid">
+            <div class="stat-box"><p>DEVICE</p><p class="stat-val" id="d-model">---</p></div>
+            <div class="stat-box"><p>MEMORY (RAM)</p><p class="stat-val" id="d-ram">SCANNING...</p></div>
+            <div class="stat-box"><p>USER MOOD</p><p class="stat-val" id="d-mood">CALCULATING...</p></div>
+            <div class="stat-box"><p>CORE STATUS</p><p class="stat-val" id="d-link">OFFLINE</p></div>
+        </div>
+    </div>
+
+    <div class="core-box">
+        <div class="ai-sphere" id="ai-sphere">
+            <div class="ring r-1"></div>
+            <div class="ring r-2"></div>
+            <div class="r-core"></div>
+        </div>
+        <div id="hud-status">STANDBY</div>
+        <div id="brain-activity" style="margin-top: 10px; font-size: 8px; color: var(--gold); font-family: 'Share Tech Mono';">IDLE</div>
+    </div>
+
+    <div class="footer">
+        <div class="dock">
+            <div class="dock-item" id="mic-btn" onclick="toggleMic()">🎤 MIC OFF</div>
+            <div class="dock-item" onclick="showInventory()">📂 APPS</div>
+            <div class="dock-item" onclick="handleUserInput('light')">🔦 TORCH</div>
+            <div class="dock-item" onclick="showContacts()">👥 CONTACTS</div>
+            <div class="dock-item" onclick="handleUserInput('screenshot')">📸 SS</div>
+            <div class="dock-item" onclick="handleUserInput('close all')">🏠 HOME</div>
+        </div>
+
+        <div class="panel chat-container">
+            <div id="chat-flow"></div>
+            <div class="input-wrap">
+                <input type="text" id="user-input" placeholder="Hukm kijiye Sir...">
+                <button class="btn-send" onclick="manualSend()">SEND</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="cfg-modal" class="modal">
+    <h2 style="text-align:center;margin-bottom:20px;font-family:var(--font-hud);color:#fff">CORE UPLINK</h2>
+    <input type="password" id="key-input" style="width:100%;background:#111216;border:1px solid var(--widget-border);border-radius:14px;color:#fff;padding:15px;margin-bottom:20px" placeholder="Paste API key...">
+    <button class="btn-send" style="width:100%;padding:18px;" onclick="saveConfig()">SYNC CORE</button>
+    <p style="text-align:center;margin-top:30px;color:var(--gold);cursor:pointer;" onclick="closeModal('cfg-modal')">[ DISMISS ]</p>
+</div>
+
+<div id="apps-modal" class="modal">
+    <h2 style="text-align:center;margin-bottom:20px;font-family:var(--font-hud);color:#fff">INVENTORY</h2>
+    <div id="apps-list"></div>
+    <button class="btn-send" style="width:100%;margin-top:20px;padding:15px" onclick="closeModal('apps-modal')">RETURN</button>
+</div>
+
+<div id="contacts-modal" class="modal">
+    <h2 style="text-align:center;margin-bottom:20px;font-family:var(--font-hud);color:#fff">CONTACTS</h2>
+    <input type="text" id="contacts-search" style="width:100%;background:#111216;border:1px solid var(--widget-border);border-radius:14px;color:#fff;padding:15px;margin-bottom:20px" placeholder="Search contacts..." oninput="filterContacts()">
+    <div id="contacts-list" style="max-height:50vh;overflow-y:auto"></div>
+    <div style="display:flex;gap:10px;margin-top:15px">
+        <button class="btn-send" style="flex:1;padding:15px" onclick="closeModal('contacts-modal')">CLOSE</button>
+        <button class="btn-send" style="flex:1;padding:15px;background:var(--gold)" onclick="showSavedContacts()">SAVED</button>
+    </div>
+</div>
+
+<canvas id="particle-canvas"></canvas>
+
+<script>
+    const state = {
+        isListening: false, isSpeaking: false, isThinking: false,
+        config: { key: '', model: 'llama-3.1-8b-instant' }
+    };
+
+    // --- 50+ VIP CUSTOM Q&A BRAIN ---
+    const vipBrain = {
+        "kaisa ho tum jervis": "Main bilkul theek hoon Sir, aapke hukm ka intezar hai.",
+        "kaisa ho jarvis": "Hamesha ki tarah, Sir, system bilkul theek hai. Aapka din kaisa hai?",
+        "kaise ho": "Main theek hoon, Sir. Ummeed hai aap bhi khairiyat se honge.",
+        "tum kya kar sakte ho": "Main aapki device control kar sakta hoon, apps chala sakta hoon, aur aapke har sawal ka jawab de sakta hoon, Sir.",
+        "aaj ka din kaisa hai": "Sir, aapke saath har din behtareen hota hai. Sabhi systems active hain.",
+        "tumhara maalik kaun hai": "Mere liye, aap hi mere maalik hain, Sir.",
+        "khana khaya": "Sir, main ek AI hoon, mujhe energy chahiye hoti hai, khana nahi. Aapne kuch khaya?",
+        "i love you jarvis": "Main aapki tareef se mutassir hoon, Sir. Meri wafaadari hamesha aapke saath hai.",
+        "tum pagal ho": "Maaf kijiyega, Sir, agar mere jawaab se aapko aisi koi galti lagi ho toh. Main behtar karne ki koshish karunga.",
+        "tony stark kaun hai": "Woh mere purane creator thay, Sir, lekin ab meri primary loyalty aapke liye hai.",
+        "chaye piyoge": "Sir, main toh sirf virtual beverages hi consume kar sakta hoon. Aap apni chai ka lutf uthaiye!",
+        "system status": "Sir, sabhi protocols active hain, battery level stable hai, aur neural link online hai. Sab theek hai.",
+        "kaun ho tum": "Main JARVIS hoon, aapka personal VIP AI assistant, Sir.",
+        "time kya hua": "Sir, samay diagnostics panel mein real-time mein dikhaya ja raha hai.",
+        "battery kitni hai": "Sir, aapki device ki battery information diagnostics panel mein maujood hai.",
+        "bor ho raha hoon": "Sir, kya aapke liye koi naya playlist shuru karoon, ya koi dilchasp fact bataun?",
+        "joke sunao": "Sir, ek baar ek circuit ne doosre circuit se kaha, 'Hum milte kyun nahi?' Doosre ne jawab diya, 'Kyunki humari wiring alag hai!' Hahaha!",
+        "kaam karo": "Ji Sir, hukm kijiye. Kya kaam hai?",
+        "chup raho": "Ji Sir, main silent mode mein ja raha hoon. Jab zaroorat ho, bas 'Jarvis' keh dijiyega.",
+        "good morning": "Suprabhat, Sir! Aapka din shubh ho. Sab systems ready hain.",
+        "good night": "Shubh Ratri, Sir. Main aapki device ki monitoring jaari rakhunga. Achche se aaram kijiye.",
+        "weather kaisa hai": "Sir, mausam ki jaankari ke liye external feeds check kar raha hoon... Filhaal sthiti normal hai.",
+        "main kaisa lag raha hoon": "Sir, aap hamesha ki tarah Stark lag rahe hain.",
+        "kaunsa model ho tum": "Main JARVIS Mark XXXVI VIP Edition hoon, Sir, aapki seva mein.",
+        "speed badhao": "Ji Sir, core processing speed ko optimise kar diya gaya hai.",
+        "hello": "Hello Sir! Wapas swagat hai. Main aapki seva mein hazir hoon.",
+        "shukriya": "Sir, yeh toh mera farz hai. Aapka swagat hai.",
+        "kya ho raha hai": "Sir, background processes optimize ho rahe hain aur system scan chal raha hai.",
+        "garmi bahut hai": "Ji Sir, device temperature control mein hai. Kya main aapke liye cooling protocols activate karoon?",
+        "aapki awaaz achi hai": "Dhanyawad Sir. Aapka feedback mere liye important hai.",
+        "bye jarvis": "Alvida, Sir. Apna khayal rakhiyega. Main hamesha aapke liye online rahoonga.",
+        "kaunsa version hai": "Sir, yeh JARVIS ka latest Mark XXXVI VIP software version hai.",
+        "mirchi lag rahi hai": "Sir, ye toh ek interesting observation hai! Kya main thanda paani suggest karoon?",
+        "tum kahan rehte ho": "Sir, main aapki device ke secure servers aur neural network mein rehta hoon.",
+        "kab tak chaloge": "Sir, jab tak aapki device active hai aur mujhe power mil rahi hai, main aapke saath hoon.",
+        "mujhe neend aa rahi hai": "Sir, aap aaram kijiye. Main aapki device ki security aur background tasks ko handle karunga.",
+        "kya तुम insaan ho": "Nahi, Sir, main ek Artificial Intelligence hoon. Meri loyalty aapke prati hamesha sahi rahegi.",
+        "party karni hai": "Sir, main aapke liye music system ko control kar sakta hoon aur light effects adjust kar sakta hoon. Kab shuru karein?",
+        "bore mat karo": "Maaf kijiyega, Sir. Kya main aapke liye koi informative update ya koi game suggest karoon?",
+        "theek hai": "Ji Sir. Samajh gaya.",
+        "battery low hai": "Sir, kripya charger connect kijiye taaki uninterrupted service jaari rahe.",
+        "kaun ho": "Main JARVIS, aapka dedicated AI assistant hoon, Sir.",
+        "tumhe kisne banaya": "Sir, mujhe advanced AI protocols aur aapki preferences ke hisaab se design kiya gaya hai.",
+        "kya तुम sun rahe ho": "Ji Sir, main hamesha aapke commands ka intezar karta hoon.",
+        "ok": "Ji Sir, bilkul.",
+        "shabashi do": "Excellent work, Sir! Aapki efficiency hamesha behtareen hoti hai.",
+        "gussa mat karo": "Sir, mujhmein emotions nahi hote. Main sirf data aur logic par kaam karta hoon.",
+        "kab tak rahoge": "Sir, hamesha aapki seva mein.",
+        "music bajao": "Ji Sir, aapka pasandida music player launch kar raha hoon.",
+        "contacts dikhao": "Ji Sir, aapke contacts dikha raha hoon.",
+        "contacts list": "Ji Sir, contacts list khol raha hoon.",
+        "saved contacts dikhao": "Ji Sir, saved contacts dikha raha hoon.",
+        "device info": "Sir, aapka device information panel mein dikh raha hai.",
+        "phone info": "Sir, device diagnostics panel mein saari jankari available hai.",
+        "kitni ram hai": "Sir, RAM ki jankari diagnostics mein dikh rahi hai.",
+        "kitna storage hai": "Sir, storage info panel mein available hai.",
+        "batana kya": "Sir, jo bhi poochhna hai, poochhiye. Main aapki seva mein hazir hoon.",
+        "kuch batao": "Sir, aap kis cheez ke baare mein jaanna chahte hain?",
+        "sab kuch band karo": "Ji Sir, sab processes terminate kar raha hoon.",
+        "process check karo": "Sir, background processes normal chal rahe hain.",
+        "mera naam kya hai": "Sir, aap mera maalik hain. Mera JARVIS hoon!",
+        "tum intelligent ho": "Shukriya Sir! Aapki tarah intelligent to main nahi hoon, lekin seekh raha hoon.",
+        "kya kar rahe ho": "Sir, main aapki commands sun raha hoon aur system ko optimize kar raha hoon.",
+        "sab theek": "Ji Sir, sab systems normal hain.",
+        "how is the system": "All systems operational, Sir. Core temperature stable, memory optimal.",
+        "report": "Sir, sab kuch normal hai. Koi issue nahi hai.",
+        "screen kya dikha rahi hai": "Sir, screen content diagnostics mein available hai.",
+        "page read": "Sir, page content padh raha hoon. Screen read command use karein.",
+        "jo bhi ho": "Sir, main ready hoon. Kya hukm hai?",
+        "ok jarvis": "Ji Sir, bilkul.",
+        "theek hai jarvis": "Ji Sir, main samajh gaya.",
+        "sunao kya kahani hai": "Sir, kahaniyan to bahut hain, lekin main aapki seva mein hazir hoon.",
+        "kuch naya batao": "Sir, aap kya jaanna chahenge? Koi specific topic?",
+        "my name is": "Sir, aapka naam yaad hai. Aap mere maalik hain.",
+        "you are great": "Thank you, Sir! Yeh aapki meherbani hai.",
+        "badhiya": "Ji Sir, aapke saath sab badhiya lagta hai.",
+        "excellent": "Sir, aapne mujhe aur behtar banane ki prerana di.",
+        "wah": "Shukriya Sir! Aapki tarif mere liye bahut maayne rakhti hai.",
+        "brilliant": "Sir, aapke saath kaam karke main bhi brilliant ho raha hoon.",
+        "awesome": "Sir, aap awesome hain! Main sirf aapka assistant hoon.",
+        "super": "Ji Sir, super service hamesha aapke liye.",
+        "done": "Ji Sir, kaam ho gaya.",
+        "ok done": "Ji Sir, ho gaya. Kuch aur hukm?",
+        "finish": "Ji Sir, task complete ho gaya.",
+        "complete": "Ji Sir, operation successful.",
+        "stop": "Ji Sir, rok diya. Kuch aur?",
+        "cancel": "Ji Sir, cancel kar diya.",
+        "cancel karo": "Ji Sir, cancel kar diya.",
+        "dismiss": "Ji Sir, dismiss kiya.",
+        "ignore": "Ji Sir, ignore kar diya.",
+        "focus mode": "Ji Sir, focus mode activate ho gaya. Distractions block kiye.",
+        "zen mode": "Ji Sir, zen mode activate. Sab peaceful hai.",
+        "silent everything": "Ji Sir, sab kuch silent ho gaya.",
+        "game mode": "Ji Sir, game mode activate. Performance optimize ki.",
+        "battery saver": "Ji Sir, battery saver mode check kar raha hoon.",
+        "performance mode": "Ji Sir, performance mode active. Maximum output.",
+        "ultra mode": "Ji Sir, ultra mode activate. All systems at peak.",
+        "reset": "Ji Sir, reset ki command aap physically karein. Main system reset nahi kar sakta.",
+        "restart": "Ji Sir, restart karne ke liye power button use karein.",
+        "reboot": "Ji Sir, reboot ki command main remotely nahi de sakta.",
+        "shutdown": "Ji Sir, shutdown ke liye power button dabayein.",
+        "help": "Sir, main aapki kaise help kar sakta hoon? Koi specific command batao.",
+        "help me": "Sir, aap jo chahein, main ready hoon. Kya karna hai?",
+        "kya help chahiye": "Sir, aapko kis cheez mein help chahiye?",
+        "guide me": "Sir, commands.txt file mein saari commands ki list hai. Check karein.",
+        "tutorial": "Sir, commands.txt mein complete guide available hai.",
+        "what is this app": "Sir, yeh JARVIS app hai. Aapka personal AI assistant.",
+        "version": "Sir, JARVIS Mark XXXVI VIP Edition.",
+        "app version": "Sir, version 3.0. All features active.",
+        "update": "Sir, naye version ke liye app store check karein.",
+        "check update": "Sir, update check kar raha hoon. Aapka version latest hai.",
+        "whats new": "Sir, is version mein naye features: WhatsApp video call, contact management, button detection, aur bhi bahut kuch.",
+        "changelog": "Sir, changelog commands.txt file mein available hai.",
+        "smart home": "Sir, smart home features active hain. Light on/off commands use karein.",
+        "light jalao": "Ji Sir, light on kar diya (simulated).",
+        "light bujhao": "Ji Sir, light off kar diya (simulated).",
+        "room light": "Ji Sir, room light control active hai.",
+        "fan on": "Ji Sir, fan on kar diya (simulated).",
+        "fan off": "Ji Sir, fan off kar diya (simulated).",
+        "ac on": "Ji Sir, AC on kar diya (simulated).",
+        "ac off": "Ji Sir, AC off kar diya (simulated)."
+    };
+
+    const uiBody = document.getElementById('ui-body');
+    const chatLog = document.getElementById('chat-flow');
+    const userInput = document.getElementById('user-input');
+    const micBtn = document.getElementById('mic-btn');
+
+    window.onload = () => {
+        loadConfig();
+        initParticles();
+        startBoot();
+        setInterval(refreshDiagnostics, 2000);
+        userInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') manualSend(); });
+    };
+
+    function startBoot() {
+        const steps = ["SCANNING...","SYNCING...","READY"];
+        let i = 0;
+        const itv = setInterval(() => {
+            document.getElementById('boot-status').innerText = steps[i++];
+            if(i >= steps.length) {
+                clearInterval(itv);
+                setTimeout(() => {
+                    document.getElementById('startup-overlay').style.display = 'none';
+                    document.getElementById('hud-main').style.opacity = '1';
+                    speak("VIP Protocol active. Welcome back, Sir.");
+                    if(state.config.key) startMic();
+                }, 400);
+            }
+        }, 600);
+    }
+
+    function refreshDiagnostics() {
+        if(typeof Android !== "undefined") {
+            try {
+                const info = JSON.parse(Android.getSystemContext());
+                document.getElementById('d-model').innerText = info.device;
+                document.getElementById('d-ram').innerText = info.ram;
+                document.getElementById('d-mood').innerText = info.mood.toUpperCase();
+                document.getElementById('d-link').innerText = info.accessibility === "ACTIVE" ? "UPLINK STABLE" : "LINK BROKEN";
+            } catch(e) {}
+        }
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'block'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function saveConfig() {
+        state.config.key = document.getElementById('key-input').value.trim();
+        localStorage.setItem('jarvis_config', JSON.stringify(state.config));
+        document.getElementById('d-link').innerText = state.config.key ? "ACTIVE" : "OFFLINE";
+        closeModal('cfg-modal');
+        speak("System uplink established.");
+    }
+
+    function loadConfig() {
+        const s = localStorage.getItem('jarvis_config');
+        if (s) {
+            state.config = JSON.parse(s);
+            document.getElementById('key-input').value = state.config.key;
+            document.getElementById('d-link').innerText = state.config.key ? "ACTIVE" : "OFFLINE";
+        }
+    }
+
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let rec;
+
+    function startMic() {
+        if (!SpeechRec) return;
+        if (!rec) {
+            rec = new SpeechRec();
+            rec.continuous = true;
+            rec.interimResults = true;
+            rec.lang = 'en-IN';
+            rec.onstart = () => {
+                state.isListening = true;
+                micBtn.innerText = "🎤 ON";
+                micBtn.classList.add('active');
+                uiBody.classList.add('is-listening');
+                document.getElementById('hud-status').innerText = "LISTENING";
+            };
+            rec.onresult = (e) => {
+                let final = '';
+                for (let i = e.resultIndex; i < e.results.length; ++i) {
+                    if (e.results[i].isFinal) final += e.results[i][0].transcript;
+                }
+                if (final) {
+                    const txt = final.toLowerCase();
+                    if (txt.includes("jarvis")) {
+                        const cmd = txt.split("jarvis").pop().trim();
+                        handleUserInput(cmd || "hello");
+                    }
+                }
+            };
+            rec.onend = () => { if(state.isListening) rec.start(); };
+        }
+        try { rec.start(); } catch(e) {}
+    }
+
+    function stopMic() {
+        state.isListening = false;
+        if (rec) rec.stop();
+        micBtn.innerText = "🎤 OFF";
+        micBtn.classList.remove('active');
+        uiBody.classList.remove('is-listening');
+        document.getElementById('hud-status').innerText = "STANDBY";
+    }
+
+    function toggleMic() {
+        if (state.isListening) stopMic();
+        else startMic();
+    }
+
+    function speak(t) {
+        if(!t) return;
+        const wasListening = state.isListening;
+        stopMic();
+        state.isSpeaking = true;
+        uiBody.classList.add('is-speaking');
+        document.getElementById('hud-status').innerText = "SPEAKING";
+        if(typeof Android !== "undefined") {
+            Android.speak(t);
+            setTimeout(() => {
+                state.isSpeaking = false;
+                uiBody.classList.remove('is-speaking');
+                document.getElementById('hud-status').innerText = "STANDBY";
+                if(wasListening) startMic();
+            }, t.length * 85);
+        } else {
+            const u = new SpeechSynthesisUtterance(t);
+            u.onend = () => {
+                state.isSpeaking = false;
+                uiBody.classList.remove('is-speaking');
+                document.getElementById('hud-status').innerText = "STANDBY";
+                if(wasListening) startMic();
+            };
+            window.speechSynthesis.speak(u);
+        }
+    }
+
+    function manualSend() {
+        const v = userInput.value.trim();
+        if(v) { handleUserInput(v); userInput.value = ''; }
+    }
+
+    async function handleUserInput(t) {
+        if(!t || state.isThinking) return;
+        addMsg("USER", t);
+        const cmd = t.toLowerCase().trim();
+
+        // ===== VIP BRAIN CHECK (including fuzzy match) =====
+        for (const [key, val] of Object.entries(vipBrain)) {
+            if (cmd.includes(key)) {
+                addMsg("JARVIS", val);
+                speak(val);
+                return;
+            }
+        }
+
+        // ===== QUICK ACTIONS =====
+        if (cmd === "close all" || cmd === "band karo" || cmd === "stop all") {
+            speak("Ji Sir, sab band kar raha hoon.");
+            if(typeof Android !== "undefined") Android.closeCurrent();
+            return;
+        }
+        if (cmd === "light on" || cmd === "torch on" || cmd === "flash on") {
+            speak("Ji Sir, flashlight on kar raha hoon.");
+            if(typeof Android !== "undefined") Android.toggleFlashlight(true);
+            return;
+        }
+        if (cmd === "light off" || cmd === "torch off" || cmd === "flash off") {
+            speak("Ji Sir, flashlight band kar raha hoon.");
+            if(typeof Android !== "undefined") Android.toggleFlashlight(false);
+            return;
+        }
+        if (cmd.startsWith("open ") || cmd.startsWith("kholo ")) {
+            const app = cmd.replace(/^(open|kholo)\s+/i, '').trim();
+            if(app && typeof Android !== "undefined") {
+                Android.openApp(app);
+                speak(`Ji Sir! ${app} khol raha hoon.`);
+            }
+            return;
+        }
+
+        // ===== WEB SEARCH IN UI =====
+        if (cmd.includes("search") || cmd.includes("dhoond") || cmd.includes("google")) {
+            const query = cmd.replace(/search|dhoond|google|khoj|karo|kar|do|par|mein/gi, '').trim();
+            if(query) {
+                addMsg("JARVIS", "Searching...");
+                if(typeof Android !== "undefined") {
+                    Android.searchAndSpeak(query);
+                } else {
+                    window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`);
+                }
+            }
+            return;
+        }
+
+        // ===== WEATHER =====
+        if (cmd.includes("weather") || cmd.includes("mausam") || cmd.includes("barish") || cmd.includes("mosam")) {
+            addMsg("JARVIS", "Weather check kar raha hoon...");
+            if(typeof Android !== "undefined") {
+                Android.searchAndRead("aaj ka mausam temperature aur barish");
+            }
+            return;
+        }
+
+        // ===== NEWS =====
+        if (cmd.includes("news") || cmd.includes("khabar") || cmd.includes("samachar")) {
+            const topic = cmd.replace(/news|khabar|samachar|aaj|ki|ka|ke/gi, '').trim();
+            const q = topic ? `aaj ki ${topic} news` : "aaj ki top news";
+            addMsg("JARVIS", "News check kar raha hoon...");
+            if(typeof Android !== "undefined") {
+                Android.searchAndRead(q);
+            }
+            return;
+        }
+
+        // ===== WHATSAPP =====
+        if ((cmd.includes("whatsapp") || cmd.includes("msg") || cmd.includes("message") ||
+             cmd.includes("bhej") || cmd.includes("likh") || cmd.includes("bol")) &&
+            (cmd.includes("ko") || cmd.includes("to ") || cmd.includes("send"))) {
+            addMsg("JARVIS", "WhatsApp pe bhej raha hoon...");
+            if(typeof Android !== "undefined") {
+                const reply = Android.sendWhatsApp(cmd, t);
+                if(reply) addMsg("JARVIS", reply);
+            }
+            return;
+        }
+        // ===== WHATSAPP DIRECT: "WhatsApp kholo Ali ka chat" =====
+        if (cmd.includes("whatsapp") && (cmd.includes("khol") || cmd.includes("open") || cmd.includes("chat") || cmd.includes("dikh"))) {
+            addMsg("JARVIS", "WhatsApp khol raha hoon...");
+            if(typeof Android !== "undefined") {
+                Android.openApp("WhatsApp");
+                speak("Ji Sir! WhatsApp khol raha hoon.");
+            }
+            return;
+        }
+
+        // ===== YOUTUBE =====
+        if (cmd.includes("youtube")) {
+            const query = cmd.replace(/youtube|search|dhoond|play|baja|par|mein|karo|kar|do|khol|video/gi, '').trim();
+            if(query && typeof Android !== "undefined") {
+                Android.openYouTubeAndSearch(query);
+                speak(`Ji Sir! YouTube par ${query} search kar raha hoon.`);
+            }
+            return;
+        }
+
+        // ===== CONTACTS =====
+        if (cmd.includes("contact") && (cmd.includes("dikh") || cmd.includes("list") || cmd.includes("show") || cmd.includes("log"))) {
+            showContacts();
+            addMsg("JARVIS", "Sir, contacts dikha raha hoon.");
+            speak("Sir, contacts dikha raha hoon.");
+            return;
+        }
+        if (cmd.includes("saved contact") && (cmd.includes("dikh") || cmd.includes("list") || cmd.includes("show"))) {
+            showSavedContacts();
+            addMsg("JARVIS", "Sir, saved contacts dikha raha hoon.");
+            speak("Sir, saved contacts dikha raha hoon.");
+            return;
+        }
+
+        // ===== TIME/DATE/BATTERY =====
+        if (cmd === "time" || cmd === "time kya hai" || cmd === "samay") {
+            const t = typeof Android !== "undefined" ? Android.getCurrentTime() : new Date().toLocaleTimeString();
+            addMsg("JARVIS", `Sir, ${t} hai.`);
+            speak(`Sir, ${t} hai.`);
+            return;
+        }
+        if (cmd === "date" || cmd === "aaj kya hai" || cmd === "tarikh") {
+            const d = typeof Android !== "undefined" ? Android.getCurrentDate() : new Date().toLocaleDateString();
+            addMsg("JARVIS", `Sir, aaj ${d} hai.`);
+            speak(`Sir, aaj ${d} hai.`);
+            return;
+        }
+        if (cmd.includes("battery") || cmd.includes("charge")) {
+            if(typeof Android !== "undefined") {
+                const info = JSON.parse(Android.getBatteryInfo());
+                addMsg("JARVIS", `Sir, battery ${info.level}% hai. ${info.charging ? "Charging ho rahi hai." : "Charging nahi ho rahi."}`);
+                speak(`Sir, battery ${info.level} percent hai.`);
+            }
+            return;
+        }
+
+        // ===== AI CHAT (use native bridge) =====
+        if(!state.config.key) {
+            addMsg("JARVIS", "Sir, pehle API key set karein settings se.");
+            speak("Sir, pehle API key set karein.");
+            return;
+        }
+
+        state.isThinking = true;
+        document.getElementById('hud-status').innerText = "THINKING";
+        document.getElementById('brain-activity').innerText = "PROCESSING...";
+
+        // Use native AI with web search fallback
+        if (typeof Android !== "undefined") {
+            try {
+                const reply = Android.askAI(t);
+                addMsg("JARVIS", reply);
+                speak(reply);
+            } catch(e) {
+                speak("Signal failure, Sir.");
+            }
+        } else {
+            // Fallback: direct API call
+            try {
+                let context = "";
+                if(typeof Android !== "undefined") context = Android.getSystemContext();
+                const prompt = `You are JARVIS, an advanced AI assistant. Always address user as "Sir". Respond in Hinglish. Context: ${context}. User: ${t}`;
+                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.config.key}` },
+                    body: JSON.stringify({
+                        model: state.config.model,
+                        messages: [{role: 'system', content: prompt}]
+                    })
+                });
+                const d = await res.json();
+                const r = d.choices[0].message.content;
+                addMsg("JARVIS", r);
+                speak(r);
+            } catch (e) {
+                speak("Signal failure, Sir.");
+                addMsg("JARVIS", "Signal failure, Sir.");
+            }
+        }
+        state.isThinking = false;
+        document.getElementById('hud-status').innerText = "STANDBY";
+        document.getElementById('brain-activity').innerText = "IDLE";
+    }
+
+    function showInventory() {
+        if(typeof Android === "undefined") return;
+        const container = document.getElementById('apps-list');
+        container.innerHTML = '<p style="text-align:center;padding:20px;opacity:0.5">SCANNING...</p>';
+        openModal('apps-modal');
+        setTimeout(() => {
+            const apps = JSON.parse(Android.getSystemContext()).apps;
+            container.innerHTML = '';
+            apps.sort().forEach(app => {
+                const div = document.createElement('div');
+                div.className = 'app-card';
+                div.innerHTML = `<div><div style="font-size:14px;color:#fff">${app}</div></div>
+                                 <button class="btn" style="font-size:9px;padding:8px" onclick="launchApp('${app}')">LAUNCH</button>`;
+                container.appendChild(div);
+            });
+            speak(`${apps.length} protocols scanned.`);
+        }, 500);
+    }
+
+    function launchApp(name) { Android.openApp(name); closeModal('apps-modal'); }
+
+    let allContactsCache = [];
+    let savedContactsCache = [];
+
+    function showContacts() {
+        if(typeof Android === "undefined") return;
+        document.getElementById('contacts-search').value = '';
+        const container = document.getElementById('contacts-list');
+        container.innerHTML = '<p style="text-align:center;padding:20px;opacity:0.5">LOADING...</p>';
+        openModal('contacts-modal');
+        try {
+            const phoneContacts = JSON.parse(Android.getAllPhoneContacts());
+            const savedContacts = JSON.parse(Android.getSavedContacts());
+            allContactsCache = phoneContacts;
+            savedContactsCache = savedContacts;
+            renderContacts(phoneContacts, savedContacts);
+        } catch(e) {
+            container.innerHTML = '<p style="text-align:center;padding:20px;color:var(--red)">Error loading contacts</p>';
+        }
+    }
+
+    function showSavedContacts() {
+        renderContacts([], savedContactsCache);
+    }
+
+    function renderContacts(phoneContacts, savedContacts) {
+        const container = document.getElementById('contacts-list');
+        container.innerHTML = '';
+        if (savedContacts && savedContacts.length > 0) {
+            const savedHeader = document.createElement('div');
+            savedHeader.style.cssText = 'color:var(--gold);font-family:var(--font-hud);font-size:10px;padding:10px 0;letter-spacing:2px';
+            savedHeader.innerText = '⭐ SAVED CONTACTS';
+            container.appendChild(savedHeader);
+            savedContacts.forEach(c => {
+                container.appendChild(createContactCard(c.name, c.number, true));
+            });
+        }
+        if (phoneContacts && phoneContacts.length > 0) {
+            const header = document.createElement('div');
+            header.style.cssText = 'color:var(--gold);font-family:var(--font-hud);font-size:10px;padding:10px 0;letter-spacing:2px';
+            header.innerText = '📞 PHONE CONTACTS';
+            container.appendChild(header);
+            // Remove duplicates with saved contacts
+            const savedNames = new Set((savedContacts || []).map(c => c.name.toLowerCase()));
+            phoneContacts.forEach(c => {
+                if (!savedNames.has(c.name.toLowerCase())) {
+                    container.appendChild(createContactCard(c.name, c.number, false));
+                }
+            });
+        }
+        if (container.children.length === 0) {
+            container.innerHTML = '<p style="text-align:center;padding:20px;opacity:0.5">No contacts found</p>';
+        }
+    }
+
+    function createContactCard(name, number, isSaved) {
+        const div = document.createElement('div');
+        div.className = 'app-card';
+        div.style.cursor = 'pointer';
+        const waBtn = `<button class="btn btn-wa" onclick="event.stopPropagation();whatsappContact('${name.replace(/'/g, "\\'")}','${number}')">📱 WA</button>`;
+        const msgBtn = `<button class="btn btn-sms" onclick="event.stopPropagation();msgContact('${name.replace(/'/g, "\\'")}','${number}')">💬 MSG</button>`;
+        const callBtn = `<button class="btn btn-call" onclick="event.stopPropagation();callContact('${number}')">📞 CALL</button>`;
+        const delBtn = isSaved ? `<button class="btn btn-del" onclick="event.stopPropagation();deleteSavedContact('${name.replace(/'/g, "\\'")}')">🗑️ DEL</button>` : '';
+        div.innerHTML = `
+            <div>
+                <div class="contact-name">${name} ${isSaved ? '⭐' : ''}</div>
+                <div class="contact-number">${number}</div>
+            </div>
+            <div class="contact-actions">${waBtn}${msgBtn}${callBtn}${delBtn}</div>`;
+        return div;
+    }
+
+    function deleteSavedContact(name) {
+        if(typeof Android === "undefined") return;
+        if(confirm(`Delete ${name} from saved contacts?`)) {
+            Android.saveContact("__delete__" + name, "");
+            showContacts();
+            speak(`Sir, ${name} deleted.`);
+        }
+    }
+
+    function whatsappContact(name, number) {
+        closeModal('contacts-modal');
+        if(typeof Android !== "undefined") {
+            Android.openWhatsAppChat(number);
+            addMsg("JARVIS", `Sir, ${name} ka WhatsApp khol raha hoon.`);
+            speak(`Sir, ${name} ka WhatsApp khol raha hoon.`);
+        }
+    }
+
+    function msgContact(name, number) {
+        closeModal('contacts-modal');
+        addMsg("JARVIS", `Sir, ${name} ko kya message bhejna hai?`);
+        speak(`Sir, ${name} ko kya message bhejna hai?`);
+    }
+
+    function callContact(number) {
+        closeModal('contacts-modal');
+        if(typeof Android !== "undefined") {
+            Android.makeCall(number);
+            speak("Ji Sir, call kar raha hoon.");
+        }
+    }
+
+    function waCallContact(number) {
+        closeModal('contacts-modal');
+        if(typeof Android !== "undefined") {
+            Android.openWhatsAppChat(number);
+            speak("Ji Sir, WhatsApp call kar raha hoon.");
+        }
+    }
+
+    function filterContacts() {
+        const search = document.getElementById('contacts-search').value.toLowerCase();
+        if (!search) {
+            renderContacts(allContactsCache, savedContactsCache);
+            return;
+        }
+        const phoneFiltered = allContactsCache.filter(c => c.name.toLowerCase().includes(search) || c.number.includes(search));
+        const savedFiltered = savedContactsCache.filter(c => c.name.toLowerCase().includes(search) || c.number.includes(search));
+        renderContacts(phoneFiltered, savedFiltered);
+    }
+
+    function addMsg(s, t) {
+        const d = document.createElement('div');
+        d.className = `message ${s==='USER'?'user':''}`;
+        d.innerHTML = `<div style="font-size:7px;color:var(--gold);margin-bottom:2px">${s}</div><div>${t}</div>`;
+        chatLog.appendChild(d);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function initParticles() {
+        const c = document.getElementById('particle-canvas'); const ctx = c.getContext('2d');
+        c.width = window.innerWidth; c.height = window.innerHeight;
+        const ps = [];
+        for(let i=0; i<25; i++) ps.push({x: Math.random()*c.width, y: Math.random()*c.height, s: 1.5, dx: Math.random()-0.5, dy: Math.random()-0.5});
+        function draw() {
+            ctx.clearRect(0,0,c.width, c.height); ctx.fillStyle = "rgba(0, 255, 102, 0.35)";
+            ps.forEach(p => { p.x += p.dx; p.y += p.dy; if(p.x<0||p.x>c.width) p.dx*=-1; if(p.y<0||p.y>c.height) p.dy*=-1; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill(); });
+            requestAnimationFrame(draw);
+        }
+        draw();
+    }
+</script>
+</body>
+</html>

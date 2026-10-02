@@ -1,0 +1,1305 @@
+╔══════════════════════════════════════════════════════════════╗
+║            JARVIS - COMPLETE COMMANDS LIST (v3.0)            ║
+║        Har command ke 10+ variations ke saath                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════
+                    APP CONTROL (App Control)
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] OPEN APP / APP KHOLO
+  Kya karta hai: Kisi bhi app ko open karta hai
+  Examples:
+  1. "Jarvis WhatsApp open karo"
+  2. "Jarvis YouTube kholo"
+  3. "Jarvis Camera khol"
+  4. "Jarvis Chrome chalao"
+  5. "Jarvis Gmail launch karo"
+  6. "Jarvis Settings start karo"
+  7. "Jarvis Phone kholo"
+  8. "Jarvis Maps open karo"
+  9. "Jarvis Instagram khol do"
+  10. "Jarvis Play Store chalao"
+
+[COMMAND] CLOSE APP / HOME
+  Kya karta hai: Home screen par jata hai ya current app band karta hai
+  Examples:
+  1. "Jarvis close all"
+  2. "Jarvis band karo"
+  3. "Jarvis home jao"
+  4. "Jarvis bahar jao"
+  5. "Jarvis stop all"
+  6. "Jarvis exit karo"
+  7. "Jarvis home screen jao"
+  8. "Jarvis sab band karo"
+  9. "Jarvis home button dabao"
+  10. "Jarvis ghar jao"
+
+═══════════════════════════════════════════════════════════════
+                    WHATSAPP COMMANDS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] WHATSAPP OPEN
+  Kya karta hai: Sirf WhatsApp app kholta hai (kuch aur nahi karta)
+  Examples:
+  1. "Jarvis WhatsApp open karo"
+  2. "Jarvis WhatsApp kholo"
+  3. "Jarvis WhatsApp chalao"
+  4. "Jarvis WhatsApp khol do"
+  5. "Jarvis WhatsApp launch karo"
+  6. "Jarvis WhatsApp open"
+  7. "Jarvis WhatsApp start karo"
+  8. "Jarvis WhatsApp khol ke dikhao"
+  9. "Jarvis WhatsApp ko kholo"
+  10. "Jarvis WhatsApp on karo"
+
+[COMMAND] WHATSAPP SEARCH
+  Kya karta hai: WhatsApp kholta hai aur usme contact search karta hai
+  Examples:
+  1. "Jarvis WhatsApp mein Ali dhoondo"
+  2. "Jarvis WhatsApp mein Sara search karo"
+  3. "Jarvis WhatsApp mein Ahmad find karo"
+  4. "Jarvis Ali ko WhatsApp mein dhoondo"
+  5. "Jarvis WhatsApp khol ke Ali dhoondo"
+  6. "Jarvis WhatsApp mein Sara khojo"
+  7. "Jarvis Ahmad WhatsApp mein search karo"
+  8. "Jarvis WhatsApp mein Sara dhundo"
+  9. "Jarvis Ali ko WhatsApp mein find karo"
+  10. "Jarvis WhatsApp mein Ahmad talash karo"
+
+[COMMAND] WHATSAPP MESSAGE BHEJNA
+  Kya karta hai: Kisi ko WhatsApp par message bhejta hai
+  NOTE: Pehle phone contact mein dhoondhta hai, phir saved contacts mein,
+        agar kuch nahi mila to UI automation se WhatsApp mein search karta hai
+  Examples:
+  1. "Jarvis Ali ko msg bhejdo kal milte hain"
+  2. "Jarvis Sara ko message karo kal milte hain"
+  3. "Jarvis Ahmad ko bhejdo party kal hai"
+  4. "Jarvis Sara ko likho main a raha hoon"
+  5. "Jarvis Ali ko send karo time kya hai"
+  6. "Jarvis Ahmad ko bol dinner pe aana"
+  7. "Jarvis send Ali I am coming"
+  8. "Jarvis msg Ali ko kitab la do"
+  9. "Jarvis message Sara ko assignment complete"
+  10. "Jarvis Ali ko WhatsApp kar do mujhe bulao"
+
+[COMMAND] WHATSAPP CALL
+  Kya karta hai: WhatsApp par voice call karta hai
+  Examples:
+  1. "Jarvis WhatsApp call karo Ali"
+  2. "Jarvis Ali ko WhatsApp call karo"
+  3. "Jarvis Ali ko WhatsApp pe call karo"
+  4. "Jarvis WhatsApp pe Ali ko call karo"
+  5. "Jarvis WhatsApp call Ali"
+  6. "Jarvis Ali ka WhatsApp call lagao"
+  7. "Jarvis Ali ko WA call karo"
+  8. "Jarvis WhatsApp pe call karo Ali"
+  9. "Jarvis WhatsApp call lagao Sara ko"
+  10. "Jarvis Sara ko WhatsApp pe phone karo"
+
+[COMMAND] WHATSAPP VIDEO CALL
+  Kya karta hai: WhatsApp par video call karta hai
+  Examples:
+  1. "Jarvis WhatsApp video call Ali"
+  2. "Jarvis Ali ko WhatsApp video call karo"
+  3. "Jarvis video call karo Ali"
+  4. "Jarvis Ali ko video call karo"
+  5. "Jarvis WhatsApp video Ali"
+  6. "Jarvis Ali ka video call karo"
+  7. "Jarvis WhatsApp pe video call karo Ali"
+  8. "Jarvis video call Ali"
+  9. "Jarvis Ali ko video karo"
+  10. "Jarvis WhatsApp video call karo"
+
+═══════════════════════════════════════════════════════════════
+                    CONTACTS MANAGEMENT
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] CONTACTS DIKHAO
+  Kya karta hai: WebView mein contacts list kholta hai
+  Examples:
+  1. "Jarvis contacts dikhao"
+  2. "Jarvis contacts kholo"
+  3. "Jarvis contacts list dikhao"
+  4. "Jarvis saved contacts dikhao"
+  5. "Jarvis phone book dikhao"
+  6. "Jarvis contacts show karo"
+  7. "Jarvis mere contacts dikhao"
+  8. "Jarvis contact list dikhao"
+  9. "Jarvis contacts khol ke dikhao"
+  10. "Jarvis all contacts dikhao"
+
+[COMMAND] CONTACT SAVE KARO
+  Kya karta hai: App ke andar contact save karta hai (name + number)
+  Examples:
+  1. "Jarvis Sara ka number 1234567890 save karo"
+  2. "Jarvis Ali ko save karo 9876543210"
+  3. "Jarvis Ahmad ka contact save karo 5551234567"
+  4. "Jarvis Sara 1234567890 save karo"
+  5. "Jarvis save contact Ali 9876543210"
+  6. "Jarvis naya contact save karo Sara 1122334455"
+  7. "Jarvis Ali ko contacts mein add karo 9988776655"
+  8. "Jarvis contact add karo Sara 1234567890"
+  9. "Jarvis Sara ka number save kar lo 1234567890"
+  10. "Jarvis Ali 9876543210 yad rakho"
+
+[COMMAND] CONTACT DELETE KARO
+  Kya karta hai: Saved contact ko delete karta hai
+  Examples:
+  1. "Jarvis Sara ko delete karo"
+  2. "Jarvis Sara ka contact delete karo"
+  3. "Jarvis Sara ko hatao"
+  4. "Jarvis Ali ko remove karo"
+  5. "Jarvis Ali ka number delete karo"
+  6. "Jarvis Ali ko contacts se hatao"
+  7. "Jarvis Sara ka contact mitao"
+  8. "Jarvis Ahmad ko erase karo"
+  9. "Jarvis delete contact Sara"
+  10. "Jarvis remove contact Ali"
+
+[COMMAND] CONTACT NUMBER DHOONDO
+  Kya karta hai: Contact ka number dhoondh kar batata hai
+  Examples:
+  1. "Jarvis Sara ka number batao"
+  2. "Jarvis Sara ka number dhoondo"
+  3. "Jarvis Sara ka contact dhoondo"
+  4. "Jarvis Sara ka number find karo"
+  5. "Jarvis Sara ka phone number batao"
+  6. "Jarvis Sara ka number kya hai"
+  7. "Jarvis Sara search karo"
+  8. "Jarvis Sara ka contact dhundo"
+  9. "Jarvis Sara ka number nikal do"
+  10. "Jarvis Sara ka number khojo"
+
+═══════════════════════════════════════════════════════════════
+                    CALL COMMANDS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] CALL KARO
+  Kya karta hai: Kisi ko phone call karta hai
+  Examples:
+  1. "Jarvis Sara ko call karo"
+  2. "Jarvis Ali ko phone karo"
+  3. "Jarvis Ahmad ko dial karo"
+  4. "Jarvis Sara ka call lagao"
+  5. "Jarvis Ali ko call kar do"
+  6. "Jarvis Sara ko phone lagao"
+  7. "Jarvis call karo Sara"
+  8. "Jarvis phone karo Ali"
+  9. "Jarvis dial karo Ahmad"
+  10. "Jarvis Sara ko call laga do"
+
+═══════════════════════════════════════════════════════════════
+                    SMS COMMANDS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] SMS BHEJNA
+  Kya karta hai: Normal SMS/Text message bhejta hai
+  Examples:
+  1. "Jarvis Sara ko sms karo kal milte hain"
+  2. "Jarvis Ali ko text karo party hai"
+  3. "Jarvis Ahmad ko sms bhejo a raha hoon"
+  4. "Jarvis Sara ko message bhejo assignment complete"
+  5. "Jarvis sms bhejo Ali ko time kya hai"
+  6. "Jarvis text bhejo Sara ko dinner pe aana"
+  7. "Jarvis send sms to Ali meeting at 5"
+  8. "Jarvis send text to Sara okay"
+  9. "Jarvis Ali ko sms kar do kal milte hain"
+  10. "Jarvis Sara ko text kar do party kal"
+
+═══════════════════════════════════════════════════════════════
+                    WIFI COMMANDS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] WIFI ON
+  1. "Jarvis wifi on karo"
+  2. "Jarvis wifi on"
+  3. "Jarvis wifi chalu karo"
+  4. "Jarvis wifi enable karo"
+  5. "Jarvis wifi start karo"
+  6. "Jarvis wifi ko on karo"
+  7. "Jarvis wifi khol do"
+  8. "Jarvis wifi chal do"
+  9. "Jarvis wifi active karo"
+  10. "Jarvis wifi connect karo"
+
+[COMMAND] WIFI OFF
+  1. "Jarvis wifi off karo"
+  2. "Jarvis wifi off"
+  3. "Jarvis wifi band karo"
+  4. "Jarvis wifi disable karo"
+  5. "Jarvis wifi ko off karo"
+  6. "Jarvis wifi stop karo"
+  7. "Jarvis wifi hata do"
+  8. "Jarvis wifi shut down karo"
+  9. "Jarvis wifi inactive karo"
+  10. "Jarvis wifi disconnect karo"
+
+═══════════════════════════════════════════════════════════════
+                    BLUETOOTH COMMANDS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] BLUETOOTH ON
+  1. "Jarvis bluetooth on karo"
+  2. "Jarvis bluetooth on"
+  3. "Jarvis bluetooth chalu karo"
+  4. "Jarvis bluetooth enable karo"
+  5. "Jarvis bluetooth start karo"
+  6. "Jarvis blue on karo"
+  7. "Jarvis bluetooth khol do"
+  8. "Jarvis bluetooth chal do"
+  9. "Jarvis bluetooth active karo"
+  10. "Jarvis bluetooth ko on karo"
+
+[COMMAND] BLUETOOTH OFF
+  1. "Jarvis bluetooth off karo"
+  2. "Jarvis bluetooth off"
+  3. "Jarvis bluetooth band karo"
+  4. "Jarvis bluetooth disable karo"
+  5. "Jarvis bluetooth stop karo"
+  6. "Jarvis blue off karo"
+  7. "Jarvis bluetooth hata do"
+  8. "Jarvis bluetooth ko off karo"
+  9. "Jarvis bluetooth inactive karo"
+  10. "Jarvis bluetooth shut down karo"
+
+═══════════════════════════════════════════════════════════════
+                    FLASHLIGHT COMMANDS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] FLASHLIGHT ON
+  1. "Jarvis flashlight on karo"
+  2. "Jarvis flash on"
+  3. "Jarvis torch on"
+  4. "Jarvis light on karo"
+  5. "Jarvis flashlight chalu karo"
+  6. "Jarvis torch chalu karo"
+  7. "Jarvis light khol do"
+  8. "Jarvis flashlight enable karo"
+  9. "Jarvis torch enable karo"
+  10. "Jarvis roshni khol do"
+
+[COMMAND] FLASHLIGHT OFF
+  1. "Jarvis flashlight off karo"
+  2. "Jarvis flash off"
+  3. "Jarvis torch off"
+  4. "Jarvis light off karo"
+  5. "Jarvis flashlight band karo"
+  6. "Jarvis torch band karo"
+  7. "Jarvis light band karo"
+  8. "Jarvis flashlight disable karo"
+  9. "Jarvis torch disable karo"
+  10. "Jarvis roshni band karo"
+
+═══════════════════════════════════════════════════════════════
+                    VOLUME COMMANDS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] VOLUME UP
+  1. "Jarvis volume up karo"
+  2. "Jarvis volume up"
+  3. "Jarvis awaz badhao"
+  4. "Jarvis awaz tej karo"
+  5. "Jarvis volume barhao"
+  6. "Jarvis sound up karo"
+  7. "Jarvis volume tej karo"
+  8. "Jarvis awaz up karo"
+  9. "Jarvis volume increase karo"
+  10. "Jarvis sound tej karo"
+
+[COMMAND] VOLUME DOWN
+  1. "Jarvis volume down karo"
+  2. "Jarvis volume down"
+  3. "Jarvis awaz kam karo"
+  4. "Jarvis awaz ghatao"
+  5. "Jarvis volume ghatao"
+  6. "Jarvis sound down karo"
+  7. "Jarvis volume kam karo"
+  8. "Jarvis awaz down karo"
+  9. "Jarvis volume decrease karo"
+  10. "Jarvis sound kam karo"
+
+[COMMAND] SET VOLUME
+  1. "Jarvis volume 50 set karo"
+  2. "Jarvis volume 70 karo"
+  3. "Jarvis awaz 80 karo"
+  4. "Jarvis volume 30 par set karo"
+  5. "Jarvis sound 60 karo"
+
+[COMMAND] MUTE
+  1. "Jarvis mute karo"
+  2. "Jarvis mute"
+  3. "Jarvis chup karo"
+  4. "Jarvis silent karo"
+  5. "Jarvis awaz band karo"
+  6. "Jarvis sound band karo"
+  7. "Jarvis mute kar do"
+  8. "Jarvis chup ho jao"
+  9. "Jarvis silent mode"
+  10. "Jarvis awaz hatao"
+
+═══════════════════════════════════════════════════════════════
+                    RINGER MODES
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] SILENT MODE
+  1. "Jarvis silent mode karo"
+  2. "Jarvis silent karo"
+  3. "Jarvis phone silent karo"
+  4. "Jarvis silent mode"
+  5. "Jarvis phone chup karo"
+  6. "Jarvis ringer silent karo"
+  7. "Jarvis silent kar do"
+  8. "Jarvis phone chup rahe"
+  9. "Jarvis no sound"
+  10. "Jarvis khamosh karo"
+
+[COMMAND] VIBRATE MODE
+  1. "Jarvis vibrate mode karo"
+  2. "Jarvis vibrate karo"
+  3. "Jarvis phone vibrate karo"
+  4. "Jarvis vibrate mode"
+  5. "Jarvis vibration on karo"
+  6. "Jarvis ringer vibrate karo"
+  7. "Jarvis vibrate kar do"
+  8. "Jarvis phone vibrate rahe"
+  9. "Jarvis vibration mode"
+  10. "Jarvis vibrate pe rakh do"
+
+[COMMAND] NORMAL MODE
+  1. "Jarvis normal mode karo"
+  2. "Jarvis normal karo"
+  3. "Jarvis phone normal karo"
+  4. "Jarvis normal mode"
+  5. "Jarvis ringer normal karo"
+  6. "Jarvis normal kar do"
+  7. "Jarvis sound wapas lao"
+  8. "Jarvis general mode"
+  9. "Jarvis phone normal rahe"
+  10. "Jarvis sound on karo"
+
+═══════════════════════════════════════════════════════════════
+                    BRIGHTNESS COMMANDS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] BRIGHTNESS UP
+  1. "Jarvis brightness up karo"
+  2. "Jarvis brightness barhao"
+  3. "Jarvis roshni badhao"
+  4. "Jarvis screen bright karo"
+  5. "Jarvis brightness tej karo"
+  6. "Jarvis roshni tej karo"
+  7. "Jarvis brightness up"
+  8. "Jarvis screen roshni badhao"
+  9. "Jarvis display bright karo"
+  10. "Jarvis brightness increase karo"
+
+[COMMAND] BRIGHTNESS DOWN
+  1. "Jarvis brightness down karo"
+  2. "Jarvis brightness ghatao"
+  3. "Jarvis roshni kam karo"
+  4. "Jarvis screen dim karo"
+  5. "Jarvis brightness kam karo"
+  6. "Jarvis roshni kam karo"
+  7. "Jarvis brightness down"
+  8. "Jarvis screen roshni kam karo"
+  9. "Jarvis display dim karo"
+  10. "Jarvis brightness decrease karo"
+
+═══════════════════════════════════════════════════════════════
+                    AIRPLANE MODE
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] AIRPLANE MODE ON
+  1. "Jarvis airplane mode on karo"
+  2. "Jarvis flight mode on karo"
+  3. "Jarvis airplane on karo"
+  4. "Jarvis flight mode chalu karo"
+  5. "Jarvis airplane mode active karo"
+  6. "Jarvis flight mode enable karo"
+  7. "Jarvis airplane lagao"
+  8. "Jarvis flight mode lagao"
+  9. "Jarvis airplane chal do"
+  10. "Jarvis flight mode chal do"
+
+[COMMAND] AIRPLANE MODE OFF
+  1. "Jarvis airplane mode off karo"
+  2. "Jarvis flight mode off karo"
+  3. "Jarvis airplane off karo"
+  4. "Jarvis flight mode band karo"
+  5. "Jarvis airplane mode disable karo"
+  6. "Jarvis flight mode hatao"
+  7. "Jarvis airplane hatao"
+  8. "Jarvis flight mode hata do"
+  9. "Jarvis airplane mode stop karo"
+  10. "Jarvis flight mode band do"
+
+═══════════════════════════════════════════════════════════════
+                    DO NOT DISTURB (DND)
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] DND ON
+  1. "Jarvis dnd on karo"
+  2. "Jarvis do not disturb on karo"
+  3. "Jarvis dnd chalu karo"
+  4. "Jarvis disturb mat karo"
+  5. "Jarvis dnd enable karo"
+  6. "Jarvis do not disturb enable karo"
+  7. "Jarvis dnd active karo"
+  8. "Jarvis dnd lagao"
+  9. "Jarvis dnd chal do"
+  10. "Jarvis dnd on"
+
+[COMMAND] DND OFF
+  1. "Jarvis dnd off karo"
+  2. "Jarvis do not disturb off karo"
+  3. "Jarvis dnd band karo"
+  4. "Jarvis disturb kar sakte ho"
+  5. "Jarvis dnd disable karo"
+  6. "Jarvis do not disturb hatao"
+  7. "Jarvis dnd hatao"
+  8. "Jarvis dnd stop karo"
+  9. "Jarvis dnd off"
+  10. "Jarvis dnd band do"
+
+═══════════════════════════════════════════════════════════════
+                    GESTURES & NAVIGATION
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] SCROLL DOWN
+  1. "Jarvis scroll down karo"
+  2. "Jarvis scroll down"
+  3. "Jarvis neeche scroll karo"
+  4. "Jarvis down scroll karo"
+  5. "Jarvis page neeche karo"
+  6. "Jarvis scroll neeche"
+  7. "Jarvis upar se neeche karo"
+  8. "Jarvis age badhao"
+  9. "Jarvis scroll aage"
+  10. "Jarvis page down karo"
+
+[COMMAND] SCROLL UP
+  1. "Jarvis scroll up karo"
+  2. "Jarvis scroll up"
+  3. "Jarvis upar scroll karo"
+  4. "Jarvis up scroll karo"
+  5. "Jarvis page upar karo"
+  6. "Jarvis scroll upar"
+  7. "Jarvis piche scroll karo"
+  8. "Jarvis peeche jao"
+  9. "Jarvis scroll piche"
+  10. "Jarvis page up karo"
+
+[COMMAND] SWIPE LEFT
+  1. "Jarvis swipe left karo"
+  2. "Jarvis left swipe karo"
+  3. "Jarvis left jao"
+  4. "Jarvis left scroll karo"
+  5. "Jarvis swipe karo left"
+  6. "Jarvis left me jao"
+  7. "Jarvis bayein jao"
+  8. "Jarvis left side jao"
+  9. "Jarvis previous page"
+  10. "Jarvis pichla page"
+
+[COMMAND] SWIPE RIGHT
+  1. "Jarvis swipe right karo"
+  2. "Jarvis right swipe karo"
+  3. "Jarvis right jao"
+  4. "Jarvis right scroll karo"
+  5. "Jarvis swipe karo right"
+  6. "Jarvis right me jao"
+  7. "Jarvis dahine jao"
+  8. "Jarvis right side jao"
+  9. "Jarvis next page"
+  10. "Jarvis agla page"
+
+[COMMAND] BACK / PICHE JAO
+  1. "Jarvis back jao"
+  2. "Jarvis back karo"
+  3. "Jarvis piche jao"
+  4. "Jarvis back"
+  5. "Jarvis piche"
+  6. "Jarvis wapis jao"
+  7. "Jarvis pichle page par jao"
+  8. "Jarvis back button dabao"
+  9. "Jarvis piche hato"
+  10. "Jarvis ek step piche"
+
+[COMMAND] HOME / BAHAR JAO
+  1. "Jarvis home jao"
+  2. "Jarvis home karo"
+  3. "Jarvis home"
+  4. "Jarvis bahar jao"
+  5. "Jarvis home screen jao"
+  6. "Jarvis main screen par jao"
+  7. "Jarvis desktop jao"
+  8. "Jarvis home button dabao"
+  9. "Jarvis ghar jao"
+  10. "Jarvis homescreen jao"
+
+[COMMAND] RECENT APPS
+  1. "Jarvis recents kholo"
+  2. "Jarvis recent apps kholo"
+  3. "Jarvis recent jao"
+  4. "Jarvis recents dikhao"
+  5. "Jarvis recent apps dikhao"
+  6. "Jarvis app switcher kholo"
+  7. "Jarvis recent mein jao"
+  8. "Jarvis recent screen dikhao"
+  9. "Jarvis recents"
+  10. "Jarvis recent apps"
+
+[COMMAND] NOTIFICATIONS
+  1. "Jarvis notifications kholo"
+  2. "Jarvis notification kholo"
+  3. "Jarvis notifications dikhao"
+  4. "Jarvis notification bar kholo"
+  5. "Jarvis notification panel kholo"
+  6. "Jarvis notifications check karo"
+  7. "Jarvis notification dekh"
+  8. "Jarvis notification dikhao"
+  9. "Jarvis notifications"
+  10. "Jarvis notification khol do"
+
+[COMMAND] QUICK SETTINGS
+  1. "Jarvis quick settings kholo"
+  2. "Jarvis quick settings dikhao"
+  3. "Jarvis quick panel dikhao"
+  4. "Jarvis settings panel kholo"
+  5. "Jarvis quick settings"
+  6. "Jarvis quick panel kholo"
+  7. "Jarvis settings shortcut dikhao"
+  8. "Jarvis quick toggles dikhao"
+
+[COMMAND] LOCK SCREEN
+  1. "Jarvis screen lock karo"
+  2. "Jarvis phone lock karo"
+  3. "Jarvis lock screen karo"
+  4. "Jarvis phone band karo"
+  5. "Jarvis screen band karo"
+  6. "Jarvis lock kar do"
+  7. "Jarvis phone lock kar do"
+  8. "Jarvis lock karo"
+  9. "Jarvis mobile lock karo"
+  10. "Jarvis screen ko lock karo"
+
+═══════════════════════════════════════════════════════════════
+                    SCREEN COMMANDS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] SCREENSHOT
+  1. "Jarvis screenshot lo"
+  2. "Jarvis screenshot le lo"
+  3. "Jarvis screenshot karo"
+  4. "Jarvis screen capture karo"
+  5. "Jarvis capture karo"
+  6. "Jarvis screenshot le"
+  7. "Jarvis screen shot lo"
+  8. "Jarvis photo le screen ka"
+  9. "Jarvis screen ka photo lo"
+  10. "Jarvis capture screen"
+
+[COMMAND] SCREEN READ / SCREEN PAR KYA HAI
+  1. "Jarvis screen read karo"
+  2. "Jarvis screen par kya hai"
+  3. "Jarvis yeh kya hai"
+  4. "Jarvis screen padho"
+  5. "Jarvis screen read"
+  6. "Jarvis screen content batao"
+  7. "Jarvis screen mein kya likha hai"
+  8. "Jarvis screen dikhao"
+  9. "Jarvis page read karo"
+  10. "Jarvis yeh page kya hai"
+
+═══════════════════════════════════════════════════════════════
+                    CLICK / BUTTON PRESS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] CLICK ON SPECIFIC TEXT
+  Kya karta hai: Screen par specific text ko dhoondh kar click karta hai
+  Examples:
+  1. "Jarvis Send par click karo"
+  2. "Jarvis OK ko click karo"
+  3. "Jarvis Submit dabao"
+  4. "Jarvis Next button dabao"
+  5. "Jarvis Cancel pe click karo"
+  6. "Jarvis Save ko press karo"
+  7. "Jarvis click on Search"
+  8. "Jarvis press Continue"
+  9. "Jarvis tap on Allow"
+  10. "Jarvis Delete click karo"
+
+[COMMAND] CLICK ANY BUTTON
+  Kya karta hai: Screen par maujood buttons ko detect karta hai,
+  agar 1 button hai to direct click, agar multiple hain to unke naam bata kar puchta hai
+  Examples:
+  1. "Jarvis button click karo"
+  2. "Jarvis button dabao"
+  3. "Jarvis jo button dikh raha hai usko click karo"
+  4. "Jarvis button par click karo"
+  5. "Jarvis click button"
+  6. "Jarvis dikh rahe button ko click karo"
+  7. "Jarvis koi bhi button click karo"
+  8. "Jarvis button press karo"
+  9. "Jarvis button ko tap karo"
+  10. "Jarvis jo button hai usko click karo"
+
+[COMMAND] TYPE TEXT
+  Kya karta hai: Current screen par text input field mein type karta hai
+  Examples:
+  1. "Jarvis Hello World type karo"
+  2. "Jarvis Mera naam Ali likho"
+  3. "Jarvis email@test.com write karo"
+  4. "Jarvis password123 enter karo"
+  5. "Jarvis search query type kar do"
+  6. "Jarvis 12345 input karo"
+  7. "Jarvis type Hello"
+  8. "Jarvis write Test Message"
+  9. "Jarvis enter username"
+  10. "Jarvis likh do yeh message"
+
+═══════════════════════════════════════════════════════════════
+                    YOUTUBE COMMANDS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] YOUTUBE OPEN
+  1. "Jarvis YouTube open karo"
+  2. "Jarvis YouTube kholo"
+  3. "Jarvis YouTube chalao"
+  4. "Jarvis YouTube khol"
+  5. "Jarvis YouTube launch karo"
+  6. "Jarvis YouTube start karo"
+  7. "Jarvis YouTube khol do"
+  8. "Jarvis YouTube khol ke dikhao"
+  9. "Jarvis YouTube on karo"
+
+[COMMAND] YOUTUBE SEARCH
+  1. "Jarvis YouTube mein funny videos search karo"
+  2. "Jarvis YouTube par songs dhoondo"
+  3. "Jarvis YouTube pe comedy search karo"
+  4. "Jarvis YouTube mein cooking dhundo"
+  5. "Jarvis YouTube cricket search karo"
+  6. "Jarvis YouTube pe music dhoondo"
+  7. "Jarvis YouTube par news search karo"
+  8. "Jarvis YouTube mein vlogs play karo"
+  9. "Jarvis YouTube par tutorials chalao"
+  10. "Jarvis YouTube gaming dikhao"
+
+═══════════════════════════════════════════════════════════════
+                    WEB SEARCH
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] GOOGLE / WEB SEARCH
+  1. "Jarvis Google par cricket score search karo"
+  2. "Jarvis Google karo today news"
+  3. "Jarvis search karo best restaurants"
+  4. "Jarvis dhoondo aaj ka mausam"
+  5. "Jarvis khojo latest movies"
+  6. "Jarvis web mein recipes search karo"
+  7. "Jarvis internet par flights dhoondo"
+  8. "Jarvis browser mein hotels search karo"
+  9. "Jarvis weather today search karo"
+  10. "Jarvis online jobs dhoondo"
+
+═══════════════════════════════════════════════════════════════
+                    WEATHER
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] WEATHER / MAUSAM
+  1. "Jarvis weather batao"
+  2. "Jarvis mausam batao"
+  3. "Jarvis aaj ka mausam kya hai"
+  4. "Jarvis kya barish hogi"
+  5. "Jarvis mausam kaisa hai"
+  6. "Jarvis weather check karo"
+  7. "Jarvis aaj ka weather batao"
+  8. "Jarvis temperature batao"
+  9. "Jarvis mausam ki jankari do"
+  10. "Jarvis barish hogi kya"
+
+═══════════════════════════════════════════════════════════════
+                    NEWS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] NEWS / KHABAR
+  1. "Jarvis news batao"
+  2. "Jarvis khabar sunao"
+  3. "Jarvis aaj ki news batao"
+  4. "Jarvis kya news hai"
+  5. "Jarvis samachar sunao"
+  6. "Jarvis todays news batao"
+  7. "Jarvis aaj ki khabar batao"
+  8. "Jarvis news kya hai"
+  9. "Jarvis latest news batao"
+  10. "Jarvis kya khabar hai"
+
+═══════════════════════════════════════════════════════════════
+                    TIME & DATE
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] TIME
+  1. "Jarvis time batao"
+  2. "Jarvis time kya hai"
+  3. "Jarvis current time batao"
+  4. "Jarvis kya time hai"
+  5. "Jarvis time check karo"
+  6. "Jarvis samay batao"
+  7. "Jarvis abhi kitna baj raha hai"
+  8. "Jarvis time kya hua"
+  9. "Jarvis ghanti batao"
+  10. "Jarvis clock kya bata raha hai"
+
+[COMMAND] DATE
+  1. "Jarvis date batao"
+  2. "Jarvis aaj kya hai"
+  3. "Jarvis tarikh batao"
+  4. "Jarvis aaj ki date kya hai"
+  5. "Jarvis current date batao"
+  6. "Jarvis aaj ka din kya hai"
+  7. "Jarvis tithi batao"
+  8. "Jarvis date kya hai"
+  9. "Jarvis kya din hai"
+  10. "Jarvis aaj konsa din hai"
+
+═══════════════════════════════════════════════════════════════
+                    BATTERY
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] BATTERY CHECK
+  1. "Jarvis battery batao"
+  2. "Jarvis battery level kya hai"
+  3. "Jarvis battery check karo"
+  4. "Jarvis phone mein kitna charge hai"
+  5. "Jarvis battery status batao"
+  6. "Jarvis charge kitna hai"
+  7. "Jarvis battery percent batao"
+  8. "Jarvis battery kaisi hai"
+  9. "Jarvis power batao"
+  10. "Jarvis battery kitni bachi hai"
+
+═══════════════════════════════════════════════════════════════
+                    CAMERA
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] CAMERA OPEN
+  1. "Jarvis camera open karo"
+  2. "Jarvis camera kholo"
+  3. "Jarvis camera chalao"
+  4. "Jarvis camera khol"
+  5. "Jarvis camera khol do"
+  6. "Jarvis camera launch karo"
+  7. "Jarvis camera on karo"
+  8. "Jarvis camera start karo"
+  9. "Jarvis photo khinchne ka camera kholo"
+  10. "Jarvis camera khol ke dikhao"
+
+[COMMAND] VIDEO CAMERA
+  1. "Jarvis video camera kholo"
+  2. "Jarvis video record karo"
+  3. "Jarvis camera video mode kholo"
+  4. "Jarvis video camera chalao"
+  5. "Jarvis video mode kholo"
+  6. "Jarvis recording start karo"
+  7. "Jarvis video record karne ka camera kholo"
+  8. "Jarvis video cam kholo"
+
+═══════════════════════════════════════════════════════════════
+                    MEDIA / MUSIC
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] MUSIC PLAY
+  1. "Jarvis music play karo"
+  2. "Jarvis music chalao"
+  3. "Jarvis gaana chalao"
+  4. "Jarvis song play karo"
+  5. "Jarvis music chal do"
+  6. "Jarvis gaana chal do"
+  7. "Jarvis music start karo"
+  8. "Jarvis song chalao"
+  9. "Jarvis music bajao"
+  10. "Jarvis gaana bajao"
+
+[COMMAND] MUSIC PAUSE / STOP
+  1. "Jarvis music pause karo"
+  2. "Jarvis music stop karo"
+  3. "Jarvis gaana band karo"
+  4. "Jarvis song pause karo"
+  5. "Jarvis music ruk do"
+  6. "Jarvis gaana ruk do"
+  7. "Jarvis music stop"
+  8. "Jarvis gaana band kar do"
+  9. "Jarvis song stop karo"
+  10. "Jarvis music rok do"
+
+[COMMAND] NEXT SONG
+  1. "Jarvis next song"
+  2. "Jarvis agla gaana"
+  3. "Jarvis age badhao"
+  4. "Jarvis next track"
+  5. "Jarvis agla song chalao"
+  6. "Jarvis skip karo"
+  7. "Jarvis age karo"
+  8. "Jarvis next karo"
+  9. "Jarvis agla gaana chalao"
+  10. "Jarvis next gaana chal do"
+
+[COMMAND] PREVIOUS SONG
+  1. "Jarvis previous song"
+  2. "Jarvis pichla gaana"
+  3. "Jarvis piche jao"
+  4. "Jarvis previous track"
+  5. "Jarvis pichla song chalao"
+  6. "Jarvis back karo song"
+  7. "Jarvis pichla gaana chalao"
+  8. "Jarvis previous karo"
+  9. "Jarvis pichle gaane par jao"
+  10. "Jarvis pichli track"
+
+═══════════════════════════════════════════════════════════════
+                    ALARM & TIMER
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] ALARM SET
+  1. "Jarvis 7 baje ka alarm set karo"
+  2. "Jarvis alarm set karo 6:30"
+  3. "Jarvis alarm laga do 8 baje"
+  4. "Jarvis 7:15 par alarm laga do"
+  5. "Jarvis 7 ke liye alarm set karo"
+  6. "Jarvis alarm 7 baje ka laga do"
+  7. "Jarvis 6 baje alarm laga do"
+  8. "Jarvis 7:30 par alarm set karo"
+
+[COMMAND] TIMER SET
+  1. "Jarvis 60 second ka timer set karo"
+  2. "Jarvis 5 minute ka timer laga do"
+  3. "Jarvis timer set karo 120"
+  4. "Jarvis 10 minute ka timer set karo"
+  5. "Jarvis 10 minute ka timer laga do"
+  6. "Jarvis timer 30 seconds ka laga do"
+  7. "Jarvis 45 sec ka timer"
+  8. "Jarvis 15 min ka timer set karo"
+
+═══════════════════════════════════════════════════════════════
+                    SMART ROUTINES
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] GOOD NIGHT / NIGHT MODE
+  Kya karta hai: Ringer silent karega, DND on karega, brightness kam karega
+  1. "Jarvis good night"
+  2. "Jarvis night mode"
+  3. "Jarvis so ja"
+  4. "Jarvis good night mode"
+  5. "Jarvis raat ho gai"
+  6. "Jarvis sleep mode"
+  7. "Jarvis good night karo"
+  8. "Jarvis so jao"
+  9. "Jarvis night time"
+  10. "Jarvis raat ka mode"
+
+[COMMAND] GOOD MORNING
+  Kya karta hai: Normal mode karega, DND off karega, brightness barhae ga
+  1. "Jarvis good morning"
+  2. "Jarvis morning mode"
+  3. "Jarvis subah ho gai"
+  4. "Jarvis good morning mode"
+  5. "Jarvis subah"
+  6. "Jarvis morning karo"
+  7. "Jarvis din shuru karo"
+  8. "Jarvis good morning karo"
+  9. "Jarvis morning time"
+  10. "Jarvis subah ka mode"
+
+[COMMAND] WORK MODE
+  Kya karta hai: Vibrate mode karega, Gmail aur Chrome khol dega
+  1. "Jarvis work mode"
+  2. "Jarvis kaam mode"
+  3. "Jarvis work karo"
+  4. "Jarvis working mode"
+  5. "Jarvis office mode"
+  6. "Jarvis kaam ka mode"
+  7. "Jarvis work time"
+  8. "Jarvis productive mode"
+  9. "Jarvis focus mode"
+  10. "Jarvis kaam shuru karo"
+
+[COMMAND] DRIVING MODE
+  Kya karta hai: DND on karega, WiFi off karega, brightness full karega, Maps khol dega
+  1. "Jarvis driving mode"
+  2. "Jarvis gaadi mode"
+  3. "Jarvis drive mode"
+  4. "Jarvis driving"
+  5. "Jarvis car mode"
+  6. "Jarvis gaadi chala raha hoon"
+  7. "Jarvis road mode"
+  8. "Jarvis driving mode laga do"
+  9. "Jarvis travel mode"
+  10. "Jarvis journey mode"
+
+[COMMAND] MEETING MODE
+  Kya karta hai: Silent mode karega, DND on karega, volume zero karega
+  1. "Jarvis meeting mode"
+  2. "Jarvis meeting"
+  3. "Jarvis meeting mein hoon"
+  4. "Jarvis meeting chalu hai"
+  5. "Jarvis meeting laga do"
+  6. "Jarvis meeting mode active karo"
+  7. "Jarvis meeting karo"
+  8. "Jarvis meeting time"
+  9. "Jarvis silent meeting"
+  10. "Jarvis meeting mein jaa raha hoon"
+
+═══════════════════════════════════════════════════════════════
+                    SYSTEM SETTINGS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] OPEN SETTINGS
+  1. "Jarvis settings open karo"
+  2. "Jarvis settings kholo"
+  3. "Jarvis settings mein jao"
+  4. "Jarvis settings khol"
+  5. "Jarvis settings dikhao"
+  6. "Jarvis settings app kholo"
+  7. "Jarvis phone settings kholo"
+  8. "Jarvis system settings kholo"
+
+[COMMAND] WIFI SETTINGS
+  1. "Jarvis wifi settings kholo"
+  2. "Jarvis wifi settings mein jao"
+  3. "Jarvis wifi settings dikhao"
+  4. "Jarvis wifi ki settings kholo"
+  5. "Jarvis wifi settings open karo"
+
+[COMMAND] BLUETOOTH SETTINGS
+  1. "Jarvis bluetooth settings kholo"
+  2. "Jarvis bluetooth settings mein jao"
+  3. "Jarvis bluetooth settings dikhao"
+  4. "Jarvis bluetooth ki settings kholo"
+
+[COMMAND] SOUND SETTINGS
+  1. "Jarvis sound settings kholo"
+  2. "Jarvis sound settings mein jao"
+  3. "Jarvis awaz ki settings kholo"
+  4. "Jarvis audio settings kholo"
+  5. "Jarvis sound settings dikhao"
+
+[COMMAND] DISPLAY SETTINGS
+  1. "Jarvis display settings kholo"
+  2. "Jarvis screen settings kholo"
+  3. "Jarvis display settings mein jao"
+  4. "Jarvis display ki settings kholo"
+  5. "Jarvis screen ki settings kholo"
+
+[COMMAND] BATTERY SETTINGS
+  1. "Jarvis battery settings kholo"
+  2. "Jarvis battery settings mein jao"
+  3. "Jarvis battery ki settings kholo"
+  4. "Jarvis power settings kholo"
+  5. "Jarvis battery settings dikhao"
+
+═══════════════════════════════════════════════════════════════
+                    CLIPBOARD
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] COPY TO CLIPBOARD
+  1. "Jarvis copy karo"
+  2. "Jarvis clipboard mein copy karo"
+  3. "Jarvis ye text copy karo"
+  4. "Jarvis copy kar lo"
+  5. "Jarvis copy text"
+  6. "Jarvis text copy karo"
+  7. "Jarvis copy karke rakh lo"
+  8. "Jarvis save to clipboard"
+  9. "Jarvis clipboard copy"
+  10. "Jarvis copy karo"
+
+[COMMAND] PASTE FROM CLIPBOARD
+  1. "Jarvis paste karo"
+  2. "Jarvis clipboard se paste karo"
+  3. "Jarvis paste kar do"
+  4. "Jarvis text paste karo"
+  5. "Jarvis yahan paste karo"
+  6. "Jarvis paste yahan"
+  7. "Jarvis clipboard paste karo"
+  8. "Jarvis paste kar"
+  9. "Jarvis jo copy kiya tha paste karo"
+  10. "Jarvis paste kar do yahan"
+
+[COMMAND] READ CLIPBOARD
+  1. "Jarvis clipboard mein kya hai"
+  2. "Jarvis clipboard batao"
+  3. "Jarvis clipboard read karo"
+  4. "Jarvis clipboard content kya hai"
+  5. "Jarvis clipboard check karo"
+
+═══════════════════════════════════════════════════════════════
+                    MAPS & NAVIGATION
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] OPEN MAPS
+  1. "Jarvis maps open karo"
+  2. "Jarvis maps kholo"
+  3. "Jarvis Google maps kholo"
+  4. "Jarvis map kholo"
+  5. "Jarvis maps chalao"
+  6. "Jarvis navigation kholo"
+  7. "Jarvis maps launch karo"
+  8. "Jarvis maps khol"
+
+[COMMAND] NAVIGATE TO LOCATION
+  1. "Jarvis Lahore ka raasta batao"
+  2. "Jarvis Islamabad ka navigation karo"
+  3. "Jarvis Karachi ka map dikhao"
+  4. "Jarvis Mall Road ka direction batao"
+  5. "Jarvis navigate to airport"
+  6. "Jarvis station ka rasta batao"
+
+═══════════════════════════════════════════════════════════════
+                    DEVICE INFO
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] DEVICE INFO
+  1. "Jarvis device info batao"
+  2. "Jarvis phone info batao"
+  3. "Jarvis device details batao"
+  4. "Jarvis mobile info batao"
+  5. "Jarvis phone ki jankari do"
+  6. "Jarvis device specs batao"
+  7. "Jarvis phone specs batao"
+  8. "Jarvis system info batao"
+
+[COMMAND] STORAGE INFO
+  1. "Jarvis storage info batao"
+  2. "Jarvis storage space batao"
+  3. "Jarvis kitna storage bacha hai"
+  4. "Jarvis memory card info batao"
+  5. "Jarvis phone storage batao"
+  6. "Jarvis storage details batao"
+  7. "Jarvis kitni jagah bachi hai"
+  8. "Jarvis storage usage batao"
+
+[COMMAND] RAM INFO
+  1. "Jarvis RAM info batao"
+  2. "Jarvis RAM details batao"
+  3. "Jarvis kitni RAM hai"
+  4. "Jarvis RAM usage batao"
+  5. "Jarvis RAM space batao"
+  6. "Jarvis RAM kitni hai"
+
+═══════════════════════════════════════════════════════════════
+                    FUN COMMANDS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] JOKE / HASAO
+  1. "Jarvis joke sunao"
+  2. "Jarvis joke batao"
+  3. "Jarvis hasao"
+  4. "Jarvis ek joke sunao"
+  5. "Jarvis chutkula sunao"
+  6. "Jarvis hasane wali baat batao"
+  7. "Jarvis funny joke sunao"
+  8. "Jarvis joke karo"
+  9. "Jarvis kuch hasa do"
+  10. "Jarvis laugh karo"
+
+[COMMAND] MOTIVATE / HOSLA DO
+  1. "Jarvis motivate karo"
+  2. "Jarvis inspire karo"
+  3. "Jarvis hosla do"
+  4. "Jarvis motivation batao"
+  5. "Jarvis kuch inspiring batao"
+  6. "Jarvis uplift karo"
+  7. "Jarvis positive karo"
+  8. "Jarvis energy do"
+  9. "Jarvis enthusiasm do"
+  10. "Jarvis himmat do"
+
+[COMMAND] QUOTE / SUVICHAR
+  1. "Jarvis quote batao"
+  2. "Jarvis quote sunao"
+  3. "Jarvis famous quote batao"
+  4. "Jarvis suvichar batao"
+  5. "Jarvis anmol vachan batao"
+  6. "Jarvis kisi ne kya kaha"
+  7. "Jarvis quote karo"
+  8. "Jarvis inspirational quote"
+  9. "Jarvis good quote"
+  10. "Jarvis best quote"
+
+═══════════════════════════════════════════════════════════════
+                    GENERAL CONVERSATION
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] HELLO / HI
+  1. "Jarvis hello"
+  2. "Jarvis hi"
+  3. "Jarvis hey"
+  4. "Hello Jarvis"
+  5. "Hi Jarvis"
+  6. "Hey Jarvis"
+  7. "Jarvis namaste"
+  8. "Jarvis salam"
+  9. "Jarvis namaskar"
+  10. "Jarvis jai hind"
+
+[COMMAND] BYE / GOODBYE
+  1. "Jarvis bye"
+  2. "Jarvis goodbye"
+  3. "Jarvis alvida"
+  4. "Jarvis phir milte hain"
+  5. "Bye Jarvis"
+  6. "Goodbye Jarvis"
+  7. "Jarvis chalta hoon"
+  8. "Jarvis nikalta hoon"
+  9. "Jarvis tata"
+  10. "Jarvis allah hafiz"
+
+[COMMAND] THANK YOU
+  1. "Jarvis thank you"
+  2. "Jarvis thanks"
+  3. "Jarvis shukriya"
+  4. "Jarvis dhanyawad"
+  5. "Thank you Jarvis"
+  6. "Thanks Jarvis"
+  7. "Jarvis shukriya"
+  8. "Jarvis bahut shukriya"
+  9. "Jarvis thanku"
+  10. "Jarvis thx"
+
+[COMMAND] WHO ARE YOU
+  1. "Jarvis who are you"
+  2. "Jarvis kaun ho tum"
+  3. "Jarvis apna parichay do"
+  4. "Jarvis tum kya ho"
+  5. "Kaun ho Jarvis"
+  6. "Jarvis aap kaun hain"
+  7. "Jarvis who is Jarvis"
+  8. "Jarvis tum kaun ho"
+  9. "Jarvis tumhara naam kya hai"
+  10. "Jarvis kaun hai"
+
+[COMMAND] WHAT CAN YOU DO
+  1. "Jarvis what can you do"
+  2. "Jarvis kya kar sakte ho"
+  3. "Jarvis tum kya kar sakte ho"
+  4. "Jarvis capability kya hai"
+  5. "Jarvis what are your features"
+  6. "Jarvis aap kya kar sakte hain"
+  7. "Jarvis capabilities batao"
+  8. "Jarvis kya kya kar sakta hai"
+  9. "Jarvis tum mein kya kya hai"
+  10. "Jarvis features batao"
+
+[COMMAND] HOW ARE YOU
+  1. "Jarvis how are you"
+  2. "Jarvis kaise ho"
+  3. "Jarvis kya haal hai"
+  4. "Jarvis kaise hain aap"
+  5. "Jarvis kya haal chal"
+  6. "How r u Jarvis"
+  7. "Jarvis sab theek"
+  8. "Jarvis kya chal raha hai"
+  9. "Jarvis kaisa hai"
+  10. "Jarvis aur kya chal raha hai"
+
+═══════════════════════════════════════════════════════════════
+                    EMERGENCY SOS
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] SOS / EMERGENCY
+  Kya karta hai: Emergency contact ko SMS bhejta hai "EMERGENCY! Sir ko help chahiye!"
+  NOTE: Pehle "emergency" naam ka contact save karna hoga
+  1. "Jarvis emergency sos"
+  2. "Jarvis help me"
+  3. "Jarvis bachao"
+  4. "Jarvis emergency"
+  5. "Jarvis sos send karo"
+  6. "Jarvis sos signal"
+  7. "Jarvis help bhejo"
+  8. "Jarvis SOS"
+
+═══════════════════════════════════════════════════════════════
+                    EXTRA FEATURES
+═══════════════════════════════════════════════════════════════
+
+[COMMAND] SAVED CONTACTS KE SAATH INTERACTION
+  Jaise hi contact save hai, direct intent se kaam karega
+  Example: "Jarvis Ali ko msg bhejdo kal milte hain"
+  - Saved contact "Ali" ka number 1234567890 hai
+  - Directly WhatsApp intent chalega (wa.me/1234567890?text=kal+milte+hain)
+  - Faster and more reliable
+
+[COMMAND] CONTEXT-AWARE SCROLL
+  Jab user kisi app mein ho, scroll command wahi context mein kaam karegi
+  Example:
+  - WhatsApp mein "scroll" to chats scroll hongi
+  - YouTube mein "scroll" to videos scroll hongi
+  - Browser mein "scroll" to webpage scroll hoga
+
+[COMMAND] BUTTON DETECTION
+  Screen par buttons detect karta hai
+  Example: "Jarvis button click karo"
+  - Agar 1 button hai → direct click
+  - Agar multiple hain → user se poochta hai kaunsa click karna hai
+
+[COMMAND] MULTI-STEP AUTOMATION
+  Ek command mein multiple steps
+  Example: "Good Morning" → Normal mode + DND off + Brightness up + WiFi on
+
+[COMMAND] AI WEB SEARCH
+  Agar API key set hai to AI se smart answers
+  Web search + AI summarization
+  Weather, News, General knowledge
+
+═══════════════════════════════════════════════════════════════
+                    QUICK REFERENCE
+═══════════════════════════════════════════════════════════════
+
+CATEGORY          | ACTION                  | EXAMPLE
+──────────────────┼─────────────────────────┼──────────────────────────────────
+APP              | Open App                | "WhatsApp open karo"
+WHATSAPP         | Send Message            | "Ali ko msg bhejdo kal milte hain"
+WHATSAPP         | Search Contact          | "WhatsApp mein Ali dhoondo"
+WHATSAPP         | Call                    | "Ali ko WhatsApp call karo"
+WHATSAPP         | Video Call              | "Ali ko video call karo"
+CONTACTS         | Show List               | "Contacts dikhao"
+CONTACTS         | Save Contact            | "Sara ka number 1234567890 save karo"
+CONTACTS         | Delete Contact          | "Sara ko delete karo"
+CONTACTS         | Find Number             | "Sara ka number batao"
+CALL             | Phone Call              | "Ali ko call karo"
+SMS              | Text Message            | "Ali ko sms karo kal milte hain"
+WIFI             | On/Off/Toggle           | "Wifi on karo"
+BLUETOOTH        | On/Off                  | "Bluetooth on karo"
+FLASHLIGHT       | On/Off/Toggle           | "Flash on karo"
+VOLUME           | Up/Down/Set/Mute        | "Volume up karo"
+RINGER           | Silent/Vibrate/Normal   | "Silent mode karo"
+BRIGHTNESS       | Up/Down/Set             | "Brightness up karo"
+AIRPLANE         | On/Off                  | "Airplane mode on karo"
+DND              | On/Off                  | "DND on karo"
+NAVIGATION       | Back/Home/Recents       | "Back jao"
+GESTURES         | Scroll/Swipe            | "Scroll down karo"
+SCREEN           | Screenshot/Read         | "Screenshot lo"
+CAMERA           | Open/Video              | "Camera open karo"
+MEDIA            | Play/Pause/Next/Prev    | "Music play karo"
+YOUTUBE          | Open/Search             | "YouTube mein songs search karo"
+WEB              | Google Search           | "Google karo cricket score"
+WEATHER          | Check Weather           | "Weather batao"
+NEWS             | Latest News             | "News batao"
+TIME/DATE        | Current Time/Date       | "Time batao"
+BATTERY          | Battery Level           | "Battery batao"
+ALARM            | Set Alarm               | "7 baje ka alarm set karo"
+TIMER            | Set Timer               | "5 minute ka timer set karo"
+ROUTINES         | Good Night/Morning/Work/Driving/Meeting | "Good night"
+SETTINGS         | Open Settings           | "Settings open karo"
+DEVICE INFO      | Device/Storage/RAM      | "Device info batao"
+CLIPBOARD        | Copy/Paste/Read         | "Copy karo"
+CLICK            | Click by Text/Button    | "Send par click karo"
+TYPE             | Type Text               | "Hello type karo"
+SOS              | Emergency               | "Emergency SOS"
+FUN              | Joke/Motivate/Quote     | "Joke sunao"
+CONVERSATION     | Hello/Bye/Thanks/Who    | "Hello Jarvis"
+
+═══════════════════════════════════════════════════════════════
+            END OF COMMANDS LIST - TOTAL: 80+ COMMANDS
+                 1000+ VARIATIONS (10+ per command)
+═══════════════════════════════════════════════════════════════
