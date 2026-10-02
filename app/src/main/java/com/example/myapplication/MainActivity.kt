@@ -23,9 +23,13 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        window.statusBarColor = android.graphics.Color.parseColor("#04080e")
+        window.navigationBarColor = android.graphics.Color.parseColor("#04080e")
+
         checkAndRequestPermissions()
 
         val webView = WebView(this)
+        webView.setBackgroundColor(android.graphics.Color.parseColor("#04080e"))
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         webView.settings.mediaPlaybackRequiresUserGesture = false
@@ -55,45 +59,57 @@ class MainActivity : AppCompatActivity() {
         webView.addJavascriptInterface(AndroidBridge(this), "Android")
 
         val serviceIntent = Intent(this, JarvisService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent)
-        } else {
-            startService(serviceIntent)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent)
+            } else {
+                startService(serviceIntent)
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Failed to start JarvisService: ${e.message}")
         }
 
         webView.loadUrl("file:///android_asset/index.html")
 
         setContentView(webView)
-
-        checkAccessibilityPermission()
-        checkOverlayPermission()
-        checkWriteSettingsPermission()
     }
 
-    private fun checkAccessibilityPermission() {
+    fun checkAccessibilityPermission() {
         if (JarvisAccessibilityService.instance == null) {
-            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-            startActivity(intent)
-            Toast.makeText(this, "Sir, please enable JARVIS Core Brain for full control.", Toast.LENGTH_LONG).show()
-        }
-    }
-
-    private fun checkOverlayPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.canDrawOverlays(this)) {
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
                 startActivity(intent)
+                Toast.makeText(this, "Sir, please enable JARVIS Core Brain for full control.", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error opening accessibility settings: ${e.message}")
             }
         }
     }
 
-    private fun checkWriteSettingsPermission() {
+    fun checkOverlayPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.System.canWrite(this)) {
-                val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:$packageName"))
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
+            try {
+                if (!Settings.canDrawOverlays(this)) {
+                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error opening overlay settings: ${e.message}")
+            }
+        }
+    }
+
+    fun checkWriteSettingsPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                if (!Settings.System.canWrite(this)) {
+                    val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:$packageName"))
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error opening write settings: ${e.message}")
             }
         }
     }
@@ -133,7 +149,19 @@ class MainActivity : AppCompatActivity() {
                 grantResults[index] != PackageManager.PERMISSION_GRANTED
             }
             if (denied.isNotEmpty()) {
-                Toast.makeText(this, "Sir, some permissions are denied: ${denied.joinToString(", ")}. JARVIS needs these for full functionality.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Sir, some permissions are denied. JARVIS core features will run in safe mode.", Toast.LENGTH_SHORT).show()
+            }
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                try {
+                    val serviceIntent = Intent(this, JarvisService::class.java)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(serviceIntent)
+                    } else {
+                        startService(serviceIntent)
+                    }
+                } catch (e: Exception) {
+                    Log.e("MainActivity", "Service start error: ${e.message}")
+                }
             }
         }
     }

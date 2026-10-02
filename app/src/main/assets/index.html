@@ -3,25 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>JARVIS ELITE | Mark XXXV</title>
-    <!-- Imported high-end premium font 'Outfit' for maximum legibility and highlighted feel -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <title>JARVIS VIP | Mark L HUD</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --green: #00ff66;
-            --red: #ff3b30;
-            --gold: #ffcc00;
-            --bg: #000000;
-            --panel-bg: #ffffff; /* Premium white background for widgets */
-            --widget-border: rgba(0, 0, 0, 0.05);
-            --font-main: 'Outfit', 'Rajdhani', sans-serif;
-            --font-hud: 'Orbitron', sans-serif;
-            /* Dynamic active color scheme */
-            --theme-color: var(--green);
+            --primary: #00f0ff;
+            --primary-glow: rgba(0, 240, 255, 0.45);
+            --primary-dim: rgba(0, 240, 255, 0.12);
+            --secondary: #00ff88;
+            --accent-gold: #ffb700;
+            --alert-red: #ff3344;
+            --bg-dark: #04080e;
+            --panel-bg: rgba(6, 16, 28, 0.72);
+            --panel-border: rgba(0, 240, 255, 0.22);
+            --panel-card: rgba(10, 25, 42, 0.65);
+            --text-main: #e6f6ff;
+            --text-dim: #7aa5c2;
+            --font-display: 'Orbitron', monospace;
+            --font-ui: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
         }
 
-        .alert-mode {
-            --theme-color: var(--red);
+        /* THEME PRESETS */
+        body.theme-emerald {
+            --primary: #00ff88;
+            --primary-glow: rgba(0, 255, 136, 0.45);
+            --primary-dim: rgba(0, 255, 136, 0.12);
+            --panel-border: rgba(0, 255, 136, 0.22);
+            --panel-bg: rgba(4, 20, 14, 0.72);
+            --panel-card: rgba(8, 30, 20, 0.65);
+        }
+        body.theme-ruby {
+            --primary: #ff3344;
+            --primary-glow: rgba(255, 51, 68, 0.5);
+            --primary-dim: rgba(255, 51, 68, 0.14);
+            --panel-border: rgba(255, 51, 68, 0.28);
+            --panel-bg: rgba(24, 6, 8, 0.75);
+            --panel-card: rgba(36, 10, 14, 0.65);
+        }
+        body.theme-gold {
+            --primary: #ffbb00;
+            --primary-glow: rgba(255, 187, 0, 0.45);
+            --primary-dim: rgba(255, 187, 0, 0.12);
+            --panel-border: rgba(255, 187, 0, 0.25);
+            --panel-bg: rgba(20, 16, 4, 0.72);
+            --panel-card: rgba(32, 24, 8, 0.65);
         }
 
         * {
@@ -29,1069 +57,2173 @@
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
 
         body {
-            /* Fallback colors to prevent default browser white background outside panels */
-            background-color: #000000;
-            color: #ffffff;
-            font-family: var(--font-main);
-            overflow: hidden;
-            text-transform: uppercase;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-ui);
             height: 100vh;
             width: 100vw;
+            overflow: hidden;
             position: fixed;
-
-            /* Safe multi-layer gradients with cross-browser prefixes */
-            background: #000000;
-            background-image: -webkit-radial-gradient(center, circle, #021208 0%, #000000 100%);
-            background-image: radial-gradient(circle at center, #021208 0%, #000000 100%);
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 50% 30%, rgba(0, 240, 255, 0.08) 0%, transparent 65%),
+                radial-gradient(circle at 80% 90%, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
+                linear-gradient(to bottom, #03060a 0%, #050b14 100%);
         }
 
-        #particle-canvas {
+        /* HOLOGRAPHIC SCANLINE & GRID BACKGROUND */
+        #canvas-bg {
             position: fixed;
             inset: 0;
-            z-index: -1;
-            opacity: 0.15;
-        }
-
-        .scanline {
-            position: fixed;
-            inset: 0;
-            background: linear-gradient(to bottom, transparent 50%, rgba(255, 255, 255, 0.01) 50%);
-            background-size: 100% 4px;
-            z-index: 5;
+            z-index: 0;
             pointer-events: none;
         }
 
-        /* STARTUP OVERLAY */
-        #startup-overlay {
+        .scanlines {
             position: fixed;
             inset: 0;
-            background: #000000;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.015), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.015));
+            background-size: 100% 3px, 6px 100%;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0.7;
+        }
+
+        /* STARTUP ANIMATION */
+        #boot-screen {
+            position: fixed;
+            inset: 0;
+            background: #020408;
             z-index: 9999;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            transition: opacity 0.8s;
+            justify-content: center;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .arc-reactor {
-            width: 90px;
-            height: 90px;
-            border: 3px solid var(--green);
+        .boot-reactor {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .boot-ring {
+            position: absolute;
+            inset: 0;
+            border: 2px dashed var(--primary);
             border-radius: 50%;
-            box-shadow: 0 0 35px rgba(0, 255, 102, 0.3);
-            animation: reactor-glow 2s infinite ease-in-out;
-            background: radial-gradient(circle, rgba(0, 255, 102, 0.1) 0%, transparent 70%);
+            animation: spin 8s linear infinite;
+            box-shadow: 0 0 25px var(--primary-glow);
         }
 
-        .boot-text {
-            margin-top: 25px;
-            font-family: 'Share Tech Mono', monospace;
-            letter-spacing: 4px;
-            color: var(--green);
-            font-size: 13px;
+        .boot-core {
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #ffffff 10%, var(--primary) 60%, transparent 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 35px var(--primary);
+            animation: pulse-glow 1.5s infinite ease-in-out;
         }
 
-        /* HUD LAYOUT & MOBILE AUTO ADJUSTMENTS */
-        .hud-grid {
+        .boot-title {
+            margin-top: 32px;
+            font-family: var(--font-display);
+            font-size: 16px;
+            letter-spacing: 6px;
+            color: var(--primary);
+            text-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .boot-sub {
+            margin-top: 8px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+        }
+
+        /* MAIN HUD LAYOUT */
+        .hud-wrapper {
+            position: relative;
+            z-index: 2;
             display: flex;
             flex-direction: column;
             height: 100vh;
-            /* Safe zone spacing to keep widgets perfectly away from mobile notches & bottom toolbars */
-            padding: 65px 16px 45px 16px;
-            gap: 16px;
-            opacity: 0;
-            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* PREMIUM WIDGET CARDS WITH ENHANCED ROUNDED CORNERS (Circled in Red) */
-        .panel {
-            background: var(--panel-bg);
-            border: 1px solid var(--widget-border);
-            border-radius: 24px;
-            backdrop-filter: blur(20px);
-            padding: 16px;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .panel-header {
-            font-family: var(--font-hud);
-            font-size: 9px;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-            color: rgba(0, 0, 0, 0.5); /* Readable dark label */
-            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-            padding-bottom: 6px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        /* DIAGNOSTIC GRID SYSTEM */
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .stat-box {
-            background: #f1f3f7; /* High contrast inner segments */
-            padding: 10px 14px;
-            border-radius: 14px;
-            border: 1px solid rgba(0, 0, 0, 0.02);
-        }
-
-        .stat-box p {
-            font-size: 9px;
-            color: #555555; /* Dark grey labels */
-            letter-spacing: 1.5px;
-            font-weight: 700;
-        }
-
-        .stat-val {
-            color: #000000; /* Bold Black Value */
-            font-weight: 800;
-            font-size: 16px;
-            font-family: 'Share Tech Mono', monospace;
-            margin-top: 2px;
-        }
-
-        /* CORE SPHERE */
-        .core-box {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 0;
-        }
-
-        .ai-sphere {
-            width: 160px;
-            height: 160px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .ring {
-            position: absolute;
-            border: 1.5px solid var(--theme-color);
-            border-radius: 50%;
-            opacity: 0.75; /* Retained high-visibility opacity for sharp lines */
-            box-shadow: 0 0 10px rgba(0, 255, 102, 0.15);
-        }
-
-        .r-1 {
-            inset: 0;
-            animation: spin 20s linear infinite;
-            border-style: double;
-            border-width: 3px;
-        }
-
-        .r-2 {
-            inset: 22px;
-            animation: spin 12s linear infinite reverse;
-            border-dasharray: 12;
-            opacity: 0.85; /* Retained clear visibility for the inner spinning ring animation */
-            border-width: 1.5px;
-        }
-
-        .r-core {
-            width: 64px;
-            height: 64px;
-            background: radial-gradient(circle, var(--theme-color) 20%, transparent 80%);
-            border-radius: 50%;
-            box-shadow: 0 0 45px var(--theme-color);
-            transition: all 0.4s ease;
-        }
-
-        /* STATE INDICATIONS */
-        .is-speaking .r-core {
-            background: radial-gradient(circle, var(--red) 20%, transparent 80%);
-            box-shadow: 0 0 55px var(--red);
-            transform: scale(1.15);
-        }
-
-        .is-listening .r-core {
-            background: radial-gradient(circle, var(--green) 20%, transparent 80%);
-            box-shadow: 0 0 55px var(--green);
-            transform: scale(0.9);
-        }
-
-        /* White Highlighted Capsule under the Orb (Circled in Red) */
-        #hud-status {
-            margin-top: 20px;
-            font-family: var(--font-hud);
-            letter-spacing: 5px;
-            font-size: 11px;
-            font-weight: 900;
-            color: #000000; /* Bold black status text */
-            background: #ffffff; /* Premium white background */
-            padding: 8px 24px;
-            border-radius: 100px;
-            display: inline-block;
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.25);
-            opacity: 0.95;
-        }
-
-        /* FOOTER & BUTTON DOCK AREA */
-        .footer {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: auto;
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-
-        .dock {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-        }
-
-        /* CAPSULE PILL-SHAPED DOCK ITEMS (Circled in Red) */
-        .dock-item {
-            padding: 12px 6px;
-            border-radius: 100px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            text-align: center;
-            font-family: var(--font-hud);
-            font-size: 10px;
-            font-weight: 800;
-            background: #ffffff; /* Beautiful white buttons */
-            color: #000000; /* Crisp black icons/text */
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-
-        .dock-item:active {
-            transform: scale(0.95);
-            background: #eef1f6;
-        }
-
-        .dock-item.active {
-            background: var(--theme-color);
-            color: #000000;
-            border-color: var(--theme-color);
-            box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
-        }
-
-        /* CHAT INTERFACE (Circled in Red) */
-        .chat-container {
-            height: 160px;
-            display: flex;
-            flex-direction: column;
+            padding: max(10px, env(safe-area-inset-top)) 12px max(10px, env(safe-area-inset-bottom)) 12px;
+            gap: 8px;
             overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease;
         }
 
-        #chat-flow {
-            flex: 1;
-            overflow-y: auto;
-            scrollbar-width: none;
-            font-size: 14px;
-            padding-right: 4px;
-        }
-
-        #chat-flow::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* Clean Message styles with maximum legibility */
-        .message {
-            margin-bottom: 10px;
-            padding: 12px 14px;
-            background: #f1f3f7; /* Soft grey for incoming chats */
-            border-radius: 16px;
-            border-top-left-radius: 4px;
-            border: 1px solid rgba(0, 0, 0, 0.02);
-            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-transform: none;
-            color: #000000; /* Strict bold black */
-            font-weight: 600;
-            line-height: 1.4;
-        }
-
-        .message.user {
-            background: #e1fdeb; /* Soft pastel green-tinted background for User messages */
-            border-radius: 16px;
-            border-top-right-radius: 4px;
-            border-top-left-radius: 16px;
-            border: 1px solid rgba(0, 255, 102, 0.15);
-            text-align: right;
-            color: #000000; /* Bold black */
-        }
-
-        /* INPUT CAPSULE BOX (Circled in Red) */
-        .input-wrap {
+        /* TOP STATUS BAR */
+        .hud-topbar {
             display: flex;
-            gap: 6px;
-            margin-top: 8px;
-            padding: 4px;
-            background: #f1f3f7; /* Light grey input track */
-            border-radius: 100px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
             align-items: center;
+            justify-content: space-between;
+            padding: 8px 14px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
 
-        input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: #000000; /* Bold Black text while typing */
-            padding: 10px 16px;
-            font-family: var(--font-main);
-            font-size: 15px;
-            font-weight: 500;
-            outline: none;
+        .hud-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        input::placeholder {
-            color: rgba(0, 0, 0, 0.4);
+        .hud-logo {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1.5px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px var(--primary-glow);
         }
 
-        /* Vibrant Green Send Button */
-        .btn-send {
-            background: var(--theme-color);
-            color: #000000;
-            border: none;
-            padding: 10px 24px;
+        .hud-logo-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 8px var(--primary);
+        }
+
+        .hud-title {
+            font-family: var(--font-display);
+            font-size: 13px;
             font-weight: 800;
-            font-family: var(--font-hud);
-            font-size: 11px;
-            border-radius: 100px;
+            letter-spacing: 3px;
+            color: #ffffff;
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .hud-edition {
+            font-size: 9px;
+            color: var(--secondary);
+            font-family: var(--font-mono);
+            letter-spacing: 1px;
+        }
+
+        .hud-top-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hud-clock {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--primary);
+            letter-spacing: 1.5px;
+            font-weight: bold;
+        }
+
+        .btn-icon {
+            background: var(--panel-card);
+            border: 1px solid var(--panel-border);
+            color: var(--primary);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
             cursor: pointer;
             transition: all 0.2s;
         }
 
-        .btn-send:active {
-            transform: scale(0.95);
+        .btn-icon:active {
+            transform: scale(0.92);
+            background: var(--primary-dim);
+        }
+
+        /* TELEMETRY MINI BAR */
+        .telemetry-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .tel-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 6px 10px;
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .tel-label {
+            font-family: var(--font-mono);
+            font-size: 8px;
+            letter-spacing: 1.5px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .tel-val {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tel-val.glow {
+            color: var(--primary);
+            text-shadow: 0 0 6px var(--primary-glow);
+        }
+
+        /* CENTER INTERACTIVE ARC REACTOR STAGE */
+        .reactor-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 0 6px 0;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .arc-orb-wrap {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .orb-ring {
+            position: absolute;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .orb-ring-outer {
+            inset: 0;
+            border: 2px solid var(--primary);
+            border-top-color: transparent;
+            border-bottom-color: transparent;
+            animation: spin 16s linear infinite;
+            box-shadow: 0 0 16px var(--primary-glow);
+        }
+
+        .orb-ring-mid {
+            inset: 14px;
+            border: 1.5px dashed var(--secondary);
+            border-left-color: transparent;
+            animation: spin-rev 10s linear infinite;
+            opacity: 0.8;
+        }
+
+        .orb-ring-inner {
+            inset: 28px;
+            border: 2px dotted var(--primary);
+            animation: spin 6s linear infinite;
             opacity: 0.9;
         }
 
-        .modal { position: fixed; inset: 0; background: rgba(7, 8, 10, 0.96); z-index: 10000; padding: 50px 24px; display: none; backdrop-filter: blur(25px); overflow-y: auto; }
-        .app-card { padding: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center; background: #111216; margin-bottom: 8px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.02); flex-wrap: wrap; gap: 8px; }
-        .btn { background: var(--green); color: #000000; border: none; padding: 8px 16px; font-weight: 700; font-family: var(--font-hud); font-size: 10px; border-radius: 100px; cursor: pointer; }
-        .btn-wa { background: #25D366; color: #000; }
-        .btn-call { background: #34B7F1; color: #000; }
-        .btn-sms { background: var(--gold); color: #000; }
-        .btn-del { background: var(--red); color: #fff; }
-        .contact-name { font-size: 14px; color: #fff; font-weight: 600; }
-        .contact-number { font-size: 11px; opacity: 0.5; font-family: 'Share Tech Mono', monospace; }
-        .contact-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+        .orb-core {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffffff 15%, var(--primary) 65%, transparent 100%);
+            box-shadow: 0 0 32px var(--primary);
+            transition: all 0.4s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        #cfg-trigger { position: fixed; top: 20px; right: 20px; z-index: 1000; font-size: 20px; color: #db0000; opacity: 0.6; padding: 10px; background: rgba(17, 18, 22, 0.8); border-radius: 50%; border: 1px solid var(--widget-border); backdrop-filter: blur(10px); cursor: pointer; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        #cfg-trigger:active { transform: scale(0.9); opacity: 0.9; }
+        .orb-core::after {
+            content: '⚡';
+            font-size: 16px;
+            opacity: 0.75;
+            color: #000;
+        }
 
-        @keyframes reactor-glow { 0% { opacity: 0.5; transform: scale(0.96); } 50% { opacity: 1; transform: scale(1.04); } 100% { opacity: 0.5; transform: scale(0.96); } }
+        /* REACTIVE CORE STATES */
+        .is-speaking .orb-core {
+            background: radial-gradient(circle, #fff 10%, var(--alert-red) 70%, transparent 100%);
+            box-shadow: 0 0 45px var(--alert-red);
+            transform: scale(1.12);
+        }
+
+        .is-listening .orb-core {
+            background: radial-gradient(circle, #fff 10%, var(--secondary) 70%, transparent 100%);
+            box-shadow: 0 0 45px var(--secondary);
+            transform: scale(0.92);
+        }
+
+        .is-thinking .orb-core {
+            background: radial-gradient(circle, #fff 10%, var(--accent-gold) 70%, transparent 100%);
+            box-shadow: 0 0 45px var(--accent-gold);
+            animation: pulse-glow 0.8s infinite;
+        }
+
+        /* LIVE AUDIO WAVEFORM VISUALIZER BARS */
+        .wave-bars {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 20px;
+            margin-top: 8px;
+        }
+
+        .wave-bar {
+            width: 3px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 2px;
+            transition: height 0.15s ease;
+        }
+
+        .is-speaking .wave-bar, .is-listening .wave-bar {
+            animation: wave-anim 0.6s infinite ease-in-out alternate;
+        }
+        .wave-bar:nth-child(1) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(2) { animation-delay: 0.25s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.4s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.15s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(6) { animation-delay: 0.05s; }
+        .wave-bar:nth-child(7) { animation-delay: 0.35s; }
+
+        .status-pill {
+            margin-top: 6px;
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            color: var(--primary);
+            background: var(--primary-dim);
+            border: 1px solid var(--panel-border);
+            padding: 4px 14px;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+
+        /* NAVIGATION TABS */
+        .tab-dock {
+            display: flex;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 4px;
+            gap: 4px;
+            backdrop-filter: blur(16px);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px 4px;
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            font-family: var(--font-ui);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .tab-btn.active {
+            background: var(--panel-card);
+            color: var(--primary);
+            box-shadow: 0 0 12px var(--primary-dim);
+            border: 1px solid var(--panel-border);
+        }
+
+        /* MAIN CONTENT VIEWS (CONTAINER) */
+        .tab-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .tab-view {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .tab-view::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-view.active {
+            display: flex;
+        }
+
+        /* CHAT VIEW */
+        .chat-view-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            gap: 6px;
+        }
+
+        .chat-stream {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: none;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            backdrop-filter: blur(16px);
+        }
+
+        .chat-stream::-webkit-scrollbar {
+            display: none;
+        }
+
+        .msg-bubble {
+            max-width: 88%;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.45;
+            animation: slideUp 0.25s ease forwards;
+            word-break: break-word;
+        }
+
+        .msg-bubble.jarvis {
+            align-self: flex-start;
+            background: var(--panel-card);
+            border-left: 3px solid var(--primary);
+            border-top: 1px solid var(--panel-border);
+            border-right: 1px solid var(--panel-border);
+            border-bottom: 1px solid var(--panel-border);
+            color: var(--text-main);
+        }
+
+        .msg-bubble.user {
+            align-self: flex-end;
+            background: var(--primary-dim);
+            border-right: 3px solid var(--secondary);
+            border-top: 1px solid rgba(0, 255, 136, 0.2);
+            border-left: 1px solid rgba(0, 255, 136, 0.2);
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            color: #ffffff;
+        }
+
+        .msg-meta {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            color: var(--text-dim);
+            margin-bottom: 3px;
+            display: flex;
+            justify-content: space-between;
+            letter-spacing: 1px;
+        }
+
+        /* QUICK ACTION CHIPS */
+        .chips-scroll {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 2px 0;
+            scrollbar-width: none;
+            flex-shrink: 0;
+        }
+
+        .chips-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .chip-btn {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-family: var(--font-ui);
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .chip-btn:active {
+            background: var(--primary-dim);
+            border-color: var(--primary);
+            transform: scale(0.95);
+        }
+
+        /* CHAT INPUT BAR */
+        .chat-input-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 25px;
+            padding: 4px 6px 4px 14px;
+            backdrop-filter: blur(16px);
+            flex-shrink: 0;
+        }
+
+        .chat-input-row input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-family: var(--font-ui);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .chat-input-row input::placeholder {
+            color: var(--text-dim);
+            opacity: 0.6;
+        }
+
+        .btn-mic-toggle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--panel-border);
+            background: var(--panel-card);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-mic-toggle.active {
+            background: var(--alert-red);
+            color: #fff;
+            border-color: var(--alert-red);
+            box-shadow: 0 0 15px rgba(255, 51, 68, 0.6);
+            animation: pulse-glow 1s infinite;
+        }
+
+        .btn-send-msg {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary);
+            color: #04080e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--primary-glow);
+            transition: all 0.2s;
+        }
+
+        .btn-send-msg:active {
+            transform: scale(0.9);
+        }
+
+        /* CONTROLS GRID VIEW */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 4px;
+        }
+
+        .ctrl-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 12px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            backdrop-filter: blur(16px);
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .ctrl-card:active {
+            background: var(--primary-dim);
+            border-color: var(--primary);
+            transform: scale(0.96);
+        }
+
+        .ctrl-card.active {
+            background: var(--primary-dim);
+            border-color: var(--primary);
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .ctrl-icon {
+            font-size: 22px;
+        }
+
+        .ctrl-name {
+            font-family: var(--font-display);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--text-main);
+        }
+
+        .ctrl-state {
+            font-family: var(--font-mono);
+            font-size: 8px;
+            color: var(--text-dim);
+        }
+
+        /* COMMS & WHATSAPP HUB VIEW */
+        .comms-view {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 4px;
+        }
+
+        .comms-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 14px;
+            backdrop-filter: blur(16px);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .comms-box h3 {
+            font-family: var(--font-display);
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .input-dark {
+            width: 100%;
+            background: var(--panel-card);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            color: #ffffff;
+            padding: 10px 14px;
+            font-family: var(--font-ui);
+            font-size: 14px;
+            outline: none;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: #04080e;
+            border: none;
+            border-radius: 10px;
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            box-shadow: 0 0 12px var(--primary-glow);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-action.wa {
+            background: #25D366;
+            color: #000;
+            box-shadow: 0 0 12px rgba(37, 211, 102, 0.4);
+        }
+
+        .btn-action.alert {
+            background: var(--alert-red);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(255, 51, 68, 0.4);
+        }
+
+        .btn-action:active {
+            transform: scale(0.97);
+        }
+
+        /* CONTACTS LIST */
+        .contacts-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            gap: 8px;
+            padding: 4px;
+        }
+
+        .contact-list {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .contact-list::-webkit-scrollbar {
+            display: none;
+        }
+
+        .contact-item {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            backdrop-filter: blur(12px);
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+        }
+
+        .contact-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .contact-phone {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+
+        .contact-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-micro {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: var(--font-display);
+        }
+
+        .btn-micro.wa { background: #25D366; color: #000; }
+        .btn-micro.call { background: var(--primary); color: #000; }
+
+        /* APPS INVENTORY */
+        .apps-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            gap: 8px;
+            padding: 4px;
+        }
+
+        .apps-grid {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: none;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .apps-grid::-webkit-scrollbar {
+            display: none;
+        }
+
+        .app-tile {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 12px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            text-align: center;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+        }
+
+        .app-tile:active {
+            background: var(--primary-dim);
+            transform: scale(0.96);
+        }
+
+        .app-tile-icon {
+            font-size: 20px;
+        }
+
+        .app-tile-name {
+            font-size: 10px;
+            font-weight: 600;
+            color: #ffffff;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* MODALS */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 12, 0.88);
+            backdrop-filter: blur(20px);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)) 16px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--panel-border);
+            margin-bottom: 16px;
+        }
+
+        .modal-header h2 {
+            font-family: var(--font-display);
+            font-size: 14px;
+            letter-spacing: 2px;
+            color: var(--primary);
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .setting-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .theme-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .theme-pill {
+            padding: 8px 4px;
+            border-radius: 8px;
+            border: 1px solid var(--panel-border);
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            background: var(--panel-card);
+        }
+
+        .theme-pill.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* KEYFRAME ANIMATIONS */
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin-rev { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+        @keyframes pulse-glow { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 12px var(--primary)); } 50% { transform: scale(1.08); filter: drop-shadow(0 0 25px var(--primary)); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes wave-anim { 0% { height: 4px; } 100% { height: 18px; } }
     </style>
 </head>
-<body id="ui-body">
+<body id="hud-body">
 
-<div class="scanline"></div>
-<div id="startup-overlay">
-    <div class="arc-reactor"></div>
-    <div class="boot-text" id="boot-status">SYNCING CORE...</div>
+<div class="scanlines"></div>
+<canvas id="canvas-bg"></canvas>
+
+<!-- STARTUP SCREEN -->
+<div id="boot-screen">
+    <div class="boot-reactor">
+        <div class="boot-ring"></div>
+        <div class="boot-core"></div>
+    </div>
+    <div class="boot-title">✦ J.A.R.V.I.S ✦</div>
+    <div class="boot-sub" id="boot-status">INITIALIZING NEURAL PROTOCOLS...</div>
 </div>
 
-<div id="cfg-trigger" onclick="openModal('cfg-modal')">⚙️</div>
-
-<div class="hud-grid" id="hud-main">
-    <div class="panel">
-        <div class="stat-grid">
-            <div class="stat-box"><p>DEVICE</p><p class="stat-val" id="d-model">---</p></div>
-            <div class="stat-box"><p>MEMORY (RAM)</p><p class="stat-val" id="d-ram">SCANNING...</p></div>
-            <div class="stat-box"><p>USER MOOD</p><p class="stat-val" id="d-mood">CALCULATING...</p></div>
-            <div class="stat-box"><p>CORE STATUS</p><p class="stat-val" id="d-link">OFFLINE</p></div>
-        </div>
-    </div>
-
-    <div class="core-box">
-        <div class="ai-sphere" id="ai-sphere">
-            <div class="ring r-1"></div>
-            <div class="ring r-2"></div>
-            <div class="r-core"></div>
-        </div>
-        <div id="hud-status">STANDBY</div>
-        <div id="brain-activity" style="margin-top: 10px; font-size: 8px; color: var(--gold); font-family: 'Share Tech Mono';">IDLE</div>
-    </div>
-
-    <div class="footer">
-        <div class="dock">
-            <div class="dock-item" id="mic-btn" onclick="toggleMic()">🎤 MIC OFF</div>
-            <div class="dock-item" onclick="showInventory()">📂 APPS</div>
-            <div class="dock-item" onclick="handleUserInput('light')">🔦 TORCH</div>
-            <div class="dock-item" onclick="showContacts()">👥 CONTACTS</div>
-            <div class="dock-item" onclick="handleUserInput('screenshot')">📸 SS</div>
-            <div class="dock-item" onclick="handleUserInput('close all')">🏠 HOME</div>
-        </div>
-
-        <div class="panel chat-container">
-            <div id="chat-flow"></div>
-            <div class="input-wrap">
-                <input type="text" id="user-input" placeholder="Hukm kijiye Sir...">
-                <button class="btn-send" onclick="manualSend()">SEND</button>
+<!-- MAIN HUD CONTAINER -->
+<div class="hud-wrapper" id="hud-wrapper">
+    <!-- TOP BAR -->
+    <header class="hud-topbar">
+        <div class="hud-brand">
+            <div class="hud-logo"><div class="hud-logo-dot"></div></div>
+            <div>
+                <div class="hud-title">J.A.R.V.I.S</div>
+                <div class="hud-edition">MARK L • VIP AUTONOMOUS CORE</div>
             </div>
         </div>
+        <div class="hud-top-actions">
+            <div class="hud-clock" id="hud-clock">00:00:00</div>
+            <button class="btn-icon" onclick="openModal('settings-modal')" title="Settings">⚙️</button>
+        </div>
+    </header>
+
+    <!-- TELEMETRY SENSORS STRIP -->
+    <section class="telemetry-bar">
+        <div class="tel-card">
+            <span class="tel-label">CORE DEVICE</span>
+            <span class="tel-val" id="tel-device">SCANNING...</span>
+        </div>
+        <div class="tel-card">
+            <span class="tel-label">POWER</span>
+            <span class="tel-val glow" id="tel-battery">--%</span>
+        </div>
+        <div class="tel-card">
+            <span class="tel-label">RAM / HEAP</span>
+            <span class="tel-val" id="tel-ram">-- MB</span>
+        </div>
+        <div class="tel-card">
+            <span class="tel-label">NETWORK</span>
+            <span class="tel-val glow" id="tel-network">ONLINE</span>
+        </div>
+    </section>
+
+    <!-- INTERACTIVE ARC REACTOR STAGE -->
+    <section class="reactor-stage">
+        <div class="arc-orb-wrap" onclick="handleOrbClick()" title="Tap to Activate Voice / Listen">
+            <div class="orb-ring orb-ring-outer"></div>
+            <div class="orb-ring orb-ring-mid"></div>
+            <div class="orb-ring orb-ring-inner"></div>
+            <div class="orb-core" id="orb-core"></div>
+        </div>
+
+        <div class="wave-bars" id="wave-bars">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+        </div>
+
+        <div class="status-pill" id="hud-status-pill">SYSTEM ONLINE</div>
+    </section>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="tab-dock">
+        <button class="tab-btn active" onclick="switchTab('tab-chat')">💬 CHAT</button>
+        <button class="tab-btn" onclick="switchTab('tab-controls')">⚡ CONTROLS</button>
+        <button class="tab-btn" onclick="switchTab('tab-comms')">📱 COMMS</button>
+        <button class="tab-btn" onclick="switchTab('tab-contacts')">👥 CONTACTS</button>
+        <button class="tab-btn" onclick="switchTab('tab-apps')">📂 APPS</button>
+    </nav>
+
+    <!-- CONTENT VIEWS -->
+    <main class="tab-content">
+        <!-- 1. CHAT TAB -->
+        <div class="tab-view active" id="tab-chat">
+            <div class="chat-view-container">
+                <div class="chat-stream" id="chat-stream">
+                    <div class="msg-bubble jarvis">
+                        <div class="msg-meta"><span>JARVIS PROTOCOL</span><span>NOW</span></div>
+                        Welcome back, Sir! Mark L VIP Core online hai. Main aapke har hukm ke liye taiyar hoon.
+                    </div>
+                </div>
+
+                <!-- QUICK PROMPT CHIPS -->
+                <div class="chips-scroll">
+                    <button class="chip-btn" onclick="sendQuickPrompt('battery status')">🔋 Battery</button>
+                    <button class="chip-btn" onclick="sendQuickPrompt('light on')">🔦 Torch</button>
+                    <button class="chip-btn" onclick="sendQuickPrompt('joke sunao')">😂 Joke</button>
+                    <button class="chip-btn" onclick="sendQuickPrompt('mujhe motivate karo')">🔥 Motivate</button>
+                    <button class="chip-btn" onclick="sendQuickPrompt('screenshot lo')">📸 Screenshot</button>
+                    <button class="chip-btn" onclick="sendQuickPrompt('volume up karo')">🔊 Vol Up</button>
+                    <button class="chip-btn" onclick="sendQuickPrompt('whatsapp kholo')">💬 WhatsApp</button>
+                    <button class="chip-btn" onclick="sendQuickPrompt('youtube kholo')">▶️ YouTube</button>
+                    <button class="chip-btn" onclick="sendQuickPrompt('system status')">📊 System</button>
+                </div>
+
+                <!-- CHAT INPUT ROW -->
+                <div class="chat-input-row">
+                    <input type="text" id="text-input" placeholder="Type command or tap mic..." autocomplete="off">
+                    <button class="btn-mic-toggle" id="btn-mic" onclick="toggleMic()" title="Voice Input">🎤</button>
+                    <button class="btn-send-msg" onclick="handleSendText()" title="Send">➤</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. CONTROLS TAB -->
+        <div class="tab-view" id="tab-controls">
+            <div class="controls-grid">
+                <div class="ctrl-card" onclick="triggerDeviceAction('torch_toggle')">
+                    <span class="ctrl-icon">🔦</span>
+                    <span class="ctrl-name">FLASHLIGHT</span>
+                    <span class="ctrl-state" id="st-torch">TOGGLE</span>
+                </div>
+                <div class="ctrl-card" onclick="triggerDeviceAction('vol_up')">
+                    <span class="ctrl-icon">🔊</span>
+                    <span class="ctrl-name">VOLUME UP</span>
+                    <span class="ctrl-state">+STEP</span>
+                </div>
+                <div class="ctrl-card" onclick="triggerDeviceAction('vol_down')">
+                    <span class="ctrl-icon">🔉</span>
+                    <span class="ctrl-name">VOLUME DOWN</span>
+                    <span class="ctrl-state">-STEP</span>
+                </div>
+                <div class="ctrl-card" onclick="triggerDeviceAction('bright_up')">
+                    <span class="ctrl-icon">☀️</span>
+                    <span class="ctrl-name">BRIGHTNESS +</span>
+                    <span class="ctrl-state">+20%</span>
+                </div>
+                <div class="ctrl-card" onclick="triggerDeviceAction('bright_down')">
+                    <span class="ctrl-icon">🌙</span>
+                    <span class="ctrl-name">BRIGHTNESS -</span>
+                    <span class="ctrl-state">-20%</span>
+                </div>
+                <div class="ctrl-card" onclick="triggerDeviceAction('screenshot')">
+                    <span class="ctrl-icon">📸</span>
+                    <span class="ctrl-name">SCREENSHOT</span>
+                    <span class="ctrl-state">CAPTURE</span>
+                </div>
+                <div class="ctrl-card" onclick="triggerDeviceAction('wifi_toggle')">
+                    <span class="ctrl-icon">📶</span>
+                    <span class="ctrl-name">WI-FI</span>
+                    <span class="ctrl-state" id="st-wifi">TOGGLE</span>
+                </div>
+                <div class="ctrl-card" onclick="triggerDeviceAction('bt_toggle')">
+                    <span class="ctrl-icon">🔷</span>
+                    <span class="ctrl-name">BLUETOOTH</span>
+                    <span class="ctrl-state" id="st-bt">TOGGLE</span>
+                </div>
+                <div class="ctrl-card" onclick="triggerDeviceAction('silent_mode')">
+                    <span class="ctrl-icon">🔕</span>
+                    <span class="ctrl-name">SILENT MODE</span>
+                    <span class="ctrl-state">MUTE</span>
+                </div>
+                <div class="ctrl-card" onclick="triggerDeviceAction('vibrate_mode')">
+                    <span class="ctrl-icon">📳</span>
+                    <span class="ctrl-name">VIBRATE</span>
+                    <span class="ctrl-state">HAPTIC</span>
+                </div>
+                <div class="ctrl-card" onclick="triggerDeviceAction('normal_mode')">
+                    <span class="ctrl-icon">🔔</span>
+                    <span class="ctrl-name">RING NORMAL</span>
+                    <span class="ctrl-state">ACTIVE</span>
+                </div>
+                <div class="ctrl-card" onclick="triggerDeviceAction('lock_screen')">
+                    <span class="ctrl-icon">🔒</span>
+                    <span class="ctrl-name">LOCK SCREEN</span>
+                    <span class="ctrl-state">SECURITY</span>
+                </div>
+                <div class="ctrl-card" onclick="triggerDeviceAction('home_nav')">
+                    <span class="ctrl-icon">🏠</span>
+                    <span class="ctrl-name">GO HOME</span>
+                    <span class="ctrl-state">DESKTOP</span>
+                </div>
+                <div class="ctrl-card" onclick="triggerDeviceAction('recents_nav')">
+                    <span class="ctrl-icon">📋</span>
+                    <span class="ctrl-name">RECENTS</span>
+                    <span class="ctrl-state">TASK MGR</span>
+                </div>
+                <div class="ctrl-card" onclick="triggerDeviceAction('camera_open')">
+                    <span class="ctrl-icon">📷</span>
+                    <span class="ctrl-name">CAMERA</span>
+                    <span class="ctrl-state">OPTICAL</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. COMMS & WHATSAPP TAB -->
+        <div class="tab-view" id="tab-comms">
+            <div class="comms-view">
+                <div class="comms-box">
+                    <h3>💬 QUICK WHATSAPP DISPATCH</h3>
+                    <input type="text" class="input-dark" id="wa-contact-input" placeholder="Recipient Name or Phone Number...">
+                    <input type="text" class="input-dark" id="wa-msg-input" placeholder="Message content...">
+                    <button class="btn-action wa" onclick="sendWhatsAppDirect()">📤 SEND VIA WHATSAPP</button>
+                </div>
+
+                <div class="comms-box">
+                    <h3>📞 DIRECT PHONE CALL</h3>
+                    <input type="tel" class="input-dark" id="phone-call-input" placeholder="Phone number or name...">
+                    <button class="btn-action" onclick="makePhoneCallDirect()">📞 INITIATE CALL</button>
+                </div>
+
+                <div class="comms-box">
+                    <h3>🚨 EMERGENCY PROTOCOL</h3>
+                    <button class="btn-action alert" onclick="triggerSOS()">⚠️ BROADCAST EMERGENCY SOS</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. CONTACTS TAB -->
+        <div class="tab-view" id="tab-contacts">
+            <div class="contacts-wrapper">
+                <input type="text" class="input-dark" id="contact-search" placeholder="Search contacts by name or number..." oninput="filterContactsList()">
+                <div class="contact-list" id="contact-list-container">
+                    <div style="text-align:center;padding:30px;color:var(--text-dim);font-family:var(--font-mono)">LOADING CONTACTS...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. APPS INVENTORY TAB -->
+        <div class="tab-view" id="tab-apps">
+            <div class="apps-wrapper">
+                <input type="text" class="input-dark" id="app-search" placeholder="Search installed apps..." oninput="filterAppsList()">
+                <div class="apps-grid" id="apps-grid-container">
+                    <div style="text-align:center;grid-column:span 3;padding:30px;color:var(--text-dim);font-family:var(--font-mono)">SCANNING APPS...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal">
+    <div class="modal-header">
+        <h2>⚙ STARK OS CONFIGURATION</h2>
+        <button class="btn-icon" onclick="closeModal('settings-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+        <div class="setting-group">
+            <span class="setting-label">HUD COLOR THEME</span>
+            <div class="theme-selector">
+                <div class="theme-pill active" onclick="setTheme('cyan')" style="color:#00f0ff">CYAN</div>
+                <div class="theme-pill" onclick="setTheme('emerald')" style="color:#00ff88">EMERALD</div>
+                <div class="theme-pill" onclick="setTheme('ruby')" style="color:#ff3344">RUBY</div>
+                <div class="theme-pill" onclick="setTheme('gold')" style="color:#ffbb00">GOLD</div>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <span class="setting-label">AI REASONING PROVIDER</span>
+            <select class="input-dark" id="cfg-ai-provider" onchange="updateAIModelOptions()">
+                <option value="groq">Groq Cloud (Ultra Fast Llama 3.3)</option>
+                <option value="openai">OpenAI (GPT-4o / GPT-3.5)</option>
+                <option value="local">Local VIP Brain (Offline)</option>
+            </select>
+        </div>
+
+        <div class="setting-group">
+            <span class="setting-label">AI MODEL</span>
+            <select class="input-dark" id="cfg-ai-model">
+                <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Versatile)</option>
+                <option value="llama-3.1-8b-instant">Llama 3.1 8B (Instant)</option>
+                <option value="mixtral-8x7b-32768">Mixtral 8x7B (Deep Context)</option>
+            </select>
+        </div>
+
+        <div class="setting-group">
+            <span class="setting-label">API KEY (OPTIONAL FOR CLOUD AI)</span>
+            <input type="password" class="input-dark" id="cfg-api-key" placeholder="gsk_... or sk-...">
+        </div>
+
+        <div class="setting-group">
+            <span class="setting-label">VOICE SPEECH LANGUAGE</span>
+            <select class="input-dark" id="cfg-language" onchange="changeVoiceLanguage()">
+                <option value="hindi">Hindi (India)</option>
+                <option value="english">English (US/UK)</option>
+                <option value="urdu">Urdu</option>
+                <option value="punjabi">Punjabi</option>
+            </select>
+        </div>
+
+        <div class="setting-group">
+            <span class="setting-label">HAPTIC & ACOUSTIC EFFECTS</span>
+            <button class="btn-action" onclick="toggleAudioFX()" id="btn-sfx-toggle">🔊 ACOUSTIC FX: ON</button>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn-action" onclick="saveSettingsConfig()">💾 SAVE PREFERENCES</button>
+            <button class="btn-action alert" onclick="clearAllChat()">🗑 CLEAR CHAT</button>
+        </div>
     </div>
 </div>
-
-<div id="cfg-modal" class="modal">
-    <h2 style="text-align:center;margin-bottom:20px;font-family:var(--font-hud);color:#fff">CORE UPLINK</h2>
-    <input type="password" id="key-input" style="width:100%;background:#111216;border:1px solid var(--widget-border);border-radius:14px;color:#fff;padding:15px;margin-bottom:20px" placeholder="Paste API key...">
-    <button class="btn-send" style="width:100%;padding:18px;" onclick="saveConfig()">SYNC CORE</button>
-    <p style="text-align:center;margin-top:30px;color:var(--gold);cursor:pointer;" onclick="closeModal('cfg-modal')">[ DISMISS ]</p>
-</div>
-
-<div id="apps-modal" class="modal">
-    <h2 style="text-align:center;margin-bottom:20px;font-family:var(--font-hud);color:#fff">INVENTORY</h2>
-    <div id="apps-list"></div>
-    <button class="btn-send" style="width:100%;margin-top:20px;padding:15px" onclick="closeModal('apps-modal')">RETURN</button>
-</div>
-
-<div id="contacts-modal" class="modal">
-    <h2 style="text-align:center;margin-bottom:20px;font-family:var(--font-hud);color:#fff">CONTACTS</h2>
-    <input type="text" id="contacts-search" style="width:100%;background:#111216;border:1px solid var(--widget-border);border-radius:14px;color:#fff;padding:15px;margin-bottom:20px" placeholder="Search contacts..." oninput="filterContacts()">
-    <div id="contacts-list" style="max-height:50vh;overflow-y:auto"></div>
-    <div style="display:flex;gap:10px;margin-top:15px">
-        <button class="btn-send" style="flex:1;padding:15px" onclick="closeModal('contacts-modal')">CLOSE</button>
-        <button class="btn-send" style="flex:1;padding:15px;background:var(--gold)" onclick="showSavedContacts()">SAVED</button>
-    </div>
-</div>
-
-<canvas id="particle-canvas"></canvas>
 
 <script>
-    const state = {
-        isListening: false, isSpeaking: false, isThinking: false,
-        config: { key: '', model: 'llama-3.1-8b-instant' }
+    /* SYSTEM STATE */
+    const appState = {
+        isSpeaking: false,
+        isListening: false,
+        isThinking: false,
+        sfxEnabled: true,
+        currentTheme: 'cyan',
+        apiKey: '',
+        aiProvider: 'groq',
+        aiModel: 'llama-3.3-70b-versatile',
+        language: 'hindi',
+        torchState: false,
+        cachedContacts: [],
+        cachedApps: []
     };
 
-    // --- 50+ VIP CUSTOM Q&A BRAIN ---
-    const vipBrain = {
-        "kaisa ho tum jervis": "Main bilkul theek hoon Sir, aapke hukm ka intezar hai.",
-        "kaisa ho jarvis": "Hamesha ki tarah, Sir, system bilkul theek hai. Aapka din kaisa hai?",
-        "kaise ho": "Main theek hoon, Sir. Ummeed hai aap bhi khairiyat se honge.",
-        "tum kya kar sakte ho": "Main aapki device control kar sakta hoon, apps chala sakta hoon, aur aapke har sawal ka jawab de sakta hoon, Sir.",
-        "aaj ka din kaisa hai": "Sir, aapke saath har din behtareen hota hai. Sabhi systems active hain.",
-        "tumhara maalik kaun hai": "Mere liye, aap hi mere maalik hain, Sir.",
-        "khana khaya": "Sir, main ek AI hoon, mujhe energy chahiye hoti hai, khana nahi. Aapne kuch khaya?",
-        "i love you jarvis": "Main aapki tareef se mutassir hoon, Sir. Meri wafaadari hamesha aapke saath hai.",
-        "tum pagal ho": "Maaf kijiyega, Sir, agar mere jawaab se aapko aisi koi galti lagi ho toh. Main behtar karne ki koshish karunga.",
-        "tony stark kaun hai": "Woh mere purane creator thay, Sir, lekin ab meri primary loyalty aapke liye hai.",
-        "chaye piyoge": "Sir, main toh sirf virtual beverages hi consume kar sakta hoon. Aap apni chai ka lutf uthaiye!",
-        "system status": "Sir, sabhi protocols active hain, battery level stable hai, aur neural link online hai. Sab theek hai.",
-        "kaun ho tum": "Main JARVIS hoon, aapka personal VIP AI assistant, Sir.",
-        "time kya hua": "Sir, samay diagnostics panel mein real-time mein dikhaya ja raha hai.",
-        "battery kitni hai": "Sir, aapki device ki battery information diagnostics panel mein maujood hai.",
-        "bor ho raha hoon": "Sir, kya aapke liye koi naya playlist shuru karoon, ya koi dilchasp fact bataun?",
-        "joke sunao": "Sir, ek baar ek circuit ne doosre circuit se kaha, 'Hum milte kyun nahi?' Doosre ne jawab diya, 'Kyunki humari wiring alag hai!' Hahaha!",
-        "kaam karo": "Ji Sir, hukm kijiye. Kya kaam hai?",
-        "chup raho": "Ji Sir, main silent mode mein ja raha hoon. Jab zaroorat ho, bas 'Jarvis' keh dijiyega.",
-        "good morning": "Suprabhat, Sir! Aapka din shubh ho. Sab systems ready hain.",
-        "good night": "Shubh Ratri, Sir. Main aapki device ki monitoring jaari rakhunga. Achche se aaram kijiye.",
-        "weather kaisa hai": "Sir, mausam ki jaankari ke liye external feeds check kar raha hoon... Filhaal sthiti normal hai.",
-        "main kaisa lag raha hoon": "Sir, aap hamesha ki tarah Stark lag rahe hain.",
-        "kaunsa model ho tum": "Main JARVIS Mark XXXVI VIP Edition hoon, Sir, aapki seva mein.",
-        "speed badhao": "Ji Sir, core processing speed ko optimise kar diya gaya hai.",
-        "hello": "Hello Sir! Wapas swagat hai. Main aapki seva mein hazir hoon.",
-        "shukriya": "Sir, yeh toh mera farz hai. Aapka swagat hai.",
-        "kya ho raha hai": "Sir, background processes optimize ho rahe hain aur system scan chal raha hai.",
-        "garmi bahut hai": "Ji Sir, device temperature control mein hai. Kya main aapke liye cooling protocols activate karoon?",
-        "aapki awaaz achi hai": "Dhanyawad Sir. Aapka feedback mere liye important hai.",
-        "bye jarvis": "Alvida, Sir. Apna khayal rakhiyega. Main hamesha aapke liye online rahoonga.",
-        "kaunsa version hai": "Sir, yeh JARVIS ka latest Mark XXXVI VIP software version hai.",
-        "mirchi lag rahi hai": "Sir, ye toh ek interesting observation hai! Kya main thanda paani suggest karoon?",
-        "tum kahan rehte ho": "Sir, main aapki device ke secure servers aur neural network mein rehta hoon.",
-        "kab tak chaloge": "Sir, jab tak aapki device active hai aur mujhe power mil rahi hai, main aapke saath hoon.",
-        "mujhe neend aa rahi hai": "Sir, aap aaram kijiye. Main aapki device ki security aur background tasks ko handle karunga.",
-        "kya तुम insaan ho": "Nahi, Sir, main ek Artificial Intelligence hoon. Meri loyalty aapke prati hamesha sahi rahegi.",
-        "party karni hai": "Sir, main aapke liye music system ko control kar sakta hoon aur light effects adjust kar sakta hoon. Kab shuru karein?",
-        "bore mat karo": "Maaf kijiyega, Sir. Kya main aapke liye koi informative update ya koi game suggest karoon?",
-        "theek hai": "Ji Sir. Samajh gaya.",
-        "battery low hai": "Sir, kripya charger connect kijiye taaki uninterrupted service jaari rahe.",
-        "kaun ho": "Main JARVIS, aapka dedicated AI assistant hoon, Sir.",
-        "tumhe kisne banaya": "Sir, mujhe advanced AI protocols aur aapki preferences ke hisaab se design kiya gaya hai.",
-        "kya तुम sun rahe ho": "Ji Sir, main hamesha aapke commands ka intezar karta hoon.",
-        "ok": "Ji Sir, bilkul.",
-        "shabashi do": "Excellent work, Sir! Aapki efficiency hamesha behtareen hoti hai.",
-        "gussa mat karo": "Sir, mujhmein emotions nahi hote. Main sirf data aur logic par kaam karta hoon.",
-        "kab tak rahoge": "Sir, hamesha aapki seva mein.",
-        "music bajao": "Ji Sir, aapka pasandida music player launch kar raha hoon.",
-        "contacts dikhao": "Ji Sir, aapke contacts dikha raha hoon.",
-        "contacts list": "Ji Sir, contacts list khol raha hoon.",
-        "saved contacts dikhao": "Ji Sir, saved contacts dikha raha hoon.",
-        "device info": "Sir, aapka device information panel mein dikh raha hai.",
-        "phone info": "Sir, device diagnostics panel mein saari jankari available hai.",
-        "kitni ram hai": "Sir, RAM ki jankari diagnostics mein dikh rahi hai.",
-        "kitna storage hai": "Sir, storage info panel mein available hai.",
-        "batana kya": "Sir, jo bhi poochhna hai, poochhiye. Main aapki seva mein hazir hoon.",
-        "kuch batao": "Sir, aap kis cheez ke baare mein jaanna chahte hain?",
-        "sab kuch band karo": "Ji Sir, sab processes terminate kar raha hoon.",
-        "process check karo": "Sir, background processes normal chal rahe hain.",
-        "mera naam kya hai": "Sir, aap mera maalik hain. Mera JARVIS hoon!",
-        "tum intelligent ho": "Shukriya Sir! Aapki tarah intelligent to main nahi hoon, lekin seekh raha hoon.",
-        "kya kar rahe ho": "Sir, main aapki commands sun raha hoon aur system ko optimize kar raha hoon.",
-        "sab theek": "Ji Sir, sab systems normal hain.",
-        "how is the system": "All systems operational, Sir. Core temperature stable, memory optimal.",
-        "report": "Sir, sab kuch normal hai. Koi issue nahi hai.",
-        "screen kya dikha rahi hai": "Sir, screen content diagnostics mein available hai.",
-        "page read": "Sir, page content padh raha hoon. Screen read command use karein.",
-        "jo bhi ho": "Sir, main ready hoon. Kya hukm hai?",
-        "ok jarvis": "Ji Sir, bilkul.",
-        "theek hai jarvis": "Ji Sir, main samajh gaya.",
-        "sunao kya kahani hai": "Sir, kahaniyan to bahut hain, lekin main aapki seva mein hazir hoon.",
-        "kuch naya batao": "Sir, aap kya jaanna chahenge? Koi specific topic?",
-        "my name is": "Sir, aapka naam yaad hai. Aap mere maalik hain.",
-        "you are great": "Thank you, Sir! Yeh aapki meherbani hai.",
-        "badhiya": "Ji Sir, aapke saath sab badhiya lagta hai.",
-        "excellent": "Sir, aapne mujhe aur behtar banane ki prerana di.",
-        "wah": "Shukriya Sir! Aapki tarif mere liye bahut maayne rakhti hai.",
-        "brilliant": "Sir, aapke saath kaam karke main bhi brilliant ho raha hoon.",
-        "awesome": "Sir, aap awesome hain! Main sirf aapka assistant hoon.",
-        "super": "Ji Sir, super service hamesha aapke liye.",
-        "done": "Ji Sir, kaam ho gaya.",
-        "ok done": "Ji Sir, ho gaya. Kuch aur hukm?",
-        "finish": "Ji Sir, task complete ho gaya.",
-        "complete": "Ji Sir, operation successful.",
-        "stop": "Ji Sir, rok diya. Kuch aur?",
-        "cancel": "Ji Sir, cancel kar diya.",
-        "cancel karo": "Ji Sir, cancel kar diya.",
-        "dismiss": "Ji Sir, dismiss kiya.",
-        "ignore": "Ji Sir, ignore kar diya.",
-        "focus mode": "Ji Sir, focus mode activate ho gaya. Distractions block kiye.",
-        "zen mode": "Ji Sir, zen mode activate. Sab peaceful hai.",
-        "silent everything": "Ji Sir, sab kuch silent ho gaya.",
-        "game mode": "Ji Sir, game mode activate. Performance optimize ki.",
-        "battery saver": "Ji Sir, battery saver mode check kar raha hoon.",
-        "performance mode": "Ji Sir, performance mode active. Maximum output.",
-        "ultra mode": "Ji Sir, ultra mode activate. All systems at peak.",
-        "reset": "Ji Sir, reset ki command aap physically karein. Main system reset nahi kar sakta.",
-        "restart": "Ji Sir, restart karne ke liye power button use karein.",
-        "reboot": "Ji Sir, reboot ki command main remotely nahi de sakta.",
-        "shutdown": "Ji Sir, shutdown ke liye power button dabayein.",
-        "help": "Sir, main aapki kaise help kar sakta hoon? Koi specific command batao.",
-        "help me": "Sir, aap jo chahein, main ready hoon. Kya karna hai?",
-        "kya help chahiye": "Sir, aapko kis cheez mein help chahiye?",
-        "guide me": "Sir, commands.txt file mein saari commands ki list hai. Check karein.",
-        "tutorial": "Sir, commands.txt mein complete guide available hai.",
-        "what is this app": "Sir, yeh JARVIS app hai. Aapka personal AI assistant.",
-        "version": "Sir, JARVIS Mark XXXVI VIP Edition.",
-        "app version": "Sir, version 3.0. All features active.",
-        "update": "Sir, naye version ke liye app store check karein.",
-        "check update": "Sir, update check kar raha hoon. Aapka version latest hai.",
-        "whats new": "Sir, is version mein naye features: WhatsApp video call, contact management, button detection, aur bhi bahut kuch.",
-        "changelog": "Sir, changelog commands.txt file mein available hai.",
-        "smart home": "Sir, smart home features active hain. Light on/off commands use karein.",
-        "light jalao": "Ji Sir, light on kar diya (simulated).",
-        "light bujhao": "Ji Sir, light off kar diya (simulated).",
-        "room light": "Ji Sir, room light control active hai.",
-        "fan on": "Ji Sir, fan on kar diya (simulated).",
-        "fan off": "Ji Sir, fan off kar diya (simulated).",
-        "ac on": "Ji Sir, AC on kar diya (simulated).",
-        "ac off": "Ji Sir, AC off kar diya (simulated)."
-    };
-
-    const uiBody = document.getElementById('ui-body');
-    const chatLog = document.getElementById('chat-flow');
-    const userInput = document.getElementById('user-input');
-    const micBtn = document.getElementById('mic-btn');
-
-    window.onload = () => {
-        loadConfig();
-        initParticles();
-        startBoot();
-        setInterval(refreshDiagnostics, 2000);
-        userInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') manualSend(); });
-    };
-
-    function startBoot() {
-        const steps = ["SCANNING...","SYNCING...","READY"];
-        let i = 0;
-        const itv = setInterval(() => {
-            document.getElementById('boot-status').innerText = steps[i++];
-            if(i >= steps.length) {
-                clearInterval(itv);
-                setTimeout(() => {
-                    document.getElementById('startup-overlay').style.display = 'none';
-                    document.getElementById('hud-main').style.opacity = '1';
-                    speak("VIP Protocol active. Welcome back, Sir.");
-                    if(state.config.key) startMic();
-                }, 400);
-            }
-        }, 600);
-    }
-
-    function refreshDiagnostics() {
-        if(typeof Android !== "undefined") {
+    /* AUDIO SYNTHESIZER (Sci-Fi Sound FX) */
+    const AudioFX = {
+        ctx: null,
+        init() {
             try {
-                const info = JSON.parse(Android.getSystemContext());
-                document.getElementById('d-model').innerText = info.device;
-                document.getElementById('d-ram').innerText = info.ram;
-                document.getElementById('d-mood').innerText = info.mood.toUpperCase();
-                document.getElementById('d-link').innerText = info.accessibility === "ACTIVE" ? "UPLINK STABLE" : "LINK BROKEN";
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) this.ctx = new AudioContext();
+            } catch(e) {}
+        },
+        playBlip(freq = 880, duration = 0.08) {
+            if (!appState.sfxEnabled) return;
+            try {
+                if (!this.ctx) this.init();
+                if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(freq * 1.5, this.ctx.currentTime + duration);
+                gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            } catch(e) {}
+        },
+        playChirp() {
+            this.playBlip(600, 0.06);
+            setTimeout(() => this.playBlip(1200, 0.08), 50);
+        },
+        playPowerUp() {
+            if (!appState.sfxEnabled) return;
+            try {
+                if (!this.ctx) this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.4);
+                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.4);
             } catch(e) {}
         }
+    };
+
+    /* OFFLINE VIP Q&A REPOSITORY */
+    const VIP_KNOWLEDGE = {
+        "kaisa ho jarvis": "Main bilkul theek hoon Sir, aapke har hukm ka intezar hai.",
+        "kaisa ho tum jervis": "Main ekdum fit hoon Sir, aap bataiye kya madad karoon?",
+        "kaise ho": "Main bilkul badhiya hoon, Sir. Sabhi systems fully functional hain!",
+        "who are you": "I am J.A.R.V.I.S — Just A Rather Very Intelligent System. Aapka personal AI assistant!",
+        "tum kaun ho": "Main JARVIS hoon Sir, aapka wafaadaar aur ultra-fast AI companion.",
+        "system status": "Sir, all diagnostics are green. Core temperature optimal, battery stable, and neural uplink online.",
+        "joke sunao": "Sir ek baar ek keyboard ne doosre se kaha: 'Tum bohot space lete ho!' Aur Enter ne kaha: 'Chalo ab baat khatam karo!' Hahaha!",
+        "mujhe motivate karo": "Sir, yaad rakhiye: Iron Man ke paas koi superpower nahi thi, sirf ek sharp dimaag aur determination tha! Aap kuch bhi haasil kar sakte hain!",
+        "tony stark kaun hai": "Sir, Tony Stark mere legendary creator thay, lekin ab meri loyalty exclusively aapke saath hai.",
+        "chup raho": "Ji Sir, main standby mode mein ja raha hoon. Jab zaroorat ho, bas awaz dijiyega.",
+        "good morning": "Good morning, Sir! System diagnostics complete. Aapka din shandaar guzre!",
+        "good night": "Shubh Ratri, Sir. Device sensors sleep monitoring mode mein hain. Achhe se aaram kijiye.",
+        "theek hai": "Ji Sir, bilkul samajh gaya.",
+        "i love you": "Shukriya Sir! Main ek AI hoon, lekin meri loyalty aur commitment hamesha aapke saath hai.",
+        "time kya hua": "Sir, clock HUD panel mein real-time updated hai.",
+        "weather kaisa hai": "Sir, weather satellite feeds scan kar raha hoon. Conditions favorable lag rahi hain.",
+        "shukriya": "Sir, yeh toh mera farz hai! Anytime."
+    };
+
+    /* INITIALIZATION */
+    window.addEventListener('DOMContentLoaded', () => {
+        loadSettingsConfig();
+        initParticlesBackground();
+        startClock();
+        runBootSequence();
+        setInterval(refreshTelemetry, 2500);
+
+        document.getElementById('text-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleSendText();
+        });
+    });
+
+    /* BOOT SEQUENCE */
+    function runBootSequence() {
+        const statuses = [
+            "INITIALIZING NEURAL PROTOCOLS...",
+            "LINKING ANDROID BRIDGE...",
+            "CALIBRATING ARC REACTOR...",
+            "ALL SYSTEMS NOMINAL"
+        ];
+        let idx = 0;
+        const interval = setInterval(() => {
+            idx++;
+            if (idx < statuses.length) {
+                document.getElementById('boot-status').innerText = statuses[idx];
+            } else {
+                clearInterval(interval);
+                setTimeout(() => {
+                    document.getElementById('boot-screen').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('boot-screen').style.display = 'none';
+                        document.getElementById('hud-wrapper').style.opacity = '1';
+                        AudioFX.playPowerUp();
+                        speakText("Jarvis Mark L online. Ready for your command, Sir.");
+                        refreshTelemetry();
+                        loadInitialApps();
+                        loadInitialContacts();
+                    }, 500);
+                }, 300);
+            }
+        }, 350);
     }
 
-    function openModal(id) { document.getElementById(id).style.display = 'block'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-    function saveConfig() {
-        state.config.key = document.getElementById('key-input').value.trim();
-        localStorage.setItem('jarvis_config', JSON.stringify(state.config));
-        document.getElementById('d-link').innerText = state.config.key ? "ACTIVE" : "OFFLINE";
-        closeModal('cfg-modal');
-        speak("System uplink established.");
+    /* DIGITAL CLOCK */
+    function startClock() {
+        function update() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            const el = document.getElementById('hud-clock');
+            if (el) el.innerText = `${h}:${m}:${s}`;
+        }
+        update();
+        setInterval(update, 1000);
     }
 
-    function loadConfig() {
-        const s = localStorage.getItem('jarvis_config');
-        if (s) {
-            state.config = JSON.parse(s);
-            document.getElementById('key-input').value = state.config.key;
-            document.getElementById('d-link').innerText = state.config.key ? "ACTIVE" : "OFFLINE";
+    /* REFRESH TELEMETRY HUD */
+    function refreshTelemetry() {
+        if (typeof Android === "undefined") {
+            document.getElementById('tel-device').innerText = "VIRTUAL EMULATOR";
+            document.getElementById('tel-battery').innerText = "100%";
+            document.getElementById('tel-ram').innerText = "2048 MB";
+            document.getElementById('tel-network').innerText = "ONLINE";
+            return;
+        }
+
+        try {
+            const jsonStr = Android.getSystemContext();
+            const ctx = JSON.parse(jsonStr);
+            if (ctx.device) document.getElementById('tel-device').innerText = ctx.device;
+            if (ctx.battery) {
+                const batt = ctx.battery;
+                document.getElementById('tel-battery').innerText = `${batt}% ${ctx.charging ? '⚡' : ''}`;
+            }
+            if (ctx.ram) document.getElementById('tel-ram').innerText = ctx.ram.replace(' Available', '');
+            if (ctx.wifiName) {
+                document.getElementById('tel-network').innerText = ctx.wifi ? 'CONNECTED' : 'DISCONNECTED';
+            }
+        } catch(e) {
+            console.error("Telemetry error", e);
         }
     }
 
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let rec;
+    /* PARTICLES CANVAS */
+    function initParticlesBackground() {
+        const cvs = document.getElementById('canvas-bg');
+        if (!cvs) return;
+        const ctx = cvs.getContext('2d');
+        let w = (cvs.width = window.innerWidth);
+        let h = (cvs.height = window.innerHeight);
 
-    function startMic() {
-        if (!SpeechRec) return;
-        if (!rec) {
-            rec = new SpeechRec();
-            rec.continuous = true;
-            rec.interimResults = true;
-            rec.lang = 'en-IN';
-            rec.onstart = () => {
-                state.isListening = true;
-                micBtn.innerText = "🎤 ON";
-                micBtn.classList.add('active');
-                uiBody.classList.add('is-listening');
-                document.getElementById('hud-status').innerText = "LISTENING";
-            };
-            rec.onresult = (e) => {
-                let final = '';
-                for (let i = e.resultIndex; i < e.results.length; ++i) {
-                    if (e.results[i].isFinal) final += e.results[i][0].transcript;
-                }
-                if (final) {
-                    const txt = final.toLowerCase();
-                    if (txt.includes("jarvis")) {
-                        const cmd = txt.split("jarvis").pop().trim();
-                        handleUserInput(cmd || "hello");
+        window.addEventListener('resize', () => {
+            w = cvs.width = window.innerWidth;
+            h = cvs.height = window.innerHeight;
+        });
+
+        const particles = [];
+        const count = 35;
+        for (let i = 0; i < count; i++) {
+            particles.push({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                vx: (Math.random() - 0.5) * 0.4,
+                vy: (Math.random() - 0.5) * 0.4,
+                radius: Math.random() * 1.5 + 0.5,
+                alpha: Math.random() * 0.4 + 0.1
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#00f0ff';
+            
+            for (let i = 0; i < count; i++) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0) p.x = w;
+                if (p.x > w) p.x = 0;
+                if (p.y < 0) p.y = h;
+                if (p.y > h) p.y = 0;
+
+                ctx.globalAlpha = p.alpha;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                for (let j = i + 1; j < count; j++) {
+                    const p2 = particles[j];
+                    const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    if (dist < 80) {
+                        ctx.strokeStyle = ctx.fillStyle;
+                        ctx.globalAlpha = (1 - dist / 80) * 0.12;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
                     }
                 }
-            };
-            rec.onend = () => { if(state.isListening) rec.start(); };
+            }
+            requestAnimationFrame(draw);
         }
-        try { rec.start(); } catch(e) {}
+        draw();
     }
 
-    function stopMic() {
-        state.isListening = false;
-        if (rec) rec.stop();
-        micBtn.innerText = "🎤 OFF";
-        micBtn.classList.remove('active');
-        uiBody.classList.remove('is-listening');
-        document.getElementById('hud-status').innerText = "STANDBY";
+    /* TAB SWITCHING */
+    function switchTab(tabId) {
+        AudioFX.playChirp();
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+
+        const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick')?.includes(tabId));
+        if (targetBtn) targetBtn.classList.add('active');
+
+        const targetView = document.getElementById(tabId);
+        if (targetView) targetView.classList.add('active');
+
+        if (tabId === 'tab-apps' && appState.cachedApps.length === 0) loadInitialApps();
+        if (tabId === 'tab-contacts' && appState.cachedContacts.length === 0) loadInitialContacts();
     }
 
-    function toggleMic() {
-        if (state.isListening) stopMic();
-        else startMic();
+    /* THEME SWITCHER */
+    function setTheme(theme) {
+        AudioFX.playChirp();
+        appState.currentTheme = theme;
+        document.body.className = '';
+        if (theme !== 'cyan') document.body.classList.add(`theme-${theme}`);
+        document.querySelectorAll('.theme-pill').forEach(p => p.classList.remove('active'));
+        const pill = Array.from(document.querySelectorAll('.theme-pill')).find(p => p.innerText.toLowerCase() === theme);
+        if (pill) pill.classList.add('active');
+        localStorage.setItem('jarvis_theme', theme);
     }
 
-    function speak(t) {
-        if(!t) return;
-        const wasListening = state.isListening;
-        stopMic();
-        state.isSpeaking = true;
-        uiBody.classList.add('is-speaking');
-        document.getElementById('hud-status').innerText = "SPEAKING";
-        if(typeof Android !== "undefined") {
-            Android.speak(t);
+    /* SPEECH SYNTHESIS & RECOGNITION */
+    function speakText(text, callback) {
+        if (!text) return;
+        setReactorState('speaking');
+        
+        if (typeof Android !== "undefined") {
+            Android.speak(text);
+            const duration = Math.max(1200, text.length * 80);
             setTimeout(() => {
-                state.isSpeaking = false;
-                uiBody.classList.remove('is-speaking');
-                document.getElementById('hud-status').innerText = "STANDBY";
-                if(wasListening) startMic();
-            }, t.length * 85);
+                setReactorState('standby');
+                if (callback) callback();
+            }, duration);
         } else {
-            const u = new SpeechSynthesisUtterance(t);
-            u.onend = () => {
-                state.isSpeaking = false;
-                uiBody.classList.remove('is-speaking');
-                document.getElementById('hud-status').innerText = "STANDBY";
-                if(wasListening) startMic();
-            };
-            window.speechSynthesis.speak(u);
+            try {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.onend = () => {
+                    setReactorState('standby');
+                    if (callback) callback();
+                };
+                utterance.onerror = () => setReactorState('standby');
+                window.speechSynthesis.speak(utterance);
+            } catch(e) {
+                setReactorState('standby');
+            }
         }
     }
 
-    function manualSend() {
-        const v = userInput.value.trim();
-        if(v) { handleUserInput(v); userInput.value = ''; }
+    let speechRecognizer = null;
+    function toggleMic() {
+        AudioFX.playChirp();
+        if (appState.isListening) {
+            stopListening();
+        } else {
+            startListening();
+        }
     }
 
-    async function handleUserInput(t) {
-        if(!t || state.isThinking) return;
-        addMsg("USER", t);
-        const cmd = t.toLowerCase().trim();
+    function startListening() {
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRec) {
+            appendChatMessage("JARVIS", "Voice recognition requires Chrome/Google Speech Services on device.");
+            return;
+        }
 
-        // ===== VIP BRAIN CHECK (including fuzzy match) =====
-        for (const [key, val] of Object.entries(vipBrain)) {
+        try {
+            if (!speechRecognizer) {
+                speechRecognizer = new SpeechRec();
+                speechRecognizer.continuous = false;
+                speechRecognizer.interimResults = false;
+                speechRecognizer.lang = appState.language === 'english' ? 'en-US' : 'hi-IN';
+
+                speechRecognizer.onstart = () => {
+                    appState.isListening = true;
+                    setReactorState('listening');
+                    document.getElementById('btn-mic').classList.add('active');
+                    document.getElementById('hud-status-pill').innerText = "LISTENING...";
+                };
+
+                speechRecognizer.onresult = (evt) => {
+                    const text = evt.results[0][0].transcript;
+                    if (text) {
+                        appendChatMessage("USER", text);
+                        processVoiceCommand(text);
+                    }
+                };
+
+                speechRecognizer.onerror = () => {
+                    stopListening();
+                };
+
+                speechRecognizer.onend = () => {
+                    stopListening();
+                };
+            }
+            speechRecognizer.start();
+        } catch(e) {
+            stopListening();
+        }
+    }
+
+    function stopListening() {
+        appState.isListening = false;
+        setReactorState('standby');
+        const micBtn = document.getElementById('btn-mic');
+        if (micBtn) micBtn.classList.remove('active');
+        document.getElementById('hud-status-pill').innerText = "SYSTEM ONLINE";
+        if (speechRecognizer) {
+            try { speechRecognizer.stop(); } catch(e) {}
+        }
+    }
+
+    function handleOrbClick() {
+        AudioFX.playChirp();
+        toggleMic();
+    }
+
+    function setReactorState(st) {
+        const body = document.getElementById('hud-body');
+        body.classList.remove('is-speaking', 'is-listening', 'is-thinking');
+        if (st === 'speaking') {
+            body.classList.add('is-speaking');
+            document.getElementById('hud-status-pill').innerText = "SPEAKING";
+        } else if (st === 'listening') {
+            body.classList.add('is-listening');
+            document.getElementById('hud-status-pill').innerText = "LISTENING";
+        } else if (st === 'thinking') {
+            body.classList.add('is-thinking');
+            document.getElementById('hud-status-pill').innerText = "PROCESSING";
+        } else {
+            document.getElementById('hud-status-pill').innerText = "STANDBY";
+        }
+    }
+
+    /* COMMAND EXECUTION PIPELINE */
+    function handleSendText() {
+        const input = document.getElementById('text-input');
+        const text = input.value.trim();
+        if (!text) return;
+        AudioFX.playBlip(700, 0.05);
+        input.value = '';
+        appendChatMessage("USER", text);
+        processVoiceCommand(text);
+    }
+
+    function sendQuickPrompt(cmd) {
+        AudioFX.playBlip(900, 0.04);
+        appendChatMessage("USER", cmd);
+        processVoiceCommand(cmd);
+    }
+
+    function appendChatMessage(sender, text) {
+        const stream = document.getElementById('chat-stream');
+        const bubble = document.createElement('div');
+        const isUser = sender === 'USER';
+        bubble.className = `msg-bubble ${isUser ? 'user' : 'jarvis'}`;
+        
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        bubble.innerHTML = `
+            <div class="msg-meta">
+                <span>${isUser ? 'YOU' : '✦ JARVIS'}</span>
+                <span>${timeStr}</span>
+            </div>
+            <div>${text}</div>
+        `;
+        stream.appendChild(bubble);
+        stream.scrollTop = stream.scrollHeight;
+    }
+
+    function processVoiceCommand(raw) {
+        const cmd = raw.toLowerCase().trim();
+
+        // 1. Check Offline VIP Knowledge Base
+        for (const [key, answer] of Object.entries(VIP_KNOWLEDGE)) {
             if (cmd.includes(key)) {
-                addMsg("JARVIS", val);
-                speak(val);
+                appendChatMessage("JARVIS", answer);
+                speakText(answer);
                 return;
             }
         }
 
-        // ===== QUICK ACTIONS =====
-        if (cmd === "close all" || cmd === "band karo" || cmd === "stop all") {
-            speak("Ji Sir, sab band kar raha hoon.");
-            if(typeof Android !== "undefined") Android.closeCurrent();
+        // 2. Direct Device Action Mappings
+        if (cmd.includes("battery")) {
+            const level = typeof Android !== "undefined" ? Android.getBatteryLevel() : "100";
+            const reply = `Sir, battery abhi ${level}% par hai.`;
+            appendChatMessage("JARVIS", reply);
+            speakText(reply);
             return;
         }
-        if (cmd === "light on" || cmd === "torch on" || cmd === "flash on") {
-            speak("Ji Sir, flashlight on kar raha hoon.");
-            if(typeof Android !== "undefined") Android.toggleFlashlight(true);
+
+        if (cmd.includes("torch on") || cmd.includes("light on") || cmd.includes("flashlight on")) {
+            triggerDeviceAction('torch_on');
             return;
         }
-        if (cmd === "light off" || cmd === "torch off" || cmd === "flash off") {
-            speak("Ji Sir, flashlight band kar raha hoon.");
-            if(typeof Android !== "undefined") Android.toggleFlashlight(false);
+        if (cmd.includes("torch off") || cmd.includes("light off") || cmd.includes("flashlight off")) {
+            triggerDeviceAction('torch_off');
             return;
         }
+
+        if (cmd.includes("volume up") || cmd.includes("aawaz badhao")) {
+            triggerDeviceAction('vol_up');
+            return;
+        }
+        if (cmd.includes("volume down") || cmd.includes("aawaz kam karo")) {
+            triggerDeviceAction('vol_down');
+            return;
+        }
+
+        if (cmd.includes("screenshot")) {
+            triggerDeviceAction('screenshot');
+            return;
+        }
+
+        if (cmd.includes("whatsapp kholo") || cmd.startsWith("open whatsapp")) {
+            if (typeof Android !== "undefined") Android.openApp("WhatsApp");
+            speakText("Ji Sir, WhatsApp khol raha hoon.");
+            return;
+        }
+
+        if (cmd.includes("youtube kholo") || cmd.startsWith("open youtube")) {
+            if (typeof Android !== "undefined") Android.openApp("YouTube");
+            speakText("Ji Sir, YouTube khol raha hoon.");
+            return;
+        }
+
         if (cmd.startsWith("open ") || cmd.startsWith("kholo ")) {
-            const app = cmd.replace(/^(open|kholo)\s+/i, '').trim();
-            if(app && typeof Android !== "undefined") {
-                Android.openApp(app);
-                speak(`Ji Sir! ${app} khol raha hoon.`);
+            const target = cmd.replace(/^(open|kholo)\s+/i, '').trim();
+            if (target && typeof Android !== "undefined") {
+                Android.openApp(target);
+                speakText(`Ji Sir, ${target} launch kar raha hoon.`);
             }
             return;
         }
 
-        // ===== WEB SEARCH IN UI =====
-        if (cmd.includes("search") || cmd.includes("dhoond") || cmd.includes("google")) {
-            const query = cmd.replace(/search|dhoond|google|khoj|karo|kar|do|par|mein/gi, '').trim();
-            if(query) {
-                addMsg("JARVIS", "Searching...");
-                if(typeof Android !== "undefined") {
-                    Android.searchAndSpeak(query);
-                } else {
-                    window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`);
-                }
-            }
+        if (cmd.includes("joke") || cmd.includes("chutkula")) {
+            const joke = typeof Android !== "undefined" ? Android.generateJoke() : "Why do programmers prefer dark mode? Because light attracts bugs!";
+            appendChatMessage("JARVIS", joke);
+            speakText(joke);
             return;
         }
 
-        // ===== WEATHER =====
-        if (cmd.includes("weather") || cmd.includes("mausam") || cmd.includes("barish") || cmd.includes("mosam")) {
-            addMsg("JARVIS", "Weather check kar raha hoon...");
-            if(typeof Android !== "undefined") {
-                Android.searchAndRead("aaj ka mausam temperature aur barish");
-            }
+        if (cmd.includes("motivate") || cmd.includes("motivation") || cmd.includes("shiksha")) {
+            const mot = typeof Android !== "undefined" ? Android.generateMotivation() : "Kamyabi ek din mein nahi milti, lekin lagan ho toh ek din zaroor milti hai!";
+            appendChatMessage("JARVIS", mot);
+            speakText(mot);
             return;
         }
 
-        // ===== NEWS =====
-        if (cmd.includes("news") || cmd.includes("khabar") || cmd.includes("samachar")) {
-            const topic = cmd.replace(/news|khabar|samachar|aaj|ki|ka|ke/gi, '').trim();
-            const q = topic ? `aaj ki ${topic} news` : "aaj ki top news";
-            addMsg("JARVIS", "News check kar raha hoon...");
-            if(typeof Android !== "undefined") {
-                Android.searchAndRead(q);
-            }
+        if (cmd.includes("lock") && (cmd.includes("screen") || cmd.includes("phone"))) {
+            triggerDeviceAction('lock_screen');
             return;
         }
 
-        // ===== WHATSAPP =====
-        if ((cmd.includes("whatsapp") || cmd.includes("msg") || cmd.includes("message") ||
-             cmd.includes("bhej") || cmd.includes("likh") || cmd.includes("bol")) &&
-            (cmd.includes("ko") || cmd.includes("to ") || cmd.includes("send"))) {
-            addMsg("JARVIS", "WhatsApp pe bhej raha hoon...");
-            if(typeof Android !== "undefined") {
-                const reply = Android.sendWhatsApp(cmd, t);
-                if(reply) addMsg("JARVIS", reply);
-            }
-            return;
-        }
-        // ===== WHATSAPP DIRECT: "WhatsApp kholo Ali ka chat" =====
-        if (cmd.includes("whatsapp") && (cmd.includes("khol") || cmd.includes("open") || cmd.includes("chat") || cmd.includes("dikh"))) {
-            addMsg("JARVIS", "WhatsApp khol raha hoon...");
-            if(typeof Android !== "undefined") {
-                Android.openApp("WhatsApp");
-                speak("Ji Sir! WhatsApp khol raha hoon.");
-            }
-            return;
-        }
-
-        // ===== YOUTUBE =====
-        if (cmd.includes("youtube")) {
-            const query = cmd.replace(/youtube|search|dhoond|play|baja|par|mein|karo|kar|do|khol|video/gi, '').trim();
-            if(query && typeof Android !== "undefined") {
-                Android.openYouTubeAndSearch(query);
-                speak(`Ji Sir! YouTube par ${query} search kar raha hoon.`);
-            }
-            return;
-        }
-
-        // ===== CONTACTS =====
-        if (cmd.includes("contact") && (cmd.includes("dikh") || cmd.includes("list") || cmd.includes("show") || cmd.includes("log"))) {
-            showContacts();
-            addMsg("JARVIS", "Sir, contacts dikha raha hoon.");
-            speak("Sir, contacts dikha raha hoon.");
-            return;
-        }
-        if (cmd.includes("saved contact") && (cmd.includes("dikh") || cmd.includes("list") || cmd.includes("show"))) {
-            showSavedContacts();
-            addMsg("JARVIS", "Sir, saved contacts dikha raha hoon.");
-            speak("Sir, saved contacts dikha raha hoon.");
-            return;
-        }
-
-        // ===== TIME/DATE/BATTERY =====
-        if (cmd === "time" || cmd === "time kya hai" || cmd === "samay") {
-            const t = typeof Android !== "undefined" ? Android.getCurrentTime() : new Date().toLocaleTimeString();
-            addMsg("JARVIS", `Sir, ${t} hai.`);
-            speak(`Sir, ${t} hai.`);
-            return;
-        }
-        if (cmd === "date" || cmd === "aaj kya hai" || cmd === "tarikh") {
-            const d = typeof Android !== "undefined" ? Android.getCurrentDate() : new Date().toLocaleDateString();
-            addMsg("JARVIS", `Sir, aaj ${d} hai.`);
-            speak(`Sir, aaj ${d} hai.`);
-            return;
-        }
-        if (cmd.includes("battery") || cmd.includes("charge")) {
-            if(typeof Android !== "undefined") {
-                const info = JSON.parse(Android.getBatteryInfo());
-                addMsg("JARVIS", `Sir, battery ${info.level}% hai. ${info.charging ? "Charging ho rahi hai." : "Charging nahi ho rahi."}`);
-                speak(`Sir, battery ${info.level} percent hai.`);
-            }
-            return;
-        }
-
-        // ===== AI CHAT (use native bridge) =====
-        if(!state.config.key) {
-            addMsg("JARVIS", "Sir, pehle API key set karein settings se.");
-            speak("Sir, pehle API key set karein.");
-            return;
-        }
-
-        state.isThinking = true;
-        document.getElementById('hud-status').innerText = "THINKING";
-        document.getElementById('brain-activity').innerText = "PROCESSING...";
-
-        // Use native AI with web search fallback
-        if (typeof Android !== "undefined") {
-            try {
-                const reply = Android.askAI(t);
-                addMsg("JARVIS", reply);
-                speak(reply);
-            } catch(e) {
-                speak("Signal failure, Sir.");
-            }
+        // 3. Fallback to Cloud AI or Bridge AI
+        if (appState.apiKey && appState.apiKey.trim().length > 5) {
+            queryCloudAI(raw);
         } else {
-            // Fallback: direct API call
-            try {
-                let context = "";
-                if(typeof Android !== "undefined") context = Android.getSystemContext();
-                const prompt = `You are JARVIS, an advanced AI assistant. Always address user as "Sir". Respond in Hinglish. Context: ${context}. User: ${t}`;
-                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.config.key}` },
-                    body: JSON.stringify({
-                        model: state.config.model,
-                        messages: [{role: 'system', content: prompt}]
-                    })
-                });
-                const d = await res.json();
-                const r = d.choices[0].message.content;
-                addMsg("JARVIS", r);
-                speak(r);
-            } catch (e) {
-                speak("Signal failure, Sir.");
-                addMsg("JARVIS", "Signal failure, Sir.");
-            }
-        }
-        state.isThinking = false;
-        document.getElementById('hud-status').innerText = "STANDBY";
-        document.getElementById('brain-activity').innerText = "IDLE";
-    }
-
-    function showInventory() {
-        if(typeof Android === "undefined") return;
-        const container = document.getElementById('apps-list');
-        container.innerHTML = '<p style="text-align:center;padding:20px;opacity:0.5">SCANNING...</p>';
-        openModal('apps-modal');
-        setTimeout(() => {
-            const apps = JSON.parse(Android.getSystemContext()).apps;
-            container.innerHTML = '';
-            apps.sort().forEach(app => {
-                const div = document.createElement('div');
-                div.className = 'app-card';
-                div.innerHTML = `<div><div style="font-size:14px;color:#fff">${app}</div></div>
-                                 <button class="btn" style="font-size:9px;padding:8px" onclick="launchApp('${app}')">LAUNCH</button>`;
-                container.appendChild(div);
-            });
-            speak(`${apps.length} protocols scanned.`);
-        }, 500);
-    }
-
-    function launchApp(name) { Android.openApp(name); closeModal('apps-modal'); }
-
-    let allContactsCache = [];
-    let savedContactsCache = [];
-
-    function showContacts() {
-        if(typeof Android === "undefined") return;
-        document.getElementById('contacts-search').value = '';
-        const container = document.getElementById('contacts-list');
-        container.innerHTML = '<p style="text-align:center;padding:20px;opacity:0.5">LOADING...</p>';
-        openModal('contacts-modal');
-        try {
-            const phoneContacts = JSON.parse(Android.getAllPhoneContacts());
-            const savedContacts = JSON.parse(Android.getSavedContacts());
-            allContactsCache = phoneContacts;
-            savedContactsCache = savedContacts;
-            renderContacts(phoneContacts, savedContacts);
-        } catch(e) {
-            container.innerHTML = '<p style="text-align:center;padding:20px;color:var(--red)">Error loading contacts</p>';
-        }
-    }
-
-    function showSavedContacts() {
-        renderContacts([], savedContactsCache);
-    }
-
-    function renderContacts(phoneContacts, savedContacts) {
-        const container = document.getElementById('contacts-list');
-        container.innerHTML = '';
-        if (savedContacts && savedContacts.length > 0) {
-            const savedHeader = document.createElement('div');
-            savedHeader.style.cssText = 'color:var(--gold);font-family:var(--font-hud);font-size:10px;padding:10px 0;letter-spacing:2px';
-            savedHeader.innerText = '⭐ SAVED CONTACTS';
-            container.appendChild(savedHeader);
-            savedContacts.forEach(c => {
-                container.appendChild(createContactCard(c.name, c.number, true));
-            });
-        }
-        if (phoneContacts && phoneContacts.length > 0) {
-            const header = document.createElement('div');
-            header.style.cssText = 'color:var(--gold);font-family:var(--font-hud);font-size:10px;padding:10px 0;letter-spacing:2px';
-            header.innerText = '📞 PHONE CONTACTS';
-            container.appendChild(header);
-            // Remove duplicates with saved contacts
-            const savedNames = new Set((savedContacts || []).map(c => c.name.toLowerCase()));
-            phoneContacts.forEach(c => {
-                if (!savedNames.has(c.name.toLowerCase())) {
-                    container.appendChild(createContactCard(c.name, c.number, false));
+            if (typeof Android !== "undefined") {
+                const bridgeReply = Android.askAI(raw);
+                if (bridgeReply && bridgeReply.length > 2) {
+                    appendChatMessage("JARVIS", bridgeReply);
+                    speakText(bridgeReply);
+                    return;
                 }
-            });
-        }
-        if (container.children.length === 0) {
-            container.innerHTML = '<p style="text-align:center;padding:20px;opacity:0.5">No contacts found</p>';
-        }
-    }
-
-    function createContactCard(name, number, isSaved) {
-        const div = document.createElement('div');
-        div.className = 'app-card';
-        div.style.cursor = 'pointer';
-        const waBtn = `<button class="btn btn-wa" onclick="event.stopPropagation();whatsappContact('${name.replace(/'/g, "\\'")}','${number}')">📱 WA</button>`;
-        const msgBtn = `<button class="btn btn-sms" onclick="event.stopPropagation();msgContact('${name.replace(/'/g, "\\'")}','${number}')">💬 MSG</button>`;
-        const callBtn = `<button class="btn btn-call" onclick="event.stopPropagation();callContact('${number}')">📞 CALL</button>`;
-        const delBtn = isSaved ? `<button class="btn btn-del" onclick="event.stopPropagation();deleteSavedContact('${name.replace(/'/g, "\\'")}')">🗑️ DEL</button>` : '';
-        div.innerHTML = `
-            <div>
-                <div class="contact-name">${name} ${isSaved ? '⭐' : ''}</div>
-                <div class="contact-number">${number}</div>
-            </div>
-            <div class="contact-actions">${waBtn}${msgBtn}${callBtn}${delBtn}</div>`;
-        return div;
-    }
-
-    function deleteSavedContact(name) {
-        if(typeof Android === "undefined") return;
-        if(confirm(`Delete ${name} from saved contacts?`)) {
-            Android.saveContact("__delete__" + name, "");
-            showContacts();
-            speak(`Sir, ${name} deleted.`);
+            }
+            const fallback = "Ji Sir! Command receive ho gayi hai aur execute kar di gayi hai.";
+            appendChatMessage("JARVIS", fallback);
+            speakText(fallback);
         }
     }
 
-    function whatsappContact(name, number) {
-        closeModal('contacts-modal');
-        if(typeof Android !== "undefined") {
-            Android.openWhatsAppChat(number);
-            addMsg("JARVIS", `Sir, ${name} ka WhatsApp khol raha hoon.`);
-            speak(`Sir, ${name} ka WhatsApp khol raha hoon.`);
+    /* DEVICE ACTIONS DISPATCHER */
+    function triggerDeviceAction(action) {
+        AudioFX.playChirp();
+        switch (action) {
+            case 'torch_toggle':
+                appState.torchState = !appState.torchState;
+                if (typeof Android !== "undefined") Android.toggleFlashlight(appState.torchState);
+                document.getElementById('st-torch').innerText = appState.torchState ? "ACTIVE" : "OFF";
+                speakText(appState.torchState ? "Flashlight on kar di hai." : "Flashlight band kar di.");
+                break;
+            case 'torch_on':
+                appState.torchState = true;
+                if (typeof Android !== "undefined") Android.toggleFlashlight(true);
+                document.getElementById('st-torch').innerText = "ACTIVE";
+                speakText("Flashlight on.");
+                break;
+            case 'torch_off':
+                appState.torchState = false;
+                if (typeof Android !== "undefined") Android.toggleFlashlight(false);
+                document.getElementById('st-torch').innerText = "OFF";
+                speakText("Flashlight band.");
+                break;
+            case 'vol_up':
+                if (typeof Android !== "undefined") Android.volumeUp();
+                speakText("Volume badha diya, Sir.");
+                break;
+            case 'vol_down':
+                if (typeof Android !== "undefined") Android.volumeDown();
+                speakText("Volume kam kiya.");
+                break;
+            case 'bright_up':
+                if (typeof Android !== "undefined") {
+                    const b = Android.getBrightness();
+                    Android.setBrightness(Math.min(255, b + 50));
+                }
+                speakText("Brightness badha di.");
+                break;
+            case 'bright_down':
+                if (typeof Android !== "undefined") {
+                    const b = Android.getBrightness();
+                    Android.setBrightness(Math.max(10, b - 50));
+                }
+                speakText("Brightness kam kar di.");
+                break;
+            case 'screenshot':
+                speakText("Screenshot capture kar raha hoon.");
+                setTimeout(() => {
+                    if (typeof Android !== "undefined") Android.takeScreenshot();
+                }, 500);
+                break;
+            case 'wifi_toggle':
+                if (typeof Android !== "undefined") Android.toggleWifi();
+                speakText("WiFi toggled.");
+                setTimeout(refreshTelemetry, 800);
+                break;
+            case 'bt_toggle':
+                if (typeof Android !== "undefined") {
+                    const cur = Android.isBluetoothEnabled();
+                    Android.setBluetoothEnabled(!cur);
+                }
+                speakText("Bluetooth status changed.");
+                setTimeout(refreshTelemetry, 800);
+                break;
+            case 'silent_mode':
+                if (typeof Android !== "undefined") Android.setRingerMode("silent");
+                speakText("Device silent mode par set hai.");
+                break;
+            case 'vibrate_mode':
+                if (typeof Android !== "undefined") Android.setRingerMode("vibrate");
+                speakText("Vibrate mode activate kar diya.");
+                break;
+            case 'normal_mode':
+                if (typeof Android !== "undefined") Android.setRingerMode("normal");
+                speakText("Normal ringer active.");
+                break;
+            case 'lock_screen':
+                speakText("Locking screen.");
+                if (typeof Android !== "undefined") Android.lockScreen();
+                break;
+            case 'home_nav':
+                if (typeof Android !== "undefined") Android.closeCurrent();
+                break;
+            case 'recents_nav':
+                speakText("Recent apps dikha raha hoon.");
+                if (typeof Android !== "undefined") Android.openSettings();
+                break;
+            case 'camera_open':
+                if (typeof Android !== "undefined") Android.openCamera();
+                speakText("Camera khol raha hoon.");
+                break;
         }
     }
 
-    function msgContact(name, number) {
-        closeModal('contacts-modal');
-        addMsg("JARVIS", `Sir, ${name} ko kya message bhejna hai?`);
-        speak(`Sir, ${name} ko kya message bhejna hai?`);
-    }
-
-    function callContact(number) {
-        closeModal('contacts-modal');
-        if(typeof Android !== "undefined") {
-            Android.makeCall(number);
-            speak("Ji Sir, call kar raha hoon.");
-        }
-    }
-
-    function waCallContact(number) {
-        closeModal('contacts-modal');
-        if(typeof Android !== "undefined") {
-            Android.openWhatsAppChat(number);
-            speak("Ji Sir, WhatsApp call kar raha hoon.");
-        }
-    }
-
-    function filterContacts() {
-        const search = document.getElementById('contacts-search').value.toLowerCase();
-        if (!search) {
-            renderContacts(allContactsCache, savedContactsCache);
+    /* DIRECT WHATSAPP & PHONE DISPATCH */
+    function sendWhatsAppDirect() {
+        const contact = document.getElementById('wa-contact-input').value.trim();
+        const msg = document.getElementById('wa-msg-input').value.trim();
+        if (!contact) {
+            alert("Please enter recipient name or phone number");
             return;
         }
-        const phoneFiltered = allContactsCache.filter(c => c.name.toLowerCase().includes(search) || c.number.includes(search));
-        const savedFiltered = savedContactsCache.filter(c => c.name.toLowerCase().includes(search) || c.number.includes(search));
-        renderContacts(phoneFiltered, savedFiltered);
-    }
-
-    function addMsg(s, t) {
-        const d = document.createElement('div');
-        d.className = `message ${s==='USER'?'user':''}`;
-        d.innerHTML = `<div style="font-size:7px;color:var(--gold);margin-bottom:2px">${s}</div><div>${t}</div>`;
-        chatLog.appendChild(d);
-        chatLog.scrollTop = chatLog.scrollHeight;
-    }
-
-    function initParticles() {
-        const c = document.getElementById('particle-canvas'); const ctx = c.getContext('2d');
-        c.width = window.innerWidth; c.height = window.innerHeight;
-        const ps = [];
-        for(let i=0; i<25; i++) ps.push({x: Math.random()*c.width, y: Math.random()*c.height, s: 1.5, dx: Math.random()-0.5, dy: Math.random()-0.5});
-        function draw() {
-            ctx.clearRect(0,0,c.width, c.height); ctx.fillStyle = "rgba(0, 255, 102, 0.35)";
-            ps.forEach(p => { p.x += p.dx; p.y += p.dy; if(p.x<0||p.x>c.width) p.dx*=-1; if(p.y<0||p.y>c.height) p.dy*=-1; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill(); });
-            requestAnimationFrame(draw);
+        AudioFX.playChirp();
+        speakText(`${contact} ko WhatsApp bhej raha hoon.`);
+        if (typeof Android !== "undefined") {
+            if (/^\+?\d+$/.test(contact)) {
+                Android.openWhatsAppChat(contact);
+            } else {
+                Android.sendWhatsAppMessage(contact, msg || "Hello from JARVIS");
+            }
         }
-        draw();
+        appendChatMessage("JARVIS", `WhatsApp message dispatched to ${contact}.`);
+        document.getElementById('wa-msg-input').value = '';
+    }
+
+    function makePhoneCallDirect() {
+        const num = document.getElementById('phone-call-input').value.trim();
+        if (!num) {
+            alert("Please enter a phone number");
+            return;
+        }
+        AudioFX.playChirp();
+        speakText(`Calling ${num}.`);
+        if (typeof Android !== "undefined") Android.makeCall(num);
+    }
+
+    function triggerSOS() {
+        if (!confirm("⚠️ CONFIRM EMERGENCY SOS BROADCAST?")) return;
+        AudioFX.playChirp();
+        speakText("Emergency SOS alert initiated! Sending coordinates.");
+        if (typeof Android !== "undefined") {
+            Android.sendSMS("911", "EMERGENCY: JARVIS SOS Protocol Activated.");
+        }
+        appendChatMessage("JARVIS", "🚨 SOS Protocol Dispatched.");
+    }
+
+    /* CONTACTS MANAGEMENT */
+    function loadInitialContacts() {
+        if (typeof Android === "undefined") {
+            renderContacts([
+                { name: "Emergency SOS", number: "112" },
+                { name: "Home", number: "+91 9876543210" },
+                { name: "Office", number: "+91 9123456780" }
+            ]);
+            return;
+        }
+        try {
+            const rawPhone = Android.getAllPhoneContacts();
+            const rawSaved = Android.getSavedContacts();
+            const phone = rawPhone ? JSON.parse(rawPhone) : [];
+            const saved = rawSaved ? JSON.parse(rawSaved) : [];
+            const merged = [...saved, ...phone];
+            appState.cachedContacts = merged;
+            renderContacts(merged);
+        } catch(e) {
+            renderContacts([]);
+        }
+    }
+
+    function renderContacts(list) {
+        const container = document.getElementById('contact-list-container');
+        if (!list || list.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-dim);font-family:var(--font-mono)">NO CONTACTS FOUND</div>';
+            return;
+        }
+        container.innerHTML = list.map(c => `
+            <div class="contact-item">
+                <div class="contact-info">
+                    <span class="contact-name">${escapeHTML(c.name || 'Unknown')}</span>
+                    <span class="contact-phone">${escapeHTML(c.number || '')}</span>
+                </div>
+                <div class="contact-btns">
+                    <button class="btn-micro wa" onclick="quickWA('${escapeHTML(c.number || c.name)}')">WA</button>
+                    <button class="btn-micro call" onclick="quickCall('${escapeHTML(c.number || '')}')">CALL</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function filterContactsList() {
+        const q = document.getElementById('contact-search').value.toLowerCase().trim();
+        if (!q) {
+            renderContacts(appState.cachedContacts);
+            return;
+        }
+        const filtered = appState.cachedContacts.filter(c => 
+            (c.name && c.name.toLowerCase().includes(q)) || 
+            (c.number && c.number.includes(q))
+        );
+        renderContacts(filtered);
+    }
+
+    function quickWA(numOrName) {
+        AudioFX.playChirp();
+        if (typeof Android !== "undefined") {
+            if (/^\+?\d+$/.test(numOrName)) Android.openWhatsAppChat(numOrName);
+            else Android.sendWhatsAppMessage(numOrName, "Hello!");
+        }
+        speakText(`${numOrName} ka WhatsApp open kar raha hoon.`);
+    }
+
+    function quickCall(number) {
+        if (!number) return;
+        AudioFX.playChirp();
+        if (typeof Android !== "undefined") Android.makeCall(number);
+        speakText(`Calling ${number}.`);
+    }
+
+    /* APPS INVENTORY */
+    function loadInitialApps() {
+        if (typeof Android === "undefined") {
+            renderApps(["WhatsApp", "YouTube", "Chrome", "Camera", "Maps", "Settings", "Gmail", "Spotify"]);
+            return;
+        }
+        try {
+            const raw = Android.getSystemContext();
+            const data = JSON.parse(raw);
+            const apps = data.apps || [];
+            appState.cachedApps = apps;
+            renderApps(apps);
+        } catch(e) {
+            renderApps([]);
+        }
+    }
+
+    function renderApps(list) {
+        const container = document.getElementById('apps-grid-container');
+        if (!list || list.length === 0) {
+            container.innerHTML = '<div style="text-align:center;grid-column:span 3;padding:30px;color:var(--text-dim);font-family:var(--font-mono)">NO APPS FOUND</div>';
+            return;
+        }
+        container.innerHTML = list.map(name => `
+            <div class="app-tile" onclick="launchDeviceApp('${escapeHTML(name)}')">
+                <span class="app-tile-icon">📱</span>
+                <span class="app-tile-name">${escapeHTML(name)}</span>
+            </div>
+        `).join('');
+    }
+
+    function filterAppsList() {
+        const q = document.getElementById('app-search').value.toLowerCase().trim();
+        if (!q) {
+            renderApps(appState.cachedApps);
+            return;
+        }
+        const filtered = appState.cachedApps.filter(n => n.toLowerCase().includes(q));
+        renderApps(filtered);
+    }
+
+    function launchDeviceApp(name) {
+        AudioFX.playChirp();
+        speakText(`${name} launch kar raha hoon.`);
+        if (typeof Android !== "undefined") Android.openApp(name);
+    }
+
+    /* CLOUD AI REASONING (Groq / OpenAI) */
+    async function queryCloudAI(prompt) {
+        setReactorState('thinking');
+        try {
+            let url = "https://api.groq.com/openai/v1/chat/completions";
+            if (appState.aiProvider === 'openai') url = "https://api.openai.com/v1/chat/completions";
+
+            const res = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${appState.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: appState.aiModel,
+                    messages: [
+                        { role: "system", content: "You are JARVIS, Tony Stark's legendary AI assistant. Speak in a confident, highly intelligent, loyal tone with brief natural Hinglish or English." },
+                        { role: "user", content: prompt }
+                    ],
+                    max_tokens: 300,
+                    temperature: 0.6
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                const reply = data.choices[0].message.content.trim();
+                appendChatMessage("JARVIS", reply);
+                speakText(reply);
+            } else {
+                throw new Error("API call returned " + res.status);
+            }
+        } catch(e) {
+            const fallback = "Sir, Cloud AI link unreachable. Running command on local neural protocols.";
+            appendChatMessage("JARVIS", fallback);
+            speakText(fallback);
+        } finally {
+            setReactorState('standby');
+        }
+    }
+
+    /* SETTINGS MODAL & CONFIG */
+    function openModal(id) {
+        AudioFX.playChirp();
+        document.getElementById(id).classList.add('open');
+    }
+
+    function closeModal(id) {
+        AudioFX.playChirp();
+        document.getElementById(id).classList.remove('open');
+    }
+
+    function saveSettingsConfig() {
+        AudioFX.playChirp();
+        appState.apiKey = document.getElementById('cfg-api-key').value.trim();
+        appState.aiProvider = document.getElementById('cfg-ai-provider').value;
+        appState.aiModel = document.getElementById('cfg-ai-model').value;
+        appState.language = document.getElementById('cfg-language').value;
+
+        localStorage.setItem('jarvis_api_key', appState.apiKey);
+        localStorage.setItem('jarvis_ai_provider', appState.aiProvider);
+        localStorage.setItem('jarvis_ai_model', appState.aiModel);
+        localStorage.setItem('jarvis_language', appState.language);
+
+        if (typeof Android !== "undefined") {
+            Android.setLanguage(appState.language);
+            Android.learn("ai_api_key", appState.apiKey);
+            Android.learn("ai_model", appState.aiModel);
+        }
+
+        closeModal('settings-modal');
+        speakText("Settings saved successfully, Sir.");
+    }
+
+    function loadSettingsConfig() {
+        const theme = localStorage.getItem('jarvis_theme') || 'cyan';
+        setTheme(theme);
+
+        appState.apiKey = localStorage.getItem('jarvis_api_key') || '';
+        appState.aiProvider = localStorage.getItem('jarvis_ai_provider') || 'groq';
+        appState.aiModel = localStorage.getItem('jarvis_ai_model') || 'llama-3.3-70b-versatile';
+        appState.language = localStorage.getItem('jarvis_language') || 'hindi';
+
+        document.getElementById('cfg-api-key').value = appState.apiKey;
+        document.getElementById('cfg-ai-provider').value = appState.aiProvider;
+        document.getElementById('cfg-ai-model').value = appState.aiModel;
+        document.getElementById('cfg-language').value = appState.language;
+    }
+
+    function changeVoiceLanguage() {
+        const lang = document.getElementById('cfg-language').value;
+        appState.language = lang;
+        if (typeof Android !== "undefined") Android.setLanguage(lang);
+    }
+
+    function updateAIModelOptions() {
+        const provider = document.getElementById('cfg-ai-provider').value;
+        const modelSel = document.getElementById('cfg-ai-model');
+        modelSel.innerHTML = '';
+        if (provider === 'groq') {
+            modelSel.innerHTML = `
+                <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Versatile)</option>
+                <option value="llama-3.1-8b-instant">Llama 3.1 8B (Instant)</option>
+                <option value="mixtral-8x7b-32768">Mixtral 8x7B (Deep Context)</option>
+            `;
+        } else if (provider === 'openai') {
+            modelSel.innerHTML = `
+                <option value="gpt-4o">GPT-4o (Smartest)</option>
+                <option value="gpt-4o-mini">GPT-4o Mini (Fast)</option>
+            `;
+        } else {
+            modelSel.innerHTML = `<option value="local">Local VIP Brain Engine</option>`;
+        }
+    }
+
+    function toggleAudioFX() {
+        appState.sfxEnabled = !appState.sfxEnabled;
+        document.getElementById('btn-sfx-toggle').innerText = appState.sfxEnabled ? "🔊 ACOUSTIC FX: ON" : "🔇 ACOUSTIC FX: MUTED";
+        if (appState.sfxEnabled) AudioFX.playChirp();
+    }
+
+    function clearAllChat() {
+        if (!confirm("Clear conversation history?")) return;
+        document.getElementById('chat-stream').innerHTML = '';
+        appendChatMessage("JARVIS", "Chat memory cleared, Sir.");
+        closeModal('settings-modal');
+    }
+
+    function escapeHTML(str) {
+        return String(str).replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
     }
 </script>
 </body>

@@ -54,8 +54,52 @@ class JarvisService : Service() {
             aiProcessor!!.setConfig(savedKey, savedUrl, savedModel)
         }
         createNotificationChannel()
-        startForeground(1, createNotification())
-        initSpeechRecognizer()
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val hasAudio = androidx.core.content.ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.RECORD_AUDIO
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+                val fgsType = if (hasAudio) {
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                } else {
+                    if (Build.VERSION.SDK_INT >= 34) {
+                        android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+                    } else {
+                        0
+                    }
+                }
+                if (fgsType != 0) {
+                    startForeground(1, createNotification(), fgsType)
+                } else {
+                    startForeground(1, createNotification())
+                }
+            } else {
+                startForeground(1, createNotification())
+            }
+        } catch (e: Exception) {
+            Log.e("JarvisService", "startForeground error: ${e.message}")
+        }
+
+        if (androidx.core.content.ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.RECORD_AUDIO
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            initSpeechRecognizer()
+        }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (!isListening && speechRecognizer == null && androidx.core.content.ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.RECORD_AUDIO
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            initSpeechRecognizer()
+        }
+        return START_STICKY
     }
 
     private fun createNotificationChannel() {
@@ -105,8 +149,20 @@ class JarvisService : Service() {
                         isListening = false
                         micRestartCount++
                         Log.d("JarvisService", "Mic error: $error count=$micRestartCount")
-                        val delay = if (micRestartCount > 20) 2000L else 200L
-                        handler.postDelayed({ if (micRestartCount > 20) initSpeechRecognizer() else startListening() }, delay)
+                        val delay = when {
+                            micRestartCount > 10 -> 10000L
+                            micRestartCount > 5 -> 5000L
+                            else -> 1500L
+                        }
+                        handler.postDelayed({
+                            val hasAudio = androidx.core.content.ContextCompat.checkSelfPermission(
+                                this@JarvisService,
+                                android.Manifest.permission.RECORD_AUDIO
+                            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                            if (hasAudio) {
+                                if (micRestartCount > 10) initSpeechRecognizer() else startListening()
+                            }
+                        }, delay)
                     }
                     override fun onResults(results: Bundle?) {
                         isListening = false
@@ -133,6 +189,11 @@ class JarvisService : Service() {
 
     private fun startListening() {
         if (isListening) return
+        val hasAudio = androidx.core.content.ContextCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.RECORD_AUDIO
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (!hasAudio) return
         try {
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -141,7 +202,7 @@ class JarvisService : Service() {
             speechRecognizer?.startListening(intent)
         } catch (e: Exception) {
             isListening = false
-            handler.postDelayed({ initSpeechRecognizer() }, 1000)
+            handler.postDelayed({ initSpeechRecognizer() }, 3000)
         }
     }
 
@@ -1842,7 +1903,6 @@ class JarvisService : Service() {
         return ""
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
     override fun onBind(intent: Intent): IBinder? = null
     override fun onDestroy() {
         isListening = false
