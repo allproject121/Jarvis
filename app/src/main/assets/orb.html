@@ -2340,21 +2340,6 @@ function parseAndDisplay3DModel(arrayBuffer, format) {
     console.error("Error parsing 3D model:", e);
     fallbackToOrb();
   }
-} else if (format === "fbx") {
-      if (typeof THREE.FBXLoader !== "undefined") {
-        const loader = new THREE.FBXLoader();
-        const obj = loader.parse(arrayBuffer, "");
-        onModelReady(obj, obj.animations);
-      } else {
-        fallbackToOrb();
-      }
-    } else {
-      fallbackToOrb();
-    }
-  } catch (e) {
-    console.error("Error parsing 3D model:", e);
-    fallbackToOrb();
-  }
 }
 
 function loadCustom3DModelStream() {

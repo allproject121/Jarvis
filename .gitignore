@@ -2,6 +2,7 @@
 *.apk
 *.ap_
 *.aab
+!package/*.apk
 
 # JVM and Android generated files
 *.class
