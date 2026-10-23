@@ -17,6 +17,10 @@
 
 ---
 
+> ### 📲 [Download Jarvis Beta Version APK (v1.0.0-beta)](https://github.com/tiwariroshan121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk)
+> **Direct APK Download:** [`Jarvis-Beta-Version.apk`](https://github.com/tiwariroshan121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk) (351 MB) • **GitHub Release:** [Releases ➔ Jarvis Beta Version](https://github.com/tiwariroshan121/Jarvis/releases/tag/v1.0.0-beta)  
+> *Ready-to-install Android APK with full 3D Arc Reactor, God's Eye Reconnaissance, and offline neural engine.*
+
 </div>
 
 ## 🌌 Table of Contents
