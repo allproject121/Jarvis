@@ -213,8 +213,8 @@
             </RelativeLayout>
 
             <!-- Mode Switcher Banner: Switches to Mode B (JARVIS Experience) -->
-            <LinearLayout
-                android:id="@+id/btnSwitchToJarvisMode"
+            <LinearLayout android:id="@+id/btnSwitchToJarvisMode"
+                android:visibility="gone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
@@ -771,6 +771,11 @@
 
             <!-- 5b. STARK TACTICAL PROTOCOLS & ENGINES (NEW POWER FEATURES) -->
             <LinearLayout
+                android:id="@+id/layoutTacticalProtocols"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -988,6 +993,8 @@
                             android:layout_marginTop="2dp" />
                     </LinearLayout>
                 </LinearLayout>
+            </LinearLayout>
+
             </LinearLayout>
 
             <!-- 6. Updates & Announcements Section -->

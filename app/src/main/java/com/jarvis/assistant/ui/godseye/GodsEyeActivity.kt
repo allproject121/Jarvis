@@ -175,6 +175,11 @@ class GodsEyeActivity : AppCompatActivity() {
             finish()
         }
 
+        binding.btnApiHub.setOnClickListener {
+            val hubSheet = GodsEyeApiHubBottomSheet()
+            hubSheet.show(supportFragmentManager, "GodsEyeApiHubBottomSheet")
+        }
+
         binding.btnReload.setOnClickListener {
             binding.layoutError.visibility = View.GONE
             binding.layoutLoading.visibility = View.VISIBLE
@@ -560,6 +565,12 @@ class GodsEyeActivity : AppCompatActivity() {
 
         // 2. Standalone direct proxy and built-in offline providers
         try {
+            // Check comprehensive GodsEyeApiHub for upstream sensor APIs & feeds
+            val hubResponse = GodsEyeApiHub.handleProxyRequest(path, url, request, corsHeaders, okHttpClient)
+            if (hubResponse != null) {
+                return hubResponse
+            }
+
             // --- A. CCTV SYSTEM ---
             if (path.startsWith("/api/cctv/sources")) {
                 return handleCctvSources(corsHeaders)

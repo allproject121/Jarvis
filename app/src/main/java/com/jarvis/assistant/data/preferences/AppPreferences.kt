@@ -84,6 +84,10 @@ class AppPreferences(context: Context) {
         private const val KEY_SHOW_WEATHER_WIDGET = "key_show_weather_widget"
         private const val KEY_SHOW_TELEMETRY_WIDGET = "key_show_telemetry_widget"
         private const val KEY_SHOW_UPDATES_WIDGET = "key_show_updates_widget"
+        private const val KEY_SHOW_QUICK_ACTIONS_WIDGET = "key_show_quick_actions_widget"
+        private const val KEY_SHOW_PROTOCOLS_WIDGET = "key_show_protocols_widget"
+        private const val KEY_SHOW_STATUS_INDICATOR_WIDGET = "key_show_status_indicator_widget"
+        private const val KEY_HIDE_ALL_HOME_CARDS = "key_hide_all_home_cards"
         private const val KEY_HUD_SOUND_ENABLED = "key_hud_sound_enabled"
         private const val KEY_HUD_SOUND_VOLUME = "key_hud_sound_volume"
         private const val KEY_VOSK_SENSITIVITY = "key_vosk_sensitivity"
@@ -415,7 +419,7 @@ class AppPreferences(context: Context) {
         set(value) = prefs.edit().putString(KEY_ORB_CORE_PRESET, value).apply()
 
     var orbEntityType: String
-        get() = prefs.getString(KEY_ORB_ENTITY_TYPE, "orb") ?: "orb"
+        get() = prefs.getString(KEY_ORB_ENTITY_TYPE, "mora_cyber") ?: "mora_cyber"
         set(value) = prefs.edit().putString(KEY_ORB_ENTITY_TYPE, value).apply()
 
     var orbShowCore: Boolean
@@ -489,6 +493,22 @@ class AppPreferences(context: Context) {
     var showUpdatesWidget: Boolean
         get() = prefs.getBoolean(KEY_SHOW_UPDATES_WIDGET, true)
         set(value) = prefs.edit().putBoolean(KEY_SHOW_UPDATES_WIDGET, value).apply()
+
+    var showQuickActionsWidget: Boolean
+        get() = prefs.getBoolean(KEY_SHOW_QUICK_ACTIONS_WIDGET, true)
+        set(value) = prefs.edit().putBoolean(KEY_SHOW_QUICK_ACTIONS_WIDGET, value).apply()
+
+    var showProtocolsWidget: Boolean
+        get() = prefs.getBoolean(KEY_SHOW_PROTOCOLS_WIDGET, true)
+        set(value) = prefs.edit().putBoolean(KEY_SHOW_PROTOCOLS_WIDGET, value).apply()
+
+    var showStatusIndicatorWidget: Boolean
+        get() = prefs.getBoolean(KEY_SHOW_STATUS_INDICATOR_WIDGET, true)
+        set(value) = prefs.edit().putBoolean(KEY_SHOW_STATUS_INDICATOR_WIDGET, value).apply()
+
+    var hideAllHomeCards: Boolean
+        get() = prefs.getBoolean(KEY_HIDE_ALL_HOME_CARDS, false)
+        set(value) = prefs.edit().putBoolean(KEY_HIDE_ALL_HOME_CARDS, value).apply()
 
     var isHudSoundEnabled: Boolean
         get() = prefs.getBoolean(KEY_HUD_SOUND_ENABLED, true)

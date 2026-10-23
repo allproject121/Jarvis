@@ -351,6 +351,11 @@ class SettingsFragment : Fragment() {
             activity?.recreate()
         }
 
+        binding.rowHomeWidgetsConfig.setOnClickListener {
+            HudSoundManager.playTapSound()
+            showHomeWidgetsDialog()
+        }
+
         binding.rowDrivingMode.setOnClickListener {
             showDrivingModeDialog()
         }
@@ -1083,6 +1088,53 @@ class SettingsFragment : Fragment() {
             .setTitle("App Identity & Verification")
             .setMessage(report)
             .setPositiveButton("Close", null)
+            .show()
+    }
+    private fun showHomeWidgetsDialog() {
+        val options = arrayOf(
+            "Show 3D Mora Cyber Character",
+            "Clean Immersion View (Hide all cards)",
+            "Live Weather Card",
+            "Stark Telemetry HUD",
+            "Quick Actions Strip (Screen/Memories/Lang)",
+            "Tactical Protocols Hub",
+            "Updates & Announcements Feed",
+            "Voice Status Indicator & Hint"
+        )
+        val checkedItems = booleanArrayOf(
+            preferences.orbEntityType == "mora_cyber",
+            preferences.hideAllHomeCards,
+            preferences.showWeatherWidget,
+            preferences.showTelemetryWidget,
+            preferences.showQuickActionsWidget,
+            preferences.showProtocolsWidget,
+            preferences.showUpdatesWidget,
+            preferences.showStatusIndicatorWidget
+        )
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Home Screen HUD & 3D Character")
+            .setMultiChoiceItems(options, checkedItems) { _, which, isChecked ->
+                HudSoundManager.playTapSound()
+                when (which) {
+                    0 -> {
+                        preferences.orbEntityType = if (isChecked) "mora_cyber" else "orb"
+                        if (isChecked) {
+                            com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(requireContext(), com.jarvis.assistant.util.ModelVaultManager.BUILTIN_MORA.id)
+                        }
+                    }
+                    1 -> preferences.hideAllHomeCards = isChecked
+                    2 -> preferences.showWeatherWidget = isChecked
+                    3 -> preferences.showTelemetryWidget = isChecked
+                    4 -> preferences.showQuickActionsWidget = isChecked
+                    5 -> preferences.showProtocolsWidget = isChecked
+                    6 -> preferences.showUpdatesWidget = isChecked
+                    7 -> preferences.showStatusIndicatorWidget = isChecked
+                }
+            }
+            .setPositiveButton("Apply") { _, _ ->
+                Toast.makeText(requireContext(), "Home HUD settings applied", Toast.LENGTH_SHORT).show()
+            }
             .show()
     }
 

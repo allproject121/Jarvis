@@ -18,18 +18,35 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Minimalist Floating Cyber HUD Back Button (Beside title logo; never obscures title bar or top actions) -->
+    <!-- Minimalist Floating Cyber HUD Back Button -->
     <ImageButton
         android:id="@+id/btnBack"
-        android:layout_width="34dp"
-        android:layout_height="34dp"
-        android:layout_marginStart="58dp"
-        android:layout_marginTop="12dp"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="52dp"
+        android:elevation="16dp"
         android:background="@drawable/bg_godseye_hud_back"
         android:src="@drawable/ic_back"
-        android:padding="7dp"
+        android:padding="8dp"
         app:tint="#00D4FF"
         android:contentDescription="Return to JARVIS"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Cyber HUD API Hub / Direct Sensor Connect Button (Placed beside Back button, immune to top-right PiP overlays) -->
+    <ImageButton
+        android:id="@+id/btnApiHub"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="52dp"
+        android:elevation="16dp"
+        android:background="@drawable/bg_godseye_hud_back"
+        android:src="@drawable/ic_code_chip"
+        android:padding="8dp"
+        app:tint="#00D4FF"
+        android:contentDescription="Open Gods Eye Direct API Hub"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 

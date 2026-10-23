@@ -132,11 +132,24 @@ class HomeFragment : Fragment() {
             }
         }
 
+        binding.btnSwitchToJarvisMode.visibility = View.GONE
         binding.btnSwitchToJarvisMode.setOnClickListener {
             HudSoundManager.playTapSound()
             preferences.experienceMode = com.jarvis.assistant.data.preferences.AppPreferences.MODE_JARVIS
             android.widget.Toast.makeText(requireContext(), "💜 Switched to JARVIS Mode", android.widget.Toast.LENGTH_SHORT).show()
             (activity as? MainActivity)?.switchExperienceMode(com.jarvis.assistant.data.preferences.AppPreferences.MODE_JARVIS)
+        }
+        // Default to 3D Mora Cyber Character on Home Screen per user specification
+        if (preferences.orbEntityType == "orb") {
+            preferences.orbEntityType = "mora_cyber"
+            com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(requireContext(), com.jarvis.assistant.util.ModelVaultManager.BUILTIN_MORA.id)
+        }
+        val isMoraInit = preferences.orbEntityType == "mora_cyber"
+        if (isMoraInit) {
+            binding.orbHaloRing.visibility = View.GONE
+            val density = resources.displayMetrics.density
+            val initialHeight = if (preferences.hideAllHomeCards) (520 * density).toInt() else (360 * density).toInt()
+            binding.orbContainer.layoutParams.height = initialHeight
         }
 
         setupOrbWebView()
@@ -294,7 +307,11 @@ class HomeFragment : Fragment() {
             setBackgroundColor(Color.TRANSPARENT)
             setLayerType(View.LAYER_TYPE_HARDWARE, null)
 
+            android.webkit.WebView.setWebContentsDebuggingEnabled(true)
             settings.apply {
+                databaseEnabled = true
+                loadsImagesAutomatically = true
+                mediaPlaybackRequiresUserGesture = false
                 javaScriptEnabled = true
                 domStorageEnabled = true
                 allowFileAccess = true
@@ -446,14 +463,26 @@ class HomeFragment : Fragment() {
     private fun applyCustomizationPreferences() {
         val b = _binding ?: return
 
-        // Widget Visibilities
-        b.cardWeather.visibility = if (preferences.showWeatherWidget) View.VISIBLE else View.GONE
-        b.cardTelemetry.visibility = if (preferences.showTelemetryWidget) View.VISIBLE else View.GONE
-        b.layoutUpdatesSectionHeader.visibility = if (preferences.showUpdatesWidget) View.VISIBLE else View.GONE
-        b.layoutUpdatesContainer.visibility = if (preferences.showUpdatesWidget) View.VISIBLE else View.GONE
+                // Mode Switcher Banner: Always hidden per user specification
+        b.btnSwitchToJarvisMode.visibility = View.GONE
+
+        // Master Clean Immersion Mode or Zen Mode hides all bottom cards
+        val hideAll = isZenModeActive || preferences.hideAllHomeCards
+        if (hideAll) {
+            b.layoutHomeCardsContainer.visibility = View.GONE
+        } else {
+            b.layoutHomeCardsContainer.visibility = View.VISIBLE
+            b.layoutStatusIndicator.visibility = if (preferences.showStatusIndicatorWidget) View.VISIBLE else View.GONE
+            b.cardWeather.visibility = if (preferences.showWeatherWidget) View.VISIBLE else View.GONE
+            b.cardTelemetry.visibility = if (preferences.showTelemetryWidget) View.VISIBLE else View.GONE
+            b.layoutActionGrid.visibility = if (preferences.showQuickActionsWidget) View.VISIBLE else View.GONE
+            b.layoutTacticalProtocols.visibility = if (preferences.showProtocolsWidget) View.VISIBLE else View.GONE
+            b.layoutUpdatesSectionHeader.visibility = if (preferences.showUpdatesWidget) View.VISIBLE else View.GONE
+            b.layoutUpdatesContainer.visibility = if (preferences.showUpdatesWidget) View.VISIBLE else View.GONE
+        }
 
         // Telemetry update
-        if (preferences.showTelemetryWidget) {
+        if (!hideAll && preferences.showTelemetryWidget) {
             updateTelemetryData()
         }
 
@@ -477,7 +506,7 @@ class HomeFragment : Fragment() {
         try {
             val screenHeight = resources.displayMetrics.heightPixels
             val density = resources.displayMetrics.density
-            val targetStageHeight = if (isZenModeActive) {
+            val targetStageHeight = if (isZenModeActive || preferences.hideAllHomeCards) {
                 (520 * density).toInt().coerceAtMost((screenHeight * 0.70f).toInt())
             } else if (preferences.isOrbCinematic50) {
                 (screenHeight * 0.48f).toInt()
@@ -1001,8 +1030,9 @@ class HomeFragment : Fragment() {
         )
         b.btnExitZenMode.visibility = if (isZenModeActive) View.VISIBLE else View.GONE
 
+                b.btnSwitchToJarvisMode.visibility = View.GONE
+
         val hudViews = listOf(
-            b.btnSwitchToJarvisMode,
             b.layoutHomeCardsContainer
         )
 
@@ -1023,15 +1053,21 @@ class HomeFragment : Fragment() {
             }
         }
 
-        if (!isZenModeActive) {
+                if (!isZenModeActive && !preferences.hideAllHomeCards) {
+            b.layoutHomeCardsContainer.visibility = View.VISIBLE
+            b.layoutStatusIndicator.visibility = if (preferences.showStatusIndicatorWidget) View.VISIBLE else View.GONE
             b.cardWeather.visibility = if (preferences.showWeatherWidget) View.VISIBLE else View.GONE
             b.cardTelemetry.visibility = if (preferences.showTelemetryWidget) View.VISIBLE else View.GONE
+            b.layoutActionGrid.visibility = if (preferences.showQuickActionsWidget) View.VISIBLE else View.GONE
+            b.layoutTacticalProtocols.visibility = if (preferences.showProtocolsWidget) View.VISIBLE else View.GONE
             b.layoutUpdatesSectionHeader.visibility = if (preferences.showUpdatesWidget) View.VISIBLE else View.GONE
             b.layoutUpdatesContainer.visibility = if (preferences.showUpdatesWidget) View.VISIBLE else View.GONE
+        } else if (preferences.hideAllHomeCards) {
+            b.layoutHomeCardsContainer.visibility = View.GONE
         }
 
         val screenHeight = resources.displayMetrics.heightPixels
-        val targetStageHeight = if (isZenModeActive) {
+        val targetStageHeight = if (isZenModeActive || preferences.hideAllHomeCards) {
             (520 * density).toInt().coerceAtMost((screenHeight * 0.70f).toInt())
         } else if (preferences.isOrbCinematic50) {
             (screenHeight * 0.48f).toInt()

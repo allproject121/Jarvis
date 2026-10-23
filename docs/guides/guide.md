@@ -933,3 +933,22 @@ Mobile devices cannot run heavy backpropagation/training due to thermal and batt
   - Executed clean Android build: BUILD SUCCESSFUL in 6m 12s.
   - Verified APK signature using apksigner verify (v2 scheme valid).
   - Copied to: C:\Users\Roshan\Downloads\Jarvis-GodsEye-PhoneLayout-Fixed.apk (366.35 MB).
+
+### Phase 7.32: God's Eye Mobile Performance & Live CCTV Visibility Overhaul (2026-10-24)
+- **Problem Addressed:**
+  1. CCTV option was hard to locate / buried in secondary groups on phone, leaving users confused about how to activate live cameras.
+  2. Severe GPU lag on phone when opening God's Eye due to 4x MSAA rasterizing 14M+ samples at 1260x2800, 1.5GB 3D tile cache, an 8-second blocking network ground-prior init wait, and 3 simultaneous heavy tracking layers (Satellites + Flights + 4,000 CCTV cameras) booting at once.
+  3. When CCTV was opened, preview was blank with "click a camera to activate".
+- **Fixes Applied:**
+  1. **Primary Layer Prominence:** In `src/ui/layerNames.js`, renamed label to `'Live CCTV Cameras'`. In `src/ui/layerPanel.js`, moved `'cctv'` to the top of `Movement & Live Feeds` so it is the first item in the primary `DATA LAYERS` drawer alongside Flights and Satellites.
+  2. **Auto Camera Selection:** In `src/ui/cctvPresentation.js`, auto-activate nearest camera via `focusNearest({ focus: false })` when CCTV is enabled so live video/snapshot streams immediately.
+  3. **GPU & Mobile Performance Optimization:**
+     - In `src/app/viewer.js`, set `msaaSamples = 1` and `viewer.resolutionScale = 0.75` on mobile (reduces GPU rasterization load by >65%).
+     - Set `viewer.scene.globe.maximumScreenSpaceError = 2.5` and `tileCacheSize = 100` on mobile.
+     - In `src/layers/cctv/policy.js`, reduced `GROUND_PRIOR_INIT_WAIT_MS` from `8000` to `600` so initial layer startup never hangs for 8 seconds.
+     - In `GodsEyeActivity.kt`, set `DEFAULT_LAYERS_HASH = "l=f"` so Flights start instantaneously at 60 FPS, with CCTV and Satellites toggleable on demand from the top of the menu.
+  4. **Build & Direct Phone Installation:**
+     - Bundled web frontend with Vite into `dist/assets/index-DXLUe38q.js`.
+     - Synced to Android assets `app/src/main/assets/godseye/`.
+     - Built APK with JDK 17, verified signature, and installed directly on phone `10BG1D01DA007QG` via ADB.
+     - Verified locked 60 FPS performance, real-time live CCTV stream (`Congress/5th St`), and mobile bottom sheet drawer.

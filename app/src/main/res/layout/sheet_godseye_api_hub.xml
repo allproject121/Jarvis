@@ -1,0 +1,580 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0F141C"
+    android:paddingTop="12dp">
+
+    <!-- Top Drag Handle -->
+    <View
+        android:layout_width="48dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="#334155"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Hub Header -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="18dp"
+        android:paddingBottom="12dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@id/btnHubClose"
+            android:layout_centerVertical="true">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_code_chip"
+                    app:tint="#00D4FF"
+                    android:contentDescription="API Hub Icon" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PLANETARY SENSORS &amp; API HUB"
+                    android:textColor="#00D4FF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Direct access to all planetary intelligence &amp; sensor feeds"
+                android:textColor="#94A3B8"
+                android:textSize="11sp"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnHubClose"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_godseye_hud_back"
+            android:src="@drawable/ic_close"
+            android:padding="7dp"
+            app:tint="#94A3B8"
+            android:contentDescription="Close Hub" />
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1E293B" />
+
+    <!-- Scrollable Sensor Sections -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ========================================== -->
+            <!-- 1. SPACE ROCKET LAUNCHES (LAUNCH LIBRARY 2) -->
+            <!-- ========================================== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_godseye_hud_card"
+                android:padding="14dp"
+                android:layout_marginBottom="14dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🚀 ORBITAL ROCKET LAUNCHES"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="LL2 v2.3"
+                        android:textColor="#00D4FF"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:background="#162E3E"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true" />
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Real-time upcoming orbital missions: SpaceX, ISRO, NASA, ESA with countdowns &amp; pads."
+                    android:textColor="#94A3B8"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnConnectLaunches"
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:text="DIRECT CONNECT • FETCH LAUNCHES"
+                    android:textColor="#0F141C"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/bg_godseye_hud_back"
+                    android:backgroundTint="#00D4FF"
+                    android:layout_marginTop="10dp" />
+
+                <ProgressBar
+                    android:id="@+id/pbLaunches"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:indeterminate="true"
+                    android:indeterminateTint="#00D4FF"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/containerLaunches"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+
+            <!-- ========================================== -->
+            <!-- 2. WORLDWIDE LIVE RADIO (RADIO BROWSER)    -->
+            <!-- ========================================== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_godseye_hud_card"
+                android:padding="14dp"
+                android:layout_marginBottom="14dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📻 WORLDWIDE LIVE RADIO"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="30,000+ STATIONS"
+                        android:textColor="#10B981"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:background="#132B25"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true" />
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Direct audio streaming from planetary broadcast transmitters around the world."
+                    android:textColor="#94A3B8"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+
+                <!-- Radio Playback Controller Bar (when playing) -->
+                <LinearLayout
+                    android:id="@+id/layoutRadioPlayer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="#162E3E"
+                    android:padding="8dp"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/tvCurrentPlayingStation"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Playing: ..."
+                        android:textColor="#00D4FF"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:singleLine="true"
+                        android:ellipsize="end" />
+
+                    <Button
+                        android:id="@+id/btnStopRadio"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:text="STOP"
+                        android:textColor="#FF3B30"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_godseye_hud_back" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="10dp">
+
+                    <Button
+                        android:id="@+id/btnConnectRadioGlobal"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="TOP GLOBAL"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_godseye_hud_card"
+                        android:layout_marginEnd="4dp" />
+
+                    <Button
+                        android:id="@+id/btnConnectRadioIndia"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="INDIA STATIONS"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_godseye_hud_card"
+                        android:layout_marginHorizontal="2dp" />
+
+                    <Button
+                        android:id="@+id/btnConnectRadioAmbient"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="AMBIENT"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_godseye_hud_card"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/pbRadio"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:indeterminate="true"
+                    android:indeterminateTint="#10B981"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/containerRadio"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+
+            <!-- ========================================== -->
+            <!-- 3. AIRCRAFT INTEL & ROUTE (ADSBdb)         -->
+            <!-- ========================================== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_godseye_hud_card"
+                android:padding="14dp"
+                android:layout_marginBottom="14dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="✈️ AIRCRAFT INTEL &amp; ROUTE LOOKUP"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ADSBdb"
+                        android:textColor="#F59E0B"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:background="#332512"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true" />
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Decode airframe registration, owner/operator, and flight route by callsign or hex."
+                    android:textColor="#94A3B8"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp">
+
+                    <EditText
+                        android:id="@+id/etAircraftQuery"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:hint="Callsign (e.g. AIC101) or Hex (e.g. 800b4a)"
+                        android:textColor="#FFFFFF"
+                        android:textColorHint="#64748B"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_godseye_hud_back"
+                        android:paddingHorizontal="10dp"
+                        android:singleLine="true"
+                        android:inputType="textCapCharacters" />
+
+                    <Button
+                        android:id="@+id/btnLookupAircraft"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="LOOKUP"
+                        android:textColor="#0F141C"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_godseye_hud_back"
+                        android:backgroundTint="#F59E0B"
+                        android:layout_marginStart="8dp" />
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/pbAircraft"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:indeterminate="true"
+                    android:indeterminateTint="#F59E0B"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvAircraftResult"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#E2E8F0"
+                    android:textSize="11sp"
+                    android:fontFamily="monospace"
+                    android:background="#161B26"
+                    android:padding="10dp"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- ========================================== -->
+            <!-- 4. NOAA CYCLONES & HURRICANES               -->
+            <!-- ========================================== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_godseye_hud_card"
+                android:padding="14dp"
+                android:layout_marginBottom="14dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🌀 NOAA TROPICAL CYCLONES"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="NHC / CPHC"
+                        android:textColor="#38BDF8"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:background="#162E3E"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true" />
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Direct telemetry of active hurricanes, cyclones, central pressure mb &amp; wind intensities."
+                    android:textColor="#94A3B8"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnConnectCyclones"
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:text="SCAN ACTIVE CYCLONES"
+                    android:textColor="#0F141C"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/bg_godseye_hud_back"
+                    android:backgroundTint="#38BDF8"
+                    android:layout_marginTop="10dp" />
+
+                <ProgressBar
+                    android:id="@+id/pbCyclones"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:indeterminate="true"
+                    android:indeterminateTint="#38BDF8"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvCyclonesResult"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#E2E8F0"
+                    android:textSize="11sp"
+                    android:fontFamily="monospace"
+                    android:background="#161B26"
+                    android:padding="10dp"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- ========================================== -->
+            <!-- 5. GDELT REAL-TIME GEO INTELLIGENCE         -->
+            <!-- ========================================== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_godseye_hud_card"
+                android:padding="14dp"
+                android:layout_marginBottom="14dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🌐 GDELT REAL-TIME GEO-INTEL"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="GDELT 2.0"
+                        android:textColor="#A855F7"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:background="#2E1C3F"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true" />
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Real-time planetary news &amp; security event feeds across thousands of international news sources."
+                    android:textColor="#94A3B8"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnConnectNews"
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:text="PULL GEO-INTELLIGENCE"
+                    android:textColor="#0F141C"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/bg_godseye_hud_back"
+                    android:backgroundTint="#A855F7"
+                    android:layout_marginTop="10dp" />
+
+                <ProgressBar
+                    android:id="@+id/pbNews"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:indeterminate="true"
+                    android:indeterminateTint="#A855F7"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/containerNews"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

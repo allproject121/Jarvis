@@ -302,11 +302,14 @@ class CustomizationStudioActivity : AppCompatActivity() {
         val scaleProg = ((preferences.orbScale - 0.70f) / 0.05f).roundToInt().coerceIn(0, 12)
         binding.sliderOrbScale.progress = scaleProg
         binding.tvOrbScaleVal.text = String.format("%.2fx", getCurrentScale())
-
         // 4. Widgets
+        binding.switchHideAllCards.isChecked = preferences.hideAllHomeCards
         binding.switchTelemetryWidget.isChecked = preferences.showTelemetryWidget
         binding.switchWeatherWidget.isChecked = preferences.showWeatherWidget
+        binding.switchQuickActionsWidget.isChecked = preferences.showQuickActionsWidget
+        binding.switchProtocolsWidget.isChecked = preferences.showProtocolsWidget
         binding.switchUpdatesWidget.isChecked = preferences.showUpdatesWidget
+        binding.switchStatusIndicatorWidget.isChecked = preferences.showStatusIndicatorWidget
         binding.switchBlurEffectStudio.isChecked = preferences.isBlurEffectEnabled
         binding.switchHoloScanlines.isChecked = preferences.isHoloScanlinesEnabled
 
@@ -923,12 +926,43 @@ class CustomizationStudioActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupWidgetTabControls() {
-        binding.switchTelemetryWidget.setOnCheckedChangeListener { _, _ -> HudSoundManager.playTapSound() }
-        binding.switchWeatherWidget.setOnCheckedChangeListener { _, _ -> HudSoundManager.playTapSound() }
-        binding.switchUpdatesWidget.setOnCheckedChangeListener { _, _ -> HudSoundManager.playTapSound() }
-        binding.switchBlurEffectStudio.setOnCheckedChangeListener { _, _ -> HudSoundManager.playTapSound() }
-        binding.switchHoloScanlines.setOnCheckedChangeListener { _, _ -> HudSoundManager.playTapSound() }
+        private fun setupWidgetTabControls() {
+        binding.switchHideAllCards.setOnCheckedChangeListener { _, isChecked ->
+            preferences.hideAllHomeCards = isChecked
+            HudSoundManager.playTapSound()
+        }
+        binding.switchTelemetryWidget.setOnCheckedChangeListener { _, isChecked ->
+            preferences.showTelemetryWidget = isChecked
+            HudSoundManager.playTapSound()
+        }
+        binding.switchWeatherWidget.setOnCheckedChangeListener { _, isChecked ->
+            preferences.showWeatherWidget = isChecked
+            HudSoundManager.playTapSound()
+        }
+        binding.switchQuickActionsWidget.setOnCheckedChangeListener { _, isChecked ->
+            preferences.showQuickActionsWidget = isChecked
+            HudSoundManager.playTapSound()
+        }
+        binding.switchProtocolsWidget.setOnCheckedChangeListener { _, isChecked ->
+            preferences.showProtocolsWidget = isChecked
+            HudSoundManager.playTapSound()
+        }
+        binding.switchUpdatesWidget.setOnCheckedChangeListener { _, isChecked ->
+            preferences.showUpdatesWidget = isChecked
+            HudSoundManager.playTapSound()
+        }
+        binding.switchStatusIndicatorWidget.setOnCheckedChangeListener { _, isChecked ->
+            preferences.showStatusIndicatorWidget = isChecked
+            HudSoundManager.playTapSound()
+        }
+        binding.switchBlurEffectStudio.setOnCheckedChangeListener { _, isChecked ->
+            preferences.isBlurEffectEnabled = isChecked
+            HudSoundManager.playTapSound()
+        }
+        binding.switchHoloScanlines.setOnCheckedChangeListener { _, isChecked ->
+            preferences.isHoloScanlinesEnabled = isChecked
+            HudSoundManager.playTapSound()
+        }
     }
 
     private fun setupAudioTabControls() {
@@ -1189,11 +1223,14 @@ class CustomizationStudioActivity : AppCompatActivity() {
 
                 // Save Theme
                 preferences.appTheme = selectedTheme
-
                 // Save Widgets & HUD Overlays
+                preferences.hideAllHomeCards = binding.switchHideAllCards.isChecked
                 preferences.showTelemetryWidget = binding.switchTelemetryWidget.isChecked
                 preferences.showWeatherWidget = binding.switchWeatherWidget.isChecked
+                preferences.showQuickActionsWidget = binding.switchQuickActionsWidget.isChecked
+                preferences.showProtocolsWidget = binding.switchProtocolsWidget.isChecked
                 preferences.showUpdatesWidget = binding.switchUpdatesWidget.isChecked
+                preferences.showStatusIndicatorWidget = binding.switchStatusIndicatorWidget.isChecked
                 preferences.isBlurEffectEnabled = binding.switchBlurEffectStudio.isChecked
                 preferences.isHoloScanlinesEnabled = binding.switchHoloScanlines.isChecked
 
