@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.jarvis.assistant.JarvisApp
+import com.jarvis.assistant.R
 import com.jarvis.assistant.automation.accessibility.JarvisAccessibilityService
 import com.jarvis.assistant.automation.macro.MacroExecutionResult
 import com.jarvis.assistant.databinding.ActivityJarvisMatrixBinding
