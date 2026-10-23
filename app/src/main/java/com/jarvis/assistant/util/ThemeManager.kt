@@ -191,19 +191,28 @@ object ThemeManager {
             else -> Triple(R.style.Theme_JarvisAssistant_Dark, Color.parseColor("#070914"), false)
         }
 
-        activity.setTheme(themeRes)
-        activity.window.setBackgroundDrawable(ColorDrawable(bgColor))
-        activity.window.decorView.setBackgroundColor(bgColor)
-        activity.window.statusBarColor = bgColor
-        activity.window.navigationBarColor = bgColor
+        try {
+            activity.setTheme(themeRes)
+            activity.window.setBackgroundDrawable(ColorDrawable(bgColor))
+            activity.window.decorView.setBackgroundColor(bgColor)
+            @Suppress("DEPRECATION")
+            try {
+                activity.window.statusBarColor = bgColor
+                activity.window.navigationBarColor = bgColor
+            } catch (_: Throwable) {}
 
-        val controller = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
-        controller.isAppearanceLightStatusBars = isLight
-        controller.isAppearanceLightNavigationBars = isLight
+            try {
+                val controller = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
+                controller.isAppearanceLightStatusBars = isLight
+                controller.isAppearanceLightNavigationBars = isLight
+            } catch (_: Throwable) {}
 
-        try { activity.findViewById<View>(android.R.id.content)?.setBackgroundColor(bgColor) } catch (_: Exception) {}
-        activity.window.decorView.post {
-            try { activity.findViewById<View>(android.R.id.content)?.setBackgroundColor(bgColor) } catch (_: Exception) {}
+            try { activity.findViewById<View>(android.R.id.content)?.setBackgroundColor(bgColor) } catch (_: Throwable) {}
+            activity.window.decorView.post {
+                try { activity.findViewById<View>(android.R.id.content)?.setBackgroundColor(bgColor) } catch (_: Throwable) {}
+            }
+        } catch (e: Throwable) {
+            android.util.Log.e("ThemeManager", "Error applying theme to ${activity.localClassName}", e)
         }
     }
 

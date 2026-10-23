@@ -140,16 +140,25 @@ class HomeFragment : Fragment() {
             (activity as? MainActivity)?.switchExperienceMode(com.jarvis.assistant.data.preferences.AppPreferences.MODE_JARVIS)
         }
         // Default to 3D Mora Cyber Character on Home Screen per user specification
-        if (preferences.orbEntityType == "orb") {
-            preferences.orbEntityType = "mora_cyber"
-            com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(requireContext(), com.jarvis.assistant.util.ModelVaultManager.BUILTIN_MORA.id)
-        }
+        try {
+            if (preferences.orbEntityType == "orb") {
+                preferences.orbEntityType = "mora_cyber"
+                com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(requireContext(), com.jarvis.assistant.util.ModelVaultManager.BUILTIN_MORA.id)
+            }
+        } catch (_: Throwable) {}
+
         val isMoraInit = preferences.orbEntityType == "mora_cyber"
         if (isMoraInit) {
             binding.orbHaloRing.visibility = View.GONE
-            val density = resources.displayMetrics.density
-            val initialHeight = if (preferences.hideAllHomeCards) (520 * density).toInt() else (360 * density).toInt()
-            binding.orbContainer.layoutParams.height = initialHeight
+            try {
+                val density = resources.displayMetrics.density
+                val initialHeight = if (preferences.hideAllHomeCards) (520 * density).toInt() else (360 * density).toInt()
+                val params = binding.orbContainer.layoutParams
+                if (params != null) {
+                    params.height = initialHeight
+                    binding.orbContainer.layoutParams = params
+                }
+            } catch (_: Throwable) {}
         }
 
         setupOrbWebView()
@@ -219,7 +228,9 @@ class HomeFragment : Fragment() {
         FrostedGlassEffect.applyBlur(binding.glowOrbBottom, 50f, 50f)
 
         // Start Arc Reactor Halo Breathing Pulse Animation
-        HudAnimationHelper.startBreathingHalo(binding.orbHaloRing)
+        if (binding.orbHaloRing.visibility != View.GONE) {
+            HudAnimationHelper.startBreathingHalo(binding.orbHaloRing)
+        }
 
         // Stark Tactical Protocols Click Handlers
         binding.cardHomeWallpaper.setOnClickListener {
@@ -307,20 +318,26 @@ class HomeFragment : Fragment() {
             setBackgroundColor(Color.TRANSPARENT)
             setLayerType(View.LAYER_TYPE_HARDWARE, null)
 
-            android.webkit.WebView.setWebContentsDebuggingEnabled(true)
-            settings.apply {
-                databaseEnabled = true
-                loadsImagesAutomatically = true
-                mediaPlaybackRequiresUserGesture = false
-                javaScriptEnabled = true
-                domStorageEnabled = true
-                allowFileAccess = true
-                allowContentAccess = true
-                @Suppress("DEPRECATION")
-                allowFileAccessFromFileURLs = true
-                @Suppress("DEPRECATION")
-                allowUniversalAccessFromFileURLs = true
-                cacheMode = WebSettings.LOAD_DEFAULT
+            try {
+                android.webkit.WebView.setWebContentsDebuggingEnabled(com.jarvis.assistant.BuildConfig.DEBUG)
+            } catch (_: Throwable) {}
+            try {
+                settings.apply {
+                    try { databaseEnabled = true } catch (_: Throwable) {}
+                    try { loadsImagesAutomatically = true } catch (_: Throwable) {}
+                    try { mediaPlaybackRequiresUserGesture = false } catch (_: Throwable) {}
+                    javaScriptEnabled = true
+                    domStorageEnabled = true
+                    allowFileAccess = true
+                    allowContentAccess = true
+                    @Suppress("DEPRECATION")
+                    try { allowFileAccessFromFileURLs = true } catch (_: Throwable) {}
+                    @Suppress("DEPRECATION")
+                    try { allowUniversalAccessFromFileURLs = true } catch (_: Throwable) {}
+                    cacheMode = WebSettings.LOAD_DEFAULT
+                }
+            } catch (e: Throwable) {
+                Log.e("OrbWebView", "Error configuring WebSettings", e)
             }
 
             webChromeClient = object : WebChromeClient() {
@@ -375,14 +392,23 @@ class HomeFragment : Fragment() {
                 v.onTouchEvent(event)
             }
 
-            addJavascriptInterface(com.jarvis.assistant.util.Jarvis3DModelBridge(requireContext()), "Jarvis3DModelBridge")
-            val initialUrl = if (preferences.orbEntityType == "mora_cyber") {
-                com.jarvis.assistant.util.JarvisWebViewClient.MORA_URL
-            } else {
-                com.jarvis.assistant.util.JarvisWebViewClient.ORB_URL
+            try {
+                val ctx = context ?: JarvisApp.instance
+                addJavascriptInterface(com.jarvis.assistant.util.Jarvis3DModelBridge(ctx), "Jarvis3DModelBridge")
+            } catch (e: Throwable) {
+                Log.e("OrbWebView", "Error adding Jarvis3DModelBridge", e)
             }
-            currentLoadedOrbUrl = initialUrl
-            loadUrl(initialUrl)
+            try {
+                val initialUrl = if (preferences.orbEntityType == "mora_cyber") {
+                    com.jarvis.assistant.util.JarvisWebViewClient.MORA_URL
+                } else {
+                    com.jarvis.assistant.util.JarvisWebViewClient.ORB_URL
+                }
+                currentLoadedOrbUrl = initialUrl
+                loadUrl(initialUrl)
+            } catch (e: Throwable) {
+                Log.e("OrbWebView", "Error loading initial url", e)
+            }
         }
     }
 
@@ -515,8 +541,10 @@ class HomeFragment : Fragment() {
             } else {
                 (280 * density).toInt()
             }
-            if (b.orbContainer.layoutParams.height != targetStageHeight) {
-                b.orbContainer.layoutParams.height = targetStageHeight
+            val params = b.orbContainer.layoutParams
+            if (params != null && params.height != targetStageHeight) {
+                params.height = targetStageHeight
+                b.orbContainer.layoutParams = params
                 b.orbContainer.requestLayout()
                 b.orbWebView.postDelayed({
                     b.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.resize){ window.JarvisOrb.resize(); }", null)
@@ -538,11 +566,12 @@ class HomeFragment : Fragment() {
             }
             val effSpeed = speed * resonanceBoost
             val rawEntityType = preferences.orbEntityType
-            val hasCustom3D = com.jarvis.assistant.util.CustomAvatarHelper.hasActiveCustom3dModel(requireContext()) ||
-                        com.jarvis.assistant.util.ModelVaultManager.getActiveModelFile(requireContext()) != null ||
-                        (com.jarvis.assistant.util.CustomAvatarHelper.get3DModelFile(requireContext())?.exists() == true)
+            val ctx = context ?: JarvisApp.instance
+            val hasCustom3D = com.jarvis.assistant.util.CustomAvatarHelper.hasActiveCustom3dModel(ctx) ||
+                        com.jarvis.assistant.util.ModelVaultManager.getActiveModelFile(ctx) != null ||
+                        (com.jarvis.assistant.util.CustomAvatarHelper.get3DModelFile(ctx)?.exists() == true)
             val hasBuiltin3D = rawEntityType == "hinata_anime" || rawEntityType == "ai_girl"
-            val entityType = if (rawEntityType == "custom_3d" && !com.jarvis.assistant.util.CustomAvatarHelper.hasCustomAvatar(requireContext()) && !hasCustom3D) {
+            val entityType = if (rawEntityType == "custom_3d" && !com.jarvis.assistant.util.CustomAvatarHelper.hasCustomAvatar(ctx) && !hasCustom3D) {
                 "orb"
             } else {
                 rawEntityType
@@ -1078,7 +1107,7 @@ class HomeFragment : Fragment() {
         }
 
         val currentParams = b.orbContainer.layoutParams
-        if (currentParams.height != targetStageHeight) {
+        if (currentParams != null && currentParams.height != targetStageHeight) {
             if (animated) {
                 val anim = android.animation.ValueAnimator.ofInt(currentParams.height, targetStageHeight)
                 anim.duration = 260
