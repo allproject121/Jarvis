@@ -364,16 +364,18 @@ class AppPreferences(context: Context) {
     var appTheme: String
         get() {
             val stored = prefs.getString(KEY_APP_THEME, "dark") ?: "dark"
-            return when (stored) {
-                "light", "pearl_white" -> "light"
-                "dark", "midnight_onyx", "cyberpunk_neon", "emerald_obsidian" -> "dark"
-                "red", "crimson" -> "crimson"
+            return when (stored.lowercase()) {
+                "light", "pearl_white", "white" -> "pearl_white"
+                "dark", "midnight_onyx", "obsidian", "cyan" -> "dark"
+                "red", "crimson" -> "red"
                 "sunset", "rose_gold" -> "sunset"
-                "stealth" -> "stealth"
-                "amethyst", "violet" -> "violet"
-                "cyan" -> "cyan"
-                "emerald" -> "emerald"
-                "white" -> "white"
+                "stealth", "black", "oled" -> "stealth"
+                "amethyst", "violet", "purple", "cyberpunk_neon" -> "amethyst"
+                "emerald", "green", "emerald_obsidian" -> "emerald"
+                "gold", "amber" -> "gold"
+                "pink", "rose" -> "pink"
+                "orange" -> "orange"
+                "indigo" -> "indigo"
                 "custom" -> "custom"
                 else -> stored
             }

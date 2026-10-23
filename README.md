@@ -667,9 +667,14 @@ JARVIS features a forgiving natural-language intent parser that natively underst
 │   │   │   ├── overlay-toys/             # 17+ floating companion avatars + custom_3d.html
 │   │   │   └── orb.html                  # Three.js 3D Arc Reactor, Quantum Orb & 🌸 Anime Girl
 │   │   └── res/                          # Layouts, drawables, animations, themes, strings
-├── docs/                                 # Technical architecture & research documentation
+├── docs/                                 # Centralized documentation library (Guides, God's Eye, Hybrid AI, UI/UX)
+│   ├── guides/guide.md                   # Master Engineering Log & Continuity Guide
+│   ├── gods_eye/                         # God's Eye reconnaissance specifications & reports
+│   ├── hybrid_ai/                        # Edge model feasibility & dual-engine architecture
+│   ├── ui_ux_design/                     # Matrix, SuperCore & UI design system
+│   ├── myra_integration/                 # Feature gap analysis & decompilation audits
+│   └── phase_reports/                    # Milestone progression & skill builder reports
 ├── gradle/                               # Gradle wrapper configuration
-├── guide.md                              # Master Engineering Log & Continuity Guide
 ├── build.gradle.kts                      # Root-level Gradle build configuration
 └── settings.gradle.kts                   # Project repositories and module settings
 ```
