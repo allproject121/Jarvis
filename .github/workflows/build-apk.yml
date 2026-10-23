@@ -74,6 +74,7 @@ jobs:
 
       - name: Build debug APK
         run: |
+          sed -i '/org.gradle.java.home/d' gradle.properties
           ./gradlew :app:assembleDebug --stacktrace --no-daemon 2>&1 | tee build.log || true
 
       - name: Upload build log
@@ -127,7 +128,7 @@ jobs:
             SAFE_REPO_NAME="jarvis"
           fi
 
-          ASSET_NAME="${SAFE_REPO_NAME}-debug-build-${GITHUB_RUN_NUMBER}.apk"
+          ASSET_NAME="Jarvis-Beta-Version.apk"
           DEST_PATH="$TMP_ASSET_DIR/$ASSET_NAME"
 
           cp app/build/outputs/apk/debug/app-debug.apk "$DEST_PATH"
@@ -162,7 +163,7 @@ jobs:
           fi
 
           TAG_NAME="debug-apk-build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
-          RELEASE_TITLE="Debug APK Build #${GITHUB_RUN_NUMBER}"
+          RELEASE_TITLE="Jarvis Beta Version (Build #${GITHUB_RUN_NUMBER})"
 
           NOTES=$(cat <<EOF
           ### Automated Debug Build

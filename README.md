@@ -10,7 +10,7 @@
 [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2028--35)-00E5FF?style=for-the-badge&logo=android&logoColor=white)](https://android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin%201.9%20%7C%20Java%2017-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Build APK](https://img.shields.io/badge/GitHub%20Actions-Auto%20Build%20APK-10B981?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/tiwariroshan121/Jarvis/actions/workflows/build-apk.yml)
-[![Download APK](https://img.shields.io/badge/Download%20APK-Latest%20Release-00E5FF?style=for-the-badge&logo=android&logoColor=white)](https://github.com/tiwariroshan121/Jarvis/releases/latest)
+[![Download Jarvis Beta Version APK](https://img.shields.io/badge/Download-Jarvis%20Beta%20Version%20APK-00E5FF?style=for-the-badge&logo=android&logoColor=black)](https://github.com/tiwariroshan121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk)
 [![Architecture](https://img.shields.io/badge/Dual--Brain-Cloud%20%2B%20100%25%20Offline-FF6D00?style=for-the-badge&logo=cpu&logoColor=white)](https://github.com/tiwariroshan121/Jarvis)
 [![License](https://img.shields.io/badge/License-Roshan%20TAMCL%20v1.0-E91E63?style=for-the-badge&logo=open-source-initiative&logoColor=white)](LICENSE)
 [![Architect](https://img.shields.io/badge/Architect-Roshan%20Tiwari-FF1744?style=for-the-badge&logo=github&logoColor=white)](https://github.com/tiwariroshan121)
@@ -57,20 +57,21 @@ Unlike typical voice wrappers that crash when the internet drops, JARVIS operate
 
 ---
 
-## 📲 Instant APK Download & Phone Setup
+## 📲 Instant APK Download — Jarvis Beta Version
 
-You do **not** need Android Studio or a developer machine to experience JARVIS. Every commit pushed to `main` automatically compiles and packages a fresh, signed debug APK via GitHub Actions.
+You do **not** need Android Studio or a developer machine to experience JARVIS. Download the official **Jarvis Beta Version APK** directly:
 
 <div align="center">
 
-[![Download JARVIS Debug APK](https://img.shields.io/badge/📲%20DOWNLOAD%20JARVIS%20APK-LATEST%20RELEASE-00E5FF?style=for-the-badge&logo=android&logoColor=black)](https://github.com/tiwariroshan121/Jarvis/releases/latest)
+[![Download Jarvis Beta Version APK](https://img.shields.io/badge/📲%20DOWNLOAD%20JARVIS%20BETA%20VERSION%20APK-00E5FF?style=for-the-badge&logo=android&logoColor=black)](https://github.com/tiwariroshan121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk)
 
-*Direct download link: [**github.com/tiwariroshan121/Jarvis/releases/latest**](https://github.com/tiwariroshan121/Jarvis/releases/latest)*
+*Direct APK Download: [**Jarvis-Beta-Version.apk (351 MB)**](https://github.com/tiwariroshan121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk)*  
+*Official Release Page: [**github.com/tiwariroshan121/Jarvis/releases/tag/v1.0.0-beta**](https://github.com/tiwariroshan121/Jarvis/releases/tag/v1.0.0-beta)*
 
 </div>
 
 ### ⚡ 3-Step Phone Installation:
-1. **Download:** Open [**Latest Releases**](https://github.com/tiwariroshan121/Jarvis/releases/latest) on your Android phone and download `jarvis-debug-build-*.apk` from the **Assets** section.
+1. **Download:** Tap [**Jarvis-Beta-Version.apk**](https://github.com/tiwariroshan121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk) on your Android phone to download the 351 MB package directly.
 2. **Install:** Tap the downloaded file in your browser or file manager (if prompted, enable *"Allow from this source"*).
 3. **Grant Core Permissions:** Launch JARVIS and grant:
    - 🎤 **Microphone:** For continuous voice recognition & Gemini Live conversation.
@@ -674,6 +675,8 @@ JARVIS features a forgiving natural-language intent parser that natively underst
 │   ├── ui_ux_design/                     # Matrix, SuperCore & UI design system
 │   ├── myra_integration/                 # Feature gap analysis & decompilation audits
 │   └── phase_reports/                    # Milestone progression & skill builder reports
+├── dumps/                                # Archive of historical layout dumps, tests, and models
+├── research_repos/                       # Anima (VRM/React), Anime-AI, and Anime-Avatar sources
 ├── gradle/                               # Gradle wrapper configuration
 ├── build.gradle.kts                      # Root-level Gradle build configuration
 └── settings.gradle.kts                   # Project repositories and module settings
