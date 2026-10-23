@@ -1,0 +1,489 @@
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+
+// modelLoader.js depends on ACS_normalizeModelURL (constants.js) and on
+// ACS_fetchVRMCached (color.js). We import the helpers in setup so the
+// dispatcher can use them like it would in the browser.
+beforeAll(async () => {
+  await import('../public/studio/constants.js');
+  await import('../public/studio/color.js');
+  await import('../public/studio/modelLoader.js');
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe('ACS_detectModelFormat (issue #36)', () => {
+  it('detects format from URL extension', () => {
+    expect(window.ACS_detectModelFormat('https://x/foo.vrm')).toBe('vrm');
+    expect(window.ACS_detectModelFormat('https://x/foo.glb')).toBe('glb');
+    expect(window.ACS_detectModelFormat('https://x/foo.gltf')).toBe('glb');
+    expect(window.ACS_detectModelFormat('https://x/foo.fbx')).toBe('fbx');
+    expect(window.ACS_detectModelFormat('https://x/foo.ply')).toBe('ply');
+    expect(window.ACS_detectModelFormat('https://x/foo.obj')).toBe('obj');
+    expect(window.ACS_detectModelFormat('https://x/scene.xml')).toBe('mjcf');
+  });
+
+  it('strips query string and fragment before checking the extension', () => {
+    expect(window.ACS_detectModelFormat('https://x/foo.glb?token=abc')).toBe(
+      'glb'
+    );
+    expect(window.ACS_detectModelFormat('https://x/foo.vrm#frag')).toBe('vrm');
+    expect(window.ACS_detectModelFormat('https://x/foo.PLY?v=1#x')).toBe('ply');
+  });
+
+  it('falls back to the Content-Type header when the URL is opaque', () => {
+    expect(
+      window.ACS_detectModelFormat('https://cdn/share/abc', 'model/gltf-binary')
+    ).toBe('glb');
+    expect(
+      window.ACS_detectModelFormat('https://cdn/share/abc', 'model/gltf+json')
+    ).toBe('glb');
+    expect(
+      window.ACS_detectModelFormat(
+        'https://cdn/share/abc',
+        'application/octet-stream'
+      )
+    ).toBe('glb');
+    expect(
+      window.ACS_detectModelFormat('https://cdn/share/abc', 'model/vrm')
+    ).toBe('vrm');
+  });
+
+  it('honours an explicit hint over both URL and Content-Type', () => {
+    expect(window.ACS_detectModelFormat('https://x/foo.glb', null, 'vrm')).toBe(
+      'vrm'
+    );
+    expect(
+      window.ACS_detectModelFormat('https://x/scene.xml', null, 'glb')
+    ).toBe('glb');
+  });
+
+  it('throws verbatim when nothing matches so the editor surfaces the failure', () => {
+    expect(() => window.ACS_detectModelFormat('https://x/foo.unknown')).toThrow(
+      /Unknown model format/
+    );
+  });
+});
+
+describe('ACS_loadModelFromBuffer dispatcher (issue #36)', () => {
+  it('rejects an empty format', async () => {
+    await expect(
+      window.ACS_loadModelFromBuffer(new ArrayBuffer(8), '')
+    ).rejects.toThrow(/format is required/);
+  });
+
+  it('rejects an unhandled format verbatim', async () => {
+    await expect(
+      window.ACS_loadModelFromBuffer(new ArrayBuffer(8), 'usdz')
+    ).rejects.toThrow(/'usdz' is not handled/);
+  });
+
+  it('routes glb to GLTFLoader (no VRMLoaderPlugin) — no "No VRM extension" throw', async () => {
+    // Stub GLTFLoader so we can assert the dispatcher does NOT register the
+    // VRMLoaderPlugin when format is 'glb'. parse() resolves with a fake
+    // gltf userData that has no `vrm` field — exactly the shape TRELLIS
+    // returns. The legacy loadVRMBuffer would have thrown 'No VRM
+    // extension in file'; the dispatcher must NOT.
+    const fakeScene = { name: 'fake-scene', traverse() {} };
+    const fakeGltf = { scene: fakeScene, userData: {} };
+    const register = vi.fn();
+    const parse = vi.fn((buf, base, res) => res(fakeGltf));
+    class FakeGLTFLoader {
+      constructor() {
+        this.register = register;
+        this.parse = parse;
+      }
+    }
+    const result = await window.ACS_loadModelFromBuffer(
+      new ArrayBuffer(8),
+      'glb',
+      { GLTFLoader: FakeGLTFLoader }
+    );
+    expect(register).not.toHaveBeenCalled();
+    expect(parse).toHaveBeenCalledTimes(1);
+    expect(result.ok).toBe(true);
+    expect(result.format).toBe('glb');
+    expect(result.kind).toBe('prop');
+    expect(result.scene).toBe(fakeScene);
+  });
+
+  it('routes vrm to GLTFLoader with VRMLoaderPlugin registered', async () => {
+    const fakeScene = { name: 'fake-vrm-scene', traverse() {} };
+    const fakeVRM = { scene: fakeScene, meta: {} };
+    const fakeGltf = { scene: fakeScene, userData: { vrm: fakeVRM } };
+    const register = vi.fn();
+    const parse = vi.fn((buf, base, res) => res(fakeGltf));
+    class FakeGLTFLoader {
+      constructor() {
+        this.register = register;
+        this.parse = parse;
+      }
+    }
+    class FakeVRMLoaderPlugin {}
+    const fakeVRMUtils = {
+      removeUnnecessaryVertices: vi.fn(),
+      combineSkeletons: vi.fn(),
+      combineMorphs: vi.fn(),
+    };
+    const result = await window.ACS_loadModelFromBuffer(
+      new ArrayBuffer(8),
+      'vrm',
+      {
+        GLTFLoader: FakeGLTFLoader,
+        THREE_VRM: {
+          VRMLoaderPlugin: FakeVRMLoaderPlugin,
+          VRMUtils: fakeVRMUtils,
+        },
+      }
+    );
+    expect(register).toHaveBeenCalledTimes(1);
+    expect(result.ok).toBe(true);
+    expect(result.format).toBe('vrm');
+    expect(result.kind).toBe('humanoid');
+    expect(result.vrm).toBe(fakeVRM);
+  });
+
+  it('throws "No VRM extension in file" only when format is vrm and meta is missing', async () => {
+    const fakeGltf = { scene: { traverse() {} }, userData: {} }; // no vrm
+    const parse = vi.fn((buf, base, res) => res(fakeGltf));
+    class FakeGLTFLoader {
+      constructor() {
+        this.register = () => {};
+        this.parse = parse;
+      }
+    }
+    class FakeVRMLoaderPlugin {}
+    const fakeVRMUtils = {
+      removeUnnecessaryVertices: vi.fn(),
+      combineSkeletons: vi.fn(),
+      combineMorphs: vi.fn(),
+    };
+    await expect(
+      window.ACS_loadModelFromBuffer(new ArrayBuffer(8), 'vrm', {
+        GLTFLoader: FakeGLTFLoader,
+        THREE_VRM: {
+          VRMLoaderPlugin: FakeVRMLoaderPlugin,
+          VRMUtils: fakeVRMUtils,
+        },
+      })
+    ).rejects.toThrow(/No VRM extension in file/);
+  });
+
+  it('routes fbx to FBXLoader.parse', async () => {
+    const fakeObj = { name: 'fake-fbx', traverse() {} };
+    const parse = vi.fn(() => fakeObj);
+    class FakeFBXLoader {
+      constructor() {
+        this.parse = parse;
+      }
+    }
+    const result = await window.ACS_loadModelFromBuffer(
+      new ArrayBuffer(8),
+      'fbx',
+      { FBXLoader: FakeFBXLoader }
+    );
+    expect(parse).toHaveBeenCalledTimes(1);
+    expect(result.format).toBe('fbx');
+    expect(result.kind).toBe('prop');
+    expect(result.scene).toBe(fakeObj);
+  });
+
+  it('routes obj through OBJLoader (string buffer goes straight through)', async () => {
+    const text = 'v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n';
+    const fakeObj = { name: 'fake-obj' };
+    const parse = vi.fn((t) => {
+      expect(t).toContain('f 1 2 3');
+      return fakeObj;
+    });
+    class FakeOBJLoader {
+      constructor() {
+        this.parse = parse;
+      }
+    }
+    const result = await window.ACS_loadModelFromBuffer(text, 'obj', {
+      OBJLoader: FakeOBJLoader,
+    });
+    expect(parse).toHaveBeenCalledTimes(1);
+    expect(result.format).toBe('obj');
+    expect(result.scene).toBe(fakeObj);
+  });
+});
+
+describe('ACS_loadModelFromURL routing (issue #36)', () => {
+  it('routes mjcf URLs to ACS_loadGearSonicRobotModel', async () => {
+    const original = window.ACS_loadGearSonicRobotModel;
+    const fakeRoot = { name: 'g1' };
+    const stub = vi.fn(async () => ({
+      root: fakeRoot,
+      bodyMap: { pelvis: {} },
+      info: { sceneURL: 'x' },
+    }));
+    window.ACS_loadGearSonicRobotModel = stub;
+    try {
+      const result = await window.ACS_loadModelFromURL(
+        'https://nvlabs.github.io/GEAR-SONIC/assets/robot/scene.xml',
+        { THREE: {}, fetch: () => {} }
+      );
+      expect(stub).toHaveBeenCalledTimes(1);
+      expect(result.format).toBe('mjcf');
+      expect(result.kind).toBe('robot');
+      expect(result.scene).toBe(fakeRoot);
+    } finally {
+      window.ACS_loadGearSonicRobotModel = original;
+    }
+  });
+
+  it('detects format from URL when none is given', async () => {
+    // Use a fetch stub that returns something the GLB branch can parse —
+    // the test only cares that the dispatcher reaches the GLB branch.
+    const fakeBuf = new ArrayBuffer(8);
+    const fakeFetch = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      arrayBuffer: async () => fakeBuf,
+      headers: { get: () => 'model/gltf-binary' },
+    }));
+    const fakeScene = { traverse() {} };
+    const fakeGltf = { scene: fakeScene, userData: {} };
+    class FakeGLTFLoader {
+      constructor() {
+        this.register = () => {};
+        this.parse = (buf, base, res) => res(fakeGltf);
+      }
+    }
+    const result = await window.ACS_loadModelFromURL(
+      'https://example.test/foo.glb',
+      { fetch: fakeFetch, GLTFLoader: FakeGLTFLoader }
+    );
+    expect(fakeFetch).toHaveBeenCalledTimes(1);
+    expect(result.format).toBe('glb');
+    expect(result.url).toBe('https://example.test/foo.glb');
+  });
+
+  it('rewrites GitHub blob URLs through ACS_normalizeModelURL', async () => {
+    // The dispatcher delegates URL rewriting to ACS_normalizeModelURL — the
+    // same helper the legacy VRM loader used. Asserting the rewritten URL
+    // gets passed to fetch verifies the same hook still runs.
+    const fakeBuf = new ArrayBuffer(8);
+    const fakeFetch = vi.fn(async (url) => {
+      expect(url).toBe('https://raw.githubusercontent.com/foo/bar/main/x.glb');
+      return {
+        ok: true,
+        status: 200,
+        arrayBuffer: async () => fakeBuf,
+        headers: { get: () => 'application/octet-stream' },
+      };
+    });
+    class FakeGLTFLoader {
+      constructor() {
+        this.register = () => {};
+        this.parse = (buf, base, res) =>
+          res({ scene: { traverse() {} }, userData: {} });
+      }
+    }
+    await window.ACS_loadModelFromURL(
+      'https://github.com/foo/bar/blob/main/x.glb',
+      { fetch: fakeFetch, GLTFLoader: FakeGLTFLoader }
+    );
+    expect(fakeFetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+const gf2Rar =
+  'https://gf2-us-cdn.sunborngame.com/prod/website/official_zf/pc/zip/Phaetusa(Dorm)_e2901aa602.rar';
+const gf2Zip =
+  'https://gf2-us-cdn.sunborngame.com/prod/website/official_zf/pc/zip/Leva (Sultry Tempo)_bb6e25da88.zip';
+
+describe('GF2 Exilium art archive inventory (issue #39)', () => {
+  it('detects official GF2 ZIP/RAR model archives by extension', () => {
+    expect(window.ACS_detectModelFormat(gf2Rar)).toBe('rar');
+    expect(window.ACS_detectModelFormat(gf2Zip)).toBe('zip');
+  });
+
+  it('ships the complete official GF2 MMD archive inventory as renderable MMD presets', () => {
+    const gf2 = window.ACS_MODEL_PRESETS.filter((p) => p.id.startsWith('gf2-'));
+    expect(gf2).toHaveLength(134);
+    expect(gf2.every((p) => p.kind === 'mmd')).toBe(true);
+    expect(gf2.every((p) => p.downloadOnly !== true)).toBe(true);
+
+    expect(gf2.find((p) => p.officialId === 134)).toMatchObject({
+      label: 'GF2 Phaetusa (Dorm) MMD model',
+      format: 'rar',
+      url: gf2Rar,
+    });
+    expect(gf2.find((p) => p.officialId === 128)).toMatchObject({
+      label: 'GF2 Leva (Sultry Tempo) MMD model',
+      format: 'zip',
+      url: gf2Zip,
+    });
+  });
+});
+
+describe('GF2 Exilium MMD archive loading (issue #39)', () => {
+  it('extracts GF2 archive buffers and routes PMX files through MMDLoader', async () => {
+    const archiveEntries = [
+      {
+        path: 'GF2 Sample/GirlsFrontline Sample.pmx',
+        file: { name: 'GirlsFrontline Sample.pmx' },
+      },
+      { path: 'GF2 Sample/Textures/body.png', file: { name: 'body.png' } },
+    ];
+    const extractArchiveFiles = vi.fn(async () => archiveEntries);
+    const createObjectURL = vi.fn((file) => `blob:${file.name}`);
+    const revokeObjectURL = vi.fn();
+    const loadCalls = [];
+
+    class FakeLoadingManager {
+      setURLModifier(fn) {
+        this.resolveURL = fn;
+        return this;
+      }
+    }
+    class FakeGroup {
+      constructor() {
+        this.children = [];
+        this.name = '';
+      }
+      add(child) {
+        this.children.push(child);
+      }
+      traverse(fn) {
+        for (const child of this.children) {
+          fn(child);
+        }
+      }
+    }
+    class FakeMMDLoader {
+      constructor(manager) {
+        this.manager = manager;
+      }
+      setResourcePath(path) {
+        this.resourcePath = path;
+        return this;
+      }
+      load(url, onLoad) {
+        loadCalls.push({
+          modelUrl: url,
+          modelBlobUrl: this.manager.resolveURL(url),
+          textureBlobUrl: this.manager.resolveURL(
+            `${this.resourcePath}Textures/body.png`
+          ),
+        });
+        onLoad({ name: 'sample mesh', traverse() {} });
+      }
+    }
+
+    const result = await window.ACS_loadModelFromBuffer(
+      new ArrayBuffer(8),
+      'zip',
+      {
+        extractArchiveFiles,
+        createObjectURL,
+        revokeObjectURL,
+        MMDLoader: FakeMMDLoader,
+        THREE: { Group: FakeGroup, LoadingManager: FakeLoadingManager },
+      }
+    );
+
+    expect(extractArchiveFiles).toHaveBeenCalledTimes(1);
+    expect(result.ok).toBe(true);
+    expect(result.format).toBe('zip');
+    expect(result.kind).toBe('mmd');
+    expect(result.scene.children).toHaveLength(1);
+    expect(result.archive.modelFiles).toEqual([
+      'GF2 Sample/GirlsFrontline Sample.pmx',
+    ]);
+    expect(loadCalls).toEqual([
+      {
+        modelUrl: expect.stringContaining('GirlsFrontline Sample.pmx'),
+        modelBlobUrl: 'blob:GirlsFrontline Sample.pmx',
+        textureBlobUrl: 'blob:body.png',
+      },
+    ]);
+    expect(revokeObjectURL).not.toHaveBeenCalled();
+  });
+
+  it('fetches official GF2 RAR URLs and parses them as MMD model archives', async () => {
+    const fakeBuf = new ArrayBuffer(8);
+    const fakeFetch = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      arrayBuffer: async () => fakeBuf,
+      headers: { get: () => 'application/vnd.rar' },
+    }));
+
+    class FakeLoadingManager {
+      setURLModifier(fn) {
+        this.resolveURL = fn;
+        return this;
+      }
+    }
+    class FakeGroup {
+      constructor() {
+        this.children = [];
+      }
+      add(child) {
+        this.children.push(child);
+      }
+      traverse() {}
+    }
+    class FakeMMDLoader {
+      constructor(manager) {
+        this.manager = manager;
+      }
+      setResourcePath(path) {
+        this.resourcePath = path;
+        return this;
+      }
+      load(url, onLoad) {
+        expect(this.manager.resolveURL(url)).toBe('blob:main.pmx');
+        onLoad({ name: 'rar mesh', traverse() {} });
+      }
+    }
+
+    const result = await window.ACS_loadModelFromURL(gf2Rar, {
+      fetch: fakeFetch,
+      extractArchiveFiles: vi.fn(async () => [
+        { path: 'Phaetusa(Dorm)/main.pmx', file: { name: 'main.pmx' } },
+      ]),
+      createObjectURL: vi.fn((file) => `blob:${file.name}`),
+      MMDLoader: FakeMMDLoader,
+      THREE: { Group: FakeGroup, LoadingManager: FakeLoadingManager },
+    });
+
+    expect(fakeFetch).toHaveBeenCalledTimes(1);
+    expect(result.format).toBe('rar');
+    expect(result.kind).toBe('mmd');
+  });
+});
+
+describe('ACS_MODEL_PRESETS / ACS_VRM_PRESETS alias (issue #36)', () => {
+  it('every preset entry has a format and a kind', () => {
+    expect(Array.isArray(window.ACS_MODEL_PRESETS)).toBe(true);
+    expect(window.ACS_MODEL_PRESETS.length).toBeGreaterThan(0);
+    for (const p of window.ACS_MODEL_PRESETS) {
+      expect(typeof p.id).toBe('string');
+      expect(typeof p.label).toBe('string');
+      expect(typeof p.url).toBe('string');
+      expect(typeof p.format).toBe('string');
+      expect(typeof p.kind).toBe('string');
+    }
+  });
+
+  it('ACS_VRM_PRESETS exposes only VRM entries (backwards-compat alias)', () => {
+    expect(Array.isArray(window.ACS_VRM_PRESETS)).toBe(true);
+    expect(window.ACS_VRM_PRESETS.length).toBeGreaterThan(0);
+    for (const p of window.ACS_VRM_PRESETS) {
+      expect(p.format).toBe('vrm');
+    }
+  });
+
+  it('MODEL_PRESETS includes at least one non-VRM entry so the dispatcher path is covered', () => {
+    const formats = new Set(window.ACS_MODEL_PRESETS.map((p) => p.format));
+    expect(formats.has('vrm')).toBe(true);
+    // Issue #36 asks for multi-format presets — make sure at least one non-
+    // VRM entry ships so QA can verify the dispatcher without TRELLIS.
+    expect(formats.size).toBeGreaterThan(1);
+  });
+});

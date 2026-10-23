@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>🎧 DJ Performance Mode</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--neon-pink: #ff0080;
+			--neon-cyan: #00f2ff;
+			--neon-purple: #8000ff;
+			--bg-dark: rgba(10, 10, 20, 0.85);
+			--text-bright: #ffffff;
+			--text-dim: #a0a0b0;
+		}
+
+		body {
+			margin: 0;
+			overflow: hidden;
+			font-family: 'Outfit', sans-serif;
+			background: #000;
+			color: var(--text-bright);
+		}
+
+		/* DJ Control Panel */
+		#djPanel {
+			position: fixed;
+			top: 20px;
+			left: 20px;
+			background: var(--bg-dark);
+			backdrop-filter: blur(20px);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			border-radius: 16px;
+			padding: 24px;
+			min-width: 280px;
+			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+			z-index: 1000;
+		}
+
+		.panel-header {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			margin-bottom: 20px;
+			padding-bottom: 16px;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		}
+
+		.panel-header h2 {
+			margin: 0;
+			font-size: 18px;
+			font-weight: 700;
+			letter-spacing: -0.02em;
+			background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan));
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+		}
+
+		.status-indicator {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background: #666;
+			transition: all 0.3s;
+		}
+
+		.status-indicator.active {
+			background: #00ff88;
+			box-shadow: 0 0 15px #00ff88;
+			animation: pulse 2s infinite;
+		}
+
+		@keyframes pulse {
+			0%, 100% { opacity: 1; transform: scale(1); }
+			50% { opacity: 0.6; transform: scale(0.9); }
+		}
+
+		.big-button {
+			width: 100%;
+			padding: 16px;
+			margin: 10px 0;
+			background: linear-gradient(135deg, rgba(255, 0, 128, 0.2), rgba(128, 0, 255, 0.2));
+			border: 1px solid rgba(255, 0, 128, 0.3);
+			border-radius: 12px;
+			color: var(--text-bright);
+			font-size: 15px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 10px;
+		}
+
+		.big-button:hover {
+			background: linear-gradient(135deg, rgba(255, 0, 128, 0.4), rgba(128, 0, 255, 0.4));
+			border-color: var(--neon-pink);
+			transform: translateY(-2px);
+			box-shadow: 0 5px 20px rgba(255, 0, 128, 0.3);
+		}
+
+		.big-button:active {
+			transform: translateY(0);
+		}
+
+		.big-button.stop {
+			background: rgba(50, 50, 50, 0.3);
+			border-color: rgba(255, 255, 255, 0.2);
+		}
+
+		.big-button.stop:hover {
+			background: rgba(80, 80, 80, 0.5);
+			border-color: rgba(255, 255, 255, 0.4);
+		}
+
+		.control-group {
+			margin: 20px 0;
+		}
+
+		.control-group label {
+			display: block;
+			font-size: 11px;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.1em;
+			color: var(--text-dim);
+			margin-bottom: 10px;
+		}
+
+		.button-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 8px;
+		}
+
+		.small-button {
+			padding: 10px;
+			background: rgba(255, 255, 255, 0.05);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			border-radius: 8px;
+			color: var(--text-bright);
+			font-size: 12px;
+			font-weight: 500;
+			cursor: pointer;
+			transition: all 0.3s;
+		}
+
+		.small-button:hover {
+			background: rgba(255, 255, 255, 0.1);
+			border-color: var(--neon-cyan);
+		}
+
+		.energy-selector {
+			display: flex;
+			gap: 8px;
+			margin-top: 8px;
+		}
+
+		.energy-btn {
+			flex: 1;
+			padding: 8px;
+			background: rgba(255, 255, 255, 0.05);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			border-radius: 8px;
+			color: var(--text-dim);
+			font-size: 11px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s;
+		}
+
+		.energy-btn.active {
+			color: #000;
+			border-color: transparent;
+		}
+
+		.energy-btn.low.active {
+			background: #4a9eff;
+			box-shadow: 0 0 15px rgba(74, 158, 255, 0.5);
+		}
+
+		.energy-btn.medium.active {
+			background: #00ff88;
+			box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+		}
+
+		.energy-btn.high.active {
+			background: #ff0080;
+			box-shadow: 0 0 15px rgba(255, 0, 128, 0.5);
+		}
+
+		.stats-display {
+			background: rgba(0, 242, 255, 0.05);
+			border: 1px solid rgba(0, 242, 255, 0.1);
+			border-radius: 8px;
+			padding: 12px;
+			margin-top: 16px;
+			font-size: 12px;
+		}
+
+		.stats-row {
+			display: flex;
+			justify-content: space-between;
+			margin: 4px 0;
+		}
+
+		.stats-label {
+			color: var(--text-dim);
+		}
+
+		.stats-value {
+			color: var(--neon-cyan);
+			font-weight: 600;
+		}
+
+		/* Info Footer */
+		#info {
+			position: fixed;
+			bottom: 20px;
+			left: 20px;
+			background: var(--bg-dark);
+			backdrop-filter: blur(20px);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			border-radius: 12px;
+			padding: 16px 20px;
+			font-size: 12px;
+			color: var(--text-dim);
+		}
+
+		#info strong {
+			color: var(--text-bright);
+		}
+
+		hr {
+			border: none;
+			height: 1px;
+			background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+			margin: 16px 0;
+		}
+	</style>
+</head>
+<body>
+	<div id="djPanel">
+		<div class="panel-header">
+			<div class="status-indicator" id="statusDot"></div>
+			<h2>DJ CONTROLLER</h2>
+		</div>
+
+		<button class="big-button" id="startBtn">
+			<span>▶️</span> Start Performance
+		</button>
+
+		<button class="big-button stop" id="stopBtn" style="display: none;">
+			<span>⏸️</span> Stop Performance
+		</button>
+
+		<hr>
+
+		<div class="control-group">
+			<label>Manual Triggers</label>
+			<div class="button-grid">
+				<button class="small-button" id="danceBtn">🕺 Dance</button>
+				<button class="small-button" id="interactBtn">👋 Interact</button>
+			</div>
+		</div>
+
+		<div class="control-group">
+			<label>Performance Energy</label>
+			<div class="energy-selector">
+				<button class="energy-btn low" data-energy="low">CHILL</button>
+				<button class="energy-btn medium active" data-energy="medium">VIBE</button>
+				<button class="energy-btn high" data-energy="high">HYPE</button>
+			</div>
+		</div>
+
+		<div class="stats-display" id="stats">
+			<div class="stats-row">
+				<span class="stats-label">Status:</span>
+				<span class="stats-value" id="statusText">Ready</span>
+			</div>
+			<div class="stats-row">
+				<span class="stats-label">Current:</span>
+				<span class="stats-value" id="currentType">-</span>
+			</div>
+			<div class="stats-row">
+				<span class="stats-label">Dancing:</span>
+				<span class="stats-value">8 animations</span>
+			</div>
+			<div class="stats-row">
+				<span class="stats-label">Interactions:</span>
+				<span class="stats-value">4 animations</span>
+			</div>
+		</div>
+	</div>
+
+	<div id="info">
+		<strong>🎧 DJ Performance Mode</strong><br>
+		Natural mixing of dancing + fan interactions
+	</div>
+
+	<script type="module">
+		import './main.js';
+
+		const startBtn = document.getElementById('startBtn');
+		const stopBtn = document.getElementById('stopBtn');
+		const danceBtn = document.getElementById('danceBtn');
+		const interactBtn = document.getElementById('interactBtn');
+		const statusDot = document.getElementById('statusDot');
+		const statusText = document.getElementById('statusText');
+		const currentType = document.getElementById('currentType');
+		const energyBtns = document.querySelectorAll('.energy-btn');
+
+		let updateInterval = null;
+
+		// Wait for DJ controller to initialize
+		setTimeout(() => {
+			const djPerf = window.djPerformance;
+
+			if (!djPerf) {
+				console.warn('⚠️ DJ Performance not ready. Load VRM model first.');
+				statusText.textContent = 'Load VRM first';
+				return;
+			}
+
+			// Start performance
+			startBtn.addEventListener('click', async () => {
+				await djPerf.startPerformance();
+				startBtn.style.display = 'none';
+				stopBtn.style.display = 'flex';
+				statusDot.classList.add('active');
+				statusText.textContent = 'Performing';
+
+				// Update stats periodically
+				updateInterval = setInterval(updateStats, 1000);
+			});
+
+			// Stop performance
+			stopBtn.addEventListener('click', () => {
+				djPerf.stopPerformance();
+				stopBtn.style.display = 'none';
+				startBtn.style.display = 'flex';
+				statusDot.classList.remove('active');
+				statusText.textContent = 'Stopped';
+				currentType.textContent = '-';
+
+				if (updateInterval) {
+					clearInterval(updateInterval);
+				}
+			});
+
+			// Manual dance
+			danceBtn.addEventListener('click', () => {
+				djPerf.playDancing();
+			});
+
+			// Manual interaction
+			interactBtn.addEventListener('click', () => {
+				djPerf.playInteraction();
+			});
+
+			// Energy selector
+			energyBtns.forEach(btn => {
+				btn.addEventListener('click', () => {
+					// Remove active from all
+					energyBtns.forEach(b => b.classList.remove('active'));
+					// Add active to clicked
+					btn.classList.add('active');
+					// Set energy
+					const energy = btn.dataset.energy;
+					djPerf.setEnergy(energy);
+					console.log(`⚡ Energy: ${energy}`);
+				});
+			});
+
+			// Update stats display
+			function updateStats() {
+				const stats = djPerf.getStats();
+				if (stats.currentType) {
+					currentType.textContent = stats.currentType === 'dancing' ? '🕺 Dancing' : '👋 Interacting';
+				}
+			}
+
+			console.log('🎧 DJ Performance UI ready!');
+
+		}, 1000);
+	</script>
+</body>
+</html>

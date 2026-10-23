@@ -1,0 +1,117 @@
+import React, { useState, useCallback } from 'react';
+import AvatarSVG from './components/AvatarSVG.jsx';
+import Avatar3D from './components/Avatar3D.jsx';
+import ConfigPanel from './components/ConfigPanel.jsx';
+import { useAnimationCycle } from './hooks/useAnimationCycle.js';
+
+const INITIAL_CONFIG = {
+  // Colors matching reference image - school girl with brown hair
+  skinColor: '#fad5c5',
+  hairColor: '#b07850',
+  eyeColor: '#4a90c2',
+  clothesColor: '#ffffff',
+  clothesSecondaryColor: '#1a3a5c',
+  blinkInterval: 3000,
+  animationSpeed: 1,
+  enableIdleAnimation: true,
+  enableRandomBlink: true,
+  showBackground: true,
+  // Detail level: 1 (minimal) to 10 (maximum detail)
+  detailLevel: 10,
+  // Whether to show full body with legs (enabled by default)
+  showLegs: true,
+  // Render mode: 'svg' (new), 'css' (legacy), or '3d'
+  renderMode: 'svg',
+  // 3D specific settings
+  enable3D: false,
+  enableLOD: true,
+  enableShadows: true,
+  modelScale: 1,
+  modelUrl: null,
+  // Character scale for 2D (similar to modelScale for 3D)
+  characterScale: 1,
+  // Model selection (procedural only for now)
+  characterModel: 'school-girl',
+  backgroundModel: 'cherry-blossom-road',
+};
+
+function App() {
+  const [config, setConfig] = useState(INITIAL_CONFIG);
+  const [isTalking, setIsTalking] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const { currentAnimation, triggerAnimation } = useAnimationCycle({
+    enabled: config.enableIdleAnimation,
+    minInterval: 8000,
+    maxInterval: 20000,
+    animationDuration: 1500,
+  });
+
+  const handleConfigChange = useCallback((newConfig) => {
+    setConfig(newConfig);
+  }, []);
+
+  const handleAnimationTrigger = useCallback(
+    (animation) => {
+      triggerAnimation(animation);
+    },
+    [triggerAnimation]
+  );
+
+  const handleTalkingToggle = useCallback(() => {
+    setIsTalking((prev) => !prev);
+  }, []);
+
+  const toggleMenu = useCallback(() => {
+    setIsMenuOpen((prev) => !prev);
+  }, []);
+
+  return (
+    <div className="app-fullscreen">
+      {/* Fullscreen Avatar Area */}
+      <div className="avatar-fullscreen">
+        {config.enable3D ? (
+          <Avatar3D
+            config={config}
+            isTalking={isTalking}
+            currentAnimation={currentAnimation}
+            modelUrl={config.modelUrl}
+          />
+        ) : (
+          <AvatarSVG
+            config={config}
+            isTalking={isTalking}
+            currentAnimation={currentAnimation}
+          />
+        )}
+      </div>
+
+      {/* Mobile Menu Toggle Button */}
+      <button
+        className={`menu-toggle ${isMenuOpen ? 'open' : ''}`}
+        onClick={toggleMenu}
+        aria-label="Toggle settings menu"
+      >
+        <span className="menu-icon"></span>
+      </button>
+
+      {/* Settings Panel - Right side, semi-transparent */}
+      <aside className={`settings-panel ${isMenuOpen ? 'open' : ''}`}>
+        <div className="settings-panel-content">
+          <ConfigPanel
+            config={config}
+            onConfigChange={handleConfigChange}
+            onAnimationTrigger={handleAnimationTrigger}
+            isTalking={isTalking}
+            onTalkingToggle={handleTalkingToggle}
+          />
+        </div>
+      </aside>
+
+      {/* Overlay for mobile when menu is open */}
+      {isMenuOpen && <div className="menu-overlay" onClick={toggleMenu}></div>}
+    </div>
+  );
+}
+
+export default App;

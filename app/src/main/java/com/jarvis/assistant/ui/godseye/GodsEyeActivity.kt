@@ -56,7 +56,7 @@ class GodsEyeActivity : AppCompatActivity() {
         const val CONSOLE_TAG = "GodsEyeConsole"
         const val ASSET_HOST_NAME = "appassets.androidplatform.net"
         const val ALL_LAYERS_HASH = "l=c,f,s"
-        const val DEFAULT_LAYERS_HASH = "l=c,f,s"
+        const val DEFAULT_LAYERS_HASH = "l=f"
         const val GODS_EYE_LOCAL_URL = "https://$ASSET_HOST_NAME/index.html"
         const val GODS_EYE_TERMUX_URL = "http://127.0.0.1:4173/"
         const val EXTRA_VIEW_URL = "extra_view_url"

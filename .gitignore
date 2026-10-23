@@ -45,3 +45,5 @@ scratch/tmp_chrome_profile/
 
 .gradle/
 **/build/
+research_repos/**/node_modules/
+

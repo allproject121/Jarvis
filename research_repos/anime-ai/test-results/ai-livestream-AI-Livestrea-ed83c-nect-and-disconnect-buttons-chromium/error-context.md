@@ -1,0 +1,74 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - heading "🎤 Virtual Idol Alicia" [level=1] [ref=e3]
+    - paragraph [ref=e4]: AI-powered livestream idol với real-time voice interaction!
+    - generic [ref=e7]: Offline
+    - generic [ref=e8]:
+      - button "🎤 Bắt đầu Live" [ref=e9] [cursor=pointer]
+      - button "⏸️ Dừng Live" [disabled] [ref=e10]
+    - paragraph [ref=e11]: "💡 Tip: Khi connected, nói chuyện với Alicia qua mic hoặc gõ text bên dưới!"
+  - generic [ref=e12]:
+    - heading "📋 Hướng dẫn" [level=3] [ref=e13]
+    - list [ref=e14]:
+      - listitem [ref=e15]: 🎤 Click "Bắt đầu Live" để kết nối
+      - listitem [ref=e16]: 🎤 Cho phép mic access
+      - listitem [ref=e17]: 🎤 Nói chuyện tự nhiên với Alicia
+      - listitem [ref=e18]: 🎤 Alicia sẽ phản hồi bằng giọng nói + animations
+    - heading "🎭 Thử nói:" [level=3] [ref=e19]
+    - list [ref=e20]:
+      - listitem [ref=e21]: 🎤 "Chào idol!"
+      - listitem [ref=e22]: 🎤 "Múa đi em ơi!"
+      - listitem [ref=e23]: 🎤 "Cute quá!"
+      - listitem [ref=e24]: 🎤 "Hôm nay thế nào?"
+    - paragraph [ref=e25]:
+      - text: Drag & drop
+      - code [ref=e26]: .vrm
+      - text: file để đổi character,
+      - code [ref=e27]: .fbx
+      - text: để thêm animations.
+  - textbox "Gõ tin nhắn cho Alicia... (Enter để gửi)" [disabled] [ref=e30]
+  - generic [ref=e32]:
+    - button "▾ Controls" [expanded] [ref=e33] [cursor=pointer]
+    - generic [ref=e34]:
+      - generic [ref=e35]:
+        - generic [ref=e36]: timeScale
+        - spinbutton "timeScale" [ref=e40]: "1"
+      - generic [ref=e41]:
+        - button "▾ 🤖 AI Live Control" [expanded] [ref=e42] [cursor=pointer]
+        - generic [ref=e43]:
+          - button "🎤 Connect Voice" [ref=e46] [cursor=pointer]:
+            - generic [ref=e47]: 🎤 Connect Voice
+          - button "⏸️ Disconnect" [ref=e50] [cursor=pointer]:
+            - generic [ref=e51]: ⏸️ Disconnect
+          - generic [ref=e52]:
+            - generic [ref=e53]: Test Text
+            - textbox "Test Text" [ref=e55]
+          - button "📤 Send Text" [ref=e58] [cursor=pointer]:
+            - generic [ref=e59]: 📤 Send Text
+      - generic [ref=e60]:
+        - button "▾ 🎭 Test Animations" [expanded] [ref=e61] [cursor=pointer]
+        - generic [ref=e62]:
+          - button "idle (0s)" [ref=e65] [cursor=pointer]:
+            - generic [ref=e66]: idle (0s)
+          - button "greet (3s)" [ref=e69] [cursor=pointer]:
+            - generic [ref=e70]: greet (3s)
+          - button "dance (15s)" [ref=e73] [cursor=pointer]:
+            - generic [ref=e74]: dance (15s)
+          - button "excited (4s)" [ref=e77] [cursor=pointer]:
+            - generic [ref=e78]: excited (4s)
+          - button "laugh (3s)" [ref=e81] [cursor=pointer]:
+            - generic [ref=e82]: laugh (3s)
+          - button "thinking (4s)" [ref=e85] [cursor=pointer]:
+            - generic [ref=e86]: thinking (4s)
+          - button "sad (5s)" [ref=e89] [cursor=pointer]:
+            - generic [ref=e90]: sad (5s)
+          - button "bow (3s)" [ref=e93] [cursor=pointer]:
+            - generic [ref=e94]: bow (3s)
+          - button "heart (3s)" [ref=e97] [cursor=pointer]:
+            - generic [ref=e98]: heart (3s)
+          - button "surprised (2s)" [ref=e101] [cursor=pointer]:
+            - generic [ref=e102]: surprised (2s)
+```

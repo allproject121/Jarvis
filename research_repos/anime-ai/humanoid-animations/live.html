@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎤 Virtual Idol Livestream - Alicia AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow: hidden;
+        }
+
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            max-width: 350px;
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        #info h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #FF6B9D, #FEC163);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #info p {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #44ff44;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .controls {
+            margin-top: 15px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #FF6B9D, #FEC163);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #chat-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 400px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+
+        #chat-messages {
+            height: 200px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .message {
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .message.user {
+            background: rgba(102, 126, 234, 0.3);
+            margin-left: 20px;
+        }
+
+        .message.ai {
+            background: rgba(255, 107, 157, 0.3);
+            margin-right: 20px;
+        }
+
+        .message strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        #chat-input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+        }
+
+        #chat-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        #chat-input:focus {
+            outline: 2px solid rgba(255, 107, 157, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .instructions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            max-width: 300px;
+            z-index: 100;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #FEC163;
+        }
+
+        .instructions ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .instructions li:before {
+            content: "🎤";
+            position: absolute;
+            left: 0;
+        }
+
+        code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        /* Stage Controls */
+        .stage-controls {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stage-controls h4 {
+            font-size: 14px;
+            margin-bottom: 12px;
+            color: #FEC163;
+        }
+
+        .control-item {
+            margin-bottom: 12px;
+        }
+
+        .control-item label {
+            display: block;
+            font-size: 11px;
+            margin-bottom: 5px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .toggle-btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(45deg, rgba(255, 107, 157, 0.2), rgba(254, 193, 99, 0.2));
+            border: 1px solid rgba(255, 107, 157, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .toggle-btn:hover {
+            background: linear-gradient(45deg, rgba(255, 107, 157, 0.3), rgba(254, 193, 99, 0.3));
+            border-color: rgba(255, 107, 157, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(45deg, #FF6B9D, #FEC163);
+            border-color: transparent;
+            box-shadow: 0 0 20px rgba(255, 107, 157, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h1>🎤 Virtual Idol Alicia</h1>
+        <p>AI-powered livestream idol với real-time voice interaction!</p>
+        
+        <div class="status">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text">Offline</span>
+        </div>
+
+        <div class="controls">
+            <button id="btn-connect" onclick="handleConnect()">🎤 Bắt đầu Live</button>
+            <button id="btn-disconnect" onclick="handleDisconnect()" disabled>⏸️ Dừng Live</button>
+        </div>
+
+        <p style="font-size: 12px; margin-top: 15px; opacity: 0.7;">
+            💡 Tip: Khi connected, nói chuyện với Alicia qua mic hoặc gõ text bên dưới!
+        </p>
+
+        <!-- Video Background -->
+        <div class="stage-controls">
+            <h4>🎬 Video Background</h4>
+            
+            <div class="control-item">
+                <label>📹 Chọn Video File</label>
+                <input type="file" id="videoFileInput" accept="video/*" style="
+                    width: 100%;
+                    padding: 10px;
+                    border: 1px solid rgba(255,255,255,0.2);
+                    border-radius: 8px;
+                    background: rgba(0,0,0,0.3);
+                    color: white;
+                    font-size: 12px;
+                    cursor: pointer;
+                ">
+                <p style="font-size: 11px; margin-top: 5px; opacity: 0.6;">Hỗ trợ: MP4, WebM (khuyến nghị 1080p, 16:9)</p>
+            </div>
+
+            <div class="control-item">
+                <label>🎛️ Stage Elements</label>
+                <button id="toggleDJBooth" class="toggle-btn active">🎧 DJ Booth</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="instructions">
+        <h3>📋 Hướng dẫn</h3>
+        <ul>
+            <li>Click "Bắt đầu Live" để kết nối</li>
+            <li>Cho phép mic access</li>
+            <li>Nói chuyện tự nhiên với Alicia</li>
+            <li>Alicia sẽ phản hồi bằng giọng nói + animations</li>
+        </ul>
+        
+        <h3 style="margin-top: 15px;">🎭 Thử nói:</h3>
+        <ul>
+            <li>"Chào idol!"</li>
+            <li>"Múa đi em ơi!"</li>
+            <li>"Cute quá!"</li>
+            <li>"Hôm nay thế nào?"</li>
+        </ul>
+
+        <p style="margin-top: 15px; font-size: 11px; opacity: 0.6;">
+            Drag & drop <code>.vrm</code> file để đổi character, <code>.fbx</code> để thêm animations.
+        </p>
+    </div>
+
+    <div id="chat-container">
+        <div id="chat-messages"></div>
+        <input 
+            type="text" 
+            id="chat-input" 
+            placeholder="Gõ tin nhắn cho Alicia... (Enter để gửi)"
+            disabled
+        />
+    </div>
+
+    <script type="module">
+        import './main.js';
+
+        // Global state
+        window.aiState = {
+            connected: false,
+            messages: []
+        };
+
+        // Connect handler - Enable Text Chat (no microphone needed)
+        window.handleConnect = async function() {
+            const btn = document.getElementById('btn-connect');
+            btn.disabled = true;
+            btn.textContent = '🔄 Đang kích hoạt...';
+
+            try {
+                // Check if TTS Chat is initialized
+                if (!window.ttsChat) {
+                    throw new Error('TTS Chat chưa được khởi tạo. Hãy load VRM model trước!');
+                }
+                
+                // Enable chat immediately (no connection needed for text chat)
+                window.aiState.connected = true;
+                updateStatus(true);
+                document.getElementById('chat-input').disabled = false;
+                document.getElementById('btn-disconnect').disabled = false;
+                btn.textContent = '✅ Đang hoạt động';
+                
+                addMessage('system', '🎉 Text Chat đã sẵn sàng! Gõ tin nhắn và Alicia sẽ trả lời bằng giọng nói!');
+            } catch (error) {
+                console.error('Activation error:', error);
+                btn.disabled = false;
+                btn.textContent = '🎤 Bắt đầu Live';
+                alert('⚠️ Lỗi kích hoạt! ' + error.message);
+            }
+        };
+
+        // Disconnect handler
+        window.handleDisconnect = function() {
+            window.disconnectAI();
+            window.aiState.connected = false;
+            updateStatus(false);
+            
+            document.getElementById('btn-connect').disabled = false;
+            document.getElementById('btn-connect').textContent = '🎤 Bắt đầu Live';
+            document.getElementById('btn-disconnect').disabled = true;
+            document.getElementById('chat-input').disabled = true;
+            
+            addMessage('system', '👋 Đã ngắt kết nối. Hẹn gặp lại!');
+        };
+
+        // Update status UI
+        function updateStatus(connected) {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            
+            if (connected) {
+                dot.classList.add('connected');
+                text.textContent = '🔴 LIVE';
+            } else {
+                dot.classList.remove('connected');
+                text.textContent = 'Offline';
+            }
+        }
+
+        // Add message to chat
+        function addMessage(type, text) {
+            const container = document.getElementById('chat-messages');
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            
+            let label = '';
+            if (type === 'user') label = 'Bạn';
+            else if (type === 'ai') label = 'Alicia';
+            else label = 'System';
+            
+            message.innerHTML = `<strong>${label}:</strong>${text}`;
+            container.appendChild(message);
+            container.scrollTop = container.scrollHeight;
+            
+            window.aiState.messages.push({ type, text, timestamp: Date.now() });
+        }
+
+        // Chat input handler - Simple animation + audio trigger (NO TTS)
+        document.getElementById('chat-input').addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter' && e.target.value.trim()) {
+                const text = e.target.value.trim();
+                addMessage('user', text);
+                e.target.value = '';
+                
+                // Check for animation keywords in user input and trigger animation + audio
+                if (window.animationTriggers) {
+                    console.log('🔍 Processing user message for triggers...');
+                    const triggered = await window.animationTriggers.processUserMessage(text);
+                    if (triggered) {
+                        console.log('✅ User message triggered animation + audio!');
+                    } else {
+                        console.log('ℹ️ No keyword detected in user message');
+                    }
+                } else {
+                    console.warn('⚠️ AnimationTriggers not initialized!');
+                }
+            }
+        });
+
+        // Callback for AI text responses
+        window.onAIResponse = function(text) {
+            console.log('🤖 AI Response received:', text);
+            addMessage('ai', text);
+        };
+
+        // Override handleAudioOutput to show AI speaking
+        const originalHandleAudioOutput = window.handleAudioOutput;
+        window.handleAudioOutput = function(audioData) {
+            if (audioData === 'speaking') {
+                // AI is speaking - lip sync starts
+            }
+            if (originalHandleAudioOutput) {
+                return originalHandleAudioOutput(audioData);
+            }
+        };
+        
+        // Add callback to show AI text response
+        window.onAIResponse = function(text) {
+            addMessage('ai', text);
+        };
+
+        // Stage controls functionality
+        setTimeout(() => {
+            const stage = window.stage;
+            
+            if (!stage) {
+                console.warn('⚠️ Stage not initialized');
+                return;
+            }
+
+            // Video file input - simplified
+            document.getElementById('videoFileInput').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const videoURL = URL.createObjectURL(file);
+                    
+                    // Set video background
+                    stage.clear();
+                    stage.setup({
+                        platform: true,
+                        djBooth: true,
+                        decorations: true,
+                        lighting: 'concert',
+                        background: 'video',
+                        videoSrc: videoURL
+                    });
+                    
+                    console.log('🎬 Video background loaded:', file.name);
+                }
+            });
+
+            // DJ Booth toggle
+            let djBoothVisible = true;
+            document.getElementById('toggleDJBooth').addEventListener('click', (e) => {
+                djBoothVisible = !djBoothVisible;
+                const btn = e.target;
+                
+                if (djBoothVisible) {
+                    btn.classList.add('active');
+                    btn.textContent = '🎧 DJ Booth';
+                } else {
+                    btn.classList.remove('active');
+                    btn.textContent = '🎧 DJ Booth (Hidden)';
+                }
+                
+                // Toggle DJ booth visibility
+                if (stage && stage.djBoothGroup) {
+                    stage.djBoothGroup.visible = djBoothVisible;
+                    console.log('🎛️ DJ Booth:', djBoothVisible ? 'visible' : 'hidden');
+                }
+            });
+
+            console.log('🎬 Video background controls initialized');
+        }, 1000);
+
+        console.log('🎤 Virtual Idol UI loaded!');
+    </script>
+</body>
+</html>

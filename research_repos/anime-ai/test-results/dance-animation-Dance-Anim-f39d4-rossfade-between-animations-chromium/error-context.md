@@ -1,0 +1,51 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - text: drag and drop
+    - link "mixamo" [ref=e3] [cursor=pointer]:
+      - /url: https://www.mixamo.com/
+    - text: animation (.fbx)
+  - generic [ref=e5]:
+    - button "▾ Controls" [expanded] [ref=e6] [cursor=pointer]
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]: timeScale
+        - spinbutton "timeScale" [ref=e13]: "1"
+      - generic [ref=e14]:
+        - button "▾ 🤖 AI Live Control" [expanded] [ref=e15] [cursor=pointer]
+        - generic [ref=e16]:
+          - button "🎤 Connect Voice" [ref=e19] [cursor=pointer]:
+            - generic [ref=e20]: 🎤 Connect Voice
+          - button "⏸️ Disconnect" [ref=e23] [cursor=pointer]:
+            - generic [ref=e24]: ⏸️ Disconnect
+          - generic [ref=e25]:
+            - generic [ref=e26]: Test Text
+            - textbox "Test Text" [ref=e28]
+          - button "📤 Send Text" [ref=e31] [cursor=pointer]:
+            - generic [ref=e32]: 📤 Send Text
+      - generic [ref=e33]:
+        - button "▾ 🎭 Test Animations" [expanded] [ref=e34] [cursor=pointer]
+        - generic [ref=e35]:
+          - button "idle (0s)" [ref=e38] [cursor=pointer]:
+            - generic [ref=e39]: idle (0s)
+          - button "greet (3s)" [ref=e42] [cursor=pointer]:
+            - generic [ref=e43]: greet (3s)
+          - button "dance (15s)" [ref=e46] [cursor=pointer]:
+            - generic [ref=e47]: dance (15s)
+          - button "excited (4s)" [ref=e50] [cursor=pointer]:
+            - generic [ref=e51]: excited (4s)
+          - button "laugh (3s)" [ref=e54] [cursor=pointer]:
+            - generic [ref=e55]: laugh (3s)
+          - button "thinking (4s)" [ref=e58] [cursor=pointer]:
+            - generic [ref=e59]: thinking (4s)
+          - button "sad (5s)" [ref=e62] [cursor=pointer]:
+            - generic [ref=e63]: sad (5s)
+          - button "bow (3s)" [ref=e66] [cursor=pointer]:
+            - generic [ref=e67]: bow (3s)
+          - button "heart (3s)" [ref=e70] [cursor=pointer]:
+            - generic [ref=e71]: heart (3s)
+          - button "surprised (2s)" [ref=e74] [cursor=pointer]:
+            - generic [ref=e75]: surprised (2s)
+```
