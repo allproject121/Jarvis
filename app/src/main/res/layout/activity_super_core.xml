@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/superCoreRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/themeBg">
+
+    <!-- Top App Bar -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="12dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_jarvis_icon_square"
+            android:src="@drawable/ic_back"
+            app:tint="?attr/themeTextPrimary"
+            android:contentDescription="Back" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="14dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SuperCore &amp; System Control"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="20sp"
+                android:fontFamily="sans-serif-medium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="OS Assistant • WhatsApp • Driving • Neural Memory"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="12sp"
+                android:fontFamily="sans-serif" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@id/topBar"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="8dp"
+            android:paddingBottom="36dp">
+
+            <!-- Card 1: Default Android Digital Assistant -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_action_card"
+                android:padding="18dp"
+                android:layout_marginBottom="18dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="10dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_nav_settings"
+                        app:tint="?attr/themeAccent" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="1. Default Digital Assistant"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="10dp" />
+
+                    <TextView
+                        android:id="@+id/tvDefaultAssistantBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CHECKING…"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="?attr/themeAccent"
+                        android:background="@drawable/bg_jarvis_status_badge"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Hold your phone's Home button or Power button to instantly summon Jarvis from anywhere in Android."
+                    android:textColor="?attr/themeTextSecondary"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="14dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSetDefaultAssistant"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="SET JARVIS AS DEFAULT ASSISTANT"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    app:backgroundTint="?attr/themeAccent"
+                    app:cornerRadius="12dp"
+                    android:layout_marginBottom="14dp" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchScreenIntelligence"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Screen &amp; Web Link Intelligence"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Automatically reads visible text and links on your active screen when assistant is invoked."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:layout_marginStart="4dp" />
+            </LinearLayout>
+
+            <!-- Card 2: Smart WhatsApp & Messaging Auto-Reader -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_action_card"
+                android:padding="18dp"
+                android:layout_marginBottom="18dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="10dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_chat_bubble"
+                        app:tint="#10B981" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="2. WhatsApp &amp; Message Reader"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="10dp" />
+
+                    <TextView
+                        android:id="@+id/tvNotificationListenerBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="DISABLED"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/status_amber"
+                        android:background="@drawable/bg_jarvis_status_badge"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Reads incoming WhatsApp, Telegram &amp; SMS notifications. Reply directly using voice without opening the app."
+                    android:textColor="?attr/themeTextSecondary"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="14dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnGrantNotificationAccess"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="GRANT NOTIFICATION ACCESS"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    app:backgroundTint="#10B981"
+                    app:cornerRadius="12dp"
+                    android:layout_marginBottom="14dp" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchWhatsAppReader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="WhatsApp &amp; WhatsApp Business"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchTelegramReader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Telegram &amp; Signal Messages"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchAutoReplyConfirm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Confirm Before Sending Voice Reply"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- Card 3: Driving Mode & Call Sentinel -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_action_card"
+                android:padding="18dp"
+                android:layout_marginBottom="18dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="10dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_verified_badge"
+                        app:tint="#F59E0B" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="3. Driving &amp; Call Sentinel"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="10dp" />
+
+                    <TextView
+                        android:id="@+id/tvDrivingModeBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="STANDBY"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="#F59E0B"
+                        android:background="@drawable/bg_jarvis_status_badge"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Hands-free safety mode for driving. Announces callers and accepts voice commands to Answer or Decline."
+                    android:textColor="?attr/themeTextSecondary"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="14dp" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchAutoCarAudio"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Auto-Activate On Vehicle Bluetooth"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchCallerIdAnnouncement"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Voice Caller ID Announcement"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- Card 4: Local Host AI & Neural Memory -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_action_card"
+                android:padding="18dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="10dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_verified_badge"
+                        app:tint="?attr/themeAccent" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="4. Local AI &amp; Neural Memory"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="10dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ACTIVE"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="?attr/themeAccent"
+                        android:background="@drawable/bg_jarvis_status_badge"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Ollama on PC, Mem0 persistent user memory, and MUSE experience-driven reflection engine."
+                    android:textColor="?attr/themeTextSecondary"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="14dp" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchMem0Memory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Mem0 Persistent User Memory"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchMuseExperience"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="MUSE Experience-Driven Self-Learning"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnConfigureOllama"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="CONFIGURE PC OLLAMA ENDPOINT"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/themeTextPrimary"
+                    app:strokeColor="?attr/themeCardBorder"
+                    app:strokeWidth="1dp"
+                    app:backgroundTint="?attr/themeChipBg"
+                    app:cornerRadius="12dp"
+                    android:layout_marginTop="10dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

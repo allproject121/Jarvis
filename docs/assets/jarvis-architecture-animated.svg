@@ -1,0 +1,424 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 820" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradients -->
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#0a1220" />
+      <stop offset="60%" stop-color="#050a14" />
+      <stop offset="100%" stop-color="#020408" />
+    </radialGradient>
+
+    <!-- Card Gradients -->
+    <linearGradient id="cardGrad5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f2b48" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#081526" stop-opacity="0.95" />
+    </linearGradient>
+
+    <linearGradient id="cardGrad4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a3328" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#041a14" stop-opacity="0.95" />
+    </linearGradient>
+
+    <linearGradient id="cardGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2a1442" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#140824" stop-opacity="0.95" />
+    </linearGradient>
+
+    <linearGradient id="cardGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3d2a08" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#1f1402" stop-opacity="0.95" />
+    </linearGradient>
+
+    <linearGradient id="cardGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#381016" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#1c050a" stop-opacity="0.95" />
+    </linearGradient>
+
+    <!-- Glow Filters -->
+    <filter id="glowCyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="glowPulse" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Custom CSS Animation -->
+    <style>
+      .flow-cyan {
+        stroke: #00e5ff;
+        stroke-dasharray: 8 6;
+        animation: flowDash 1.2s linear infinite;
+      }
+      .flow-amber {
+        stroke: #f59e0b;
+        stroke-dasharray: 6 5;
+        animation: flowDash 1s linear infinite reverse;
+      }
+      .flow-purple {
+        stroke: #a855f7;
+        stroke-dasharray: 7 5;
+        animation: flowDash 1.4s linear infinite;
+      }
+      .flow-green {
+        stroke: #10b981;
+        stroke-dasharray: 8 6;
+        animation: flowDash 1.5s linear infinite;
+      }
+      @keyframes flowDash {
+        from { stroke-dashoffset: 28; }
+        to { stroke-dashoffset: 0; }
+      }
+      .pulse-fade {
+        animation: pulseFade 2.5s ease-in-out infinite alternate;
+      }
+      @keyframes pulseFade {
+        0% { opacity: 0.35; }
+        100% { opacity: 0.95; }
+      }
+      .text-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 800; }
+      .text-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 11px; fill: #94a3b8; }
+      .text-header { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 12px; font-weight: 700; }
+    </style>
+  </defs>
+
+  <!-- Background Base Canvas -->
+  <rect width="1000" height="820" rx="16" fill="url(#bgGrad)" stroke="#00e5ff" stroke-width="1.5" stroke-opacity="0.35" />
+
+  <!-- Background Cyber Matrix Grid -->
+  <g opacity="0.08" stroke="#00e5ff" stroke-width="0.75">
+    <line x1="50" y1="0" x2="50" y2="820" />
+    <line x1="150" y1="0" x2="150" y2="820" />
+    <line x1="250" y1="0" x2="250" y2="820" />
+    <line x1="350" y1="0" x2="350" y2="820" />
+    <line x1="450" y1="0" x2="450" y2="820" />
+    <line x1="550" y1="0" x2="550" y2="820" />
+    <line x1="650" y1="0" x2="650" y2="820" />
+    <line x1="750" y1="0" x2="750" y2="820" />
+    <line x1="850" y1="0" x2="850" y2="820" />
+    <line x1="950" y1="0" x2="950" y2="820" />
+    
+    <line x1="0" y1="70" x2="1000" y2="70" />
+    <line x1="0" y1="170" x2="1000" y2="170" />
+    <line x1="0" y1="270" x2="1000" y2="270" />
+    <line x1="0" y1="370" x2="1000" y2="370" />
+    <line x1="0" y1="470" x2="1000" y2="470" />
+    <line x1="0" y1="570" x2="1000" y2="570" />
+    <line x1="0" y1="670" x2="1000" y2="670" />
+    <line x1="0" y1="770" x2="1000" y2="770" />
+  </g>
+
+  <!-- ==================== HEADER BAR ==================== -->
+  <g transform="translate(30, 20)">
+    <!-- Rotating Arc Reactor Logo -->
+    <g transform="translate(25, 20)">
+      <circle cx="0" cy="0" r="18" fill="none" stroke="#00e5ff" stroke-width="2" filter="url(#glowCyan)">
+        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="8s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="0" cy="0" r="10" fill="#00e5ff" fill-opacity="0.25" stroke="#00e5ff" stroke-width="1.5" />
+      <polygon points="0,-12 10,6 -10,6" fill="none" stroke="#00e5ff" stroke-width="1.2">
+        <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="12s" repeatCount="indefinite" />
+      </polygon>
+      <circle cx="0" cy="0" r="3.5" fill="#ffffff" filter="url(#glowCyan)" />
+    </g>
+
+    <!-- Header Titles -->
+    <text x="60" y="16" class="text-title" font-size="17" fill="#ffffff" letter-spacing="1.5">
+      JARVIS <tspan fill="#00e5ff">CYBERNETIC OS</tspan> — COMPLETE SYSTEM ARCHITECTURE
+    </text>
+    <text x="60" y="32" class="text-body" font-size="11" fill="#94a3b8">
+      Dual-Brain Multi-Tier Execution Loop • 100% Offline Edge SLMs • Satellite Telemetry &amp; Autonomous OS Automation
+    </text>
+
+    <!-- Status Badges Right -->
+    <rect x="740" y="4" width="190" height="28" rx="14" fill="#00e5ff" fill-opacity="0.1" stroke="#00e5ff" stroke-width="1" />
+    <circle cx="756" cy="18" r="4.5" fill="#10b981">
+      <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" />
+    </circle>
+    <text x="768" y="22" class="text-title" font-size="10.5" fill="#00e5ff" letter-spacing="1">OS STATE: 100% OPERATIONAL</text>
+  </g>
+
+  <!-- ==================== ANIMATED FLOW CONNECTORS (VERTICAL) ==================== -->
+  <g>
+    <!-- Path: Voice PCM Ingestion to ModelRouter -->
+    <path id="flow_pcm" d="M 155 700 L 155 455" fill="none" class="flow-cyan" stroke-width="2.5" />
+    <!-- Pulse Particle on PCM Path -->
+    <circle r="4.5" fill="#00e5ff" filter="url(#glowCyan)">
+      <animateMotion dur="2s" repeatCount="indefinite" path="M 155 700 L 155 455" />
+    </circle>
+
+    <!-- Path: ModelRouter to Gemini Live Cloud -->
+    <path d="M 370 410 L 370 455" fill="none" class="flow-cyan" stroke-width="2" />
+
+    <!-- Path: ModelRouter to Local SLM (Failover) -->
+    <path d="M 610 410 L 610 455" fill="none" class="flow-amber" stroke-width="2" />
+    <!-- Pulse Particle on Failover -->
+    <circle r="4" fill="#f59e0b" filter="url(#glowCyan)">
+      <animateMotion dur="1.8s" repeatCount="indefinite" path="M 610 455 L 610 410" />
+    </circle>
+
+    <!-- Path: ModelRouter to Vector Memory RAG -->
+    <path d="M 270 495 L 270 560" fill="none" class="flow-purple" stroke-width="2" />
+    <circle r="4" fill="#a855f7" filter="url(#glowCyan)">
+      <animateMotion dur="2.2s" repeatCount="indefinite" path="M 270 495 L 270 560" />
+    </circle>
+
+    <!-- Path: Gemini Live to God's Eye 3D Satellite -->
+    <path d="M 370 370 L 370 260" fill="none" class="flow-green" stroke-width="2" />
+    <circle r="4" fill="#10b981" filter="url(#glowCyan)">
+      <animateMotion dur="2.5s" repeatCount="indefinite" path="M 370 370 L 370 260" />
+    </circle>
+
+    <!-- Path: ModelRouter to SuperCore OS Actions -->
+    <path d="M 480 495 L 480 700" fill="none" class="flow-cyan" stroke-width="2" />
+    <circle r="4" fill="#00e5ff" filter="url(#glowCyan)">
+      <animateMotion dur="2.2s" repeatCount="indefinite" path="M 480 495 L 480 700" />
+    </circle>
+
+    <!-- Path: SuperCore OS to Holographic 3D Viewport Reactivity -->
+    <path d="M 850 700 C 920 500, 920 300, 850 145" fill="none" class="flow-cyan" stroke-width="2" />
+    <circle r="4" fill="#00e5ff" filter="url(#glowCyan)">
+      <animateMotion dur="3s" repeatCount="indefinite" path="M 850 700 C 920 500, 920 300, 850 145" />
+    </circle>
+  </g>
+
+  <!-- ==================== LAYER 5: 3D VIEWPORTS & HOLOGRAPHIC AVATARS ==================== -->
+  <g transform="translate(30, 75)">
+    <!-- Layer Bounding Box -->
+    <rect width="940" height="96" rx="12" fill="none" stroke="#00e5ff" stroke-width="1.2" stroke-opacity="0.3" />
+    <rect width="940" height="96" rx="12" fill="#00e5ff" fill-opacity="0.02" />
+    <text x="16" y="20" class="text-title" font-size="11" fill="#38bdf8" letter-spacing="1">
+      LAYER 5 — HOLOGRAPHIC 3D VIEWPORT &amp; COMPANION AVATAR MATRIX (60 FPS WEBGL)
+    </text>
+
+    <!-- Card 5.1: Arc Reactor Mechanical Core -->
+    <g transform="translate(16, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad5)" stroke="#38bdf8" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">⚡ Stark Arc Reactor Core</text>
+      <text x="12" y="34" class="text-body">Titanium segmented rings, copper coils</text>
+      <text x="12" y="47" class="text-body" fill="#38bdf8">16.6ms • Three.js • orb.html</text>
+    </g>
+
+    <!-- Card 5.2: 3D Anime AI Female Companion -->
+    <g transform="translate(247, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad5)" stroke="#38bdf8" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">🌸 3D Anime AI Girl</text>
+      <text x="12" y="34" class="text-body">Ahoge spring bounce, emotive lip-sync</text>
+      <text x="12" y="47" class="text-body" fill="#38bdf8">Procedural Poses • Idle/Listen/Wave</text>
+    </g>
+
+    <!-- Card 5.3: Custom 3D Photo Medallion -->
+    <g transform="translate(478, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad5)" stroke="#38bdf8" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">✨ Custom 3D Photo Avatar</text>
+      <text x="12" y="34" class="text-body">Turns gallery photos into 3D medallion</text>
+      <text x="12" y="47" class="text-body" fill="#38bdf8">Alpha Mask • Touch Tilt • 360° Spin</text>
+    </g>
+
+    <!-- Card 5.4: Floating System HUD Overlay -->
+    <g transform="translate(709, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad5)" stroke="#38bdf8" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">🫧 Floating Companion HUD</text>
+      <text x="12" y="34" class="text-body">17+ Toys, edge snap, task progress pill</text>
+      <text x="12" y="47" class="text-body" fill="#38bdf8">WindowManager • TYPE_APPLICATION</text>
+    </g>
+  </g>
+
+  <!-- ==================== LAYER 4: GOD'S EYE VIEW 3D GEOSPATIAL INTELLIGENCE ==================== -->
+  <g transform="translate(30, 190)">
+    <rect width="940" height="96" rx="12" fill="none" stroke="#10b981" stroke-width="1.2" stroke-opacity="0.3" />
+    <rect width="940" height="96" rx="12" fill="#10b981" fill-opacity="0.02" />
+    <text x="16" y="20" class="text-title" font-size="11" fill="#34d399" letter-spacing="1">
+      LAYER 4 — GOD'S EYE VIEW 3D GEOSPATIAL INTELLIGENCE CONSOLE (CESIUMJS WEBGL 2)
+    </text>
+
+    <!-- Card 4.1: Cesium 3D Globe -->
+    <g transform="translate(16, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad4)" stroke="#34d399" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">🌍 CesiumJS 3D Earth Globe</text>
+      <text x="12" y="34" class="text-body">Google Photorealistic 3D Tiles</text>
+      <text x="12" y="47" class="text-body" fill="#34d399">100% Offline Asset • WebViewLoader</text>
+    </g>
+
+    <!-- Card 4.2: Satellite Telemetry Proxy -->
+    <g transform="translate(247, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad4)" stroke="#34d399" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">🛰️ Live Telemetry Proxy</text>
+      <text x="12" y="34" class="text-body">OpenSky flights, USGS quakes, NASA fires</text>
+      <text x="12" y="47" class="text-body" fill="#34d399">In-App Native Proxy • No Node.js</text>
+    </g>
+
+    <!-- Card 4.3: CCTV Catalog -->
+    <g transform="translate(478, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad4)" stroke="#34d399" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">📹 3,700+ CCTV Surveillance</text>
+      <text x="12" y="34" class="text-body">HLS video streams &amp; synthetic HUD</text>
+      <text x="12" y="47" class="text-body" fill="#34d399">Global Traffic Feeds • Offline Index</text>
+    </g>
+
+    <!-- Card 4.4: MCP Voice Tool Bridge -->
+    <g transform="translate(709, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad4)" stroke="#34d399" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">🔌 GodsEyeMcpClient Bridge</text>
+      <text x="12" y="34" class="text-body">Voice-activated orbit &amp; layer toggles</text>
+      <text x="12" y="47" class="text-body" fill="#34d399">10 MCP Declarations • JSON-RPC</text>
+    </g>
+  </g>
+
+  <!-- ==================== LAYER 3: DUAL-BRAIN AI CORE & SMART ROUTER ==================== -->
+  <g transform="translate(30, 305)">
+    <rect width="940" height="110" rx="12" fill="none" stroke="#a855f7" stroke-width="1.2" stroke-opacity="0.35" />
+    <rect width="940" height="110" rx="12" fill="#a855f7" fill-opacity="0.03" />
+    <text x="16" y="20" class="text-title" font-size="11" fill="#c084fc" letter-spacing="1">
+      LAYER 3 — DUAL-BRAIN AI NEURAL CORE &amp; SMART MODEL ROUTER (ZERO-DOWNTIME FAILOVER)
+    </text>
+
+    <!-- Card 3.1: ModelRouter Gateway -->
+    <g transform="translate(16, 28)">
+      <rect width="215" height="68" rx="8" fill="url(#cardGrad3)" stroke="#c084fc" stroke-width="1.2" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">🧠 ModelRouter Gateway</text>
+      <text x="12" y="34" class="text-body">Network-aware intelligence switch</text>
+      <text x="12" y="48" class="text-body">Injects 3-Tier Vector RAG context</text>
+      <text x="12" y="61" class="text-body" fill="#c084fc">&lt;2ms Latency • ConnectivityManager</text>
+    </g>
+
+    <!-- Card 3.2: Gemini Live WebSocket -->
+    <g transform="translate(247, 28)">
+      <rect width="215" height="68" rx="8" fill="url(#cardGrad3)" stroke="#c084fc" stroke-width="1.2" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">⚡ Gemini Live WebSocket</text>
+      <text x="12" y="34" class="text-body">Persistent bidirectional 16kHz PCM</text>
+      <text x="12" y="48" class="text-body">Sub-second voice &amp; speech interruption</text>
+      <text x="12" y="61" class="text-body" fill="#c084fc">gemini-3.1-flash-live • Tool Calling</text>
+    </g>
+
+    <!-- Card 3.3: Local On-Device SLM -->
+    <g transform="translate(478, 28)">
+      <rect width="215" height="68" rx="8" fill="url(#cardGrad3)" stroke="#f59e0b" stroke-width="1.2" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">💻 Local On-Device SLM</text>
+      <text x="12" y="34" class="text-body">100% Offline Edge Intelligence</text>
+      <text x="12" y="48" class="text-body">Quantized int4 Gemma 2 2B / Qwen 2.5</text>
+      <text x="12" y="61" class="text-body" fill="#f59e0b">llama-android • Zero Cloud Lag</text>
+    </g>
+
+    <!-- Card 3.4: Silent Hot Failover -->
+    <g transform="translate(709, 28)">
+      <rect width="215" height="68" rx="8" fill="url(#cardGrad3)" stroke="#f59e0b" stroke-width="1.2" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">🛡️ Silent Hot Failover</text>
+      <text x="12" y="34" class="text-body">Intercepts net drops &amp; 429 quota limits</text>
+      <text x="12" y="48" class="text-body">Keeps mic open; reconnects in 5s</text>
+      <text x="12" y="61" class="text-body" fill="#f59e0b">0ms Interruption • No Error Dialogs</text>
+    </g>
+  </g>
+
+  <!-- ==================== LAYER 2: 3-TIER SEMANTIC MEMORY & LEARNING ==================== -->
+  <g transform="translate(30, 435)">
+    <rect width="940" height="96" rx="12" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-opacity="0.3" />
+    <rect width="940" height="96" rx="12" fill="#f59e0b" fill-opacity="0.02" />
+    <text x="16" y="20" class="text-title" font-size="11" fill="#fbbf24" letter-spacing="1">
+      LAYER 2 — 3-TIER SEMANTIC MEMORY &amp; ADAPTIVE SELF-LEARNING CORE (384-DIM RAG)
+    </text>
+
+    <!-- Card 2.1: Vector RAG -->
+    <g transform="translate(16, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad2)" stroke="#fbbf24" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">💾 384-Dim Vector RAG</text>
+      <text x="12" y="34" class="text-body">On-device dense embeddings &amp; Cosine</text>
+      <text x="12" y="47" class="text-body" fill="#fbbf24">&lt;25ms • TextEmbeddingEngine.kt</text>
+    </g>
+
+    <!-- Card 2.2: Academic Vault -->
+    <g transform="translate(247, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad2)" stroke="#fbbf24" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">📐 Academic Knowledge Vault</text>
+      <text x="12" y="34" class="text-body">Class 1-12 Physics/Chem/Maths Laws</text>
+      <text x="12" y="47" class="text-body" fill="#fbbf24">Newton, Ohm, Maxwell, Thermodynamics</text>
+    </g>
+
+    <!-- Card 2.3: User Correction Tracker -->
+    <g transform="translate(478, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad2)" stroke="#fbbf24" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">🎯 Adaptive Correction Tracker</text>
+      <text x="12" y="34" class="text-body">Learns 'Nahi aise nahi' corrections</text>
+      <text x="12" y="47" class="text-body" fill="#fbbf24">In-Context Few-Shot Behavioral Prompt</text>
+    </g>
+
+    <!-- Card 2.4: Room Database -->
+    <g transform="translate(709, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad2)" stroke="#fbbf24" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">🗄️ Encrypted SQLite Room DB</text>
+      <text x="12" y="34" class="text-body">User facts, habits, contacts &amp; notes</text>
+      <text x="12" y="47" class="text-body" fill="#fbbf24">Room 2.6.1 • JSON Backup &amp; Restore</text>
+    </g>
+  </g>
+
+  <!-- ==================== LAYER 1: SUPERCORE OS AUTOMATION & VOICE ==================== -->
+  <g transform="translate(30, 550)">
+    <rect width="940" height="96" rx="12" fill="none" stroke="#ef4444" stroke-width="1.2" stroke-opacity="0.3" />
+    <rect width="940" height="96" rx="12" fill="#ef4444" fill-opacity="0.02" />
+    <text x="16" y="20" class="text-title" font-size="11" fill="#f87171" letter-spacing="1">
+      LAYER 1 — JARVIS SUPERCORE: AUTONOMOUS OS AUTOMATION &amp; AUDIO VOICE PIPELINE
+    </text>
+
+    <!-- Card 1.1: 16kHz Vosk Audio Pipeline -->
+    <g transform="translate(16, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad1)" stroke="#f87171" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">🎙️ 16kHz Vosk Audio Pipeline</text>
+      <text x="12" y="34" class="text-body">Continuous offline ASR &amp; speaker MFCC</text>
+      <text x="12" y="47" class="text-body" fill="#f87171">model-en-us • RMS Amplitude Visualizer</text>
+    </g>
+
+    <!-- Card 1.2: JarvisAccessibilityService -->
+    <g transform="translate(247, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad1)" stroke="#f87171" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">♿ JarvisAccessibilityService</text>
+      <text x="12" y="34" class="text-body">Autonomous taps, typing &amp; gestures</text>
+      <text x="12" y="47" class="text-body" fill="#f87171">Direct WhatsApp Message Dispatch</text>
+    </g>
+
+    <!-- Card 1.3: MediaProjection Screen Vision -->
+    <g transform="translate(478, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad1)" stroke="#f87171" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">👁️ MediaProjection Vision</text>
+      <text x="12" y="34" class="text-body">Real-time display capture &amp; analysis</text>
+      <text x="12" y="47" class="text-body" fill="#f87171">ScreenCaptureManager • Gemini Vision</text>
+    </g>
+
+    <!-- Card 1.4: Hardware Controls & Guardian Sentry -->
+    <g transform="translate(709, 28)">
+      <rect width="215" height="56" rx="8" fill="url(#cardGrad1)" stroke="#f87171" stroke-width="1" />
+      <text x="12" y="19" class="text-header" fill="#ffffff">🛡️ Touch Guard &amp; Torch Control</text>
+      <text x="12" y="34" class="text-body">Hardware flash, siren &amp; stealth selfie</text>
+      <text x="12" y="47" class="text-body" fill="#f87171">CameraManager • Accelerometer Sentry</text>
+    </g>
+  </g>
+
+  <!-- ==================== FOOTER SPECIFICATION PILLS ==================== -->
+  <g transform="translate(30, 665)">
+    <rect width="940" height="42" rx="10" fill="#0d1829" stroke="#00e5ff" stroke-width="1" stroke-opacity="0.25" />
+    
+    <circle cx="25" cy="21" r="4" fill="#00e5ff" />
+    <text x="36" y="25" class="text-title" font-size="11" fill="#38bdf8">DUAL-BRAIN DISPATCH:</text>
+    <text x="175" y="25" class="text-body" fill="#e2e8f0">Gemini Live WebSocket (Online) ⇄ Local SLM int4 (Offline)</text>
+
+    <circle cx="510" cy="21" r="4" fill="#10b981" />
+    <text x="521" y="25" class="text-title" font-size="11" fill="#34d399">SECURITY &amp; PRIVACY:</text>
+    <text x="640" y="25" class="text-body" fill="#e2e8f0">Biometric AppLock • AES-256 GCM • 0 Tracking</text>
+  </g>
+
+  <g transform="translate(30, 720)">
+    <rect width="940" height="42" rx="10" fill="#0d1829" stroke="#00e5ff" stroke-width="1" stroke-opacity="0.25" />
+
+    <circle cx="25" cy="21" r="4" fill="#a855f7" />
+    <text x="36" y="25" class="text-title" font-size="11" fill="#c084fc">VECTOR MEMORY:</text>
+    <text x="145" y="25" class="text-body" fill="#e2e8f0">384-Dim On-Device Dense Embedding • Cosine Similarity Retrieval</text>
+
+    <circle cx="560" cy="21" r="4" fill="#f59e0b" />
+    <text x="571" y="25" class="text-title" font-size="11" fill="#fbbf24">SATELLITE INTEL:</text>
+    <text x="675" y="25" class="text-body" fill="#e2e8f0">CesiumJS 3D • 3,700+ CCTV Feeds • OpenSky</text>
+  </g>
+
+  <text x="500" y="795" text-anchor="middle" class="text-body" font-size="11" fill="#64748b">
+    Architected &amp; Engineered by Roshan Tiwari (@tiwariroshan121) • Built for Android 8.0+ (API 28–35)
+  </text>
+</svg>

@@ -1,0 +1,111 @@
+Created At: 2026-10-18T08:16:27+05:30
+Completed At: 2026-10-18T08:16:27+05:30
+The following changes were made by the replace_file_content tool to: c:\Users\Roshan\Documents\Jarvis\app\src\main\res\layout\fragment_settings.xml. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -246,6 +246,103 @@
+                 </LinearLayout>
+             </LinearLayout>
+ 
++            <!-- SECTION 0: SUPERCORE & SYSTEM INTEGRATION -->
++            <TextView
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:text="SUPERCORE &amp; SYSTEM INTEGRATION"
++                android:textColor="?attr/themeTextMuted"
++                android:textSize="11sp"
++                android:letterSpacing="0.08"
++                android:fontFamily="sans-serif-medium"
++                android:textStyle="bold"
++                android:layout_marginBottom="8dp" />
++
++            <LinearLayout
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:orientation="vertical"
++                android:background="@drawable/bg_jarvis_card"
++                android:padding="10dp"
++                android:layout_marginBottom="22dp">
++
++                <LinearLayout
++                    android:id="@+id/rowSuperCore"
++                    android:layout_width="match_parent"
++                    android:layout_height="wrap_content"
++                    android:orientation="horizontal"
++                    android:gravity="center_vertical"
++                    android:padding="12dp"
++                    android:background="@drawable/bg_jarvis_row_item"
++                    android:clickable="true"
++                    android:focusable="true">
++
++                    <FrameLayout
++                        android:layout_width="40dp"
++                        android:layout_height="40dp"
++                        android:background="@drawable/bg_jarvis_icon_square">
++
++                        <ImageView
++                            android:layout_width="22dp"
++                            android:layout_height="22dp"
++                            android:layout_gravity="center"
++                            android:src="@drawable/ic_verified_badge"
++                            app:tint="@color/primary_cyan"
++                            android:contentDescription="SuperCore" />
++                    </FrameLayout>
++
++                    <LinearLayout
++                        android:layout_width="0dp"
++                        android:layout_height="wrap_content"
++                        android:layout_weight="1"
++                        android:orientation="vertical"
++                        android:layout_marginStart="14dp">
++
++                        <LinearLayout
++                            android:layout_width="wrap_content"
++                            android:layout_height="wrap_content"
++                            android:orientation="horizontal"
++                            android:gravity="center_vertical">
++
++                            <TextView
++                                android:layout_width="wrap_content"
++                                android:layout_height="wrap_content"
++                                android:text="SuperCore &amp; System Control"
++                                android:textColor="?attr/themeTextPrimary"
++                                android:textSize="15sp"
++                                android:textStyle="bold" />
++
++                            <TextView
++                                android:layout_width="wrap_content"
++                                android:layout_height="wrap_content"
++                                android:text="CORE"
++                                android:textSize="9sp"
++                                android:textStyle="bold"
++                                android:textColor="@color/primary_cyan"
++                                android:background="@drawable/bg_jarvis_status_badge"
++                                android:paddingHorizontal="6dp"
++                                android:paddingVertical="2dp"
++                                android:layout_marginStart="8dp" />
++                        </LinearLayout>
++
++                        <TextView
++                            android:layout_width="wrap_content"
++                            android:layout_height="wrap_content"
++                            android:text="Default Assistant • WhatsApp Auto-Reader • Driving Mode"
++                            android:textColor="?attr/themeTextMuted"
++                            android:textSize="12sp"
++                            android:layout_marginTop="2dp" />
++                    </LinearLayout>
++
++                    <ImageView
++                        android:layout_width="20dp"
++                        android:layout_height="20dp"
++                        android:src="@drawable/ic_chevron_right"
++                        app:tint="?attr/themeTextMuted"
++                        android:contentDescription="Open" />
++                </LinearLayout>
++            </LinearLayout>
++
+             <!-- SECTION 1: VOICE & NEURAL INTELLIGENCE -->
+             <TextView
+                 android:layout_width="wrap_content"
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.

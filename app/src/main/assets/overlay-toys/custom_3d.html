@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" style="background:transparent;margin:0;padding:0;overflow:hidden;width:100%;height:100%;">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Custom 3D Avatar</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+    touch-action: manipulation;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #canvas-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+    outline: none;
+  }
+</style>
+</head>
+<body>
+<div id="canvas-container">
+  <canvas id="c"></canvas>
+</div>
+
+<script src="../three.min.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  const canvas = document.getElementById("c");
+  const container = document.getElementById("canvas-container");
+
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true, powerPreference: "high-performance" });
+  } catch (e) {
+    return;
+  }
+  renderer.setClearColor(0x000000, 0);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 50);
+  camera.position.set(0, 0, 3.6);
+
+  // Lights
+  const ambLight = new THREE.AmbientLight(0xffffff, 0.95);
+  scene.add(ambLight);
+
+  const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.5);
+  dirLight.position.set(2, 3, 4);
+  scene.add(dirLight);
+
+  const rimLight = new THREE.PointLight(0xa855f7, 2.2, 12);
+  rimLight.position.set(-2.5, 2, -2);
+  scene.add(rimLight);
+
+  const rootGroup = new THREE.Group();
+  scene.add(rootGroup);
+
+  // Materials
+  const defaultCanvas = document.createElement("canvas");
+  defaultCanvas.width = 256;
+  defaultCanvas.height = 256;
+  const ctx = defaultCanvas.getContext("2d");
+  const grad = ctx.createLinearGradient(0, 0, 256, 256);
+  grad.addColorStop(0, "#0284c7");
+  grad.addColorStop(0.5, "#6366f1");
+  grad.addColorStop(1, "#a855f7");
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(128, 128, 124, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#38bdf8";
+  ctx.lineWidth = 6;
+  ctx.stroke();
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 96px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("AI", 128, 128);
+
+  let defaultTexture = new THREE.CanvasTexture(defaultCanvas);
+  defaultTexture.generateMipmaps = true;
+
+  const frontMat = new THREE.MeshStandardMaterial({
+    map: defaultTexture,
+    roughness: 0.30,
+    metalness: 0.15,
+    transparent: true
+  });
+
+  const rimMat = new THREE.MeshStandardMaterial({
+    color: 0x1e293b,
+    metalness: 0.90,
+    roughness: 0.20
+  });
+
+  const glowBezelMat = new THREE.MeshBasicMaterial({
+    color: 0x38bdf8,
+    transparent: true,
+    opacity: 0.95
+  });
+
+  const backMat = new THREE.MeshStandardMaterial({
+    color: 0x090d16,
+    metalness: 0.85,
+    roughness: 0.35
+  });
+
+  // 3D Medallion Mesh: Token with front face, rim, back face
+  const tokenGroup = new THREE.Group();
+  rootGroup.add(tokenGroup);
+
+  // Front disc for custom photo
+  const frontDiscGeom = new THREE.CircleGeometry(1.05, 48);
+  const frontMesh = new THREE.Mesh(frontDiscGeom, frontMat);
+  frontMesh.position.z = 0.082;
+  tokenGroup.add(frontMesh);
+
+  // Outer cyber glowing ring
+  const glowRingGeom = new THREE.TorusGeometry(1.08, 0.038, 16, 64);
+  const glowRing = new THREE.Mesh(glowRingGeom, glowBezelMat);
+  glowRing.position.z = 0.083;
+  tokenGroup.add(glowRing);
+
+  // Token rim / body
+  const bodyGeom = new THREE.CylinderGeometry(1.06, 1.06, 0.16, 48);
+  bodyGeom.rotateX(Math.PI / 2);
+  const bodyMesh = new THREE.Mesh(bodyGeom, rimMat);
+  tokenGroup.add(bodyMesh);
+
+  // Back face (engraved tech core)
+  const backDiscGeom = new THREE.CircleGeometry(1.05, 48);
+  const backMesh = new THREE.Mesh(backDiscGeom, backMat);
+  backMesh.rotation.y = Math.PI;
+  backMesh.position.z = -0.082;
+  tokenGroup.add(backMesh);
+
+  const backCoreRing = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.6, 24), glowBezelMat);
+  backCoreRing.rotation.y = Math.PI;
+  backCoreRing.position.z = -0.083;
+  tokenGroup.add(backCoreRing);
+
+  // Orbiting Particle Cloud
+  const PARTICLE_COUNT = 20;
+  const partGeom = new THREE.BufferGeometry();
+  const partPos = new Float32Array(PARTICLE_COUNT * 3);
+  const partData = [];
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const angle = (i / PARTICLE_COUNT) * Math.PI * 2;
+    const r = 1.32 + Math.random() * 0.18;
+    partData.push({ angle: angle, radius: r, speed: 0.8 + Math.random() * 0.6, yOffset: (Math.random() - 0.5) * 0.35 });
+    partPos[i * 3] = Math.cos(angle) * r;
+    partPos[i * 3 + 1] = Math.sin(angle) * 0.3;
+    partPos[i * 3 + 2] = Math.sin(angle) * r * 0.6;
+  }
+  partGeom.setAttribute("position", new THREE.BufferAttribute(partPos, 3));
+
+  const partMat = new THREE.PointsMaterial({
+    color: 0x38bdf8,
+    size: 0.07,
+    transparent: true,
+    opacity: 0.85,
+    blending: THREE.AdditiveBlending
+  });
+  const particles = new THREE.Points(partGeom, partMat);
+  rootGroup.add(particles);
+
+  // Resize handling
+  function onResize() {
+    const w = container.clientWidth || 88;
+    const h = container.clientHeight || 88;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener("resize", onResize);
+  onResize();
+
+  // Texture Loading
+  function applyTextureBase64(base64) {
+    if (!base64 || typeof base64 !== "string") return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = function() {
+      const tex = new THREE.Texture(img);
+      tex.needsUpdate = true;
+      tex.generateMipmaps = true;
+      tex.minFilter = THREE.LinearMipmapLinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+      frontMat.map = tex;
+      frontMat.needsUpdate = true;
+    };
+    img.src = base64;
+  }
+  window.setCustomTexture = applyTextureBase64;
+
+  // Check Android bridge immediately
+  try {
+    if (window.JarvisCustom3D && window.JarvisCustom3D.getCustomAvatarBase64) {
+      const b64 = window.JarvisCustom3D.getCustomAvatarBase64();
+      if (b64) applyTextureBase64(b64);
+    }
+  } catch (_) {}
+
+  // Interactive Touch & Spin Physics
+  let targetRotX = 0;
+  let targetRotY = 0;
+  let spinVelocity = 0;
+
+  function onPointerMove(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+    targetRotY = x * 0.6;
+    targetRotX = -y * 0.5;
+  }
+
+  function triggerHopSpin() {
+    spinVelocity = 14.0;
+  }
+
+  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerdown", () => {
+    triggerHopSpin();
+  });
+
+  // Animation Loop
+  let lastTime = performance.now();
+  function animate(now) {
+    requestAnimationFrame(animate);
+    const dt = Math.min((now - lastTime) / 1000, 0.05);
+    lastTime = now;
+    const t = now * 0.001;
+
+    // Hover breathing
+    tokenGroup.position.y = Math.sin(t * 2.4) * 0.06;
+
+    // Spin velocity decay on click
+    if (spinVelocity > 0.05) {
+      tokenGroup.rotation.y += spinVelocity * dt;
+      spinVelocity *= Math.exp(-dt * 3.5);
+    } else {
+      // Natural 3D idle floating sway with touch-tracking
+      const idleSwayY = Math.sin(t * 1.5) * 0.38 + targetRotY;
+      const idleSwayX = Math.cos(t * 1.2) * 0.18 + targetRotX;
+      tokenGroup.rotation.y = THREE.MathUtils.lerp(tokenGroup.rotation.y, idleSwayY, dt * 5);
+      tokenGroup.rotation.x = THREE.MathUtils.lerp(tokenGroup.rotation.x, idleSwayX, dt * 5);
+      targetRotX *= Math.exp(-dt * 2.0);
+      targetRotY *= Math.exp(-dt * 2.0);
+    }
+
+    // Glow ring pulse
+    const glowPulse = 0.8 + Math.sin(t * 3.0) * 0.2;
+    glowRing.scale.setScalar(1.0 + Math.sin(t * 3.0) * 0.015);
+    glowBezelMat.opacity = 0.75 + glowPulse * 0.25;
+
+    // Orbit particles update
+    const posAttr = particles.geometry.attributes.position;
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const p = partData[i];
+      p.angle += p.speed * dt * 0.8;
+      const px = Math.cos(p.angle) * p.radius;
+      const pz = Math.sin(p.angle) * p.radius * 0.6;
+      const py = Math.sin(p.angle * 1.5) * 0.35 + p.yOffset;
+      posAttr.setXYZ(i, px, py, pz);
+    }
+    posAttr.needsUpdate = true;
+
+    renderer.render(scene, camera);
+  }
+
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

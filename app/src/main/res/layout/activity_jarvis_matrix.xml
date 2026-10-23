@@ -1,0 +1,1154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?attr/themeBg">
+
+    <!-- Top App Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="12dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_jarvis_icon_square"
+            android:src="@drawable/ic_back"
+            android:padding="8dp"
+            app:tint="?attr/themeAccent"
+            android:contentDescription="Back" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="14dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="JARVIS AGENT MATRIX"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TACTICAL AGENTIC PROTOCOLS &amp; TOOLS"
+                android:textColor="?attr/themeAccent"
+                android:textSize="11sp"
+                android:letterSpacing="0.06"
+                android:fontFamily="sans-serif"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/themeCardBorder" />
+
+    <!-- Category Filter Chips Bar -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="10dp"
+        android:background="?attr/themeCardGlassStart">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/chipFilterAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⚡ ALL PROTOCOLS"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/bg_jarvis_pill_button"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/chipFilterSecurity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🛡️ SECURITY &amp; APPLOCK"
+                android:textColor="#90A4AE"
+                android:background="@drawable/bg_jarvis_action_card"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/chipFilterVoice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🎙️ NEURAL VOICE &amp; VISION"
+                android:textColor="#90A4AE"
+                android:background="@drawable/bg_jarvis_action_card"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/chipFilterAutomation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⚙️ LINUX &amp; MACROS"
+                android:textColor="#90A4AE"
+                android:background="@drawable/bg_jarvis_action_card"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/chipFilterSmartHome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🏠 SMART HOME &amp; WALLPAPER"
+                android:textColor="#90A4AE"
+                android:background="@drawable/bg_jarvis_action_card"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Scrollable Content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="40dp">
+
+            <!-- SECTION 1: AUTONOMOUS AI MACROS -->
+            <LinearLayout
+                android:id="@+id/secAiMacros"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AUTONOMOUS AI MACROS (CHATGPT &amp; GEMINI)"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="18dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ChatGPT Image Generator"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Opens ChatGPT app, types prompt, waits for generation &amp; auto-downloads to Gallery"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11.5sp"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/etChatGptPrompt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="e.g. Iron Man neon suit flying in dark space"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textColorHint="?attr/themeTextMuted"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="10dp"
+                    android:textSize="13sp" />
+
+                <Button
+                    android:id="@+id/btnDirectGenerateImg"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="GENERATE DIRECT AI IMAGE (INSTANT)"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_jarvis_pill_button"
+                    android:textColor="#FFFFFF" />
+
+                <ProgressBar
+                    android:id="@+id/pbAiImageLoading"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/ivGeneratedAiImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp"
+                    android:scaleType="centerCrop"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:visibility="gone"
+                    android:contentDescription="Generated AI Image" />
+
+                <TextView
+                    android:id="@+id/tvAiImageStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp"
+                    android:visibility="gone" />
+
+                <!-- Action buttons for generated image: Save, Share, View -->
+                <LinearLayout
+                    android:id="@+id/layoutAiImageActions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone">
+
+                    <Button
+                        android:id="@+id/btnSaveAiImage"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:text="💾 SAVE TO APP &amp; GALLERY"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:paddingHorizontal="8dp" />
+
+                    <Button
+                        android:id="@+id/btnShareAiImage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="↗️ SHARE"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="11sp"
+                        android:layout_marginStart="8dp"
+                        android:paddingHorizontal="12dp" />
+
+                    <Button
+                        android:id="@+id/btnViewFullAiImage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="🔍 VIEW"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="11sp"
+                        android:layout_marginStart="8dp"
+                        android:paddingHorizontal="12dp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnGenerateChatGptImg"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="AUTOMATE CHATGPT APP (MACRO)"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?attr/themeCardBorder"
+                    android:layout_marginVertical="14dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Gemini Image &amp; Video (Google Veo)"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etGeminiPrompt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="e.g. Futuristic hypercar speeding on neon highway"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textColorHint="?attr/themeTextMuted"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="10dp"
+                    android:textSize="13sp"
+                    android:layout_marginTop="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <Button
+                        android:id="@+id/btnGeminiImage"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="IMAGE MACRO"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginEnd="6dp" />
+
+                    <Button
+                        android:id="@+id/btnGeminiVideo"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="VIDEO (VEO) MACRO"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginStart="6dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvMacroStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Requires JARVIS Accessibility Service to interact with screen."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+            </LinearLayout>
+
+            <!-- SECTION 2: VOICE GUARDIAN & SECURITY -->
+            <LinearLayout
+                android:id="@+id/secVoiceGuardian"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="VOICE GUARDIAN &amp; SECURITY PROTOCOLS"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="18dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Voice Guardian State"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvGuardStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Status: Armed (Full Protection)"
+                            android:textColor="?attr/themeAccent"
+                            android:textSize="11.5sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btnToggleGuard"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ARM/DISARM"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvEnrolledVoices"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Enrolled: Boss (Full Admin), Family, Friends"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="12sp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="10dp"
+                    android:layout_marginBottom="10dp" />
+
+                <Button
+                    android:id="@+id/btnTestWatchmanPhoto"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="TEST INTRUDER FRONT CAM SNAP"
+                    android:background="@drawable/bg_jarvis_pill_button"
+                    android:textColor="#FFFFFF" />
+            </LinearLayout>
+            </LinearLayout>
+
+            <!-- SECTION 3: TERMUX LINUX COMMAND BRIDGE -->
+            <LinearLayout
+                android:id="@+id/secLinuxTermux"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TERMUX &amp; LINUX BRIDGE"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="18dp">
+
+                <EditText
+                    android:id="@+id/etTermuxCommand"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Bash command (e.g. ls -la, python -V, pkg list)"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textColorHint="?attr/themeTextMuted"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="10dp"
+                    android:textSize="13sp" />
+
+                <Button
+                    android:id="@+id/btnRunNativeShell"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="EXECUTE NATIVE LINUX (NO APPS NEEDED)"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_jarvis_pill_button"
+                    android:textColor="#FFFFFF" />
+
+                <!-- Quick Terminal Chips -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="6dp">
+
+                    <Button
+                        android:id="@+id/btnChipUname"
+                        android:layout_width="0dp"
+                        android:layout_height="34dp"
+                        android:layout_weight="1"
+                        android:text="uname -a"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:textColor="?attr/themeAccent"
+                        android:layout_marginEnd="4dp" />
+
+                    <Button
+                        android:id="@+id/btnChipDf"
+                        android:layout_width="0dp"
+                        android:layout_height="34dp"
+                        android:layout_weight="1"
+                        android:text="df -h"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:textColor="?attr/themeAccent"
+                        android:layout_marginEnd="4dp" />
+
+                    <Button
+                        android:id="@+id/btnChipUptime"
+                        android:layout_width="0dp"
+                        android:layout_height="34dp"
+                        android:layout_weight="1"
+                        android:text="uptime"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:textColor="?attr/themeAccent"
+                        android:layout_marginEnd="4dp" />
+
+                    <Button
+                        android:id="@+id/btnChipDate"
+                        android:layout_width="0dp"
+                        android:layout_height="34dp"
+                        android:layout_weight="1"
+                        android:text="date"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:textColor="?attr/themeAccent" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="6dp">
+
+                    <Button
+                        android:id="@+id/btnRunTermux"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="DISPATCH TO TERMUX"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="10.5sp"
+                        android:layout_marginEnd="6dp" />
+
+                    <Button
+                        android:id="@+id/btnRunUbuntu"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="TERMUX UBUNTU"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="10.5sp"
+                        android:layout_marginStart="6dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvTermuxResult"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Ready for execution."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11.5sp"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+            </LinearLayout>
+
+            <!-- SECTION 4: LIVE STOCKS & WATCHLIST -->
+            <LinearLayout
+                android:id="@+id/secStocks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="LIVE STOCK MARKET &amp; CRYPTO"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="18dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <EditText
+                        android:id="@+id/etStockSymbol"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="RELIANCE, TCS, BTC, AAPL, NIFTY"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textColorHint="?attr/themeTextMuted"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:padding="10dp"
+                        android:textSize="13sp"
+                        android:layout_marginEnd="8dp" />
+
+                    <Button
+                        android:id="@+id/btnFetchStock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="QUOTE"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+
+                <!-- Quick Tickers -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <Button
+                        android:id="@+id/btnChipReliance"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="RELIANCE"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginEnd="4dp" />
+
+                    <Button
+                        android:id="@+id/btnChipTcs"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="TCS"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginEnd="4dp" />
+
+                    <Button
+                        android:id="@+id/btnChipBtc"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="BITCOIN"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginEnd="4dp" />
+
+                    <Button
+                        android:id="@+id/btnChipNifty"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="NIFTY"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvStockResult"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Tap any ticker above or search a symbol."
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="13sp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="10dp"
+                    android:layout_marginTop="10dp" />
+
+                <Button
+                    android:id="@+id/btnTrendingStocks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="VIEW TRENDING STOCKS"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_jarvis_pill_button"
+                    android:textColor="#FFFFFF" />
+            </LinearLayout>
+            </LinearLayout>
+
+            <!-- SECTION 5: CREATOR STUDIO & SEO TOOLKIT -->
+            <LinearLayout
+                android:id="@+id/secCreatorStudio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CREATOR STUDIO &amp; SEO PROTOCOLS"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="18dp">
+
+                <EditText
+                    android:id="@+id/etScriptTopic"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Video/Reel Topic (e.g. 5 Secret AI websites)"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textColorHint="?attr/themeTextMuted"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="10dp"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <Button
+                        android:id="@+id/btnGenerateScript"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="GENERATE SCRIPT"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginEnd="6dp" />
+
+                    <Button
+                        android:id="@+id/btnCopyScript"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="COPY SCRIPT"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginStart="6dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvScriptResult"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Script framework will appear here."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="12sp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="10dp"
+                    android:layout_marginTop="10dp" />
+            </LinearLayout>
+            </LinearLayout>
+
+            <!-- SECTION 6: ON-DEVICE POCKET-TTS NEURAL VOICE ENGINE (24KHZ) -->
+            <LinearLayout
+                android:id="@+id/secPocketTts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ON-DEVICE POCKET-TTS NEURAL VOICE ENGINE"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="18dp">
+
+                <TextView
+                    android:id="@+id/tvPocketTtsStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="PocketTTS Engine: ONNX Runtime &amp; Mimi Vocoder Ready (24kHz)"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/etPocketTtsInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="नमस्ते सर, मैं जार्विस हूँ। ऑल सिस्टम्स नॉमिनल।"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textColorHint="?attr/themeTextMuted"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="10dp"
+                    android:textSize="13sp" />
+
+                <!-- Quick Phrases -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <Button
+                        android:id="@+id/btnPhraseHindi"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="HINDI GREETING"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginEnd="4dp" />
+
+                    <Button
+                        android:id="@+id/btnPhraseEnglish"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="SYSTEM STATUS"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <Button
+                        android:id="@+id/btnPocketTtsSpeak"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.6"
+                        android:text="SPEAK (LOCAL NEURAL)"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginEnd="6dp" />
+
+                    <Button
+                        android:id="@+id/btnPocketTtsStop"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="STOP"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:textColor="?attr/themeTextMuted"
+                        android:layout_marginStart="6dp" />
+                </LinearLayout>
+            </LinearLayout>
+            </LinearLayout>
+
+            <!-- SECTION 7: STARK ARC REACTOR LIVE WALLPAPER -->
+            <LinearLayout
+                android:id="@+id/secLiveWallpaper"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="STARK ARC REACTOR LIVE WALLPAPER"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="18dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Sets an interactive cybernetic JARVIS Arc Reactor HUD directly onto your Android Home Screen with real-time touch ripples and gyro HUD rings."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="10dp" />
+
+                <Button
+                    android:id="@+id/btnApplyLiveWallpaper"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="APPLY STARK ARC REACTOR LIVE WALLPAPER"
+                    android:background="@drawable/bg_jarvis_pill_button"
+                    android:textColor="#FFFFFF" />
+            </LinearLayout>
+            </LinearLayout>
+
+            <!-- SECTION 8: PROTOCOL 7 BIOMETRIC & FACE APPLOCK -->
+            <LinearLayout
+                android:id="@+id/secBiometricAppLock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PROTOCOL 7: BIOMETRIC &amp; FACE APPLOCK"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="18dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Intercepts launches of protected applications and requests hardware Face Unlock, Fingerprint, or PIN verification."
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="10dp" />
+
+                    <Button
+                        android:id="@+id/btnLaunchAppLockTest"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="TEST BIOMETRIC APPLOCK OVERLAY"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- SECTION 9: ON-DEVICE MLKIT BARCODE & QR SCANNER -->
+            <LinearLayout
+                android:id="@+id/secBarcodeScanner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ON-DEVICE MLKIT BARCODE &amp; QR SCANNER"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="18dp">
+
+                    <Button
+                        android:id="@+id/btnScanScreenBarcode"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="SCAN SCREEN FOR QR / BARCODES"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:textColor="#FFFFFF" />
+
+                    <TextView
+                        android:id="@+id/tvBarcodeScanResult"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Ready for scanning (MLKit models loaded)."
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:padding="10dp"
+                        android:layout_marginTop="10dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- SECTION 10: STARK SMART HOME & IOT SENTINEL -->
+            <LinearLayout
+                android:id="@+id/secSmartHome"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="STARK SMART HOME &amp; IOT SENTINEL"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="24dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Control smart home lights and appliances with immediate execution, blink/chase party patterns, or timed delays."
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="10dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <Button
+                            android:id="@+id/btnSmartHomeOn"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="LIGHTS ON"
+                            android:background="@drawable/bg_jarvis_pill_button"
+                            android:textColor="#FFFFFF"
+                            android:layout_marginEnd="4dp" />
+
+                        <Button
+                            android:id="@+id/btnSmartHomeOff"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="LIGHTS OFF"
+                            android:background="@drawable/bg_jarvis_pill_button"
+                            android:textColor="#FFFFFF"
+                            android:layout_marginStart="4dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnSmartHomeBlink"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="BLINK STROBE"
+                            android:background="@drawable/bg_jarvis_pill_button"
+                            android:textColor="#FFFFFF"
+                            android:layout_marginEnd="4dp" />
+
+                        <Button
+                            android:id="@+id/btnSmartHomeChase"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="PARTY CHASE"
+                            android:background="@drawable/bg_jarvis_pill_button"
+                            android:textColor="#FFFFFF"
+                            android:layout_marginStart="4dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="8dp">
+
+                        <Button
+                            android:id="@+id/btnConfigureSmartHome"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="SETUP IOT / HA"
+                            android:background="@drawable/bg_jarvis_pill_button"
+                            android:textColor="#FFFFFF"
+                            android:layout_marginEnd="4dp" />
+
+                        <Button
+                            android:id="@+id/btnTestSmartHome"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="TEST CONNECTION"
+                            android:background="@drawable/bg_jarvis_pill_button"
+                            android:textColor="#FFFFFF"
+                            android:layout_marginStart="4dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvSmartHomeStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Smart Home Engine: Standby (Ready for commands)."
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:padding="10dp"
+                        android:layout_marginTop="10dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

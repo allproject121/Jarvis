@@ -1,0 +1,204 @@
+package com.jarvis.assistant.ui.godseye
+
+import android.annotation.SuppressLint
+import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Bundle
+import android.view.View
+import android.webkit.GeolocationPermissions
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatActivity
+import com.jarvis.assistant.databinding.ActivityGodsEyeBinding
+import com.jarvis.assistant.util.ThemeManager
+
+/**
+ * Dedicated Host Activity for the Original God's Eye View Console.
+ * Connects securely to the local loopback service on http://127.0.0.1:4173/
+ * with hardware-accelerated WebGL 2, restricted file access, and graceful error recovery.
+ */
+class GodsEyeActivity : AppCompatActivity() {
+
+    companion object {
+        const val GODS_EYE_LOCAL_URL = "http://127.0.0.1:4173/"
+        private const val LOCAL_HOST_IPV4 = "127.0.0.1"
+        private const val LOCAL_HOST_NAME = "localhost"
+    }
+
+    private lateinit var binding: ActivityGodsEyeBinding
+    private var isInitialPageLoaded = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeManager.applyTheme(this)
+        super.onCreate(savedInstanceState)
+        binding = ActivityGodsEyeBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        ThemeManager.applyDynamicBackground(binding.rootGodsEyeLayout)
+
+        setupButtons()
+        setupBackNavigation()
+        setupWebView()
+
+        loadGodsEye()
+    }
+
+    private fun setupButtons() {
+        binding.btnBack.setOnClickListener {
+            finish()
+        }
+
+        binding.btnReload.setOnClickListener {
+            binding.layoutError.visibility = View.GONE
+            binding.layoutLoading.visibility = View.VISIBLE
+            binding.webViewGodsEye.reload()
+        }
+
+        binding.btnRetry.setOnClickListener {
+            binding.layoutError.visibility = View.GONE
+            binding.layoutLoading.visibility = View.VISIBLE
+            loadGodsEye()
+        }
+
+        binding.btnErrorBack.setOnClickListener {
+            finish()
+        }
+    }
+
+    private fun setupBackNavigation() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (binding.webViewGodsEye.canGoBack()) {
+                    binding.webViewGodsEye.goBack()
+                } else {
+                    finish()
+                }
+            }
+        })
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun setupWebView() {
+        binding.webViewGodsEye.apply {
+            setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            setBackgroundColor(android.graphics.Color.BLACK)
+
+            settings.apply {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                databaseEnabled = true
+
+                // Security Hardening: Never allow arbitrary local file or content access
+                allowFileAccess = false
+                allowContentAccess = false
+
+                // Enforce strict mixed content isolation
+                mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
+
+                // Performance & Layout
+                useWideViewPort = true
+                loadWithOverviewMode = true
+                mediaPlaybackRequiresUserGesture = false
+                setGeolocationEnabled(true)
+            }
+
+            webChromeClient = object : WebChromeClient() {
+                override fun onGeolocationPermissionsShowPrompt(
+                    origin: String?,
+                    callback: GeolocationPermissions.Callback?
+                ) {
+                    // Allow geolocation only for local loopback origin
+                    val isLoopback = origin?.contains(LOCAL_HOST_IPV4) == true || origin?.contains(LOCAL_HOST_NAME) == true
+                    callback?.invoke(origin, isLoopback, false)
+                }
+
+                override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                    if (newProgress >= 90 && !isInitialPageLoaded) {
+                        binding.layoutLoading.visibility = View.GONE
+                    }
+                }
+            }
+
+            webViewClient = object : WebViewClient() {
+                override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                    super.onPageStarted(view, url, favicon)
+                    if (!isInitialPageLoaded) {
+                        binding.layoutLoading.visibility = View.VISIBLE
+                    }
+                }
+
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    isInitialPageLoaded = true
+                    binding.layoutLoading.visibility = View.GONE
+                    binding.layoutError.visibility = View.GONE
+                }
+
+                override fun onReceivedError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    error: WebResourceError?
+                ) {
+                    super.onReceivedError(view, request, error)
+                    if (request?.isForMainFrame == true) {
+                        isInitialPageLoaded = false
+                        binding.layoutLoading.visibility = View.GONE
+                        binding.layoutError.visibility = View.VISIBLE
+                        val desc = error?.description?.toString() ?: "Connection failed"
+                        binding.tvErrorMessage.text = "Connection to God's Eye local server failed ($desc).\n\nPlease verify that the background service is running in Termux:\ncd ~/gods-eye-view\nnpm run preview -- --host 127.0.0.1 --port 4173"
+                    }
+                }
+
+                override fun shouldOverrideUrlLoading(
+                    view: WebView?,
+                    request: WebResourceRequest?
+                ): Boolean {
+                    val url = request?.url ?: return false
+                    val host = url.host.orEmpty()
+
+                    // Only allow in-app navigation within the verified local loopback host
+                    if (host == LOCAL_HOST_IPV4 || host == LOCAL_HOST_NAME) {
+                        return false
+                    }
+
+                    // Protect WebView: Forward all external links out to the user's default browser
+                    return try {
+                        val externalIntent = Intent(Intent.ACTION_VIEW, url)
+                        startActivity(externalIntent)
+                        true
+                    } catch (_: Exception) {
+                        true
+                    }
+                }
+            }
+        }
+    }
+
+    private fun loadGodsEye() {
+        binding.webViewGodsEye.loadUrl(GODS_EYE_LOCAL_URL)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.webViewGodsEye.onResume()
+        binding.webViewGodsEye.resumeTimers()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        binding.webViewGodsEye.onPause()
+        binding.webViewGodsEye.pauseTimers()
+    }
+
+    override fun onDestroy() {
+        binding.webViewGodsEye.stopLoading()
+        binding.webViewGodsEye.destroy()
+        super.onDestroy()
+    }
+}

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/themeAccentLight">
+    <item>
+        <layer-list>
+            <!-- Layer 1: Frosted acrylic glass fill with theme border -->
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="20dp" />
+                    <gradient
+                        android:type="linear"
+                        android:angle="135"
+                        android:startColor="?attr/themeCardGlassStart"
+                        android:endColor="?attr/themeCardGlassEnd" />
+                    <stroke
+                        android:width="1.2dp"
+                        android:color="?attr/themeCardBorder" />
+                </shape>
+            </item>
+
+            <!-- Layer 2: Apple Liquid Glass Top Specular Sheen -->
+            <item
+                android:top="1dp"
+                android:left="1dp"
+                android:right="1dp"
+                android:bottom="14dp">
+                <shape android:shape="rectangle">
+                    <corners
+                        android:topLeftRadius="19dp"
+                        android:topRightRadius="19dp"
+                        android:bottomLeftRadius="4dp"
+                        android:bottomRightRadius="4dp" />
+                    <gradient
+                        android:type="linear"
+                        android:angle="270"
+                        android:startColor="#22FFFFFF"
+                        android:centerColor="#09FFFFFF"
+                        android:endColor="#00FFFFFF" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</ripple>

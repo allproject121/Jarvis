@@ -1,0 +1,3308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JARVIS Holographic Core</title>
+<style>
+:root{--bg:#fff;--fg:#1d2340;--sub:#6b7390;--glass:rgba(255,255,255,.72);--gb:rgba(255,255,255,.9);--chip:#4a527a;--t1:#2f6bff;--t2:#8b5cf6;--t3:#c15de0;--sh:rgba(70,80,170,.22)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{display:flex;flex-direction:column;align-items:center;background:var(--bg);color:var(--fg);font-family:Inter,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
+header{text-align:center;padding-top:clamp(12px,3.5vh,36px);flex:none}
+h1{font-size:clamp(22px,4.2vh,34px);font-weight:700;letter-spacing:.3em;padding-left:.3em;background:linear-gradient(90deg,var(--t1),var(--t2) 60%,var(--t3));-webkit-background-clip:text;background-clip:text;color:transparent}
+header p{margin-top:6px;font-size:clamp(12px,1.8vh,15px);color:var(--sub);letter-spacing:.04em}
+#stage{position:relative;flex:1 1 auto;min-height:0;width:100%;max-width:900px}
+#stage canvas{position:absolute;top:0;left:0;right:0;bottom:0;width:100%!important;height:100%!important;display:block;touch-action:none;cursor:grab}
+#shadow{position:absolute;left:50%;height:22px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(closest-side,var(--sh),transparent);filter:blur(4px);animation:float 5s ease-in-out infinite;pointer-events:none}
+@keyframes float{50%{opacity:.6;transform:translateX(-50%) scaleX(.9)}}
+#status{flex:none;display:flex;align-items:center;gap:10px;padding:9px 20px;border-radius:999px;background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 4px 18px rgba(0,0,0,.12),inset 0 0 0 1px var(--gb);font-size:13px;font-weight:600;letter-spacing:.22em;color:var(--fg)}
+#dot{width:8px;height:8px;border-radius:50%;background:var(--t1);animation:ping 1.6s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.panel{flex:none;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;margin-top:10px;padding:6px;border-radius:20px;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 8px 28px rgba(0,0,0,.12),inset 0 0 0 1px var(--gb);max-width:100%}
+#panel{margin-bottom:clamp(12px,2.5vh,24px)}
+button{font:inherit;font-size:11.5px;font-weight:600;letter-spacing:.1em;border:0;border-radius:13px;padding:10px 13px;color:var(--chip);background:transparent;cursor:pointer;transition:all .2s}
+button.on{color:#fff;background:linear-gradient(135deg,var(--t1),var(--t2));box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#bgc{width:34px;height:34px;border:0;border-radius:50%;padding:0;background:none;cursor:pointer;overflow:hidden}
+#bgc::-webkit-color-swatch-wrapper{padding:0}#bgc::-webkit-color-swatch{border:2px solid var(--gb);border-radius:50%}
+#toast{position:fixed;left:50%;bottom:110px;transform:translate(-50%,20px);opacity:0;background:#1d2340;color:#fff;font-size:13px;padding:10px 16px;border-radius:12px;transition:all .3s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+/* Hide all HTML panels immediately so they never flash */
+#themes,
+#panel,
+#status,
+#toast,
+#err,
+header {
+  display: none !important;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: transparent !important;
+  background-color: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+</style>
+</head>
+<body class="embedded">
+<div id="stage"><canvas id="c"></canvas><div id="shadow"></div></div>
+
+<script src="three.min.js"></script>
+<script src="fflate.min.js"></script>
+<script src="GLTFLoader.js"></script>
+<script src="OBJLoader.js"></script>
+<script src="STLLoader.js"></script>
+<script src="FBXLoader.js"></script>
+<script>
+if (typeof THREE !== "undefined" && THREE.LoaderUtils && typeof THREE.LoaderUtils.resolveURL !== "function") {
+  THREE.LoaderUtils.resolveURL = function(url, path) {
+    if (typeof url !== "string" || url === "") return "";
+    if (/^(https?:|blob:|data:)/i.test(url)) return url;
+    if (/^\/\//.test(url)) return url;
+    return (path || "") + url;
+  };
+}
+</script>
+<script src="GLTFLoader.js"></script>
+<script src="OBJLoader.js"></script>
+<script src="STLLoader.js"></script>
+<script>
+(function(){
+"use strict";
+const isEmbedded = true;
+if (isEmbedded) {
+  document.body.classList.add("embedded");
+  document.documentElement.style.background = "transparent";
+  document.body.style.background = "transparent";
+}
+
+const FOV=45, VIS=3.6, ORBIT=36, COUNT=6000;
+const STATES={
+  idle:     {scale:1.00,speed:.40,cyan:.45,purple:.55,bright:1.05,glow:.60,ring:.25,wob:0},
+  listening:{scale:1.06,speed:.90,cyan:1.00,purple:.30,bright:1.20,glow:.95,ring:.45,wob:0},
+  thinking: {scale:1.00,speed:1.60,cyan:.35,purple:1.00,bright:1.15,glow:.85,ring:1.00,wob:1},
+  speaking: {scale:1.05,speed:1.20,cyan:.95,purple:.90,bright:1.25,glow:1.00,ring:.50,wob:0}
+};
+const LABELS={idle:"READY",listening:"LISTENING",thinking:"THINKING...",speaking:"SPEAKING"};
+const $=s=>document.querySelector(s);
+const stage=$("#stage"),canvas=$("#c"),shadowEl=$("#shadow");
+
+let renderer = null;
+try {
+  renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, powerPreference:"high-performance"});
+} catch(e1) {
+  try {
+    renderer = new THREE.WebGLRenderer({canvas, antialias:false, alpha:true});
+  } catch(e2) {
+    console.error("Critical WebGL context failure:", e2);
+  }
+}
+if (renderer) {
+  renderer.setClearColor(0x000000, 0);
+}
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(FOV,1,.1,50);
+camera.position.set(0,0,6);
+
+/* Ambient & directional lights for 3D meshes (AI Girl, Custom 3D & Arc Reactor) */
+const ambLight = new THREE.AmbientLight(0xffffff, 0.85);
+scene.add(ambLight);
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x1e293b, 0.90);
+scene.add(hemiLight);
+const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.4);
+dirLight.position.set(3, 4, 5);
+scene.add(dirLight);
+const frontFillLight = new THREE.DirectionalLight(0xffffff, 0.85);
+frontFillLight.position.set(0, 1, 6);
+scene.add(frontFillLight);
+const rimLight = new THREE.PointLight(0xa855f7, 2.0, 15);
+rimLight.position.set(-3, 2, -2);
+scene.add(rimLight);
+
+/* Shared uniforms */
+const U={uTime:{value:0},uAmp:{value:0},uBass:{value:0},uHigh:{value:0},uCyan:{value:.35},uPurple:{value:.45},uBright:{value:1},uPx:{value:300},uCamZ:{value:6},DEEP:{value:new THREE.Color()},BLUE:{value:new THREE.Color()},CYAN:{value:new THREE.Color()},PURP:{value:new THREE.Color()}};
+const UNI="uniform float uTime,uAmp,uBass,uHigh,uCyan,uPurple,uBright,uPx,uCamZ;uniform vec3 DEEP,BLUE,CYAN,PURP;";
+const PAL="";
+
+/* ---------- 3D particle volume ---------- */
+const partV=UNI+PAL+`attribute float aRnd;varying vec3 vC;varying float vA;
+void main(){
+ float base=length(position);vec3 d=position/base;float t=uTime;
+ float n=sin(d.x*3.+t*.8+aRnd*6.)*sin(d.y*3.-t*.6)*sin(d.z*3.+t*.5);
+ float r=base*(1.+n*.05+uAmp*.1*aRnd+.015*sin(t*2.+aRnd*20.));
+ vec4 mv=modelViewMatrix*vec4(d*r,1.);
+ float depth=smoothstep(-1.,1.,mv.z+uCamZ);          /* 0 = back, 1 = front */
+ vA=mix(.22,1.,depth);
+ vec3 c=mix(BLUE,CYAN,smoothstep(-.5,.9,d.y+n)*uCyan);
+ c=mix(c,PURP,smoothstep(.1,.9,d.x*.6-d.y*.3+aRnd*.4)*uPurple);
+ c=mix(DEEP,c,.5+.5*aRnd);
+ vC=c*uBright*mix(.6,1.,depth);
+ gl_PointSize=max((.009+aRnd*.017)*(1.+uAmp*.5)*uPx/(-mv.z)*mix(.85,1.2,depth),1.7);
+ gl_Position=projectionMatrix*mv;}`;
+const dotF="precision highp float;varying vec3 vC;varying float vA;void main(){float d=length(gl_PointCoord-.5);gl_FragColor=vec4(vC,smoothstep(.5,.05,d)*vA);}";
+function buildParticles(){
+  const pos=new Float32Array(COUNT*3),rnd=new Float32Array(COUNT);
+  for(let i=0;i<COUNT;i++){
+    const y=1-2*(i+.5)/COUNT,r=Math.sqrt(1-y*y),th=i*2.39996;
+    const shell=.93+.07*Math.random();
+    pos.set([Math.cos(th)*r*shell,y*shell,Math.sin(th)*r*shell],i*3);rnd[i]=Math.random();
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute("position",new THREE.BufferAttribute(pos,3));g.setAttribute("aRnd",new THREE.BufferAttribute(rnd,1));
+  const p=new THREE.Points(g,new THREE.ShaderMaterial({vertexShader:partV,fragmentShader:dotF,uniforms:U,transparent:true,depthWrite:false}));
+  p.frustumCulled=false;p.renderOrder=1;return p;
+}
+
+const orb=new THREE.Group();
+const pointsMesh=buildParticles();
+orb.add(pointsMesh);scene.add(orb);
+
+/* ---------- Glow (outer halo only) ---------- */
+let glowMat,glow,ring1,ring2,ring3,orbitPts,ptData=[];
+function createGlow(){
+  glowMat=new THREE.ShaderMaterial({
+    vertexShader:"varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
+    fragmentShader:`varying vec2 vUv;uniform float uTime,uStrength,uMix;uniform vec3 uA,uB,uC;
+void main(){vec2 c=vUv-.5;float d=length(c)*2.,a=atan(c.y,c.x);
+ float g=(d>.68?exp(-(d-.68)*6.5)*.75:0.)*smoothstep(1.,.78,d);
+ vec3 col=mix(mix(uA,uB,.5+.5*sin(a+uTime*.4)),uC,uMix*(.5+.5*sin(a*2.-uTime*.6)));
+ gl_FragColor=vec4(col,clamp(g*uStrength*.5,0.,.55));}`,
+    transparent:true,depthWrite:false,depthTest:false,uniforms:{uTime:{value:0},uStrength:{value:.5},uMix:{value:.3},uA:U.BLUE,uB:U.PURP,uC:U.CYAN}});
+  glow=new THREE.Mesh(new THREE.PlaneGeometry(VIS,VIS),glowMat);glow.position.z=-.05;glow.renderOrder=-2;scene.add(glow);
+}
+function createRing(r0,r1,segs,seed,alpha){
+  const m=new THREE.Mesh(new THREE.RingGeometry(r0,r1,128,1),new THREE.ShaderMaterial({
+    vertexShader:"varying vec2 vP;void main(){vP=position.xy;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
+    fragmentShader:`varying vec2 vP;uniform float uAlpha,uSeed,uSegs;uniform vec3 uA,uB,uC;
+void main(){float a=atan(vP.y,vP.x);
+ float m=smoothstep(-.25,.35,sin(a*uSegs+uSeed))*smoothstep(-.9,-.2,sin(a+uSeed*.7));
+ vec3 col=mix(mix(uC,uA,.5+.5*sin(a+uSeed)),uB,.5+.5*sin(a*2.-uSeed));
+ gl_FragColor=vec4(col,m*uAlpha);}`,
+    transparent:true,depthWrite:false,side:THREE.DoubleSide,uniforms:{uAlpha:{value:alpha},uSeed:{value:seed},uSegs:{value:segs},uA:U.BLUE,uB:U.PURP,uC:U.CYAN}}));
+  m.renderOrder=0;scene.add(m);return m;
+}
+function createParticles(){
+  const pos=new Float32Array(ORBIT*3),size=new Float32Array(ORBIT),alpha=new Float32Array(ORBIT),color=new Float32Array(ORBIT*3);
+  const pal=[[.1,.7,1],[.2,.4,1],[.55,.3,.95]];
+  for(let i=0;i<ORBIT;i++){color.set(pal[i%3],i*3);size[i]=.02+Math.random()*.045;
+    ptData.push({a:Math.random()*6.283,r:1.5+Math.random()*.55,sp:(.08+Math.random()*.18)*(Math.random()<.5?-1:1),ph:Math.random()*6.283,tilt:(Math.random()-.5)*1.2,y:(Math.random()-.5)*1.1,fs:.2+Math.random()*.4});}
+  const g=new THREE.BufferGeometry();
+  g.setAttribute("position",new THREE.BufferAttribute(pos,3));g.setAttribute("aSize",new THREE.BufferAttribute(size,1));
+  g.setAttribute("aAlpha",new THREE.BufferAttribute(alpha,1));g.setAttribute("aColor",new THREE.BufferAttribute(color,3));
+  orbitPts=new THREE.Points(g,new THREE.ShaderMaterial({
+    vertexShader:"attribute float aSize,aAlpha;attribute vec3 aColor;uniform float uPx;varying float vA;varying vec3 vC;void main(){vA=aAlpha;vC=aColor;vec4 mv=modelViewMatrix*vec4(position,1.);gl_PointSize=max(aSize*uPx/(-mv.z),1.);gl_Position=projectionMatrix*mv;}",
+    fragmentShader:dotF,transparent:true,depthWrite:false,uniforms:{uPx:U.uPx}}));
+  orbitPts.frustumCulled=false;orbitPts.renderOrder=3;scene.add(orbitPts);
+}
+createGlow();ring1=createRing(1.255,1.272,2,0,.5);ring2=createRing(1.38,1.388,3,2.1,.3);ring3=createRing(1.49,1.502,4,4.2,.4);ring3.rotation.x=1.05;createParticles();
+
+/* ---------- Jett (Valorant Live 3D AI Companion) Entity Group ---------- */
+let aiGirlGroup = null;
+let girlHead, girlFace, girlEyeLGroup, girlEyeRGroup, girlEyes, girlEyeLashL, girlEyeLashR, girlEyebrowL, girlEyebrowR;
+let girlBlushL, girlBlushR, girlMouth, girlAhoge, girlHairGroup;
+let girlTorso, girlChestCore, girlCollar, girlSkirt;
+let girlPelvis, girlLeftLeg, girlLeftKnee, girlLeftFoot, girlRightLeg, girlRightKnee, girlRightFoot;
+let girlLeftArm, girlLeftElbow, girlLeftHand;
+let girlRightArm, girlRightElbow, girlRightHand;
+let girlHaloWing, girlHaloInner;
+let jettKunaiStorm = null;
+let jettPantsMat, jettInnerTopMat, jettWhiteTrimMat, jettSteelMat, jettMarkingMat, jettBladeGlowMat;
+let girlSkinMat, girlHairMat, girlHairRibbonMat, girlEyeWhiteMat, girlEyeIrisMat, girlEyePupilMat, girlEyeSparkleMat;
+let girlEyeLashMat, girlEyebrowMat, girlBlushMat, girlMouthMat, girlSuitMat, girlCollarMat, girlTieMat, girlGlowMat;
+let waveAnimationTimer = 0;
+let emoteCycle = 0;
+let activeEmote = "none";
+let emoteTimer = 0;
+let targetGazeX = 0, targetGazeY = 0, gazeX = 0, gazeY = 0;
+let customModelBounceTimer = 0;
+let customModelEngine = null;
+
+function buildAiGirl() {
+  aiGirlGroup = new THREE.Group();
+  aiGirlGroup.visible = false;
+
+  // 1. Jett (Valorant) Stylized Materials
+  girlSkinMat = new THREE.MeshStandardMaterial({
+    color: 0xffebd9, // Fair porcelain anime skin tone
+    roughness: 0.52,
+    metalness: 0.04
+  });
+
+  girlHairMat = new THREE.MeshStandardMaterial({
+    color: 0xf1f5f9, // Jett's signature platinum silver-white hair
+    roughness: 0.38,
+    metalness: 0.14
+  });
+
+  girlHairRibbonMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a, // Dark charcoal hair-tie band for high topknot
+    roughness: 0.45,
+    metalness: 0.20
+  });
+
+  girlEyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  girlEyeIrisMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 }); // Luminous Radiant Cyan wind irises
+  girlEyePupilMat = new THREE.MeshBasicMaterial({ color: 0x050a14 });
+  girlEyeSparkleMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Specular eye highlights
+  girlEyeLashMat = new THREE.MeshBasicMaterial({ color: 0x0a0f1d }); // Winged eyeliner
+  girlEyebrowMat = new THREE.MeshBasicMaterial({ color: 0x475569 }); // Slate eyebrows matching silver hair
+
+  girlBlushMat = new THREE.MeshBasicMaterial({
+    color: 0xfb7185,
+    transparent: true,
+    opacity: 0.32,
+    depthWrite: false
+  });
+
+  girlMouthMat = new THREE.MeshBasicMaterial({ color: 0xbe123c });
+
+  girlSuitMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a, // Jett's dark navy/charcoal tactical sleeveless cropped vest
+    roughness: 0.45,
+    metalness: 0.25
+  });
+
+  jettPantsMat = new THREE.MeshStandardMaterial({
+    color: 0x1e293b, // Tactical harem athletic joggers in charcoal slate
+    roughness: 0.60,
+    metalness: 0.12
+  });
+
+  jettInnerTopMat = new THREE.MeshStandardMaterial({
+    color: 0x0891b2, // Radiant athletic cyan inner sports tank / crop top
+    roughness: 0.35,
+    metalness: 0.20
+  });
+
+  girlTieMat = jettInnerTopMat; // Backward compatibility with theme tinting
+
+  girlCollarMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a, // High funnel cowl neck collar outer
+    roughness: 0.40,
+    metalness: 0.20
+  });
+
+  jettWhiteTrimMat = new THREE.MeshStandardMaterial({
+    color: 0xf8fafc, // Clean white aerodynamic panel trims and sneaker accents
+    roughness: 0.30,
+    metalness: 0.10
+  });
+
+  jettSteelMat = new THREE.MeshStandardMaterial({
+    color: 0x94a3b8, // Kunai throwing daggers forged steel
+    roughness: 0.20,
+    metalness: 0.85
+  });
+
+  jettMarkingMat = new THREE.MeshBasicMaterial({
+    color: 0x22d3ee, // Jett's cyan radiant wind tattoo streak under right eye
+    transparent: true,
+    opacity: 0.85
+  });
+
+  jettBladeGlowMat = new THREE.MeshBasicMaterial({
+    color: 0x38bdf8, // Glowing Radiant wind edge on Kunai daggers
+    transparent: true,
+    opacity: 0.90
+  });
+
+  girlGlowMat = new THREE.MeshBasicMaterial({
+    color: 0x22d3ee, // Luminous Radiant wind energy cyan
+    transparent: true,
+    opacity: 0.95
+  });
+
+  // Strict Bounding Root: Anchored and scaled so the entire full-body character stays 100% inside screen height
+  const bodyRoot = new THREE.Group();
+  bodyRoot.position.y = 0.18;
+  bodyRoot.scale.setScalar(0.72);
+  aiGirlGroup.add(bodyRoot);
+
+  // 2. Torso & Jett's Signature Cropped Wind Vest & Athletic Top
+  girlTorso = new THREE.Group();
+
+  // Slender Bare Neck
+  const neckGeom = new THREE.CylinderGeometry(0.075, 0.090, 0.18, 16);
+  const neckMesh = new THREE.Mesh(neckGeom, girlSkinMat);
+  neckMesh.position.y = 0.33;
+  girlTorso.add(neckMesh);
+
+  // High Tactical Funnel / Cowl Collar
+  const cowlGeom = new THREE.CylinderGeometry(0.12, 0.14, 0.16, 20, 1, true);
+  const cowlMesh = new THREE.Mesh(cowlGeom, girlCollarMat);
+  cowlMesh.position.y = 0.33;
+  girlTorso.add(cowlMesh);
+
+  // Glowing Cyan Radiant Trim on top edge of cowl neck
+  girlCollar = new THREE.Mesh(new THREE.TorusGeometry(0.122, 0.012, 8, 24), girlGlowMat);
+  girlCollar.rotation.x = Math.PI / 2;
+  girlCollar.position.y = 0.40;
+  girlTorso.add(girlCollar);
+
+  // Folded Wind Jacket Hood resting behind neck and upper back
+  const hoodGeom = new THREE.CylinderGeometry(0.17, 0.13, 0.18, 16, 1, false, 0, Math.PI);
+  const hoodMesh = new THREE.Mesh(hoodGeom, girlSuitMat);
+  hoodMesh.position.set(0, 0.24, -0.12);
+  hoodMesh.rotation.set(0.40, Math.PI, 0);
+  girlTorso.add(hoodMesh);
+
+  // Inner Cyan Sports Crop Top (Bust & Ribs)
+  const innerTopGeom = new THREE.CylinderGeometry(0.27, 0.22, 0.36, 20);
+  const innerTopMesh = new THREE.Mesh(innerTopGeom, jettInnerTopMat);
+  innerTopMesh.position.y = 0.10;
+  girlTorso.add(innerTopMesh);
+
+  // Sleeveless Cropped Wind Vest (Dark Navy / Charcoal outer jacket)
+  const vestGeom = new THREE.CylinderGeometry(0.295, 0.235, 0.32, 20);
+  const vestMesh = new THREE.Mesh(vestGeom, girlSuitMat);
+  vestMesh.position.set(0, 0.14, 0);
+  girlTorso.add(vestMesh);
+
+  // Vest Lapels / Front Open Cut (Revealing the cyan inner top)
+  const lapelL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.28, 0.025), girlSuitMat);
+  lapelL.position.set(-0.11, 0.15, 0.19);
+  lapelL.rotation.set(-0.18, 0, -0.22);
+  girlTorso.add(lapelL);
+
+  const lapelR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.28, 0.025), girlSuitMat);
+  lapelR.position.set(0.11, 0.15, 0.19);
+  lapelR.rotation.set(-0.18, 0, 0.22);
+  girlTorso.add(lapelR);
+
+  // Aerodynamic White Wind Slashes on Vest Shoulders
+  const vestDecalL = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.18, 0.015), jettWhiteTrimMat);
+  vestDecalL.position.set(-0.19, 0.16, 0.14);
+  vestDecalL.rotation.set(0, 0.45, 0.30);
+  girlTorso.add(vestDecalL);
+
+  const vestDecalR = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.18, 0.015), jettWhiteTrimMat);
+  vestDecalR.position.set(0.19, 0.16, 0.14);
+  vestDecalR.rotation.set(0, -0.45, -0.30);
+  girlTorso.add(vestDecalR);
+
+  // Jett's Radiant Wind Swirl Insignia / Arc Core on Chest (Pulses with voice & breath)
+  const coreGeom = new THREE.RingGeometry(0.022, 0.070, 24);
+  girlChestCore = new THREE.Mesh(coreGeom, girlGlowMat);
+  girlChestCore.position.set(0, 0.15, 0.235);
+  girlTorso.add(girlChestCore);
+
+  // Bare Athletic Midriff between cropped vest and waistband
+  const midriffGeom = new THREE.CylinderGeometry(0.19, 0.21, 0.13, 20);
+  const midriffMesh = new THREE.Mesh(midriffGeom, girlSkinMat);
+  midriffMesh.position.y = -0.11;
+  girlTorso.add(midriffMesh);
+
+  // Navel Accent
+  const navel = new THREE.Mesh(new THREE.SphereGeometry(0.008, 8, 8), girlHairRibbonMat);
+  navel.position.set(0, -0.12, 0.208);
+  girlTorso.add(navel);
+
+  // Tactical Utility Kunai Belt (Replacing the school skirt)
+  const beltGeom = new THREE.CylinderGeometry(0.225, 0.245, 0.08, 20);
+  girlSkirt = new THREE.Mesh(beltGeom, girlSuitMat); // Retain girlSkirt reference for safety
+  girlSkirt.position.set(0, -0.21, 0);
+  girlTorso.add(girlSkirt);
+
+  // Metallic Belt Buckle
+  const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.03), jettSteelMat);
+  buckle.position.set(0, -0.21, 0.245);
+  girlTorso.add(buckle);
+
+  // Glowing Cyan Energy Line on Belt
+  const beltGlow = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.010, 8, 32), girlGlowMat);
+  beltGlow.rotation.x = Math.PI / 2;
+  beltGlow.position.set(0, -0.21, 0);
+  girlTorso.add(beltGlow);
+
+  // Tactical Belt Ammo / Radiant Pouches
+  const pouchL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.05), girlSuitMat);
+  pouchL.position.set(-0.16, -0.22, 0.18);
+  pouchL.rotation.y = 0.35;
+  girlTorso.add(pouchL);
+
+  const pouchR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.05), girlSuitMat);
+  pouchR.position.set(0.16, -0.22, 0.18);
+  pouchR.rotation.y = -0.35;
+  girlTorso.add(pouchR);
+
+  // Holstered Hip Kunai Daggers (Left & Right Hips)
+  function createHolsteredKunai(isLeft) {
+    const holsterGroup = new THREE.Group();
+    const sign = isLeft ? -1 : 1;
+    holsterGroup.position.set(sign * 0.24, -0.23, 0.02);
+    holsterGroup.rotation.set(0.25, 0, sign * 0.45);
+
+    // Sheath / Loop
+    const sheath = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.08, 0.03), girlSuitMat);
+    holsterGroup.add(sheath);
+
+    // Kunai Blade
+    const bladeGeom = new THREE.ConeGeometry(0.030, 0.14, 4);
+    bladeGeom.scale(0.35, 1.0, 0.16);
+    const blade = new THREE.Mesh(bladeGeom, jettSteelMat);
+    blade.position.y = -0.06;
+    blade.rotation.y = Math.PI / 4;
+    holsterGroup.add(blade);
+
+    // Kunai Handle
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.010, 0.010, 0.06, 8), girlHairRibbonMat);
+    handle.position.y = 0.06;
+    holsterGroup.add(handle);
+
+    // Kunai Ring Pommel
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.018, 0.005, 6, 16), jettSteelMat);
+    ring.position.y = 0.095;
+    holsterGroup.add(ring);
+
+    return holsterGroup;
+  }
+  girlTorso.add(createHolsteredKunai(true));
+  girlTorso.add(createHolsteredKunai(false));
+
+  // 3. Jett's Head, Expressive Face & Radiant Markings
+  girlHead = new THREE.Group();
+  girlHead.position.set(0, 0.58, 0);
+
+  // Head Mesh (Porcelain anime head with tapered chin)
+  const headGeom = new THREE.SphereGeometry(0.27, 24, 20);
+  headGeom.scale(0.92, 1.02, 0.94);
+  girlFace = new THREE.Mesh(headGeom, girlSkinMat);
+  girlHead.add(girlFace);
+
+  // Sharp Anime Eyes with Radiant Cyan Irises and Winged Liner
+  function createJettEye(isLeft) {
+    const eyeGroup = new THREE.Group();
+    const sign = isLeft ? -1 : 1;
+    eyeGroup.position.set(sign * 0.105, 0.01, 0.235);
+
+    // Sclera (White eye backing)
+    const scleraGeom = new THREE.SphereGeometry(0.062, 16, 16);
+    scleraGeom.scale(0.95, 1.30, 0.15);
+    const sclera = new THREE.Mesh(scleraGeom, girlEyeWhiteMat);
+    eyeGroup.add(sclera);
+
+    // Luminous Radiant Cyan Iris
+    const irisGeom = new THREE.CylinderGeometry(0.046, 0.046, 0.012, 24);
+    irisGeom.rotateX(Math.PI / 2);
+    const iris = new THREE.Mesh(irisGeom, girlEyeIrisMat);
+    iris.position.set(0, -0.005, 0.012);
+    eyeGroup.add(iris);
+
+    // Dark Pupil
+    const pupilGeom = new THREE.CylinderGeometry(0.024, 0.024, 0.014, 18);
+    pupilGeom.rotateX(Math.PI / 2);
+    const pupil = new THREE.Mesh(pupilGeom, girlEyePupilMat);
+    pupil.position.set(0, -0.005, 0.015);
+    eyeGroup.add(pupil);
+
+    // Primary Specular Eye Sparkle
+    const sparkle1 = new THREE.Mesh(new THREE.SphereGeometry(0.013, 8, 8), girlEyeSparkleMat);
+    sparkle1.position.set(-0.015, 0.020, 0.018);
+    eyeGroup.add(sparkle1);
+
+    // Secondary Specular Eye Sparkle
+    const sparkle2 = new THREE.Mesh(new THREE.SphereGeometry(0.008, 8, 8), girlEyeSparkleMat);
+    sparkle2.position.set(0.014, -0.018, 0.018);
+    eyeGroup.add(sparkle2);
+
+    // Jett's Winged Cat-Eye Eyeliner
+    const lashGeom = new THREE.TorusGeometry(0.068, 0.013, 8, 20, Math.PI * 0.74);
+    const lashMesh = new THREE.Mesh(lashGeom, girlEyeLashMat);
+    lashMesh.rotation.z = isLeft ? -Math.PI * 0.36 : Math.PI * 0.64;
+    lashMesh.position.set(0, 0.025, 0.019);
+    eyeGroup.add(lashMesh);
+
+    // Winged eyeliner flick on outer edge
+    const wingFlick = new THREE.Mesh(new THREE.ConeGeometry(0.016, 0.06, 6), girlEyeLashMat);
+    wingFlick.position.set(sign * 0.062, 0.035, 0.018);
+    wingFlick.rotation.set(0, 0, sign * -0.9);
+    eyeGroup.add(wingFlick);
+
+    return eyeGroup;
+  }
+
+  girlEyeLGroup = createJettEye(true);
+  girlEyeRGroup = createJettEye(false);
+  girlHead.add(girlEyeLGroup);
+  girlHead.add(girlEyeRGroup);
+  girlEyes = girlEyeLGroup;
+
+  // Confident Arched Eyebrows (Slate grey matching silver-white hair)
+  const browGeom = new THREE.BoxGeometry(0.082, 0.014, 0.01);
+  girlEyebrowL = new THREE.Mesh(browGeom, girlEyebrowMat);
+  girlEyebrowL.position.set(-0.105, 0.125, 0.245);
+  girlEyebrowL.rotation.z = -0.10;
+  girlHead.add(girlEyebrowL);
+
+  girlEyebrowR = new THREE.Mesh(browGeom, girlEyebrowMat);
+  girlEyebrowR.position.set(0.105, 0.125, 0.245);
+  girlEyebrowR.rotation.z = 0.10;
+  girlHead.add(girlEyebrowR);
+
+  // Jett's Signature Cyan Radiant Wind Slash Tattoo below Right Eye
+  const markGeom = new THREE.BoxGeometry(0.038, 0.008, 0.01);
+  const jettMarkMesh = new THREE.Mesh(markGeom, jettMarkingMat);
+  jettMarkMesh.position.set(0.12, -0.065, 0.245);
+  jettMarkMesh.rotation.z = -0.32;
+  girlHead.add(jettMarkMesh);
+
+  // Soft Cheek Blush
+  const blushGeom = new THREE.RingGeometry(0, 0.040, 16);
+  girlBlushL = new THREE.Mesh(blushGeom, girlBlushMat);
+  girlBlushL.position.set(-0.145, -0.07, 0.23);
+  girlHead.add(girlBlushL);
+
+  girlBlushR = new THREE.Mesh(blushGeom, girlBlushMat);
+  girlBlushR.position.set(0.145, -0.07, 0.23);
+  girlHead.add(girlBlushR);
+
+  // Cute Small Anime Nose Bump
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.025, 8), girlSkinMat);
+  nose.position.set(0, -0.04, 0.26);
+  nose.rotation.x = -0.2;
+  girlHead.add(nose);
+
+  // Expressive Mouth (Lip-syncs with voice audio)
+  const mouthGeom = new THREE.BoxGeometry(0.075, 0.022, 0.02);
+  girlMouth = new THREE.Mesh(mouthGeom, girlMouthMat);
+  girlMouth.position.set(0, -0.135, 0.245);
+  girlHead.add(girlMouth);
+
+  // 4. Jett's Signature Platinum Silver-White Hairstyle (High Bun / Topknot & Sweeping Fringe)
+  girlHairGroup = new THREE.Group();
+
+  // Head Volume Base Hair (Platinum silver-white)
+  const hairBack = new THREE.Mesh(
+    new THREE.SphereGeometry(0.308, 22, 18, 0, Math.PI * 2, 0, Math.PI / 1.58),
+    girlHairMat
+  );
+  hairBack.position.set(0, 0.06, -0.04);
+  girlHairGroup.add(hairBack);
+
+  // Jett's High Bun / Topknot at the Crown
+  const bunGroup = new THREE.Group();
+  bunGroup.position.set(0, 0.29, -0.06);
+
+  // Tight Spherical Bun
+  const bunSphere = new THREE.Mesh(new THREE.SphereGeometry(0.125, 18, 16), girlHairMat);
+  bunGroup.add(bunSphere);
+
+  // Dark Tactical Hair-Tie Band
+  const bunBand = new THREE.Mesh(new THREE.TorusGeometry(0.095, 0.018, 8, 24), girlHairRibbonMat);
+  bunBand.rotation.x = Math.PI / 2;
+  bunBand.position.y = -0.04;
+  bunGroup.add(bunBand);
+
+  // Upward/Backward Swept Spiky Wisps / Quills (Jett's signature swept hair spikes)
+  const bunQuill1 = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.22, 8), girlHairMat);
+  bunQuill1.position.set(0, 0.12, -0.04);
+  bunQuill1.rotation.set(-0.45, 0, 0);
+  bunGroup.add(bunQuill1);
+
+  const bunQuill2 = new THREE.Mesh(new THREE.ConeGeometry(0.038, 0.18, 8), girlHairMat);
+  bunQuill2.position.set(-0.04, 0.10, -0.05);
+  bunQuill2.rotation.set(-0.50, 0, -0.25);
+  bunGroup.add(bunQuill2);
+
+  const bunQuill3 = new THREE.Mesh(new THREE.ConeGeometry(0.038, 0.18, 8), girlHairMat);
+  bunQuill3.position.set(0.04, 0.10, -0.05);
+  bunQuill3.rotation.set(-0.50, 0, 0.25);
+  bunGroup.add(bunQuill3);
+
+  // Hair Chopstick / Hair Pin Crossing the Bun with Cyan Glowing Tips
+  const pinGeom = new THREE.CylinderGeometry(0.007, 0.007, 0.28, 8);
+  const pinMesh = new THREE.Mesh(pinGeom, jettSteelMat);
+  pinMesh.rotation.set(0.4, 0, 0.7);
+  bunGroup.add(pinMesh);
+
+  const pinTip1 = new THREE.Mesh(new THREE.SphereGeometry(0.013, 8, 8), girlGlowMat);
+  pinTip1.position.set(-0.09, -0.09, -0.04);
+  bunGroup.add(pinTip1);
+
+  const pinTip2 = new THREE.Mesh(new THREE.SphereGeometry(0.013, 8, 8), girlGlowMat);
+  pinTip2.position.set(0.09, 0.09, 0.04);
+  bunGroup.add(pinTip2);
+
+  girlHairGroup.add(bunGroup);
+
+  // Jett's Iconic Sweeping Bangs & Face-Framing Strands
+  // Long Left Swept Bang (Drapes across forehead past left eye)
+  const bangMainL = new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.35, 8), girlHairMat);
+  bangMainL.position.set(-0.07, 0.12, 0.25);
+  bangMainL.rotation.set(0.32, 0.12, -0.32);
+  girlHairGroup.add(bangMainL);
+
+  const bangOuterL = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.32, 8), girlHairMat);
+  bangOuterL.position.set(-0.15, 0.11, 0.23);
+  bangOuterL.rotation.set(0.28, 0, -0.42);
+  girlHairGroup.add(bangOuterL);
+
+  // Right Swept Bang Framing Cheek
+  const bangMainR = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.27, 8), girlHairMat);
+  bangMainR.position.set(0.08, 0.14, 0.24);
+  bangMainR.rotation.set(0.32, 0, 0.25);
+  girlHairGroup.add(bangMainR);
+
+  // Center Feathered Fringe
+  const bangCenter = new THREE.Mesh(new THREE.ConeGeometry(0.042, 0.22, 8), girlHairMat);
+  bangCenter.position.set(0.01, 0.17, 0.255);
+  bangCenter.rotation.set(0.35, 0, 0.05);
+  girlHairGroup.add(bangCenter);
+
+  // Long Sidelocks Framing Jawline
+  const sidelockGeom = new THREE.ConeGeometry(0.055, 0.44, 8);
+  const sidelockL = new THREE.Mesh(sidelockGeom, girlHairMat);
+  sidelockL.position.set(-0.21, -0.10, 0.16);
+  sidelockL.rotation.set(-0.1, 0, 0.16);
+  girlHairGroup.add(sidelockL);
+
+  const sidelockR = new THREE.Mesh(sidelockGeom, girlHairMat);
+  sidelockR.position.set(0.21, -0.10, 0.16);
+  sidelockR.rotation.set(-0.1, 0, -0.16);
+  girlHairGroup.add(sidelockR);
+
+  // Jett's Wind-Swept Ahoge / Top Wisp (Dynamic spring response)
+  girlAhoge = new THREE.Group();
+  girlAhoge.position.set(0, 0.28, 0.08);
+  const ahogeStem = new THREE.Mesh(new THREE.ConeGeometry(0.022, 0.20, 8), girlHairMat);
+  ahogeStem.position.set(0, 0.09, 0);
+  ahogeStem.rotation.x = -0.32;
+  girlAhoge.add(ahogeStem);
+
+  const ahogeTip = new THREE.Mesh(new THREE.ConeGeometry(0.016, 0.13, 8), girlHairMat);
+  ahogeTip.position.set(0, 0.20, 0.04);
+  ahogeTip.rotation.x = 0.42;
+  girlAhoge.add(ahogeTip);
+  girlHairGroup.add(girlAhoge);
+
+  girlHead.add(girlHairGroup);
+  girlTorso.add(girlHead);
+
+  // 5. Left Arm (Bare Athletic Shoulder, Tactical Arm Wrap & Radiant Wristband)
+  girlLeftArm = new THREE.Group();
+  girlLeftArm.position.set(-0.35, 0.24, 0);
+
+  // Bare Shoulder
+  const shoulderL = new THREE.Mesh(new THREE.SphereGeometry(0.065, 12, 12), girlSkinMat);
+  girlLeftArm.add(shoulderL);
+
+  const upperArmL = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.040, 0.26, 12), girlSkinMat);
+  upperArmL.position.y = -0.13;
+  girlLeftArm.add(upperArmL);
+
+  girlLeftElbow = new THREE.Group();
+  girlLeftElbow.position.y = -0.26;
+
+  // Forearm Athletic Wrap
+  const forearmL = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.036, 0.24, 12), jettPantsMat);
+  forearmL.position.y = -0.12;
+  girlLeftElbow.add(forearmL);
+
+  // Glowing Cyan Radiant Wrist Cuff
+  const cuffL = new THREE.Mesh(new THREE.TorusGeometry(0.042, 0.012, 8, 16), girlGlowMat);
+  cuffL.rotation.x = Math.PI / 2;
+  cuffL.position.y = -0.20;
+  girlLeftElbow.add(cuffL);
+
+  // Tactical Fingerless Glove Hand
+  girlLeftHand = new THREE.Mesh(new THREE.BoxGeometry(0.050, 0.080, 0.022), girlSuitMat);
+  girlLeftHand.position.y = -0.25;
+  girlLeftElbow.add(girlLeftHand);
+
+  girlLeftArm.add(girlLeftElbow);
+  girlTorso.add(girlLeftArm);
+
+  // 6. Right Arm (Supports Waving, Thinking, Conversing)
+  girlRightArm = new THREE.Group();
+  girlRightArm.position.set(0.35, 0.24, 0);
+
+  const shoulderR = new THREE.Mesh(new THREE.SphereGeometry(0.065, 12, 12), girlSkinMat);
+  girlRightArm.add(shoulderR);
+
+  const upperArmR = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.040, 0.26, 12), girlSkinMat);
+  upperArmR.position.y = -0.13;
+  girlRightArm.add(upperArmR);
+
+  girlRightElbow = new THREE.Group();
+  girlRightElbow.position.y = -0.26;
+
+  // Forearm Athletic Wrap
+  const forearmR = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.036, 0.24, 12), jettPantsMat);
+  forearmR.position.y = -0.12;
+  girlRightElbow.add(forearmR);
+
+  // Glowing Cyan Radiant Wrist Cuff
+  const cuffR = new THREE.Mesh(new THREE.TorusGeometry(0.042, 0.012, 8, 16), girlGlowMat);
+  cuffR.rotation.x = Math.PI / 2;
+  cuffR.position.y = -0.20;
+  girlRightElbow.add(cuffR);
+
+  // Tactical Fingerless Glove Hand
+  girlRightHand = new THREE.Mesh(new THREE.BoxGeometry(0.050, 0.080, 0.022), girlSuitMat);
+  girlRightHand.position.y = -0.25;
+  girlRightElbow.add(girlRightHand);
+
+  girlRightArm.add(girlRightElbow);
+  girlTorso.add(girlRightArm);
+
+  // 7. Jett's Radiant "Blade Storm" - 5 Floating Orbiting Kunai Daggers in Wind Vortex
+  jettKunaiStorm = new THREE.Group();
+  jettKunaiStorm.position.set(0, 0.15, 0);
+
+  function createHoveringKunai() {
+    const kGroup = new THREE.Group();
+
+    // Sharp Diamond Blade
+    const bladeGeom = new THREE.ConeGeometry(0.038, 0.16, 4);
+    bladeGeom.scale(0.38, 1.0, 0.16);
+    const blade = new THREE.Mesh(bladeGeom, jettSteelMat);
+    blade.position.y = 0.08;
+    blade.rotation.y = Math.PI / 4;
+    kGroup.add(blade);
+
+    // Glowing Radiant Wind Edge
+    const edge = new THREE.Mesh(new THREE.ConeGeometry(0.041, 0.165, 4), jettBladeGlowMat);
+    edge.scale.set(0.39, 1.0, 0.18);
+    edge.position.y = 0.08;
+    edge.rotation.y = Math.PI / 4;
+    kGroup.add(edge);
+
+    // Handle Grip
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.010, 0.010, 0.07, 8), girlHairRibbonMat);
+    handle.position.y = -0.035;
+    kGroup.add(handle);
+
+    // Kunai Pommel Ring
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.020, 0.005, 6, 16), jettSteelMat);
+    ring.position.y = -0.08;
+    kGroup.add(ring);
+
+    return kGroup;
+  }
+
+  // Create 5 Orbiting Kunai Daggers at evenly spaced angles around Jett
+  const kunaiCount = 5;
+  for (let i = 0; i < kunaiCount; i++) {
+    const angle = (i / kunaiCount) * Math.PI * 2;
+    const radius = 0.54;
+    const kunai = createHoveringKunai();
+    kunai.position.set(Math.cos(angle) * radius, Math.sin(i * 1.5) * 0.12, Math.sin(angle) * radius);
+    kunai.rotation.set(-0.25, -angle + Math.PI / 2, 0.35);
+    jettKunaiStorm.add(kunai);
+  }
+  girlTorso.add(jettKunaiStorm);
+
+  // Swirling Radiant Wind Rings (replacing generic school ribbon/wings)
+  const outerWindGeom = new THREE.TorusGeometry(0.60, 0.012, 8, 48);
+  girlHaloWing = new THREE.Mesh(outerWindGeom, girlGlowMat);
+  girlHaloWing.position.set(0, 0.05, 0);
+  girlHaloWing.rotation.x = Math.PI / 2 - 0.2;
+  girlTorso.add(girlHaloWing);
+
+  const innerWindGeom = new THREE.TorusGeometry(0.42, 0.009, 8, 36);
+  girlHaloInner = new THREE.Mesh(innerWindGeom, girlGlowMat);
+  girlHaloInner.position.set(0, 0.05, 0);
+  girlHaloInner.rotation.x = Math.PI / 2 + 0.15;
+  girlTorso.add(girlHaloInner);
+
+  // 8. Jett's Tactical Lower Body: Joggers, Aerodynamic Slashes & High-Top Sneakers
+  girlPelvis = new THREE.Group();
+  girlPelvis.position.set(0, -0.32, 0);
+
+  const thighGeom = new THREE.CylinderGeometry(0.082, 0.062, 0.38, 16);
+  const calfGeom = new THREE.CylinderGeometry(0.060, 0.046, 0.36, 16);
+  const stripeGeom = new THREE.BoxGeometry(0.014, 0.34, 0.018);
+
+  // Left Leg Hierarchy
+  girlLeftLeg = new THREE.Group();
+  girlLeftLeg.position.set(-0.13, 0, 0);
+
+  const thighL = new THREE.Mesh(thighGeom, jettPantsMat);
+  thighL.position.y = -0.19;
+  girlLeftLeg.add(thighL);
+
+  // Aerodynamic Radiant Wind Slashes on Thigh Seam
+  const stripeL = new THREE.Mesh(stripeGeom, girlGlowMat);
+  stripeL.position.set(-0.075, -0.19, 0);
+  girlLeftLeg.add(stripeL);
+
+  const whiteStripeL = new THREE.Mesh(new THREE.BoxGeometry(0.010, 0.30, 0.015), jettWhiteTrimMat);
+  whiteStripeL.position.set(-0.072, -0.19, 0.02);
+  girlLeftLeg.add(whiteStripeL);
+
+  girlLeftKnee = new THREE.Group();
+  girlLeftKnee.position.y = -0.38;
+
+  // Tactical Knee Armor Pad
+  const kneeCapL = new THREE.Mesh(new THREE.SphereGeometry(0.054, 10, 10), girlSuitMat);
+  girlLeftKnee.add(kneeCapL);
+
+  // Tapered Jogger Calf with Ninja Wraps
+  const calfL = new THREE.Mesh(calfGeom, jettPantsMat);
+  calfL.position.y = -0.18;
+  girlLeftKnee.add(calfL);
+
+  girlLeftFoot = new THREE.Group();
+  girlLeftFoot.position.y = -0.36;
+
+  // Jett's High-Top Ninja Athletic Sneaker
+  const bootUpperL = new THREE.Mesh(new THREE.BoxGeometry(0.082, 0.12, 0.12), girlSuitMat);
+  bootUpperL.position.set(0, -0.04, 0.01);
+  girlLeftFoot.add(bootUpperL);
+
+  // White Sneaker Side Panel
+  const bootSideL = new THREE.Mesh(new THREE.BoxGeometry(0.086, 0.08, 0.08), jettWhiteTrimMat);
+  bootSideL.position.set(0, -0.04, 0.01);
+  girlLeftFoot.add(bootSideL);
+
+  const bootToeL = new THREE.Mesh(new THREE.BoxGeometry(0.080, 0.06, 0.09), girlSuitMat);
+  bootToeL.position.set(0, -0.07, 0.08);
+  girlLeftFoot.add(bootToeL);
+
+  // Glowing Radiant Cyan Sneaker Outsole
+  const bootSoleL = new THREE.Mesh(new THREE.BoxGeometry(0.088, 0.024, 0.20), girlGlowMat);
+  bootSoleL.position.set(0, -0.10, 0.04);
+  girlLeftFoot.add(bootSoleL);
+
+  girlLeftKnee.add(girlLeftFoot);
+  girlLeftLeg.add(girlLeftKnee);
+  girlPelvis.add(girlLeftLeg);
+
+  // Right Leg Hierarchy
+  girlRightLeg = new THREE.Group();
+  girlRightLeg.position.set(0.13, 0, 0);
+
+  const thighR = new THREE.Mesh(thighGeom, jettPantsMat);
+  thighR.position.y = -0.19;
+  girlRightLeg.add(thighR);
+
+  // Aerodynamic Radiant Wind Slashes on Thigh Seam
+  const stripeR = new THREE.Mesh(stripeGeom, girlGlowMat);
+  stripeR.position.set(0.075, -0.19, 0);
+  girlRightLeg.add(stripeR);
+
+  const whiteStripeR = new THREE.Mesh(new THREE.BoxGeometry(0.010, 0.30, 0.015), jettWhiteTrimMat);
+  whiteStripeR.position.set(0.072, -0.19, 0.02);
+  girlRightLeg.add(whiteStripeR);
+
+  girlRightKnee = new THREE.Group();
+  girlRightKnee.position.y = -0.38;
+
+  // Tactical Knee Armor Pad
+  const kneeCapR = new THREE.Mesh(new THREE.SphereGeometry(0.054, 10, 10), girlSuitMat);
+  girlRightKnee.add(kneeCapR);
+
+  // Tapered Jogger Calf with Ninja Wraps
+  const calfR = new THREE.Mesh(calfGeom, jettPantsMat);
+  calfR.position.y = -0.18;
+  girlRightKnee.add(calfR);
+
+  girlRightFoot = new THREE.Group();
+  girlRightFoot.position.y = -0.36;
+
+  // Jett's High-Top Ninja Athletic Sneaker
+  const bootUpperR = new THREE.Mesh(new THREE.BoxGeometry(0.082, 0.12, 0.12), girlSuitMat);
+  bootUpperR.position.set(0, -0.04, 0.01);
+  girlRightFoot.add(bootUpperR);
+
+  // White Sneaker Side Panel
+  const bootSideR = new THREE.Mesh(new THREE.BoxGeometry(0.086, 0.08, 0.08), jettWhiteTrimMat);
+  bootSideR.position.set(0, -0.04, 0.01);
+  girlRightFoot.add(bootSideR);
+
+  const bootToeR = new THREE.Mesh(new THREE.BoxGeometry(0.080, 0.06, 0.09), girlSuitMat);
+  bootToeR.position.set(0, -0.07, 0.08);
+  girlRightFoot.add(bootToeR);
+
+  // Glowing Radiant Cyan Sneaker Outsole
+  const bootSoleR = new THREE.Mesh(new THREE.BoxGeometry(0.088, 0.024, 0.20), girlGlowMat);
+  bootSoleR.position.set(0, -0.10, 0.04);
+  girlRightFoot.add(bootSoleR);
+
+  girlRightKnee.add(girlRightFoot);
+  girlRightLeg.add(girlRightKnee);
+  girlPelvis.add(girlRightLeg);
+
+  girlTorso.add(girlPelvis);
+
+  bodyRoot.add(girlTorso);
+  scene.add(aiGirlGroup);
+}
+
+function updateAiGirl(t, dt) {
+  if (!aiGirlGroup || !aiGirlGroup.visible) return;
+
+  // 1. Natural Anime Breathing Motion & Ahoge Dynamic Spring
+  const breath = Math.sin(t * 2.2);
+  girlTorso.position.y = breath * 0.020;
+  girlTorso.scale.y = 1.0 + breath * 0.012;
+  girlChestCore.scale.setScalar(1.0 + breath * 0.15 + audio.level * 0.35);
+  girlHaloWing.rotation.z += dt * 0.35;
+  if (girlHaloInner) girlHaloInner.rotation.z -= dt * 0.45;
+
+  // Jett's Radiant Blade Storm Dynamic Kunai Orbit
+  if (jettKunaiStorm) {
+    const isTalking = state === "speaking" || audio.level > 0.05;
+    const isEmoting = (emoteTimer > 0) || (waveAnimationTimer > 0);
+    const stormSpeed = isTalking ? 2.2 : (isEmoting ? 2.8 : 0.85);
+    jettKunaiStorm.rotation.y += dt * stormSpeed;
+    jettKunaiStorm.position.y = 0.15 + Math.sin(t * 2.4) * 0.025;
+  }
+
+  // Ahoge Bouncy Hair Strand Dynamics (Signature anime bounce)
+  if (girlAhoge) {
+    girlAhoge.rotation.z = Math.sin(t * 3.6) * 0.12;
+    girlAhoge.rotation.x = Math.cos(t * 2.8) * 0.08;
+  }
+
+  // 2. Eye Blinking (Natural anime blink every ~3.6 seconds)
+  const blinkCycle = t % 3.6;
+  const isBlinking = blinkCycle < 0.11;
+  const eyeScaleY = isBlinking ? 0.08 : 1.0;
+
+  // 3. Audio Lip-Sync (Dynamic anime mouth opening with voice amplitude)
+  const isTalking = state === "speaking" || audio.level > 0.05;
+  const mouthOpen = 0.22 + (audio.level * 2.8) + (isTalking ? Math.abs(Math.sin(t * 11)) * 0.45 : 0);
+  girlMouth.scale.y = THREE.MathUtils.lerp(girlMouth.scale.y, mouthOpen, dt * 18);
+  girlMouth.scale.x = THREE.MathUtils.lerp(girlMouth.scale.x, isTalking ? 1.15 : 1.0, dt * 8);
+
+  // 4. Interactive Emotes (Triggered on touch / poke or triggerTouchReaction)
+  const isEmoting = (emoteTimer > 0) || (waveAnimationTimer > 0);
+  if (isEmoting) {
+    if (waveAnimationTimer > 0) {
+      waveAnimationTimer -= dt;
+      activeEmote = "wave";
+    } else {
+      emoteTimer -= dt;
+    }
+
+    if (activeEmote === "wave") {
+      // 1. WAVE / GREETING EMOTE
+      girlEyeLGroup.scale.set(1.0, 0.35, 1.0);
+      girlEyeRGroup.scale.set(1.0, 0.35, 1.0);
+      girlBlushMat.opacity = THREE.MathUtils.lerp(girlBlushMat.opacity, 0.95, dt * 10);
+      girlMouth.scale.set(1.4, 2.0, 1.0);
+      if (girlAhoge) girlAhoge.rotation.z = Math.sin(t * 14.0) * 0.25;
+
+      girlRightArm.rotation.x = THREE.MathUtils.lerp(girlRightArm.rotation.x, -1.95, dt * 10);
+      girlRightArm.rotation.z = THREE.MathUtils.lerp(girlRightArm.rotation.z, 0.45, dt * 10);
+      girlRightElbow.rotation.z = Math.sin(t * 15) * 0.45;
+      girlRightElbow.rotation.x = -0.3;
+
+      girlLeftArm.rotation.x = THREE.MathUtils.lerp(girlLeftArm.rotation.x, -0.4, dt * 6);
+      girlLeftArm.rotation.z = THREE.MathUtils.lerp(girlLeftArm.rotation.z, 0.2, dt * 6);
+      girlLeftElbow.rotation.x = THREE.MathUtils.lerp(girlLeftElbow.rotation.x, -0.6, dt * 6);
+
+      girlHead.rotation.z = THREE.MathUtils.lerp(girlHead.rotation.z, 0.12, dt * 8);
+      girlHead.rotation.y = THREE.MathUtils.lerp(girlHead.rotation.y, 0.05, dt * 8);
+      return;
+    } else if (activeEmote === "nod") {
+      // 2. HAPPY BOUNCY NOD / AFFIRMATION
+      const nodWave = Math.sin((1.8 - emoteTimer) * Math.PI * 4);
+      girlHead.rotation.x = nodWave * 0.18;
+      girlTorso.position.y = breath * 0.02 + nodWave * 0.035;
+      girlEyeLGroup.scale.set(1.0, 0.75, 1.0);
+      girlEyeRGroup.scale.set(1.0, 0.75, 1.0);
+      girlBlushMat.opacity = THREE.MathUtils.lerp(girlBlushMat.opacity, 0.85, dt * 8);
+      girlMouth.scale.set(1.2, 1.4, 1.0);
+      if (girlAhoge) girlAhoge.rotation.z = Math.sin(t * 16.0) * 0.28;
+
+      girlRightArm.rotation.x = THREE.MathUtils.lerp(girlRightArm.rotation.x, -0.45, dt * 8);
+      girlRightArm.rotation.z = THREE.MathUtils.lerp(girlRightArm.rotation.z, -0.15, dt * 8);
+      girlRightElbow.rotation.x = THREE.MathUtils.lerp(girlRightElbow.rotation.x, -0.75, dt * 8);
+      girlLeftArm.rotation.x = THREE.MathUtils.lerp(girlLeftArm.rotation.x, -0.45, dt * 8);
+      girlLeftArm.rotation.z = THREE.MathUtils.lerp(girlLeftArm.rotation.z, 0.15, dt * 8);
+      girlLeftElbow.rotation.x = THREE.MathUtils.lerp(girlLeftElbow.rotation.x, -0.75, dt * 8);
+      return;
+    } else if (activeEmote === "curious") {
+      // 3. CURIOUS HEAD TILT ("EH? / NANI?")
+      girlHead.rotation.z = THREE.MathUtils.lerp(girlHead.rotation.z, 0.26, dt * 8);
+      girlHead.rotation.y = THREE.MathUtils.lerp(girlHead.rotation.y, 0.14, dt * 8);
+      girlHead.rotation.x = THREE.MathUtils.lerp(girlHead.rotation.x, -0.10, dt * 8);
+
+      girlEyeLGroup.scale.set(1.15, 1.15, 1.0);
+      girlEyeRGroup.scale.set(1.15, 1.15, 1.0);
+      girlEyebrowL.position.y = THREE.MathUtils.lerp(girlEyebrowL.position.y, 0.145, dt * 8);
+      girlEyebrowR.position.y = THREE.MathUtils.lerp(girlEyebrowR.position.y, 0.145, dt * 8);
+      girlMouth.scale.set(0.70, 1.6, 1.0);
+      girlBlushMat.opacity = THREE.MathUtils.lerp(girlBlushMat.opacity, 0.65, dt * 6);
+      if (girlAhoge) girlAhoge.rotation.z = Math.sin(t * 10.0) * 0.20;
+
+      girlRightArm.rotation.x = THREE.MathUtils.lerp(girlRightArm.rotation.x, -1.05, dt * 8);
+      girlRightArm.rotation.z = THREE.MathUtils.lerp(girlRightArm.rotation.z, -0.25, dt * 8);
+      girlRightElbow.rotation.x = THREE.MathUtils.lerp(girlRightElbow.rotation.x, -1.35, dt * 8);
+      return;
+    } else if (activeEmote === "blush") {
+      // 4. SHY BLUSHING & GIGGLE
+      girlHead.rotation.z = THREE.MathUtils.lerp(girlHead.rotation.z, -0.12, dt * 8);
+      girlHead.rotation.x = THREE.MathUtils.lerp(girlHead.rotation.x, 0.10, dt * 8);
+      girlBlushMat.opacity = THREE.MathUtils.lerp(girlBlushMat.opacity, 1.0, dt * 10);
+      girlEyeLGroup.scale.set(1.0, 0.45, 1.0);
+      girlEyeRGroup.scale.set(1.0, 0.45, 1.0);
+      girlMouth.scale.set(1.1, 1.3, 1.0);
+      girlTorso.position.y = breath * 0.02 + Math.sin(t * 12.0) * 0.015;
+
+      girlRightArm.rotation.x = THREE.MathUtils.lerp(girlRightArm.rotation.x, -0.85, dt * 8);
+      girlRightArm.rotation.z = THREE.MathUtils.lerp(girlRightArm.rotation.z, -0.32, dt * 8);
+      girlRightElbow.rotation.x = THREE.MathUtils.lerp(girlRightElbow.rotation.x, -1.15, dt * 8);
+      girlLeftArm.rotation.x = THREE.MathUtils.lerp(girlLeftArm.rotation.x, -0.85, dt * 8);
+      girlLeftArm.rotation.z = THREE.MathUtils.lerp(girlLeftArm.rotation.z, 0.32, dt * 8);
+      girlLeftElbow.rotation.x = THREE.MathUtils.lerp(girlLeftElbow.rotation.x, -1.15, dt * 8);
+      return;
+    } else if (activeEmote === "success") {
+      // 5. VICTORY CHEER & TASK SUCCESS EMOTE
+      girlEyeLGroup.scale.set(1.0, 0.40, 1.0);
+      girlEyeRGroup.scale.set(1.0, 0.40, 1.0);
+      girlBlushMat.opacity = THREE.MathUtils.lerp(girlBlushMat.opacity, 1.0, dt * 10);
+      girlMouth.scale.set(1.4, 2.0, 1.0);
+      const hop = Math.sin((2.2 - emoteTimer) * Math.PI * 3) * 0.04;
+      girlTorso.position.y = breath * 0.02 + hop;
+      girlHead.rotation.x = Math.sin(t * 12) * 0.10;
+
+      // Both arms raised in triumph
+      girlRightArm.rotation.x = THREE.MathUtils.lerp(girlRightArm.rotation.x, -2.1, dt * 10);
+      girlRightArm.rotation.z = THREE.MathUtils.lerp(girlRightArm.rotation.z, 0.55, dt * 10);
+      girlRightElbow.rotation.x = THREE.MathUtils.lerp(girlRightElbow.rotation.x, -0.4, dt * 10);
+
+      girlLeftArm.rotation.x = THREE.MathUtils.lerp(girlLeftArm.rotation.x, -2.1, dt * 10);
+      girlLeftArm.rotation.z = THREE.MathUtils.lerp(girlLeftArm.rotation.z, -0.55, dt * 10);
+      girlLeftElbow.rotation.x = THREE.MathUtils.lerp(girlLeftElbow.rotation.x, -0.4, dt * 10);
+      return;
+    } else if (activeEmote === "failed") {
+      // 6. CONFUSED SHRUG & TASK FAILURE EMOTE
+      girlEyeLGroup.scale.set(1.1, 1.1, 1.0);
+      girlEyeRGroup.scale.set(1.1, 1.1, 1.0);
+      girlEyebrowL.rotation.z = THREE.MathUtils.lerp(girlEyebrowL.rotation.z, 0.12, dt * 8);
+      girlEyebrowR.rotation.z = THREE.MathUtils.lerp(girlEyebrowR.rotation.z, -0.12, dt * 8);
+      girlHead.rotation.z = THREE.MathUtils.lerp(girlHead.rotation.z, 0.22, dt * 8);
+      girlHead.rotation.x = THREE.MathUtils.lerp(girlHead.rotation.x, -0.08, dt * 8);
+      girlMouth.scale.set(0.9, 0.8, 1.0);
+
+      girlRightArm.rotation.x = THREE.MathUtils.lerp(girlRightArm.rotation.x, -0.30, dt * 8);
+      girlRightArm.rotation.z = THREE.MathUtils.lerp(girlRightArm.rotation.z, 0.55, dt * 8);
+      girlRightElbow.rotation.x = THREE.MathUtils.lerp(girlRightElbow.rotation.x, -1.0, dt * 8);
+
+      girlLeftArm.rotation.x = THREE.MathUtils.lerp(girlLeftArm.rotation.x, -0.30, dt * 8);
+      girlLeftArm.rotation.z = THREE.MathUtils.lerp(girlLeftArm.rotation.z, -0.55, dt * 8);
+      girlLeftElbow.rotation.x = THREE.MathUtils.lerp(girlLeftElbow.rotation.x, -1.0, dt * 8);
+      return;
+    }
+  }
+
+  // Restore Eye Blink Scale when not emoting
+  girlEyeLGroup.scale.set(1.0, eyeScaleY, 1.0);
+  girlEyeRGroup.scale.set(1.0, eyeScaleY, 1.0);
+
+  // Smooth Gaze Tracking towards touch pointer
+  gazeX = THREE.MathUtils.lerp(gazeX, targetGazeX, dt * 7);
+  gazeY = THREE.MathUtils.lerp(gazeY, targetGazeY, dt * 7);
+  girlHead.rotation.y += gazeX * 0.35;
+  girlHead.rotation.x += -gazeY * 0.25;
+  if (girlEyeLGroup && girlEyeRGroup) {
+    girlEyeLGroup.position.x = -0.105 + gazeX * 0.014;
+    girlEyeLGroup.position.y = 0.01 - gazeY * 0.010;
+    girlEyeRGroup.position.x = 0.105 + gazeX * 0.014;
+    girlEyeRGroup.position.y = 0.01 - gazeY * 0.010;
+  }
+
+  // Standing Weight-Shift Dynamics on Pelvis, Hips, Knees & Feet
+  const weightCycle = Math.sin(t * 0.65);
+  if (girlPelvis && girlLeftLeg && girlRightLeg && girlLeftKnee && girlRightKnee) {
+    const rollZ = weightCycle * 0.035;
+    girlPelvis.rotation.z = THREE.MathUtils.lerp(girlPelvis.rotation.z, rollZ, dt * 4);
+
+    const leftKneeBend = weightCycle > 0 ? (weightCycle * 0.14) : 0.02;
+    const rightKneeBend = weightCycle < 0 ? (-weightCycle * 0.14) : 0.02;
+
+    girlLeftLeg.rotation.z = THREE.MathUtils.lerp(girlLeftLeg.rotation.z, -rollZ * 0.6, dt * 4);
+    girlRightLeg.rotation.z = THREE.MathUtils.lerp(girlRightLeg.rotation.z, -rollZ * 0.6, dt * 4);
+
+    girlLeftKnee.rotation.x = THREE.MathUtils.lerp(girlLeftKnee.rotation.x, leftKneeBend, dt * 4);
+    girlRightKnee.rotation.x = THREE.MathUtils.lerp(girlRightKnee.rotation.x, rightKneeBend, dt * 4);
+
+    if (girlLeftFoot && girlRightFoot) {
+      girlLeftFoot.rotation.x = THREE.MathUtils.lerp(girlLeftFoot.rotation.x, -leftKneeBend * 0.5, dt * 4);
+      girlRightFoot.rotation.x = THREE.MathUtils.lerp(girlRightFoot.rotation.x, -rightKneeBend * 0.5, dt * 4);
+    }
+  }
+
+  // 5. State-based Conversational Anime Gestures & Emotes
+  if (state === "idle") {
+    // Soft subtle blush
+    girlBlushMat.opacity = THREE.MathUtils.lerp(girlBlushMat.opacity, 0.45, dt * 4);
+
+    const armSway = Math.sin(t * 1.5) * 0.04;
+    girlRightArm.rotation.x = THREE.MathUtils.lerp(girlRightArm.rotation.x, 0.14 + armSway, dt * 4);
+    girlRightArm.rotation.z = THREE.MathUtils.lerp(girlRightArm.rotation.z, -0.14, dt * 4);
+    girlRightElbow.rotation.x = THREE.MathUtils.lerp(girlRightElbow.rotation.x, -0.28, dt * 4);
+    girlRightElbow.rotation.z = 0;
+
+    girlLeftArm.rotation.x = THREE.MathUtils.lerp(girlLeftArm.rotation.x, 0.14 - armSway, dt * 4);
+    girlLeftArm.rotation.z = THREE.MathUtils.lerp(girlLeftArm.rotation.z, 0.14, dt * 4);
+    girlLeftElbow.rotation.x = THREE.MathUtils.lerp(girlLeftElbow.rotation.x, -0.28, dt * 4);
+
+    girlHead.rotation.y = Math.sin(t * 0.7) * 0.05;
+    girlHead.rotation.x = Math.sin(t * 1.1) * 0.03;
+    girlHead.rotation.z = 0;
+    girlTorso.rotation.x = THREE.MathUtils.lerp(girlTorso.rotation.x, 0, dt * 4);
+
+    girlEyebrowL.rotation.z = -0.08;
+    girlEyebrowR.rotation.z = 0.08;
+  }
+  else if (state === "listening") {
+    // Curious Anime Head Tilt & Attentive Eyes
+    girlBlushMat.opacity = THREE.MathUtils.lerp(girlBlushMat.opacity, 0.70, dt * 5);
+
+    girlTorso.rotation.x = THREE.MathUtils.lerp(girlTorso.rotation.x, 0.10, dt * 5);
+    girlHead.rotation.x = THREE.MathUtils.lerp(girlHead.rotation.x, -0.05 + Math.sin(t * 2.8) * 0.03, dt * 6);
+    girlHead.rotation.z = THREE.MathUtils.lerp(girlHead.rotation.z, 0.14, dt * 5); // Cute sideways head tilt
+    girlHead.rotation.y = THREE.MathUtils.lerp(girlHead.rotation.y, 0.03, dt * 5);
+
+    // Eyebrows raised slightly with curiosity
+    girlEyebrowL.position.y = THREE.MathUtils.lerp(girlEyebrowL.position.y, 0.135, dt * 5);
+    girlEyebrowR.position.y = THREE.MathUtils.lerp(girlEyebrowR.position.y, 0.135, dt * 5);
+
+    // Left hand near chest, attentive pose
+    girlRightArm.rotation.x = THREE.MathUtils.lerp(girlRightArm.rotation.x, -0.30, dt * 4);
+    girlRightArm.rotation.z = THREE.MathUtils.lerp(girlRightArm.rotation.z, -0.20, dt * 4);
+    girlRightElbow.rotation.x = THREE.MathUtils.lerp(girlRightElbow.rotation.x, -0.65, dt * 4);
+
+    girlLeftArm.rotation.x = THREE.MathUtils.lerp(girlLeftArm.rotation.x, -0.45, dt * 4);
+    girlLeftArm.rotation.z = THREE.MathUtils.lerp(girlLeftArm.rotation.z, 0.25, dt * 4);
+    girlLeftElbow.rotation.x = THREE.MathUtils.lerp(girlLeftElbow.rotation.x, -0.80, dt * 4);
+  }
+  else if (state === "thinking") {
+    // Thoughtful Anime Pose: Hand to chin, head tilted up-right
+    girlBlushMat.opacity = THREE.MathUtils.lerp(girlBlushMat.opacity, 0.40, dt * 4);
+
+    girlTorso.rotation.x = THREE.MathUtils.lerp(girlTorso.rotation.x, 0.0, dt * 4);
+    girlHead.rotation.x = THREE.MathUtils.lerp(girlHead.rotation.x, -0.15, dt * 5);
+    girlHead.rotation.y = THREE.MathUtils.lerp(girlHead.rotation.y, 0.18, dt * 5);
+    girlHead.rotation.z = THREE.MathUtils.lerp(girlHead.rotation.z, -0.06, dt * 5);
+
+    // Eyebrows tilted thoughtfully
+    girlEyebrowL.rotation.z = THREE.MathUtils.lerp(girlEyebrowL.rotation.z, -0.16, dt * 6);
+    girlEyebrowR.rotation.z = THREE.MathUtils.lerp(girlEyebrowR.rotation.z, 0.16, dt * 6);
+
+    // Right arm lifts hand to chin
+    girlRightArm.rotation.x = THREE.MathUtils.lerp(girlRightArm.rotation.x, -1.15, dt * 6);
+    girlRightArm.rotation.z = THREE.MathUtils.lerp(girlRightArm.rotation.z, -0.38, dt * 6);
+    girlRightElbow.rotation.x = THREE.MathUtils.lerp(girlRightElbow.rotation.x, -1.45, dt * 6);
+    girlRightElbow.rotation.y = THREE.MathUtils.lerp(girlRightElbow.rotation.y, 0.38, dt * 6);
+
+    // Left arm folds across waist supporting right arm
+    girlLeftArm.rotation.x = THREE.MathUtils.lerp(girlLeftArm.rotation.x, -0.80, dt * 5);
+    girlLeftArm.rotation.z = THREE.MathUtils.lerp(girlLeftArm.rotation.z, 0.48, dt * 5);
+    girlLeftElbow.rotation.x = THREE.MathUtils.lerp(girlLeftElbow.rotation.x, -1.05, dt * 5);
+
+    // Ahoge twitches thoughtfully
+    if (girlAhoge) girlAhoge.rotation.z = Math.sin(t * 8.0) * 0.16;
+  }
+  else if (state === "speaking") {
+    // Dynamic Conversational Gestures & Anime Head Nods
+    girlBlushMat.opacity = THREE.MathUtils.lerp(girlBlushMat.opacity, 0.65, dt * 4);
+
+    girlTorso.rotation.x = THREE.MathUtils.lerp(girlTorso.rotation.x, 0.03, dt * 4);
+    girlHead.rotation.x = Math.sin(t * 4.2) * 0.05;
+    girlHead.rotation.y = Math.sin(t * 1.8) * 0.08;
+    girlHead.rotation.z = Math.sin(t * 2.2) * 0.03;
+
+    // Expressive alternating hand gestures
+    const gR = Math.sin(t * 3.4) * 0.22;
+    const gL = Math.cos(t * 3.0) * 0.20;
+    girlRightArm.rotation.x = THREE.MathUtils.lerp(girlRightArm.rotation.x, -0.65 + gR, dt * 6);
+    girlRightArm.rotation.z = THREE.MathUtils.lerp(girlRightArm.rotation.z, -0.30 + gR * 0.4, dt * 6);
+    girlRightElbow.rotation.x = THREE.MathUtils.lerp(girlRightElbow.rotation.x, -0.90 + gR * 0.5, dt * 6);
+
+    girlLeftArm.rotation.x = THREE.MathUtils.lerp(girlLeftArm.rotation.x, -0.60 + gL, dt * 6);
+    girlLeftArm.rotation.z = THREE.MathUtils.lerp(girlLeftArm.rotation.z, 0.30 - gL * 0.4, dt * 6);
+    girlLeftElbow.rotation.x = THREE.MathUtils.lerp(girlLeftElbow.rotation.x, -0.85 + gL * 0.5, dt * 6);
+  }
+}
+
+/* ---------- Stark Arc Reactor Mechanical Core Group ---------- */
+let arcReactorGroup = null;
+let arcCoils = [], arcInnerLens, arcCoreLight, arcCopperMat, arcGlowMatRing;
+
+function buildArcReactor() {
+  arcReactorGroup = new THREE.Group();
+  arcReactorGroup.visible = false;
+
+  const metalMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a,
+    metalness: 0.95,
+    roughness: 0.2
+  });
+
+  arcGlowMatRing = new THREE.MeshBasicMaterial({
+    color: 0x22d3ee,
+    transparent: true,
+    opacity: 0.95
+  });
+
+  arcCopperMat = new THREE.MeshStandardMaterial({
+    color: 0xd97706,
+    metalness: 0.85,
+    roughness: 0.3
+  });
+
+  const outerRing = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.08, 16, 64), metalMat);
+  arcReactorGroup.add(outerRing);
+
+  const coilGeom = new THREE.BoxGeometry(0.12, 0.22, 0.14);
+  for (let i = 0; i < 10; i++) {
+    const angle = (i / 10) * Math.PI * 2;
+    const coil = new THREE.Mesh(coilGeom, arcCopperMat);
+    coil.position.set(Math.cos(angle) * 1.2, Math.sin(angle) * 1.2, 0);
+    coil.rotation.z = angle;
+    arcReactorGroup.add(coil);
+    arcCoils.push(coil);
+  }
+
+  arcInnerLens = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.85, 32), arcGlowMatRing);
+  arcReactorGroup.add(arcInnerLens);
+
+  const coreMesh = new THREE.Mesh(new THREE.CircleGeometry(0.42, 3), arcGlowMatRing);
+  arcReactorGroup.add(coreMesh);
+  arcCoreLight = coreMesh;
+
+  scene.add(arcReactorGroup);
+}
+
+function updateArcReactor(t, dt) {
+  if (!arcReactorGroup || !arcReactorGroup.visible) return;
+  arcInnerLens.rotation.z += dt * (0.8 + audio.level * 1.5) * speedMultiplier;
+  arcCoreLight.rotation.z -= dt * (0.4 + audio.level) * speedMultiplier;
+  const pulse = 1.0 + (audio.bass * 0.4) + Math.sin(t * 3.0) * 0.08;
+  arcReactorGroup.scale.setScalar(scaleMultiplier * pulse);
+}
+
+/* ---------- 3D Custom Photo Hologram Entity ---------- */
+let customPhotoGroup = null;
+let customPhotoFrontMat = null;
+let customPhotoGlowRing = null;
+let customPhotoBody = null;
+let customPhotoCanvasTex = null;
+
+function buildCustomPhotoMesh() {
+  customPhotoGroup = new THREE.Group();
+  customPhotoGroup.visible = false;
+
+  const defaultCanvas = document.createElement("canvas");
+  defaultCanvas.width = 256;
+  defaultCanvas.height = 256;
+  const ctx = defaultCanvas.getContext("2d");
+  const grad = ctx.createLinearGradient(0, 0, 256, 256);
+  grad.addColorStop(0, "#0284c7");
+  grad.addColorStop(0.5, "#6366f1");
+  grad.addColorStop(1, "#a855f7");
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(128, 128, 122, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#38bdf8";
+  ctx.lineWidth = 6;
+  ctx.stroke();
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 96px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("3D", 128, 128);
+
+  customPhotoCanvasTex = new THREE.CanvasTexture(defaultCanvas);
+
+  customPhotoFrontMat = new THREE.MeshStandardMaterial({
+    map: customPhotoCanvasTex,
+    roughness: 0.30,
+    metalness: 0.20,
+    transparent: true
+  });
+
+  const rimMat = new THREE.MeshStandardMaterial({
+    color: 0x1e293b,
+    metalness: 0.90,
+    roughness: 0.20
+  });
+
+  const glowBezelMat = new THREE.MeshBasicMaterial({
+    color: 0x38bdf8,
+    transparent: true,
+    opacity: 0.95
+  });
+
+  const backMat = new THREE.MeshStandardMaterial({
+    color: 0x090d16,
+    metalness: 0.85,
+    roughness: 0.35
+  });
+
+  // Front Photo Disc
+  const frontMesh = new THREE.Mesh(new THREE.CircleGeometry(1.10, 48), customPhotoFrontMat);
+  frontMesh.position.z = 0.082;
+  customPhotoGroup.add(frontMesh);
+
+  // Outer Glowing Bezel Ring
+  const glowRingGeom = new THREE.TorusGeometry(1.12, 0.038, 16, 64);
+  customPhotoGlowRing = new THREE.Mesh(glowRingGeom, glowBezelMat);
+  customPhotoGlowRing.position.z = 0.083;
+  customPhotoGroup.add(customPhotoGlowRing);
+
+  // Rim Body Cylinder
+  const bodyGeom = new THREE.CylinderGeometry(1.10, 1.10, 0.16, 48);
+  bodyGeom.rotateX(Math.PI / 2);
+  customPhotoBody = new THREE.Mesh(bodyGeom, rimMat);
+  customPhotoGroup.add(customPhotoBody);
+
+  // Back Face (Engraved Circuit Core)
+  const backMesh = new THREE.Mesh(new THREE.CircleGeometry(1.10, 48), backMat);
+  backMesh.rotation.y = Math.PI;
+  backMesh.position.z = -0.082;
+  customPhotoGroup.add(backMesh);
+
+  const backCoreRing = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.65, 24), glowBezelMat);
+  backCoreRing.rotation.y = Math.PI;
+  backCoreRing.position.z = -0.083;
+  customPhotoGroup.add(backCoreRing);
+
+  scene.add(customPhotoGroup);
+}
+
+function updateCustomPhotoMesh(t, dt) {
+  if (!customPhotoGroup || !customPhotoGroup.visible) return;
+  const pulse = 1.0 + (audio.bass * 0.3) + Math.sin(t * 2.8) * 0.06;
+  customPhotoGroup.scale.setScalar(scaleMultiplier * pulse);
+  customPhotoGroup.position.y = Math.sin(t * 2.2) * 0.06;
+  customPhotoGroup.rotation.y = Math.sin(t * 1.5) * 0.45 + velY * 0.3;
+  customPhotoGroup.rotation.x = Math.cos(t * 1.2) * 0.18 + velX * 0.3;
+}
+
+let customPhotoLoaded = false;
+
+function applyCustomPhotoTexture(base64) {
+  if (!base64 || !customPhotoFrontMat) return;
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = function() {
+    const tex = new THREE.Texture(img);
+    tex.needsUpdate = true;
+    tex.generateMipmaps = true;
+    tex.minFilter = THREE.LinearMipmapLinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    customPhotoFrontMat.map = tex;
+    customPhotoFrontMat.needsUpdate = true;
+    customPhotoLoaded = true;
+  };
+  img.src = base64;
+}
+
+function loadCustomPhotoFromBridge() {
+  if (entityType !== "custom_3d") return false;
+  if (!window.Jarvis3DModelBridge) return false;
+  try {
+    if (window.Jarvis3DModelBridge.hasCustomAvatar && window.Jarvis3DModelBridge.hasCustomAvatar()) {
+      const b64 = window.Jarvis3DModelBridge.getCustomAvatarBase64();
+      if (b64 && b64.length > 20) {
+        applyCustomPhotoTexture(b64);
+        return true;
+      }
+    }
+  } catch (e) {
+    console.warn("Bridge photo load warning:", e);
+  }
+  return false;
+}
+
+/* ---------- Real 3D Model Support (.glb, .gltf, .obj, .stl, .fbx) ---------- */
+let customModelGroup = null;
+let customModelInner = null;
+let customModelMixer = null;
+let customModelLoaded = false;
+let customModelFormat = "glb";
+let customModelStageGroup = null;
+let customModelPedestalRing1 = null;
+let customModelPedestalRing2 = null;
+let customModelShockwaveRing = null;
+let customModelWindShards = [];
+let customModelReactionTimer = 0;
+let customModelReactionIndex = 0;
+
+function buildCustomModelGroup() {
+  customModelGroup = new THREE.Group();
+  customModelGroup.visible = false;
+  scene.add(customModelGroup);
+}
+
+/* =========================================================================
+   UNIVERSAL HUMANOID ANIMATION ENGINE & COMPATIBILITY LAYER
+   - Automatically detects skeletal joints (Mixamo, ReadyPlayerMe, VRM, Rigify, Bip01)
+   - Procedural kinematics for Idle, Listening, Thinking, Speaking, Wave, Success, Failed
+   - Morph target blend shape animation (Blinking, Lip-sync via real-time audio)
+   - Graceful fallback & telemetry diagnostics for static unrigged meshes
+   ========================================================================= */
+class UniversalHumanoidEngine {
+  constructor(rootObject, animations) {
+    this.root = rootObject;
+    this.animations = animations || [];
+    this.bones = {};
+    this.restRotations = {};
+    this.restPositions = {};
+    this.morphMeshes = [];
+    this.morphIndicesList = [];
+    this.mixer = null;
+    this.actions = {};
+    this.activeAction = null;
+    this.activeActionName = "idle";
+    this.isRigged = false;
+    this.hasMorphTargets = false;
+    this.hasClips = false;
+    this.mappedBonesList = [];
+    this.diagnostics = {};
+    this.curGazeYaw = 0;
+    this.curGazePitch = 0;
+    this.curGazeRoll = 0;
+    this.livingBreath = 0;
+    this.livingSway = 0;
+    this.livingNodX = 0;
+    this.livingNodY = 0;
+
+    this.init();
+    if (this.animations && this.animations.length > 0) {
+      this.setAnimations(this.animations);
+    }
+  }
+
+  init() {
+    const BONE_PATTERNS = {
+      hips: /(hips|pelvis|bip\d*_pelvis|root_bone|mixamorig:?hips|j_bip_c_hips)/i,
+      spine: /(spine$|spine1|lower_spine|mixamorig:?spine$|j_bip_c_spine)/i,
+      chest: /(chest|upperchest|spine2|mixamorig:?spine1|mixamorig:?spine2|j_bip_c_chest|j_bip_c_upperchest)/i,
+      neck: /(neck|mixamorig:?neck|j_bip_c_neck)/i,
+      head: /(head|mixamorig:?head|j_bip_c_head)/i,
+      leftShoulder: /(leftshoulder|shoulder_l|l_shoulder|mixamorig:?leftshoulder|j_bip_l_shoulder)/i,
+      leftUpperArm: /(leftarm|leftupperarm|arm_l|upperarm_l|l_arm|mixamorig:?leftarm|j_bip_l_upperarm)/i,
+      leftForearm: /(leftforearm|forearm_l|lowerarm_l|l_forearm|mixamorig:?leftforearm|j_bip_l_lowerarm)/i,
+      leftHand: /(lefthand|hand_l|l_hand|mixamorig:?lefthand|j_bip_l_hand)/i,
+      rightShoulder: /(rightshoulder|shoulder_r|r_shoulder|mixamorig:?rightshoulder|j_bip_r_shoulder)/i,
+      rightUpperArm: /(rightarm|rightupperarm|arm_r|upperarm_r|r_arm|mixamorig:?rightarm|j_bip_r_upperarm)/i,
+      rightForearm: /(rightforearm|forearm_r|lowerarm_r|r_forearm|mixamorig:?rightforearm|j_bip_r_lowerarm)/i,
+      rightHand: /(righthand|hand_r|r_hand|mixamorig:?righthand|j_bip_r_hand)/i,
+      leftThigh: /(leftupleg|leftthigh|thigh_l|upperleg_l|l_leg|mixamorig:?leftupleg|j_bip_l_upperleg)/i,
+      leftCalf: /(leftleg|leftcalf|calf_l|lowerleg_l|l_calf|leftshin|mixamorig:?leftleg|j_bip_l_lowerleg)/i,
+      leftFoot: /(leftfoot|foot_l|l_foot|mixamorig:?leftfoot|j_bip_l_foot)/i,
+      rightThigh: /(rightupleg|rightthigh|thigh_r|upperleg_r|r_leg|mixamorig:?rightupleg|j_bip_r_upperleg)/i,
+      rightCalf: /(rightleg|rightcalf|calf_r|lowerleg_r|r_calf|rightshin|mixamorig:?rightleg|j_bip_r_lowerleg)/i,
+      rightFoot: /(rightfoot|foot_r|r_foot|mixamorig:?rightfoot|j_bip_r_foot)/i
+    };
+
+    let totalMeshes = 0;
+    const self = this;
+
+    this.root.traverse(function(child) {
+      if (child.isMesh) {
+        totalMeshes++;
+        if (child.morphTargetDictionary && Object.keys(child.morphTargetDictionary).length > 0) {
+          self.morphMeshes.push(child);
+          self.hasMorphTargets = true;
+
+          const dict = child.morphTargetDictionary;
+          const entry = { mesh: child, mouthA: [], mouthO: [], mouthE: [], blink: [], joy: [] };
+          for (const [k, idx] of Object.entries(dict)) {
+            const lk = k.toLowerCase();
+            if (lk.includes("fcl_mth_a") || lk === "aa" || lk.includes("mouthopen") || lk.includes("jawopen") || lk === "viseme_aa") {
+              entry.mouthA.push(idx);
+            } else if (lk.includes("fcl_mth_o") || lk.includes("fcl_mth_u") || lk === "oh" || lk.includes("viseme_o")) {
+              entry.mouthO.push(idx);
+            } else if (lk.includes("fcl_mth_e") || lk.includes("fcl_mth_i") || lk === "ee" || lk.includes("viseme_e")) {
+              entry.mouthE.push(idx);
+            } else if (lk.includes("fcl_eye_close") || lk === "blink" || lk.includes("eyeblink")) {
+              entry.blink.push(idx);
+            } else if (lk.includes("fcl_all_joy") || lk.includes("fcl_mth_joy") || lk.includes("smile") || lk === "happy" || lk === "joy") {
+              entry.joy.push(idx);
+            }
+          }
+          self.morphIndicesList.push(entry);
+        }
+      }
+
+      const name = child.name || "";
+      for (const [key, regex] of Object.entries(BONE_PATTERNS)) {
+        if (!self.bones[key] && regex.test(name)) {
+          self.bones[key] = child;
+          self.restRotations[key] = child.rotation.clone();
+          self.restPositions[key] = child.position.clone();
+          self.mappedBonesList.push(key);
+          break;
+        }
+      }
+    });
+
+    if (this.mappedBonesList.length >= 3 || this.bones.head || this.bones.leftUpperArm || this.bones.hips) {
+      this.isRigged = true;
+    } else {
+      this.setupKinematicDeformer();
+    }
+
+    this.updateDiagnostics(totalMeshes);
+  }
+
+  setAnimations(animations) {
+    if (!animations || animations.length === 0) return;
+    this.animations = animations;
+    if (!this.mixer) {
+      this.mixer = new THREE.AnimationMixer(this.root);
+    }
+    for (let i = 0; i < animations.length; i++) {
+      const clip = animations[i];
+      const rawName = (clip.name || "").toLowerCase();
+      try {
+        // Retargeting / Clean-Room Track Filtering:
+        // Keep ONLY skeletal joint rotation (.quaternion/.rotation) tracks for bones that exist in this model.
+        // Discarding translation and scale tracks preserves rest-pose bone socket offsets,
+        // preventing bone displacement, joint stretching, or T-pose dislocation.
+        const cleanTracks = [];
+        for (let t = 0; t < clip.tracks.length; t++) {
+          const track = clip.tracks[t];
+          if (!track.name.endsWith('.quaternion') && !track.name.endsWith('.rotation')) continue;
+          const boneName = track.name.split('.')[0];
+          if (this.root.getObjectByName(boneName)) {
+            cleanTracks.push(track);
+          }
+        }
+        const cleanClip = new THREE.AnimationClip(clip.name, clip.duration, cleanTracks.length > 0 ? cleanTracks : clip.tracks);
+        const action = this.mixer.clipAction(cleanClip);
+        action.setLoop(THREE.LoopRepeat);
+        this.actions[rawName] = action;
+        if (rawName.includes("idle")) this.actions["idle"] = action;
+        if (rawName.includes("wave")) { action.setLoop(THREE.LoopOnce); action.clampWhenFinished = true; this.actions["wave"] = action; }
+        if (rawName.includes("shrug")) { action.setLoop(THREE.LoopOnce); action.clampWhenFinished = true; this.actions["shrug"] = action; }
+        if (rawName.includes("talking_0") || rawName === "talking0") this.actions["talking_0"] = action;
+        if (rawName.includes("talking_1") || rawName === "talking1") this.actions["talking_1"] = action;
+        if (rawName.includes("talking_2") || rawName === "talking2") this.actions["talking_2"] = action;
+        if (rawName.includes("talking") && !this.actions["talking_0"]) this.actions["talking_0"] = action;
+        if (rawName.includes("laugh")) this.actions["laughing"] = action;
+        if (rawName.includes("angry")) this.actions["angry"] = action;
+        if (rawName.includes("cry")) this.actions["crying"] = action;
+        if (rawName.includes("rumba") || rawName.includes("dance")) this.actions["rumba"] = action;
+        if (rawName.includes("terrif") || rawName.includes("fear")) this.actions["terrified"] = action;
+      } catch (err) {
+        console.warn("Error creating clip action for", clip.name, err);
+      }
+    }
+    this.hasClips = Object.keys(this.actions).length > 0;
+    this.fadeToAction("idle", 0.1);
+    this.updateDiagnostics();
+  }
+
+  addAnimaMotion(name, clip, sourceScene) {
+    if (!this.mixer) this.mixer = new THREE.AnimationMixer(this.root);
+    const BONE_TO_VRM = {
+      'Hips': 'hips', 'Spine02': 'spine', 'Spine01': 'chest', 'Spine': 'upperChest',
+      'neck': 'neck', 'Head': 'head',
+      'LeftShoulder': 'leftShoulder', 'LeftArm': 'leftUpperArm', 'LeftForeArm': 'leftForearm', 'LeftHand': 'leftHand',
+      'RightShoulder': 'rightShoulder', 'RightArm': 'rightUpperArm', 'RightForeArm': 'rightForearm', 'RightHand': 'rightHand',
+      'LeftUpLeg': 'leftThigh', 'LeftLeg': 'leftCalf', 'LeftFoot': 'leftFoot',
+      'RightUpLeg': 'rightThigh', 'RightLeg': 'rightCalf', 'RightFoot': 'rightFoot'
+    };
+    const retargetedTracks = [];
+    for (const track of clip.tracks) {
+      const parts = track.name.split('.');
+      const rawBone = parts[0];
+      const prop = parts.slice(1).join('.');
+      if (prop !== "quaternion") continue; // Crucial: Only retarget skeletal joint rotations (quaternion) to prevent hips translation blowup
+      const vrmKey = BONE_TO_VRM[rawBone];
+      const targetBoneNode = vrmKey ? this.bones[vrmKey] : (this.root.getObjectByName(rawBone));
+      if (targetBoneNode) {
+        const cloned = track.clone();
+        cloned.name = targetBoneNode.name + '.' + prop;
+        retargetedTracks.push(cloned);
+      }
+    }
+    if (retargetedTracks.length > 0) {
+      const retargetedClip = new THREE.AnimationClip(name, clip.duration, retargetedTracks);
+      const action = this.mixer.clipAction(retargetedClip);
+      action.setLoop(THREE.LoopOnce);
+      action.clampWhenFinished = true;
+      this.actions[name] = action;
+      this.hasClips = true;
+      console.log("Added Anima motion clip:", name, "tracks:", retargetedTracks.length);
+    }
+  }
+
+  fadeToAction(name, duration) {
+    duration = (duration !== undefined && duration !== null) ? duration : 0.35;
+    if (!this.mixer) return;
+    const targetAction = this.actions[name] || this.actions["idle"];
+    if (!targetAction) return;
+
+    if (this.activeAction === targetAction) {
+      if (!targetAction.isRunning()) targetAction.play();
+      return;
+    }
+
+    const prevAction = this.activeAction;
+    this.activeAction = targetAction;
+    this.activeActionName = name;
+
+    targetAction.reset();
+    targetAction.setEffectiveTimeScale(1);
+    targetAction.setEffectiveWeight(1);
+    targetAction.clampWhenFinished = false;
+
+    if (prevAction && prevAction !== targetAction) {
+      prevAction.crossFadeTo(targetAction, duration, true);
+    }
+    targetAction.play();
+  }
+
+  updateDiagnostics(meshCount) {
+    this.diagnostics = {
+      isRigged: this.isRigged,
+      rigType: this.isRigged ? (this.mappedBonesList.length >= 10 ? "Full Humanoid Armature" : "Partial Humanoid Rig") : "GPU Kinematic Humanoid (T-Pose Lowered & Animated)",
+      meshCount: meshCount !== undefined ? meshCount : (this.diagnostics.meshCount || 0),
+      boneCount: this.mappedBonesList.length,
+      mappedBones: this.mappedBonesList,
+      hasAnimations: this.hasClips || (this.animations && this.animations.length > 0),
+      animationClipsCount: this.animations ? this.animations.length : 0,
+      activeClip: this.activeActionName,
+      hasMorphTargets: this.hasMorphTargets,
+      statusMessage: this.isRigged
+        ? "Rigged Humanoid Armature Active (" + this.mappedBonesList.length + " joints mapped). Skeletal animations (" + (this.animations ? this.animations.length : 0) + " clips) & ARKit facial visemes active."
+        : "Kinematic Humanoid Engine active. Fallback vertex deformation active."
+    };
+
+    console.log("UniversalHumanoidEngine diagnostics:", this.diagnostics);
+
+    if (window.Jarvis3DModelBridge && typeof window.Jarvis3DModelBridge.reportModelDiagnostics === "function") {
+      try {
+        window.Jarvis3DModelBridge.reportModelDiagnostics(JSON.stringify(this.diagnostics));
+      } catch (err) {
+        console.warn("Could not report diagnostics to bridge:", err);
+      }
+    }
+  }
+
+  setupKinematicDeformer() {
+    this.uniformList = [];
+    this.curArmAngleR = 1.15;
+    this.curArmAngleL = -1.15;
+    this.curForearmR = 0;
+    this.curForearmL = 0;
+    this.curHeadYaw = 0;
+    this.curHeadPitch = 0;
+    this.curHeadRoll = 0;
+    this.curChestBreath = 0;
+    this.curLegShift = 0;
+
+    const self = this;
+    const vertexPrefix = `
+uniform float uKinematicTime;
+uniform float uArmAngleR;
+uniform float uArmAngleL;
+uniform float uForearmR;
+uniform float uForearmL;
+uniform float uHeadYaw;
+uniform float uHeadPitch;
+uniform float uHeadRoll;
+uniform float uChestBreath;
+uniform float uLegShift;
+
+vec3 kRotX(vec3 p, vec3 piv, float ang) {
+  float c = cos(ang), s = sin(ang);
+  vec3 d = p - piv;
+  return vec3(d.x, d.y * c - d.z * s, d.y * s + d.z * c) + piv;
+}
+vec3 kRotY(vec3 p, vec3 piv, float ang) {
+  float c = cos(ang), s = sin(ang);
+  vec3 d = p - piv;
+  return vec3(d.x * c + d.z * s, d.y, -d.x * s + d.z * c) + piv;
+}
+vec3 kRotZ(vec3 p, vec3 piv, float ang) {
+  float c = cos(ang), s = sin(ang);
+  vec3 d = p - piv;
+  return vec3(d.x * c - d.y * s, d.x * s + d.y * c, d.z) + piv;
+}
+`;
+
+    const vertexDeformLogic = `
+#include <begin_vertex>
+float kWR = smoothstep(0.18, 0.28, position.z);
+if (kWR > 0.0) {
+  vec3 pivR = vec3(0.0, 0.44, 0.22);
+  vec3 rArm = kRotX(transformed, pivR, uArmAngleR);
+  float kWForearmR = smoothstep(0.40, 0.52, position.z);
+  rArm = kRotZ(rArm, pivR, uForearmR * kWForearmR);
+  transformed = mix(transformed, rArm, kWR);
+}
+float kWL = smoothstep(-0.18, -0.28, position.z);
+if (kWL > 0.0) {
+  vec3 pivL = vec3(0.0, 0.44, -0.22);
+  vec3 lArm = kRotX(transformed, pivL, uArmAngleL);
+  float kWForearmL = smoothstep(-0.40, -0.52, position.z);
+  lArm = kRotZ(lArm, pivL, uForearmL * kWForearmL);
+  transformed = mix(transformed, lArm, kWL);
+}
+float kWH = smoothstep(0.46, 0.53, position.y);
+if (kWH > 0.0) {
+  vec3 pivHead = vec3(0.0, 0.48, 0.0);
+  vec3 hPos = kRotY(transformed, pivHead, uHeadYaw);
+  hPos = kRotZ(hPos, pivHead, uHeadPitch);
+  hPos = kRotX(hPos, pivHead, uHeadRoll);
+  transformed = mix(transformed, hPos, kWH);
+}
+float kWChest = smoothstep(-0.15, 0.15, position.y) * (1.0 - smoothstep(0.35, 0.50, position.y));
+transformed.x += uChestBreath * kWChest * 0.012;
+transformed.z += uChestBreath * kWChest * 0.008 * sign(position.z);
+float kWLegs = smoothstep(-0.05, -0.25, position.y);
+transformed.z += uLegShift * kWLegs * 0.012;
+`;
+
+    const normalDeformLogic = `
+#include <beginnormal_vertex>
+float knWR = smoothstep(0.18, 0.28, position.z);
+if (knWR > 0.0) {
+  vec3 rNormR = kRotX(objectNormal, vec3(0.0), uArmAngleR);
+  objectNormal = mix(objectNormal, rNormR, knWR);
+}
+float knWL = smoothstep(-0.18, -0.28, position.z);
+if (knWL > 0.0) {
+  vec3 rNormL = kRotX(objectNormal, vec3(0.0), uArmAngleL);
+  objectNormal = mix(objectNormal, rNormL, knWL);
+}
+float knWH = smoothstep(0.46, 0.53, position.y);
+if (knWH > 0.0) {
+  vec3 hNorm = kRotY(objectNormal, vec3(0.0), uHeadYaw);
+  hNorm = kRotZ(hNorm, vec3(0.0), uHeadPitch);
+  hNorm = kRotX(hNorm, vec3(0.0), uHeadRoll);
+  objectNormal = mix(objectNormal, hNorm, knWH);
+}
+`;
+
+    const processedMaterials = new Set();
+    this.root.traverse(function(child) {
+      if (child.isMesh && child.material) {
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach(function(mat) {
+          if (processedMaterials.has(mat)) return;
+          processedMaterials.add(mat);
+
+          const uniforms = {
+            uKinematicTime: { value: 0 },
+            uArmAngleR: { value: 1.15 },
+            uArmAngleL: { value: -1.15 },
+            uForearmR: { value: 0 },
+            uForearmL: { value: 0 },
+            uHeadYaw: { value: 0 },
+            uHeadPitch: { value: 0 },
+            uHeadRoll: { value: 0 },
+            uChestBreath: { value: 0 },
+            uLegShift: { value: 0 }
+          };
+          self.uniformList.push(uniforms);
+
+          mat.customProgramCacheKey = function() {
+            return "jett_kinematic_deformer_v3";
+          };
+
+          const origOnBeforeCompile = mat.onBeforeCompile;
+          mat.onBeforeCompile = function(shader, renderer) {
+            if (origOnBeforeCompile) origOnBeforeCompile(shader, renderer);
+            Object.assign(shader.uniforms, uniforms);
+            shader.vertexShader = shader.vertexShader.replace(
+              '#include <common>',
+              '#include <common>\n' + vertexPrefix
+            );
+            shader.vertexShader = shader.vertexShader.replace(
+              '#include <begin_vertex>',
+              vertexDeformLogic
+            );
+            shader.vertexShader = shader.vertexShader.replace(
+              '#include <beginnormal_vertex>',
+              normalDeformLogic
+            );
+          };
+          mat.needsUpdate = true;
+        });
+      }
+    });
+  }
+
+  interrupt() {
+    // REDMAGIC Barge-In / Interruption:
+    // Instantly collapse mouth shapes to zero so the character doesn't freeze with open mouth
+    if (this.hasMorphTargets) {
+      for (const item of this.morphIndicesList) {
+        const infl = item.mesh.morphTargetInfluences;
+        if (!infl) continue;
+        for (const idx of item.mouthA) infl[idx] = 0;
+        for (const idx of item.mouthO) infl[idx] = 0;
+        for (const idx of item.mouthE) infl[idx] = 0;
+      }
+    }
+    // Fade speech animation immediately back to attentive listening or idle
+    if (this.hasClips && this.mixer) {
+      this.fadeToAction("idle", 0.15);
+    }
+    this.curThinkingWeight = 0;
+  }
+
+  update(dt, t, state, audio, gazeX, gazeY, activeEmote, emoteTimer) {
+    // 0. Living Layer Kinematics (Breathing, Posture Sway, Micro-nods)
+    // Undo previous living offsets for un-animated procedural rigs so they don't accumulate
+    if (!this.hasClips && this.isRigged) {
+      if (this.bones.chest) this.bones.chest.rotation.x -= this.livingBreath;
+      if (this.bones.spine) this.bones.spine.rotation.z -= this.livingSway;
+      if (this.bones.head) {
+        this.bones.head.rotation.x -= this.livingNodX;
+        this.bones.head.rotation.y -= this.livingNodY;
+      }
+    }
+
+    // 1. Determine & cross-fade active animation clip
+    if (this.hasClips && this.mixer) {
+      let desiredClip = "idle";
+      const isSpeaking = (state === "speaking");
+      const isListening = (state === "listening");
+      const isThinking = (state === "thinking");
+
+      if (activeEmote === "rumba" || activeEmote === "dance") {
+        desiredClip = "rumba";
+      } else if (activeEmote === "laugh" || activeEmote === "happy" || activeEmote === "joy") {
+        desiredClip = "laughing";
+      } else if (activeEmote === "angry") {
+        desiredClip = "angry";
+      } else if (activeEmote === "crying" || activeEmote === "sad") {
+        desiredClip = "crying";
+      } else if (activeEmote === "terrified" || activeEmote === "fear") {
+        desiredClip = "terrified";
+      } else if (isSpeaking) {
+        // Cycle natural conversational talking gestures
+        const talkCycle = Math.floor((t / 2.6) % 3);
+        desiredClip = talkCycle === 1 ? "talking_1" : (talkCycle === 2 ? "talking_2" : "talking_0");
+      } else {
+        desiredClip = "idle";
+      }
+
+      this.fadeToAction(desiredClip, 0.40);
+      this.mixer.update(dt);
+    }
+
+    // 2. Facial Morph Targets: Real-time Audio Lip Sync & Natural Blinking
+    // STRICT SEPARATION: Microphone amplitude MUST NEVER trigger speech lip sync!
+    // Lip sync is ONLY active when state === "speaking"
+    if (this.hasMorphTargets) {
+      const isTalking = (state === "speaking");
+      const rawVol = (audio && audio.level > 0.015) ? audio.level : 0;
+      const mouthOpen = isTalking ? Math.min(1.0, (rawVol > 0.015 ? rawVol * 3.2 : 0.40) + Math.abs(Math.sin(t * 11.5)) * 0.32) : 0;
+      const visemeO = isTalking ? Math.min(0.85, Math.abs(Math.cos(t * 7.5)) * (rawVol > 0.015 ? rawVol * 2.6 : 0.30)) : 0;
+      const visemeE = isTalking ? Math.min(0.75, Math.abs(Math.sin(t * 9.2)) * (rawVol > 0.015 ? rawVol * 2.0 : 0.22)) : 0;
+
+      // Realistic human eyelid blinking: ~130ms blink duration every 3.8s
+      const blinkCycle = t % 3.8;
+      const isBlinking = blinkCycle < 0.13 ? 1.0 : 0.0;
+      const gentleSmile = (activeEmote === "joy" || activeEmote === "success" || activeEmote === "teach" || activeEmote === "blush") ? 0.70 : 0.15;
+
+      for (const item of this.morphIndicesList) {
+        const infl = item.mesh.morphTargetInfluences;
+        if (!infl) continue;
+        for (const idx of item.mouthA) infl[idx] = THREE.MathUtils.lerp(infl[idx], mouthOpen, dt * 26);
+        for (const idx of item.mouthO) infl[idx] = THREE.MathUtils.lerp(infl[idx], visemeO, dt * 22);
+        for (const idx of item.mouthE) infl[idx] = THREE.MathUtils.lerp(infl[idx], visemeE, dt * 22);
+        for (const idx of item.blink)  infl[idx] = THREE.MathUtils.lerp(infl[idx], isBlinking, dt * 32);
+        for (const idx of item.joy)    infl[idx] = THREE.MathUtils.lerp(infl[idx], gentleSmile, dt * 10);
+      }
+    }
+
+    // 3. Additive Head Gaze Tracking, Emotional Tilts & Conversational Cadence
+    if (this.isRigged && this.bones.head) {
+      const gazeYaw = (typeof gazeX !== "undefined" ? gazeX : 0) * 0.38;
+      const gazePitch = -(typeof gazeY !== "undefined" ? gazeY : 0) * 0.26;
+      let emoteHeadTiltZ = 0, emoteHeadPitchX = 0;
+
+      if (activeEmote === "curious") {
+        emoteHeadTiltZ = 0.16;
+        emoteHeadPitchX = -0.06;
+      } else if (state === "listening") {
+        emoteHeadTiltZ = 0.10;
+        emoteHeadPitchX = -0.05;
+      } else if (activeEmote === "wave") {
+        emoteHeadTiltZ = 0.08;
+      } else if (activeEmote === "teach" || activeEmote === "nod") {
+        emoteHeadPitchX = Math.sin(t * 12.0) * 0.15;
+      } else if (activeEmote === "joy" || activeEmote === "success") {
+        emoteHeadTiltZ = -0.08;
+        emoteHeadPitchX = -0.04;
+      } else if (state === "thinking") {
+        emoteHeadTiltZ = -0.12;
+        emoteHeadPitchX = -0.14;
+      }
+
+      const speechNod = (state === "speaking") ? Math.sin(t * 6.5) * (0.04 + audio.level * 0.08) : 0;
+
+      this.curGazeYaw = THREE.MathUtils.lerp(this.curGazeYaw, gazeYaw, dt * 5.0);
+      this.curGazePitch = THREE.MathUtils.lerp(this.curGazePitch, gazePitch + emoteHeadPitchX + speechNod, dt * 5.0);
+      this.curGazeRoll = THREE.MathUtils.lerp(this.curGazeRoll, emoteHeadTiltZ, dt * 5.0);
+
+      this.bones.head.rotation.y += this.curGazeYaw;
+      this.bones.head.rotation.x += this.curGazePitch;
+      this.bones.head.rotation.z += this.curGazeRoll;
+    }
+
+    // 4. Additive Torso & Arm Kinematics for Listening & Thinking (REDMAGIC Style)
+    if (this.isRigged) {
+      const isListening = (state === "listening");
+      const isThinking = (state === "thinking");
+
+      // Attentive torso forward lean when listening
+      if (isListening && this.bones.chest) {
+        this.bones.chest.rotation.x += 0.07;
+      }
+
+      // Thinking: Contemplative hand-to-chin gesture
+      if (this.bones.rightUpperArm && this.bones.rightForearm) {
+        if (isThinking) {
+          this.curThinkingWeight = THREE.MathUtils.lerp(this.curThinkingWeight || 0, 1.0, dt * 5.0);
+        } else {
+          this.curThinkingWeight = THREE.MathUtils.lerp(this.curThinkingWeight || 0, 0.0, dt * 6.0);
+        }
+        if (this.curThinkingWeight > 0.01) {
+          const targetArmX = -0.65;
+          const targetArmZ = -0.75;
+          const targetForearmZ = -1.25;
+          this.bones.rightUpperArm.rotation.x = THREE.MathUtils.lerp(this.bones.rightUpperArm.rotation.x, targetArmX, this.curThinkingWeight);
+          this.bones.rightUpperArm.rotation.z = THREE.MathUtils.lerp(this.bones.rightUpperArm.rotation.z, targetArmZ, this.curThinkingWeight);
+          this.bones.rightForearm.rotation.z = THREE.MathUtils.lerp(this.bones.rightForearm.rotation.z, targetForearmZ, this.curThinkingWeight);
+        }
+      }
+    }
+
+    // 5. Guaranteed Additive Arm Wave & Shrug Gestures
+    if (this.isRigged && this.bones.rightUpperArm && activeEmote === "wave") {
+      const wavePhase = Math.sin(t * 14.0);
+      this.bones.rightUpperArm.rotation.z = -1.60;
+      this.bones.rightUpperArm.rotation.x = -0.40;
+      if (this.bones.rightForearm) {
+        this.bones.rightForearm.rotation.z = -0.80 + wavePhase * 0.40;
+      }
+    }
+    if (this.isRigged && (activeEmote === "shrug" || activeEmote === "failed")) {
+      if (this.bones.leftUpperArm && this.bones.rightUpperArm) {
+        this.bones.leftUpperArm.rotation.z = 0.55;
+        this.bones.rightUpperArm.rotation.z = -0.55;
+        if (this.bones.leftForearm) this.bones.leftForearm.rotation.z = 0.70;
+        if (this.bones.rightForearm) this.bones.rightForearm.rotation.z = -0.70;
+      }
+      if (this.bones.head) {
+        this.bones.head.rotation.z = 0.14;
+      }
+    }
+
+    // 6. Apply Anima Living Layer Kinematics (Breathing, Weight Shift Sway, Drift)
+    if (this.isRigged) {
+      this.livingBreath = Math.sin(t * 1.9) * 0.012;
+      this.livingSway = Math.sin(t * 0.45) * 0.012 + Math.sin(t * 0.17) * 0.008;
+      this.livingNodX = Math.sin(t * 0.31) * 0.02;
+      this.livingNodY = Math.sin(t * 0.23 + 1) * 0.035;
+
+      if (this.bones.chest) this.bones.chest.rotation.x += this.livingBreath;
+      if (this.bones.spine) this.bones.spine.rotation.z += this.livingSway;
+      if (this.bones.head) {
+        this.bones.head.rotation.x += this.livingNodX;
+        this.bones.head.rotation.y += this.livingNodY;
+      }
+    }
+
+    // GPU Kinematic Humanoid Deformation for Unrigged Models (e.g. Jett sculpt)
+    if (!this.isRigged && this.uniformList && this.uniformList.length > 0) {
+      const isSpeaking = (state === "speaking") || (audio.level > 0.04);
+      const isListening = (state === "listening");
+      const isThinking = (state === "thinking");
+      const breath = Math.sin(t * 2.2);
+
+      let tgtArmAngleR = 1.15;
+      let tgtArmAngleL = -1.15;
+      let tgtForearmR = 0;
+      let tgtForearmL = 0;
+      let tgtHeadYaw = (typeof gazeX !== "undefined" ? gazeX : 0) * 0.35;
+      let tgtHeadPitch = -(typeof gazeY !== "undefined" ? gazeY : 0) * 0.25;
+      let tgtHeadRoll = 0;
+      let tgtChestBreath = breath;
+      let tgtLegShift = Math.sin(t * 0.7);
+
+      if (activeEmote === "wave") {
+        tgtArmAngleR = -0.35;
+        tgtForearmR = Math.sin(t * 12.0) * 0.45;
+        tgtHeadRoll = 0.10;
+        tgtHeadPitch = -0.05;
+      } else if (activeEmote === "nod") {
+        tgtHeadPitch = Math.sin(t * 10.0) * 0.18;
+        tgtArmAngleR = 0.85;
+        tgtArmAngleL = -0.85;
+        tgtForearmR = -0.40;
+        tgtForearmL = 0.40;
+      } else if (activeEmote === "curious") {
+        tgtHeadRoll = 0.22;
+        tgtHeadYaw = 0.15;
+        tgtHeadPitch = -0.08;
+        tgtArmAngleR = 0.60;
+        tgtForearmR = -0.65;
+      } else if (activeEmote === "blush") {
+        tgtHeadRoll = -0.14;
+        tgtHeadPitch = 0.10;
+        tgtArmAngleR = 0.90;
+        tgtArmAngleL = -0.90;
+        tgtForearmR = -0.50;
+        tgtForearmL = 0.50;
+      } else if (activeEmote === "success") {
+        tgtArmAngleR = -0.30;
+        tgtArmAngleL = 0.30;
+        tgtHeadPitch = -0.10;
+      } else if (activeEmote === "failed") {
+        tgtArmAngleR = 0.70;
+        tgtArmAngleL = -0.70;
+        tgtForearmR = -0.50;
+        tgtForearmL = 0.50;
+        tgtHeadRoll = 0.14;
+      } else if (isThinking) {
+        tgtArmAngleR = 0.25;
+        tgtForearmR = -0.85;
+        tgtHeadRoll = -0.14;
+        tgtHeadPitch = -0.12;
+      } else if (isSpeaking) {
+        const gR = Math.sin(t * 3.5) * 0.18;
+        const gL = Math.cos(t * 3.0) * 0.16;
+        tgtArmAngleR = 0.90 + gR;
+        tgtArmAngleL = -0.90 + gL;
+        tgtForearmR = -0.30 + gR * 0.5;
+        tgtForearmL = 0.30 + gL * 0.5;
+        tgtHeadPitch += Math.sin(t * 6.5) * (0.04 + audio.level * 0.08);
+        tgtHeadYaw += Math.sin(t * 2.0) * 0.05;
+      } else if (isListening) {
+        tgtHeadRoll = 0.12;
+        tgtHeadPitch = -0.08;
+        tgtArmAngleR = 1.10;
+        tgtArmAngleL = -1.10;
+      } else {
+        const armSway = Math.sin(t * 1.5) * 0.025;
+        tgtArmAngleR = 1.15 + armSway;
+        tgtArmAngleL = -1.15 - armSway;
+        tgtHeadRoll = Math.sin(t * 0.9) * 0.02;
+      }
+
+      const lerpSpeed = (activeEmote === "wave" || activeEmote === "success") ? 8.0 : 5.0;
+      this.curArmAngleR = THREE.MathUtils.lerp(this.curArmAngleR, tgtArmAngleR, dt * lerpSpeed);
+      this.curArmAngleL = THREE.MathUtils.lerp(this.curArmAngleL, tgtArmAngleL, dt * lerpSpeed);
+      this.curForearmR = THREE.MathUtils.lerp(this.curForearmR, tgtForearmR, dt * (activeEmote === "wave" ? 18.0 : lerpSpeed));
+      this.curForearmL = THREE.MathUtils.lerp(this.curForearmL, tgtForearmL, dt * lerpSpeed);
+      this.curHeadYaw = THREE.MathUtils.lerp(this.curHeadYaw, tgtHeadYaw, dt * 6.0);
+      this.curHeadPitch = THREE.MathUtils.lerp(this.curHeadPitch, tgtHeadPitch, dt * 6.0);
+      this.curHeadRoll = THREE.MathUtils.lerp(this.curHeadRoll, tgtHeadRoll, dt * 6.0);
+      this.curChestBreath = tgtChestBreath;
+      this.curLegShift = tgtLegShift;
+
+      for (let i = 0; i < this.uniformList.length; i++) {
+        const u = this.uniformList[i];
+        u.uKinematicTime.value = t;
+        u.uArmAngleR.value = this.curArmAngleR;
+        u.uArmAngleL.value = this.curArmAngleL;
+        u.uForearmR.value = this.curForearmR;
+        u.uForearmL.value = this.curForearmL;
+        u.uHeadYaw.value = this.curHeadYaw;
+        u.uHeadPitch.value = this.curHeadPitch;
+        u.uHeadRoll.value = this.curHeadRoll;
+        u.uChestBreath.value = this.curChestBreath;
+        u.uLegShift.value = this.curLegShift;
+      }
+    }
+  }
+}
+
+function clearCustom3DModel() {
+  if (customModelInner && customModelGroup) {
+    customModelGroup.remove(customModelInner);
+    customModelInner = null;
+  }
+  if (customModelMixer) {
+    try { customModelMixer.stopAllAction(); } catch (_) {}
+    customModelMixer = null;
+  }
+  if (customModelEngine) {
+    customModelEngine = null;
+  }
+  customModelLoaded = false;
+}
+
+function fallbackToOrb() {
+  clearCustom3DModel();
+  if (pointsMesh) pointsMesh.visible = componentToggles.core;
+  if (glow) glow.visible = componentToggles.glow;
+  if (ring1) ring1.visible = componentToggles.rings && componentToggles.ring1;
+  if (ring2) ring2.visible = componentToggles.rings && componentToggles.ring2;
+  if (ring3) ring3.visible = componentToggles.rings && componentToggles.ring3;
+  if (orbitPts) orbitPts.visible = componentToggles.orbitDust;
+}
+
+function onModelReady(object, animations) {
+  if (!object) {
+    fallbackToOrb();
+    return;
+  }
+  clearCustom3DModel();
+
+  let meshCount = 0;
+  let isVRoid = false;
+
+  object.traverse(function(child) {
+    if (child.name && (child.name.startsWith("J_Bip_") || child.name.startsWith("j_bip_"))) {
+      isVRoid = true;
+    }
+    if (child.isMesh) {
+      meshCount++;
+      child.castShadow = true;
+      child.receiveShadow = true;
+      child.frustumCulled = false;
+      if (child.geometry && !child.geometry.attributes.normal) {
+        try { child.geometry.computeVertexNormals(); } catch (_) {}
+      }
+      if (!child.material) {
+        child.material = new THREE.MeshStandardMaterial({
+          color: 0x38bdf8,
+          metalness: 0.25,
+          roughness: 0.40,
+          side: THREE.DoubleSide
+        });
+      } else {
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach(function(m) {
+          m.side = THREE.DoubleSide;
+          m.skinning = true;
+          m.morphTargets = true;
+          if (!m.map && m.color && m.color.r < 0.05 && m.color.g < 0.05 && m.color.b < 0.05) {
+            m.color.setHex(0x94a3b8);
+          }
+          m.needsUpdate = true;
+        });
+      }
+    }
+  });
+
+  if (window.Jarvis3DModelBridge && typeof window.Jarvis3DModelBridge.getModelCategory === "function") {
+    try {
+      if (window.Jarvis3DModelBridge.getModelCategory() === "hinata_anime") isVRoid = true;
+    } catch (_) {}
+  }
+
+  const box = new THREE.Box3().setFromObject(object);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const center = new THREE.Vector3();
+  box.getCenter(center);
+
+  // Center model horizontally (X & Z) and place soles/feet at local Y = 0
+  object.position.x = -center.x;
+  object.position.y = -box.min.y;
+  object.position.z = -center.z;
+
+  // Face camera directly (+Z) - VRM/VRoid models default to -Z, 180 deg rotation faces the user
+  object.rotation.y = Math.PI;
+
+  const wrapper = new THREE.Group();
+  wrapper.add(object);
+
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const targetHeight = 2.65;
+  const scaleFactor = targetHeight / (size.y > 0.001 ? size.y : (maxDim > 0.0001 ? maxDim : 1.0));
+  wrapper.scale.set(scaleFactor, scaleFactor, scaleFactor);
+  wrapper.position.set(0, 0, 0);
+
+  customModelInner = wrapper;
+  if (!customModelGroup) {
+    buildCustomModelGroup();
+  }
+  customModelGroup.add(wrapper);
+  customModelLoaded = true;
+  customModelGroup.visible = (entityType === "custom_3d" || entityType === "ai_girl" || entityType === "hinata_anime");
+
+  // Initialize Universal Humanoid Engine
+  try {
+    if (typeof UniversalHumanoidEngine !== "undefined") {
+      customModelEngine = new UniversalHumanoidEngine(object, animations);
+      if (customModelEngine.mixer) {
+        customModelMixer = customModelEngine.mixer;
+      }
+    } else if (animations && animations.length > 0) {
+      customModelMixer = new THREE.AnimationMixer(object);
+      customModelMixer.clipAction(animations[0]).play();
+    }
+
+    // Load Anima motion library (.glb) for standard humanoid rigs without built-in animations
+    if (!isVRoid && typeof THREE.GLTFLoader !== "undefined") {
+      const animaMotions = [
+        { name: "wave", url: "https://appassets.androidplatform.net/assets/motions/wave_290.glb" },
+        { name: "shrug", url: "https://appassets.androidplatform.net/assets/motions/shrug_317.glb" },
+        { name: "talk_expressive", url: "https://appassets.androidplatform.net/assets/motions/talk_314.glb" },
+        { name: "idle_alt1", url: "https://appassets.androidplatform.net/assets/motions/idle_243.glb" },
+        { name: "idle_alt2", url: "https://appassets.androidplatform.net/assets/motions/idle_249.glb" },
+        { name: "idle_alt3", url: "https://appassets.androidplatform.net/assets/motions/idle_252.glb" }
+      ];
+      const loader = new THREE.GLTFLoader();
+      animaMotions.forEach(function(m) {
+        loader.load(
+          m.url,
+          function(gltf) {
+            if (gltf.animations && gltf.animations.length > 0 && customModelEngine) {
+              customModelEngine.addAnimaMotion(m.name, gltf.animations[0], gltf.scene);
+            }
+          },
+          undefined,
+          function(err) {
+            console.warn("Could not load motion:", m.name, err);
+          }
+        );
+      });
+    }
+  } catch (err) {
+    console.warn("UniversalHumanoidEngine init error:", err);
+  }
+
+  if (customPhotoGroup) customPhotoGroup.visible = false;
+  console.log("3D Model successfully staged. Meshes:", meshCount, "Rigged:", customModelEngine ? customModelEngine.isRigged : false, "VRoid:", isVRoid);
+}
+
+function parseAndDisplay3DModel(arrayBuffer, format) {
+  format = (format || "glb").toLowerCase();
+  clearCustom3DModel();
+
+  try {
+    if (format === "glb" || format === "gltf") {
+      if (typeof THREE.GLTFLoader !== "undefined") {
+        const loader = new THREE.GLTFLoader();
+        loader.parse(arrayBuffer, "", function(gltf) {
+          const sceneOrObject = gltf.scene || (gltf.scenes && gltf.scenes[0]) || gltf;
+          onModelReady(sceneOrObject, gltf.animations);
+        }, function(err) {
+          console.error("GLTF parse error:", err);
+          fallbackToOrb();
+        });
+      } else {
+        fallbackToOrb();
+      }
+    } else if (format === "obj") {
+      if (typeof THREE.OBJLoader !== "undefined") {
+        const text = new TextDecoder().decode(arrayBuffer);
+        const loader = new THREE.OBJLoader();
+        const obj = loader.parse(text);
+        onModelReady(obj, null);
+      } else {
+        fallbackToOrb();
+      }
+    } else if (format === "stl") {
+      if (typeof THREE.STLLoader !== "undefined") {
+        const loader = new THREE.STLLoader();
+        const geometry = loader.parse(arrayBuffer);
+        const material = new THREE.MeshStandardMaterial({
+          color: 0x38bdf8,
+          metalness: 0.35,
+          roughness: 0.30,
+          side: THREE.DoubleSide
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        onModelReady(mesh, null);
+      } else {
+        fallbackToOrb();
+      }
+    } else if (format === "fbx") {
+      if (typeof THREE.FBXLoader !== "undefined") {
+        const loader = new THREE.FBXLoader();
+        const obj = loader.parse(arrayBuffer, "");
+        onModelReady(obj, obj.animations);
+      } else {
+        fallbackToOrb();
+      }
+    } else {
+      fallbackToOrb();
+    }
+  } catch (e) {
+    console.error("Error parsing 3D model:", e);
+    fallbackToOrb();
+  }
+} else if (format === "fbx") {
+      if (typeof THREE.FBXLoader !== "undefined") {
+        const loader = new THREE.FBXLoader();
+        const obj = loader.parse(arrayBuffer, "");
+        onModelReady(obj, obj.animations);
+      } else {
+        fallbackToOrb();
+      }
+    } else {
+      fallbackToOrb();
+    }
+  } catch (e) {
+    console.error("Error parsing 3D model:", e);
+    fallbackToOrb();
+  }
+}
+
+function loadCustom3DModelStream() {
+  if (entityType !== "custom_3d" && entityType !== "ai_girl" && entityType !== "hinata_anime") return false;
+  if (!window.Jarvis3DModelBridge) return false;
+  try {
+    if (!window.Jarvis3DModelBridge.hasCustom3DModel()) {
+      clearCustom3DModel();
+      return false;
+    }
+    const format = (window.Jarvis3DModelBridge.getModelFormat() || "glb").toLowerCase();
+    const streamUrl = "https://appassets.androidplatform.net/active_3d_model?t=" + Date.now();
+    console.log("Initiating native 3D stream load:", streamUrl, "format:", format);
+
+    if (format === "glb" || format === "gltf") {
+      if (typeof THREE.GLTFLoader !== "undefined") {
+        const loader = new THREE.GLTFLoader();
+        loader.load(
+          streamUrl,
+          function(gltf) {
+            console.log("GLTF model streamed & parsed successfully!");
+            const sceneOrObject = gltf.scene || (gltf.scenes && gltf.scenes[0]) || gltf;
+            onModelReady(sceneOrObject, gltf.animations);
+          },
+          undefined,
+          function(err) {
+            console.warn("Stream GLTF load error, trying fallback:", err);
+            loadCustom3DModelChunkFallback();
+          }
+        );
+        return true;
+      }
+    } else if (format === "obj") {
+      if (typeof THREE.OBJLoader !== "undefined") {
+        const loader = new THREE.OBJLoader();
+        loader.load(streamUrl, function(obj) { onModelReady(obj, null); });
+        return true;
+      }
+    } else if (format === "stl") {
+      if (typeof THREE.STLLoader !== "undefined") {
+        const loader = new THREE.STLLoader();
+        loader.load(streamUrl, function(geom) {
+          const mat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.35, roughness: 0.30 });
+          const mesh = new THREE.Mesh(geom, mat);
+          onModelReady(mesh, null);
+        });
+        return true;
+      }
+    }
+  } catch (e) {
+    console.error("Error streaming 3D model:", e);
+  }
+  return false;
+}
+
+function loadCustom3DModelChunkFallback() {
+  if (entityType !== "custom_3d" && entityType !== "ai_girl" && entityType !== "hinata_anime") return false;
+  if (!window.Jarvis3DModelBridge) return false;
+  try {
+    if (!window.Jarvis3DModelBridge.hasCustom3DModel()) return false;
+    const format = (window.Jarvis3DModelBridge.getModelFormat() || "glb").toLowerCase();
+    const chunkCount = window.Jarvis3DModelBridge.getModelChunkCount(262144);
+    if (chunkCount <= 0) {
+      fallbackToOrb();
+      return false;
+    }
+
+    let totalLen = 0;
+    const byteArrays = [];
+    for (let i = 0; i < chunkCount; i++) {
+      const b64 = window.Jarvis3DModelBridge.getModelChunk(i, 262144);
+      if (!b64) continue;
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let j = 0; j < bin.length; j++) bytes[j] = bin.charCodeAt(j);
+      byteArrays.push(bytes);
+      totalLen += bytes.length;
+    }
+
+    if (totalLen <= 0) {
+      fallbackToOrb();
+      return false;
+    }
+
+    const fullBuffer = new Uint8Array(totalLen);
+    let offset = 0;
+    for (let i = 0; i < byteArrays.length; i++) {
+      fullBuffer.set(byteArrays[i], offset);
+      offset += byteArrays[i].length;
+    }
+
+    parseAndDisplay3DModel(fullBuffer.buffer, format);
+    return true;
+  } catch (err) {
+    console.error("Bridge model load error:", err);
+    fallbackToOrb();
+    return false;
+  }
+}
+
+function loadCustom3DModelFromBridge() {
+  return loadCustom3DModelStream();
+}
+
+buildAiGirl();
+buildArcReactor();
+buildCustomPhotoMesh();
+buildCustomModelGroup();
+
+/* ---------- 3D Companion Fleet / Multi-Orb Swarm Group ---------- */
+let companionFleetGroup = null;
+let companionEntities = [];
+let companionCount = 0;
+let companionStyle = "orb"; // "orb" | "drone" | "wisp"
+let companionMats = [];
+
+function buildCompanionFleet() {
+  companionFleetGroup = new THREE.Group();
+  scene.add(companionFleetGroup);
+}
+buildCompanionFleet();
+
+function clearCompanionFleet() {
+  if (!companionFleetGroup) return;
+  while (companionFleetGroup.children.length > 0) {
+    const obj = companionFleetGroup.children[0];
+    companionFleetGroup.remove(obj);
+  }
+  companionEntities = [];
+  companionMats = [];
+}
+
+function setCompanionFleet(count, style) {
+  clearCompanionFleet();
+  companionCount = Math.max(0, Math.min(4, Number(count) || 0));
+  companionStyle = style || "orb";
+  if (companionCount <= 0) return;
+
+  const currentTheme = THEMES[themeName] || THEMES.dark;
+  const pal = currentTheme.pal || [[.08,.12,.42],[.20,.45,1],[.05,.88,1],[.72,.25,1]];
+
+  for (let i = 0; i < companionCount; i++) {
+    const subGroup = new THREE.Group();
+    const baseAngle = (i / companionCount) * Math.PI * 2;
+    const radius = 1.75 + (i % 2) * 0.35;
+    const speed = (0.75 + i * 0.22) * (i % 2 === 0 ? 1 : -1);
+    const inclination = (i - 1.5) * 0.25;
+
+    const subMat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(pal[2][0], pal[2][1], pal[2][2]),
+      transparent: true,
+      opacity: 0.92
+    });
+    companionMats.push(subMat);
+
+    if (companionStyle === "drone") {
+      // Miniature Arc Reactor Drone
+      const droneBody = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.05, 12), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.9, roughness: 0.2 }));
+      droneBody.rotateX(Math.PI / 2);
+      subGroup.add(droneBody);
+
+      const droneCore = new THREE.Mesh(new THREE.SphereGeometry(0.045, 12, 12), subMat);
+      droneCore.position.z = 0.03;
+      subGroup.add(droneCore);
+
+      const droneRing = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.012, 8, 20), subMat);
+      subGroup.add(droneRing);
+    } else if (companionStyle === "wisp") {
+      // Cute Anime Spirit Wisp Familiar
+      const wispCore = new THREE.Mesh(new THREE.SphereGeometry(0.09, 16, 16), subMat);
+      subGroup.add(wispCore);
+
+      const wingL = new THREE.Mesh(new THREE.RingGeometry(0.02, 0.10, 12), subMat);
+      wingL.position.set(-0.10, 0.04, 0);
+      wingL.rotation.y = 0.4;
+      subGroup.add(wingL);
+
+      const wingR = new THREE.Mesh(new THREE.RingGeometry(0.02, 0.10, 12), subMat);
+      wingR.position.set(0.10, 0.04, 0);
+      wingR.rotation.y = -0.4;
+      subGroup.add(wingR);
+    } else {
+      // Glowing Multi-Orb Core
+      const core = new THREE.Mesh(new THREE.SphereGeometry(0.10, 16, 16), subMat);
+      subGroup.add(core);
+
+      const orbitRing = new THREE.Mesh(new THREE.RingGeometry(0.13, 0.16, 24), subMat);
+      orbitRing.rotation.x = Math.PI / 3;
+      subGroup.add(orbitRing);
+    }
+
+    companionFleetGroup.add(subGroup);
+    companionEntities.push({
+      mesh: subGroup,
+      angle: baseAngle,
+      radius: radius,
+      speed: speed,
+      inclination: inclination,
+      phase: i * 1.5,
+      scatter: 0
+    });
+  }
+}
+
+function updateCompanionFleet(t, dt) {
+  if (!companionEntities || companionEntities.length === 0) return;
+  const isInteracting = dragging || (Math.abs(velX) + Math.abs(velY) > 0.02);
+  const boost = 1.0 + (audio.level * 1.2) + (state === "speaking" ? 0.35 : 0);
+
+  for (let i = 0; i < companionEntities.length; i++) {
+    const e = companionEntities[i];
+    e.angle += dt * e.speed * boost * speedMultiplier;
+
+    if (isInteracting) {
+      e.scatter = THREE.MathUtils.lerp(e.scatter, 0.55, dt * 8);
+    } else {
+      e.scatter = THREE.MathUtils.lerp(e.scatter, 0.0, dt * 3);
+    }
+
+    const curR = (e.radius + e.scatter) * scaleMultiplier;
+    e.mesh.position.x = Math.cos(e.angle) * curR;
+    e.mesh.position.z = Math.sin(e.angle) * curR * 0.85;
+    e.mesh.position.y = Math.sin(e.angle * 2.0 + e.phase) * 0.32 + (e.mesh.position.x * e.inclination);
+
+    const s = scaleMultiplier * (1.0 + audio.bass * 0.45 + Math.sin(t * 3.5 + e.phase) * 0.07);
+    e.mesh.scale.setScalar(s);
+    e.mesh.rotation.y += dt * 2.0;
+    e.mesh.rotation.z = Math.sin(t * 2.0 + e.phase) * 0.2;
+  }
+}
+
+/* ---------- Themes / background ---------- */
+const LIGHTPAL=[[.04,.10,.50],[.12,.32,.95],[.10,.78,1],[.55,.28,.95]];
+const THEMES={
+ light:{bg:"radial-gradient(120% 80% at 50% 35%,#fff 0%,#f4f6fb 60%,#eceff7 100%)",fg:"#1d2340",sub:"#6b7390",glass:"rgba(255,255,255,.72)",gb:"rgba(255,255,255,.9)",chip:"#4a527a",t:["#2f6bff","#8b5cf6","#c15de0"],add:false,sh:"rgba(70,80,170,.22)",pal:LIGHTPAL},
+ dark:{bg:"radial-gradient(120% 80% at 50% 35%,#171c40 0%,#0a0d1f 60%,#04050d 100%)",fg:"#e8ecff",sub:"#8f98c8",glass:"rgba(255,255,255,.07)",gb:"rgba(255,255,255,.12)",chip:"#aab3e6",t:["#22d3ee","#8b5cf6","#3b82f6"],add:true,sh:"rgba(34,211,238,.25)",pal:[[.08,.12,.42],[.20,.45,1],[.05,.88,1],[.72,.25,1]]},
+ cyan:{bg:"radial-gradient(120% 80% at 50% 35%,#171c40 0%,#0a0d1f 60%,#04050d 100%)",fg:"#e8ecff",sub:"#8f98c8",glass:"rgba(255,255,255,.07)",gb:"rgba(255,255,255,.12)",chip:"#aab3e6",t:["#22d3ee","#8b5cf6","#3b82f6"],add:true,sh:"rgba(34,211,238,.25)",pal:[[.08,.12,.42],[.20,.45,1],[.05,.88,1],[.72,.25,1]]},
+ crimson:{bg:"radial-gradient(120% 80% at 50% 35%,#2a0a10 0%,#120508 60%,#050203 100%)",fg:"#ffe8ea",sub:"#c98a92",glass:"rgba(255,255,255,.07)",gb:"rgba(255,120,130,.18)",chip:"#f0a8b0",t:["#ff4d5e","#ff2d6f","#ff8a5c"],add:true,sh:"rgba(255,60,80,.2)",pal:[[.55,.05,.10],[.95,.15,.20],[1,.45,.30],[1,.25,.55]]},
+ red:{bg:"radial-gradient(120% 80% at 50% 35%,#2a0a10 0%,#120508 60%,#050203 100%)",fg:"#ffe8ea",sub:"#c98a92",glass:"rgba(255,255,255,.07)",gb:"rgba(255,120,130,.18)",chip:"#f0a8b0",t:["#ff4d5e","#ff2d6f","#ff8a5c"],add:true,sh:"rgba(255,60,80,.2)",pal:[[.55,.05,.10],[.95,.15,.20],[1,.45,.30],[1,.25,.55]]},
+ violet:{bg:"radial-gradient(120% 80% at 50% 35%,#1f0a28 0%,#0d0412 60%,#040106 100%)",fg:"#fae8ff",sub:"#c084fc",glass:"rgba(255,255,255,.07)",gb:"rgba(216,180,254,.18)",chip:"#e9d5ff",t:["#c084fc","#a855f7","#ec4899"],add:true,sh:"rgba(192,132,252,.25)",pal:[[.20,.05,.35],[.55,.15,.85],[.85,.25,1],[.95,.40,.85]]},
+ amethyst:{bg:"radial-gradient(120% 80% at 50% 35%,#1f0a28 0%,#0d0412 60%,#040106 100%)",fg:"#fae8ff",sub:"#c084fc",glass:"rgba(255,255,255,.07)",gb:"rgba(216,180,254,.18)",chip:"#e9d5ff",t:["#c084fc","#a855f7","#ec4899"],add:true,sh:"rgba(192,132,252,.25)",pal:[[.20,.05,.35],[.55,.15,.85],[.85,.25,1],[.95,.40,.85]]},
+ emerald:{bg:"radial-gradient(120% 80% at 50% 35%,#05251a 0%,#02100b 60%,#010503 100%)",fg:"#e6fffa",sub:"#6ee7b7",glass:"rgba(255,255,255,.07)",gb:"rgba(110,231,183,.18)",chip:"#a7f3d0",t:["#10b981","#34d399","#06b6d4"],add:true,sh:"rgba(16,185,129,.25)",pal:[[.02,.25,.15],[.08,.65,.35],[.25,.95,.60],[.10,.85,.95]]},
+ white:{bg:"radial-gradient(120% 80% at 50% 35%,#131e2b 0%,#080e16 60%,#020406 100%)",fg:"#f0f9ff",sub:"#bae6fd",glass:"rgba(255,255,255,.09)",gb:"rgba(186,230,253,.22)",chip:"#e0f2fe",t:["#38bdf8","#bae6fd","#ffffff"],add:true,sh:"rgba(224,242,254,.3)",pal:[[.15,.25,.45],[.45,.70,.95],[.85,.95,1],[1,1,1]]},
+ sunset:{bg:"radial-gradient(120% 80% at 50% 35%,#fff6ef 0%,#ffe7e1 60%,#fbd8e8 100%)",fg:"#4a2340",sub:"#98677f",glass:"rgba(255,255,255,.6)",gb:"rgba(255,255,255,.85)",chip:"#7a4566",t:["#ff6a3d","#e83e8c","#8b5cf6"],add:false,sh:"rgba(170,70,110,.22)",pal:[[.55,.12,.45],[.95,.30,.45],[1,.55,.20],[.60,.30,.90]]},
+ stealth:{bg:"radial-gradient(120% 80% at 50% 35%,#0a0f1d 0%,#030712 60%,#000000 100%)",fg:"#f0f9ff",sub:"#94a3b8",glass:"rgba(255,255,255,.05)",gb:"rgba(56,189,248,.15)",chip:"#0284c7",t:["#38bdf8","#0284c7","#60a5fa"],add:true,sh:"rgba(56,189,248,.25)",pal:[[.04,.10,.25],[.10,.35,.75],[.22,.74,.97],[.38,.65,.98]]}
+};
+let themeName="dark";
+function setBlend(add){
+  [pointsMesh.material,orbitPts.material,glowMat,ring1.material,ring2.material,ring3.material].forEach(m=>{m.blending=add?THREE.AdditiveBlending:THREE.NormalBlending;m.needsUpdate=true;});
+}
+function applyTheme(name,custom){
+  let customHex = null;
+  if(name && typeof name === "string" && name.startsWith("#")){
+    customHex = name;
+    name = "custom";
+  } else if(custom && typeof custom === "string" && custom.startsWith("#")){
+    customHex = custom;
+  } else if(name === "custom" && custom && typeof custom === "string"){
+    customHex = custom.startsWith("#") ? custom : ("#" + custom);
+  }
+
+  let t = (name && THEMES[name]) ? Object.assign({}, THEMES[name]) : Object.assign({}, THEMES.dark);
+
+  if(customHex){
+    try{
+      const c=new THREE.Color(customHex),L=.299*c.r+.587*c.g+.114*c.b,light=L>.60;
+      const hsl={h:0,s:0,l:0};
+      c.getHSL(hsl);
+
+      let pal;
+      if(hsl.s<.06){
+        pal=light?LIGHTPAL:[[.10,.20,.80],[.25,.50,1],[.30,.92,1],[.70,.45,1]];
+      }else{
+        const h=hsl.h;
+        const cDeep=new THREE.Color().setHSL(h,Math.min(1,Math.max(.6,hsl.s*1.2)),Math.max(.08,Math.min(.35,hsl.l*.45)));
+        const cMain=new THREE.Color().setHSL(h,Math.max(.85,hsl.s),Math.max(.45,Math.min(.65,hsl.l)));
+        const cAcc1=new THREE.Color().setHSL((h+.08)%1.,.95,.65);
+        const cAcc2=new THREE.Color().setHSL((h-.08+1.)%1.,.95,.70);
+        pal=[
+          [cDeep.r,cDeep.g,cDeep.b],
+          [cMain.r,cMain.g,cMain.b],
+          [cAcc1.r,cAcc1.g,cAcc1.b],
+          [cAcc2.r,cAcc2.g,cAcc2.b]
+        ];
+      }
+
+      const baseTheme=light?THEMES.light:THEMES.dark;
+      t=Object.assign({},baseTheme,{
+        bg:customHex,
+        fg:light?"#0f172a":"#ffffff",
+        sub:light?"#475569":"#cbd5e1",
+        glass:light?"rgba(255,255,255,.65)":"rgba(255,255,255,.14)",
+        gb:light?"rgba(255,255,255,.85)":"rgba(255,255,255,.22)",
+        chip:light?"#1e293b":"#f1f5f9",
+        pal:pal,
+        add:!light,
+        t:[
+          "#"+new THREE.Color(pal[1][0],pal[1][1],pal[1][2]).getHexString(),
+          "#"+new THREE.Color(pal[2][0],pal[2][1],pal[2][2]).getHexString(),
+          "#"+new THREE.Color(pal[3][0],pal[3][1],pal[3][2]).getHexString()
+        ]
+      });
+      themeName="custom";
+    }catch(_){}
+  }else{
+    themeName=(name && THEMES[name]) ? name : "dark";
+  }
+
+  const r=document.documentElement.style;
+  if(!isEmbedded){
+    r.setProperty("--bg",t.bg);
+  }else{
+    r.setProperty("--bg","transparent");
+    document.documentElement.style.background="transparent";
+    document.body.style.background="transparent";
+  }
+  r.setProperty("--fg",t.fg);r.setProperty("--sub",t.sub);r.setProperty("--glass",t.glass);r.setProperty("--gb",t.gb);r.setProperty("--chip",t.chip);
+  r.setProperty("--t1",t.t[0]);r.setProperty("--t2",t.t[1]);r.setProperty("--t3",t.t[2]);r.setProperty("--sh",t.sh);
+
+  if(t.pal && t.pal.length >= 4){
+    ["DEEP","BLUE","CYAN","PURP"].forEach((k,i)=>U[k].value.setRGB(t.pal[i][0],t.pal[i][1],t.pal[i][2]));
+    const oc=orbitPts.geometry.attributes.aColor,cols=[t.pal[2],t.pal[1],t.pal[3]];
+    for(let i=0;i<ORBIT;i++) oc.setXYZ(i,cols[i%3][0],cols[i%3][1],cols[i%3][2]);
+    oc.needsUpdate=true;
+
+    // Update lights & 3D character materials safely with null checks
+    if (girlGlowMat && girlGlowMat.color) girlGlowMat.color.setRGB(t.pal[2][0], t.pal[2][1], t.pal[2][2]);
+    if (girlEyeIrisMat && girlEyeIrisMat.color) girlEyeIrisMat.color.setRGB(t.pal[2][0], t.pal[2][1], t.pal[2][2]);
+    if (girlTieMat && girlTieMat.color) girlTieMat.color.setRGB(t.pal[1][0], t.pal[1][1], t.pal[1][2]);
+    if (girlHairRibbonMat && girlHairRibbonMat.color) girlHairRibbonMat.color.setRGB(t.pal[3][0], t.pal[3][1], t.pal[3][2]);
+    if (girlChestCore && girlChestCore.material && girlChestCore.material.color) girlChestCore.material.color.setRGB(t.pal[2][0], t.pal[2][1], t.pal[2][2]);
+    if (girlHaloWing && girlHaloWing.material && girlHaloWing.material.color) girlHaloWing.material.color.setRGB(t.pal[2][0], t.pal[2][1], t.pal[2][2]);
+    if (girlHaloInner && girlHaloInner.material && girlHaloInner.material.color) girlHaloInner.material.color.setRGB(t.pal[1][0], t.pal[1][1], t.pal[1][2]);
+    if (jettBladeGlowMat && jettBladeGlowMat.color) jettBladeGlowMat.color.setRGB(t.pal[2][0], t.pal[2][1], t.pal[2][2]);
+    if (jettMarkingMat && jettMarkingMat.color) jettMarkingMat.color.setRGB(t.pal[2][0], t.pal[2][1], t.pal[2][2]);
+    if (arcInnerLens && arcInnerLens.material && arcInnerLens.material.color) arcInnerLens.material.color.setRGB(t.pal[2][0], t.pal[2][1], t.pal[2][2]);
+    if (arcCoreLight && arcCoreLight.material && arcCoreLight.material.color) arcCoreLight.material.color.setRGB(t.pal[1][0], t.pal[1][1], t.pal[1][2]);
+    if (arcGlowMatRing && arcGlowMatRing.color) arcGlowMatRing.color.setRGB(t.pal[2][0], t.pal[2][1], t.pal[2][2]);
+    if (arcCopperMat && arcCopperMat.color) arcCopperMat.color.setRGB(t.pal[1][0], t.pal[1][1], t.pal[1][2]);
+    if (customPhotoGlowRing && customPhotoGlowRing.material && customPhotoGlowRing.material.color) customPhotoGlowRing.material.color.setRGB(t.pal[2][0], t.pal[2][1], t.pal[2][2]);
+    if (companionMats && companionMats.length > 0) {
+      companionMats.forEach(m => { if (m && m.color) m.color.setRGB(t.pal[2][0], t.pal[2][1], t.pal[2][2]); });
+    }
+    if (dirLight && dirLight.color) dirLight.color.setRGB(t.pal[1][0], t.pal[1][1], t.pal[1][2]);
+    if (rimLight && rimLight.color) rimLight.color.setRGB(t.pal[3][0], t.pal[3][1], t.pal[3][2]);
+  }
+
+  setBlend(t.add);
+  document.querySelectorAll("[data-t]").forEach(b=>b.classList.toggle("on",!customHex&&b.dataset.t===themeName));
+}
+
+/* ---------- State ---------- */
+let state="idle";
+const cur=Object.assign({},STATES.idle),tgt=Object.assign({},STATES.idle);
+function setOrbState(s){
+  if(!STATES[s]) return;
+  const prevState = state;
+  state=s;Object.assign(tgt,STATES[s]);
+  const lbl = $("#stext");
+  if(lbl) lbl.textContent=LABELS[s] || "READY";
+  document.querySelectorAll("[data-s]").forEach(b=>b.classList.toggle("on",b.dataset.s===s));
+
+  // REDMAGIC Interruption / Barge-in responsiveness:
+  if (prevState === "speaking" && s !== "speaking") {
+    extAudio.level = 0;
+    extAudio.bass = 0;
+    extAudio.high = 0;
+    audio.level = 0;
+    if (customModelEngine && typeof customModelEngine.interrupt === "function") {
+      customModelEngine.interrupt();
+    }
+  }
+}
+
+/* ---------- Audio (Simulated, Web mic, or External Native) ---------- */
+const audio={level:0,bass:0,high:0};
+let actx=null,analyser=null,micStream=null,freq=null,micOn=false;
+let externalAudioTime=0;
+const extAudio={level:0,bass:0,high:0};
+
+function setExternalAudio(level, bass, high){
+  const l = Math.max(0, Math.min(1, Number(level) || 0));
+  extAudio.level = l;
+  extAudio.bass = Math.max(0, Math.min(1, bass !== undefined && bass !== null ? Number(bass) : l));
+  extAudio.high = Math.max(0, Math.min(1, high !== undefined && high !== null ? Number(high) : l));
+  externalAudioTime = performance.now();
+}
+
+function toast(m){const t=$("#toast");if(!t)return;t.textContent=m;t.classList.add("show");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove("show"),2600);}
+function updateMicUI(){const b=$("#mic");if(b){b.classList.toggle("on",micOn);b.textContent=micOn?"MIC ON":"MIC TEST";}}
+async function startAudioReactive(){
+  if(micOn) return true;
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+    actx=new AC();if(actx.state==="suspended") await actx.resume();
+    analyser=actx.createAnalyser();analyser.fftSize=256;analyser.smoothingTimeConstant=.8;
+    actx.createMediaStreamSource(micStream).connect(analyser);
+    freq=new Uint8Array(analyser.frequencyBinCount);micOn=true;updateMicUI();return true;
+  }catch(e){micOn=false;updateMicUI();toast("Microphone unavailable — using simulated audio");return false;}
+}
+function stopAudioReactive(){
+  if(micStream) micStream.getTracks().forEach(t=>t.stop());
+  if(actx&&actx.close) actx.close().catch(()=>{});
+  micStream=null;actx=null;analyser=null;micOn=false;updateMicUI();
+}
+function simulateAudio(t){
+  let l,b,h;
+  if(state==="speaking"){const syl=Math.pow(Math.abs(Math.sin(t*7.3)*Math.sin(t*2.1+1)),.8),gate=Math.sin(t*.9)>-.7?1:.15;l=(.3+.45*syl)*gate;b=l*(.6+.4*Math.sin(t*5));h=l*(.5+.5*Math.sin(t*11));}
+  else if(state==="listening"){l=.2+.2*Math.abs(Math.sin(t*3.1)*Math.sin(t*1.3));b=l*.8;h=l*.5;}
+  else if(state==="thinking"){l=.12+.07*Math.sin(t*2.2);b=l*.7;h=l*.6;}
+  else{l=.05+.03*Math.sin(t*1.1);b=l;h=l*.5;}
+  return [l,b,h];
+}
+function readAudio(t,dt){
+  let l,b,h;
+  if(performance.now() - externalAudioTime < 220){
+    l = extAudio.level;
+    b = extAudio.bass;
+    h = extAudio.high;
+  } else if(micOn&&analyser){
+    analyser.getByteFrequencyData(freq);
+    const avg=(a,z)=>{let s=0;for(let i=a;i<z;i++)s+=freq[i];return s/((z-a)*255);};
+    l=Math.min(avg(0,freq.length)*2.6,1);b=Math.min(avg(0,6)*2.2,1);h=Math.min(avg(48,110)*3,1);
+  } else {
+    [l,b,h]=simulateAudio(t);
+  }
+  const k=1-Math.exp(-dt*(l>audio.level?18:6));
+  audio.level+=(l-audio.level)*k;audio.bass+=(b-audio.bass)*k;audio.high+=(h-audio.high)*k;
+}
+
+/* ---------- Drag to rotate (3D) & Touch Gaze Tracking ---------- */
+let dragging=false,px=0,py=0,velX=0,velY=0;
+let customModelRotY=0,customModelRotX=0;
+let pointerDownX=0, pointerDownY=0, pointerDownTime=0;
+canvas.addEventListener("pointerdown",e=>{
+  if(!componentToggles.touchDrag) return;
+  dragging=true;px=e.clientX;py=e.clientY;
+  pointerDownX=e.clientX;pointerDownY=e.clientY;pointerDownTime=performance.now();
+  try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+  canvas.style.cursor="grabbing";
+  const rect=canvas.getBoundingClientRect();
+  if(rect.width>0&&rect.height>0){
+    targetGazeX=Math.max(-1,Math.min(1,((e.clientX-rect.left)/rect.width)*2-1));
+    targetGazeY=Math.max(-1,Math.min(1,((e.clientY-rect.top)/rect.height)*2-1));
+  }
+});
+canvas.addEventListener("pointermove",e=>{
+  if(!dragging)return;
+  if(entityType === "custom_3d" || entityType === "ai_girl" || entityType === "hinata_anime") {
+    customModelRotY += (e.clientX-px)*0.014;
+    customModelRotX = Math.max(-0.6, Math.min(0.6, customModelRotX + (e.clientY-py)*0.009));
+  }
+  velY+=(e.clientX-px)*.012;velX+=(e.clientY-py)*.012;px=e.clientX;py=e.clientY;
+  const rect=canvas.getBoundingClientRect();
+  if(rect.width>0&&rect.height>0){
+    targetGazeX=Math.max(-1,Math.min(1,((e.clientX-rect.left)/rect.width)*2-1));
+    targetGazeY=Math.max(-1,Math.min(1,((e.clientY-rect.top)/rect.height)*2-1));
+  }
+});
+const endDrag=(e)=>{
+  if (dragging && e) {
+    const dist = Math.hypot(e.clientX - pointerDownX, e.clientY - pointerDownY);
+    const dur = performance.now() - pointerDownTime;
+    if (dist < 22 && dur < 450) {
+      triggerTouchReaction();
+    }
+  }
+  dragging=false;canvas.style.cursor="grab";
+  targetGazeX=0;targetGazeY=0;
+};
+canvas.addEventListener("pointerup",endDrag);
+canvas.addEventListener("pointercancel",()=>{ dragging=false; targetGazeX=0; targetGazeY=0; });
+
+/* Interactive Tap / Poke Touch Reactions & Event-driven Reactions */
+function triggerReaction(type) {
+  type = (type || "").toLowerCase();
+  activeEmote = type;
+  if (type === "wave") emoteTimer = 2.4;
+  else if (type === "teach" || type === "learning") emoteTimer = 2.6;
+  else if (type === "joy" || type === "laugh") emoteTimer = 2.4;
+  else if (type === "success") emoteTimer = 2.4;
+  else if (type === "failed") emoteTimer = 2.2;
+  else if (type === "listening") emoteTimer = 2.0;
+  else if (type === "thinking") emoteTimer = 2.5;
+  else if (type === "curious") emoteTimer = 2.0;
+  else if (type === "nod") emoteTimer = 1.8;
+  else if (type === "blush") emoteTimer = 2.0;
+  else emoteTimer = 2.0;
+
+  console.log("TriggerReaction: type=" + type + " timer=" + emoteTimer + " entity=" + entityType);
+
+  if (entityType === "custom_3d" || entityType === "ai_girl" || entityType === "hinata_anime") {
+    customModelReactionTimer = 1.2;
+    if (type === "wave") customModelReactionIndex = 3;
+    else if (type === "success") customModelReactionIndex = 0;
+    else if (type === "failed") customModelReactionIndex = 1;
+    else customModelReactionIndex = 2;
+  }
+}
+
+function triggerTouchReaction() {
+  const reactionPool = ["wave", "nod", "curious", "blush", "success"];
+  emoteCycle = (emoteCycle + 1) % reactionPool.length;
+  triggerReaction(reactionPool[emoteCycle]);
+
+  if (entityType === "custom_3d" || entityType === "ai_girl" || entityType === "hinata_anime") {
+    if (customModelMixer && customModelMixer._actions && customModelMixer._actions.length > 0) {
+      try {
+        const action = customModelMixer._actions[0];
+        action.timeScale = 1.8;
+        setTimeout(() => { try { action.timeScale = 1.0; } catch(_) {} }, 1400);
+      } catch (_) {}
+    }
+    try {
+      if (window.JarvisBridge && typeof window.JarvisBridge.onOrbClicked === "function") {
+        window.JarvisBridge.onOrbClicked();
+      }
+    } catch (_) {}
+  } else if (entityType === "orb") {
+    cur.wob = 1.5;
+    setTimeout(() => { cur.wob = 0; }, 600);
+  } else if (entityType === "arc_reactor") {
+    audio.bass = Math.min(1, audio.bass + 0.8);
+  }
+
+  try {
+    if (window.Jarvis3DModelBridge && window.Jarvis3DModelBridge.onModelTouchReact) {
+      window.Jarvis3DModelBridge.onModelTouchReact();
+    }
+  } catch (_) {}
+}
+
+canvas.addEventListener("click", () => {
+  triggerTouchReaction();
+});
+
+/* ---------- Entity & Granular Component Toggles ---------- */
+let entityType = "orb"; // "orb" | "ai_girl" | "arc_reactor" | "custom_3d" | "hinata_anime"
+let componentToggles = {
+  core: true,
+  glow: true,
+  rings: true,
+  ring1: true,
+  ring2: true,
+  ring3: true,
+  orbitDust: true,
+  shadow: true,
+  idleBreathing: true,
+  touchDrag: true,
+  audioReactive: true,
+  autoRotation: false // Default false: authentic anime forward orientation without spinning carousel
+};
+
+/* ---------- Update ---------- */
+let time=0,flow=0,r1a=0,r2a=0,r3a=0,pxPerUnit=300;
+let speedMultiplier=1.0, glowMultiplier=1.0, scaleMultiplier=1.0, resonanceMultiplier=1.0;
+
+function updateOrb(dt){
+  const k=1-Math.exp(-dt*3.5);
+  for(const key in cur) cur[key]+=(tgt[key]-cur[key])*k;
+  const effSpeed=cur.speed*speedMultiplier*resonanceMultiplier;
+  time+=dt;flow+=dt*effSpeed;r1a+=dt*(.12+cur.ring*.6)*speedMultiplier;r2a-=dt*(.08+cur.ring*.35)*speedMultiplier;
+  r3a+=dt*(.15+cur.ring*.55)*speedMultiplier;
+  readAudio(time,dt);
+
+  // Granular Toggles evaluation
+  const cfg = componentToggles;
+  shadowEl.style.display = cfg.shadow ? "block" : "none";
+  if (!cfg.audioReactive) { audio.level = 0; audio.bass = 0; audio.high = 0; }
+
+  const idlePulse = cfg.idleBreathing ? Math.pow(Math.max(0,Math.sin(time*.5)),12)*.15*(1-cur.wob) : 0;
+  const s=cur.scale*scaleMultiplier*(1+.018*Math.sin(time*1.2)+audio.level*.07+cur.wob*.025*Math.sin(time*3.6));
+  orb.scale.setScalar(s);
+
+  // Controlled 3D Auto-Rotation
+  const doAutoRotate = cfg.autoRotation === true;
+  if (doAutoRotate) {
+    orb.rotation.y += dt * .18 * (.5 + effSpeed) + velY * Math.min(dt * 20, 1) * .5;
+  } else {
+    orb.rotation.y += velY * Math.min(dt * 20, 1) * .5;
+  }
+  orb.rotation.x=Math.max(-1.2,Math.min(1.2,orb.rotation.x+velX*Math.min(dt*20,1)*.5));
+  velX*=Math.exp(-dt*5);velY*=Math.exp(-dt*5);
+  if(!dragging&&Math.abs(orb.rotation.x)>.001) orb.rotation.x*=Math.exp(-dt*.6);
+
+  U.uTime.value=flow;U.uAmp.value=audio.level+cur.wob*.25;U.uBass.value=audio.bass;U.uHigh.value=audio.high;
+  U.uCyan.value=cur.cyan;U.uPurple.value=cur.purple;U.uBright.value=(cur.bright*glowMultiplier)+idlePulse;
+  glowMat.uniforms.uTime.value=time;glowMat.uniforms.uMix.value=cur.cyan;
+  glowMat.uniforms.uStrength.value=(cur.glow*glowMultiplier)+audio.level*.6+idlePulse*2;
+  const pulse=cur.ring*.5*(.5+.5*Math.sin(time*4))+audio.bass*.8;
+  ring1.rotation.z=r1a;ring2.rotation.z=r2a;
+  ring3.rotation.z=r3a;
+  ring3.rotation.y=Math.sin(time*0.5)*0.2;
+  ring1.scale.setScalar(s*(1+pulse*.03));ring2.scale.setScalar(s*(1+pulse*.02));
+  ring3.scale.setScalar(s*(1+pulse*.035));
+  ring1.material.uniforms.uAlpha.value=(.4+cur.ring*.3+audio.level*.35)*Math.min(glowMultiplier, 1.4);
+  ring2.material.uniforms.uAlpha.value=(.22+cur.ring*.2+audio.level*.2)*Math.min(glowMultiplier, 1.4);
+  ring3.material.uniforms.uAlpha.value=(.28+cur.ring*.25+audio.level*.25)*Math.min(glowMultiplier, 1.4);
+  shadowEl.style.width=Math.round(pxPerUnit*1.5*s)+"px";
+
+  // Entity Type Routing & Component Visibility
+  const anyEnabled = (cfg.core !== false) || (cfg.glow !== false) || (cfg.rings !== false);
+  const effCore = anyEnabled ? cfg.core : true;
+  const effGlow = anyEnabled ? cfg.glow : true;
+  const effRings = anyEnabled ? cfg.rings : true;
+  const effRing1 = anyEnabled ? cfg.ring1 : true;
+  const effRing2 = anyEnabled ? cfg.ring2 : true;
+  const effRing3 = anyEnabled ? cfg.ring3 : true;
+  const showRings = effRings;
+  if (emoteTimer > 0) {
+    emoteTimer -= dt;
+    if (emoteTimer <= 0) {
+      activeEmote = "none";
+      emoteTimer = 0;
+    }
+  }
+
+  if (entityType === "orb") {
+    ring1.position.set(0, 0, 0);
+    ring1.rotation.x = 0;
+    ring1.rotation.y = 0;
+    ring2.position.set(0, 0, 0);
+    ring2.rotation.x = 0;
+    ring2.rotation.y = 0;
+    ring3.position.set(0, 0, 0);
+    ring3.rotation.x = 1.05;
+
+    pointsMesh.visible = effCore;
+    glow.visible = effGlow;
+    ring1.visible = showRings && effRing1;
+    ring2.visible = showRings && effRing2;
+    ring3.visible = showRings && effRing3;
+    orbitPts.visible = cfg.orbitDust;
+    if (aiGirlGroup) aiGirlGroup.visible = false;
+    if (arcReactorGroup) arcReactorGroup.visible = false;
+    if (customPhotoGroup) customPhotoGroup.visible = false;
+    if (customModelGroup) customModelGroup.visible = false;
+  } else if (entityType === "arc_reactor") {
+    pointsMesh.visible = false;
+    glow.visible = cfg.glow;
+    ring1.visible = false;
+    ring2.visible = false;
+    ring3.visible = false;
+    orbitPts.visible = cfg.orbitDust;
+    if (aiGirlGroup) aiGirlGroup.visible = false;
+    if (arcReactorGroup) {
+      arcReactorGroup.visible = true;
+      updateArcReactor(time, dt);
+    }
+    if (customPhotoGroup) customPhotoGroup.visible = false;
+    if (customModelGroup) customModelGroup.visible = false;
+  } else if (entityType === "custom_3d" || entityType === "ai_girl" || entityType === "hinata_anime") {
+    if (aiGirlGroup) aiGirlGroup.visible = false;
+    if (arcReactorGroup) arcReactorGroup.visible = false;
+    const hasRealModel = customModelLoaded && customModelGroup && customModelInner;
+    const hasPhoto = customPhotoLoaded && customPhotoGroup;
+
+    if (hasRealModel) {
+      pointsMesh.visible = false;
+
+      // Holographic Ring Stand flat beneath feet
+      ring1.position.set(0, -1.28, 0);
+      ring1.rotation.x = Math.PI / 2;
+      ring1.rotation.y = 0;
+      ring1.visible = showRings && effRing1;
+
+      ring2.position.set(0, -1.28, 0);
+      ring2.rotation.x = Math.PI / 2;
+      ring2.rotation.y = 0;
+      ring2.visible = showRings && effRing2;
+
+      ring3.position.set(0, 0, -0.25);
+      ring3.rotation.x = 1.05;
+      ring3.visible = showRings && effRing3;
+
+      glow.visible = cfg.glow;
+      orbitPts.visible = cfg.orbitDust;
+      if (aiGirlGroup) aiGirlGroup.visible = false;
+      if (arcReactorGroup) arcReactorGroup.visible = false;
+      if (customPhotoGroup) customPhotoGroup.visible = false;
+      customModelGroup.visible = true;
+
+      // Update humanoid engine (handles animations, procedural bones, blinks & lip-sync)
+      if (customModelEngine) {
+        customModelEngine.update(dt, time, state, audio, gazeX, gazeY, activeEmote, emoteTimer);
+      } else if (customModelMixer) {
+        customModelMixer.update(dt);
+      }
+
+      // Stand firmly and straight on holographic pedestal - feet anchored at stand level
+      customModelGroup.position.set(0, -1.28, 0);
+      customModelGroup.rotation.x = 0;
+      customModelGroup.rotation.z = 0;
+      customModelGroup.scale.setScalar(scaleMultiplier);
+
+      if (componentToggles.autoRotation) {
+        customModelRotY += dt * 0.5 * speedMultiplier;
+        customModelGroup.rotation.y = customModelRotY;
+      } else {
+        customModelGroup.rotation.y = THREE.MathUtils.lerp(customModelGroup.rotation.y, customModelRotY, dt * 6.0);
+      }
+    } else if (hasPhoto) {
+      pointsMesh.visible = false;
+      ring1.visible = false;
+      ring2.visible = false;
+      ring3.visible = showRings && cfg.ring3;
+      glow.visible = cfg.glow;
+      orbitPts.visible = cfg.orbitDust;
+      if (aiGirlGroup) aiGirlGroup.visible = false;
+      if (arcReactorGroup) arcReactorGroup.visible = false;
+      if (customModelGroup) customModelGroup.visible = false;
+      customPhotoGroup.visible = true;
+      updateCustomPhotoMesh(time, dt);
+    } else {
+      // SAFE FALLBACK: If neither model nor photo is loaded yet, keep the plasma core and rings visible! Never leave canvas blank!
+      pointsMesh.visible = cfg.core;
+      glow.visible = cfg.glow;
+      ring1.visible = showRings && cfg.ring1;
+      ring2.visible = showRings && cfg.ring2;
+      ring3.visible = showRings && cfg.ring3;
+      orbitPts.visible = cfg.orbitDust;
+      if (aiGirlGroup) aiGirlGroup.visible = false;
+      if (arcReactorGroup) arcReactorGroup.visible = false;
+      if (customModelGroup) customModelGroup.visible = false;
+      if (customPhotoGroup) customPhotoGroup.visible = false;
+    }
+  }
+}
+
+function updateParticles(dt){
+  const P=orbitPts.geometry.attributes,boost=(.6+cur.speed*.8+(state==="thinking"?1.2:0))*resonanceMultiplier;
+  for(let i=0;i<ORBIT;i++){
+    const d=ptData[i];d.a+=d.sp*dt*boost;
+    const r=d.r+Math.sin(time*d.fs+d.ph)*.12-(state==="thinking"?.15:0)+audio.level*.1;
+    const x=Math.cos(d.a)*r,z=Math.sin(d.a)*r*.6,y=d.y*.8+Math.sin(d.a*1.3+d.ph)*.18+x*d.tilt*.25;
+    P.position.setXYZ(i,x,y,z);
+    P.aAlpha.setX(i,Math.pow(.5+.5*Math.sin(time*d.fs*1.6+d.ph),1.5)*(.55+cur.glow*.3));
+  }
+  P.position.needsUpdate=true;P.aAlpha.needsUpdate=true;
+}
+
+/* ---------- Resize / loop ---------- */
+function handleResize(){
+  if (!renderer) return;
+  const w = Math.max(stage ? stage.clientWidth : 0, window.innerWidth || 300, 100);
+  const h = Math.max(stage ? stage.clientHeight : 0, window.innerHeight || 300, 100);
+  const pr = Math.min(window.devicePixelRatio || 1, 2);
+  renderer.setPixelRatio(pr);
+  renderer.setSize(w, h, true);
+  camera.aspect = w / h;
+  const visH = VIS / Math.min(1, w / h);
+  const tan = Math.tan(THREE.MathUtils.degToRad(FOV / 2));
+  camera.position.z = visH / (2 * tan);
+  U.uCamZ.value = camera.position.z;
+  camera.updateProjectionMatrix();
+  pxPerUnit = h / visH;
+  U.uPx.value = h * pr / (2 * tan);
+  if (shadowEl) shadowEl.style.top = Math.round(h / 2 + pxPerUnit * 1.2) + "px";
+}
+
+let last = performance.now();
+let lastStageW = 0, lastStageH = 0;
+function animate(now){
+  requestAnimationFrame(animate);
+  const curW = stage ? stage.clientWidth : 0;
+  const curH = stage ? stage.clientHeight : 0;
+  if ((curW > 10 && curH > 10) && (Math.abs(curW - lastStageW) > 2 || Math.abs(curH - lastStageH) > 2)) {
+    lastStageW = curW;
+    lastStageH = curH;
+    handleResize();
+  }
+  const dt = Math.max(0.001, Math.min((now - last) / 1000, 0.05));
+  last = now;
+  updateOrb(dt);
+  updateParticles(dt);
+  updateCompanionFleet(time, dt);
+  if (renderer) renderer.render(scene, camera);
+}
+
+document.querySelectorAll("[data-s]").forEach(b=>b.addEventListener("click",()=>setOrbState(b.dataset.s)));
+document.querySelectorAll("[data-t]").forEach(b=>b.addEventListener("click",()=>applyTheme(b.dataset.t)));
+const bgcInput = $("#bgc");
+if(bgcInput) bgcInput.addEventListener("input",e=>applyTheme(null,e.target.value));
+const micBtn = $("#mic");
+if(micBtn) micBtn.addEventListener("click",()=>micOn?stopAudioReactive():startAudioReactive());
+window.addEventListener("resize",handleResize);
+window.addEventListener("orientationchange",()=>setTimeout(handleResize,200));
+if(window.ResizeObserver && stage) new ResizeObserver(handleResize).observe(stage);
+
+window.JarvisOrb={
+  resize: handleResize,
+  setState:setOrbState,
+  setTheme:(n,custom)=>{
+    applyTheme(n,custom);
+  },
+  setPreset:(p,custom)=>{
+    applyTheme(p,custom);
+  },
+  setSpeed:sp=>{ speedMultiplier=Math.max(0.1,Math.min(3.0,Number(sp)||1.0)); },
+  setGlow:gl=>{ glowMultiplier=Math.max(0.1,Math.min(3.0,Number(gl)||1.0)); },
+  setScale:sc=>{ scaleMultiplier=Math.max(0.4,Math.min(2.5,Number(sc)||1.0)); },
+  setResonance:res=>{ resonanceMultiplier=Math.max(0.2,Math.min(2.0,(Number(res)||84)/84.0)); },
+  setBackground:hex=>{
+    if(!isEmbedded) document.documentElement.style.setProperty("--bg",hex);
+    applyTheme(null,hex);
+  },
+  setEntityType:type=>{
+    entityType = type || "orb";
+    if (entityType === "arc_reactor") {
+      if (pointsMesh) pointsMesh.visible = false;
+      if (glow) glow.visible = false;
+      if (ring1) ring1.visible = false;
+      if (ring2) ring2.visible = false;
+      if (ring3) ring3.visible = false;
+      if (aiGirlGroup) aiGirlGroup.visible = false;
+      if (customPhotoGroup) customPhotoGroup.visible = false;
+      if (customModelGroup) customModelGroup.visible = false;
+      if (arcReactorGroup) arcReactorGroup.visible = true;
+    } else if (entityType === "ai_girl" || entityType === "custom_3d" || entityType === "hinata_anime") {
+      if (arcReactorGroup) arcReactorGroup.visible = false;
+      if (aiGirlGroup) aiGirlGroup.visible = false;
+      if (pointsMesh) pointsMesh.visible = false;
+      if (ring1) ring1.visible = false;
+      if (ring2) ring2.visible = false;
+      if (ring3) ring3.visible = true;
+      if (glow) glow.visible = true;
+      if (customModelGroup) customModelGroup.visible = true;
+      if (customPhotoGroup) customPhotoGroup.visible = !customModelLoaded;
+      if (!customModelLoaded) {
+        loadCustom3DModelStream();
+      }
+    } else {
+      entityType = "orb";
+      clearCustom3DModel();
+      if (arcReactorGroup) arcReactorGroup.visible = false;
+      if (aiGirlGroup) aiGirlGroup.visible = false;
+      if (customPhotoGroup) customPhotoGroup.visible = false;
+      if (customModelGroup) customModelGroup.visible = false;
+      if (pointsMesh) pointsMesh.visible = componentToggles.core;
+      if (glow) glow.visible = componentToggles.glow;
+      if (ring1) ring1.visible = componentToggles.rings && componentToggles.ring1;
+      if (ring2) ring2.visible = componentToggles.rings && componentToggles.ring2;
+      if (ring3) ring3.visible = componentToggles.rings && componentToggles.ring3;
+      if (orbitPts) orbitPts.visible = componentToggles.orbitDust;
+    }
+  },
+  switchToDefaultOrb:()=>{
+    entityType = "orb";
+    clearCustom3DModel();
+    if (arcReactorGroup) arcReactorGroup.visible = false;
+    if (aiGirlGroup) aiGirlGroup.visible = false;
+    if (customPhotoGroup) customPhotoGroup.visible = false;
+    if (customModelGroup) customModelGroup.visible = false;
+    if (pointsMesh) pointsMesh.visible = componentToggles.core;
+    if (glow) glow.visible = componentToggles.glow;
+    if (ring1) ring1.visible = componentToggles.rings && componentToggles.ring1;
+    if (ring2) ring2.visible = componentToggles.rings && componentToggles.ring2;
+    if (ring3) ring3.visible = componentToggles.rings && componentToggles.ring3;
+    if (orbitPts) orbitPts.visible = componentToggles.orbitDust;
+  },
+  setAutoRotation:enabled=>{
+    componentToggles.autoRotation = !!enabled;
+  },
+  setCompanionFleet:(count,style)=>{
+    setCompanionFleet(count,style);
+  },
+  setCustomPhotoTexture:base64=>{
+    applyCustomPhotoTexture(base64);
+  },
+  loadCustomPhoto:()=>{
+    loadCustomPhotoFromBridge();
+  },
+  loadCustom3DModel:()=>{
+    loadCustom3DModelFromBridge();
+  },
+  clearCustom3DModel:()=>{
+    clearCustom3DModel();
+  },
+  parse3DModelBase64:(b64,format)=>{
+    try {
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let j = 0; j < bin.length; j++) bytes[j] = bin.charCodeAt(j);
+      parseAndDisplay3DModel(bytes.buffer, format);
+    } catch (e) {
+      console.error("Base64 3D parse error", e);
+    }
+  },
+  setComponentToggles:toggles=>{
+    try{
+      const obj = typeof toggles==="string"?JSON.parse(toggles):toggles;
+      Object.assign(componentToggles, obj);
+    }catch(_){}
+  },
+  triggerReaction: triggerReaction,
+  triggerTouchReaction: triggerTouchReaction,
+  triggerWave: () => triggerReaction("wave"),
+  setRotY: (y) => {
+    customModelRotY = Number(y) || 0;
+    if (customModelGroup) customModelGroup.rotation.y = customModelRotY;
+  },
+  getEngine: () => customModelEngine,
+  getInner: () => customModelInner,
+  getGroup: () => customModelGroup,
+  setEmote: (emote) => triggerReaction(emote),
+  setAnimState: (s) => {
+    setOrbState(s);
+    if (customModelEngine) customModelEngine.fadeToAction(s === "speaking" ? "talking_0" : s, 0.35);
+  },
+  setExternalAudio:setExternalAudio,
+  startListening:()=>setOrbState("listening"),
+  startThinking:()=>setOrbState("thinking"),
+  startSpeaking:()=>setOrbState("speaking"),
+  stopSpeaking:()=>setOrbState("idle"),
+  interrupt: () => {
+    setOrbState("listening");
+    if (customModelEngine && typeof customModelEngine.interrupt === "function") {
+      customModelEngine.interrupt();
+    }
+  },
+  startAudioReactive:startAudioReactive,
+  stopAudioReactive:stopAudioReactive
+};
+
+handleResize();
+applyTheme("dark");
+setOrbState("idle");
+requestAnimationFrame(animate);
+
+// Layout stabilization checks for Android WebView
+setTimeout(handleResize, 50);
+setTimeout(handleResize, 150);
+setTimeout(handleResize, 350);
+setTimeout(handleResize, 800);
+setTimeout(handleResize, 1500);
+
+setTimeout(function() {
+  try {
+    if (entityType === "custom_3d" || entityType === "ai_girl" || entityType === "hinata_anime") {
+      loadCustom3DModelFromBridge();
+      loadCustomPhotoFromBridge();
+    }
+  } catch (e) {
+    console.warn("Deferred bridge init error:", e);
+  }
+}, 300);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+Created At: 2026-10-18T08:37:50+05:30
+Completed At: 2026-10-18T08:37:50+05:30
+File Path: `file:///c:/Users/Roshan/Documents/Jarvis/app/src/main/java/com/jarvis/assistant/ui/settings/SettingsFragment.kt`
+Total Lines: 339
+Total Bytes: 14321
+Showing lines 1 to 150
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: package com.jarvis.assistant.ui.settings
+2: 
+3: import android.content.Intent
+4: import android.graphics.Color
+5: import android.net.Uri
+6: import android.os.Bundle
+7: import android.view.LayoutInflater
+8: import android.view.View
+9: import android.view.ViewGroup
+10: import android.widget.EditText
+11: import android.widget.Toast
+12: import androidx.appcompat.app.AlertDialog
+13: import androidx.core.content.ContextCompat
+14: import androidx.fragment.app.Fragment
+15: import com.google.android.material.dialog.MaterialAlertDialogBuilder
+16: import com.jarvis.assistant.JarvisApp
+17: import com.jarvis.assistant.R
+18: import com.jarvis.assistant.data.model.GeminiConstants
+19: import com.jarvis.assistant.databinding.FragmentSettingsBinding
+20: import com.jarvis.assistant.ui.memory.MemoryActivity
+21: import com.jarvis.assistant.ui.permission.PermissionActivity
+22: import com.jarvis.assistant.ui.voice.VoiceEnrollmentActivity
+23: 
+24: class SettingsFragment : Fragment() {
+25: 
+26:     private var _binding: FragmentSettingsBinding? = null
+27:     private val binding get() = _binding!!
+28:     private val preferences by lazy { JarvisApp.instance.preferences }
+29: 
+30:     override fun onCreateView(
+31:         inflater: LayoutInflater,
+32:         container: ViewGroup?,
+33:         savedInstanceState: Bundle?
+34:     ): View {
+35:         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
+36:         return binding.root
+37:     }
+38: 
+39:     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+40:         super.onViewCreated(view, savedInstanceState)
+41:         com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
+42: 
+43:         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+44:             val statusBarInsets = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+45:             val density = resources.displayMetrics.density
+46:             val topInset = statusBarInsets.top
+47:             val safeTopPadding = if (topInset > 0) topInset + (6 * density).toInt() else (14 * density).toInt()
+48:             v.setPadding(v.paddingLeft, safeTopPadding, v.paddingRight, v.paddingBottom)
+49:             insets
+50:         }
+51: 
+52:         loadUserData()
+53:         setupClickListeners()
+54:     }
+55: 
+56:     override fun onResume() {
+57:         super.onResume()
+58:         if (_binding != null) {
+59:             com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
+60:             loadUserData()
+61:         }
+62:     }
+63: 
+64:     override fun onHiddenChanged(hidden: Boolean) {
+65:         super.onHiddenChanged(hidden)
+66:         if (!hidden && _binding != null) {
+67:             binding.root.visibility = View.VISIBLE
+68:             com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
+69:             loadUserData()
+70:         } else if (hidden && _binding != null) {
+71:             binding.root.visibility = View.GONE
+72:         }
+73:     }
+74: 
+75:     private fun loadUserData() {
+76:         val userName = preferences.userName.ifBlank { "Roshan" }
+77:         binding.tvProfileName.text = userName
+78:         binding.tvProfileSubtitle.text = "JARVIS OPERATOR • PRIMARY USER"
+79: 
+80:         // Owner Voice Profile Status
+81:         val hasVoiceProfile = preferences.hasOwnerVoiceProfile()
+82:         if (hasVoiceProfile) {
+83:             binding.tvOwnerVoiceBadge.text = "ACTIVE"
+84:             binding.tvOwnerVoiceBadge.setTextColor(Color.parseColor("#10B981"))
+85:             binding.tvOwnerVoiceBadge.setBackgroundResource(R.drawable.bg_jarvis_status_badge_green)
+86:             binding.tvOwnerVoiceSubtitle.text = "Voice Profile Active • Only you can speak"
+87: 
+88:             binding.tvProfileVoiceStatus.text = "VOICE ENROLLED"
+89:             binding.tvProfileVoiceStatus.setTextColor(Color.parseColor("#10B981"))
+90:             binding.chipProfileVoiceStatus.setBackgroundResource(R.drawable.bg_jarvis_status_badge_green)
+91:             binding.ivProfileVoiceBadgeIcon.setImageResource(R.drawable.ic_verified_badge)
+92:             binding.ivProfileVoiceBadgeIcon.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#10B981"))
+93:         } else {
+94:             binding.tvOwnerVoiceBadge.text = "SETUP"
+95:             binding.tvOwnerVoiceBadge.setTextColor(ContextCompat.getColor(requireContext(), R.color.accent_sapphire))
+96:             binding.tvOwnerVoiceBadge.setBackgroundResource(R.drawable.bg_jarvis_status_badge)
+97:             binding.tvOwnerVoiceSubtitle.text = "Not enrolled • Tap to record voice profile"
+98: 
+99:             binding.tvProfileVoiceStatus.text = "ENROLL VOICE"
+100:             binding.tvProfileVoiceStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.accent_sapphire))
+101:             binding.chipProfileVoiceStatus.setBackgroundResource(R.drawable.bg_jarvis_status_badge)
+102:             binding.ivProfileVoiceBadgeIcon.setImageResource(R.drawable.ic_settings_owner_voice)
+103:             binding.ivProfileVoiceBadgeIcon.imageTintList = android.content.res.ColorStateList.valueOf(
+104:                 ContextCompat.getColor(requireContext(), R.color.accent_sapphire)
+105:             )
+106:         }
+107: 
+108:         // Language
+109:         binding.tvCurrentLanguage.text = preferences.language
+110: 
+111:         // Persona & Voice
+112:         val currentPersona = preferences.personality
+113:         val currentVoice = preferences.voice
+114:         binding.tvCurrentPersona.text = "$currentPersona • Voice: $currentVoice"
+115:         binding.tvProfilePersonaChip.text = currentPersona.uppercase()
+116: 
+117:         // Silent Execution Mode
+118:         binding.switchSilentMode.isChecked = preferences.isSilentExecutionMode
+119: 
+120:         // Model
+121:         val modelDisplay = preferences.aiModel.removePrefix("models/")
+122:         binding.tvCurrentModel.text = "$modelDisplay • Live WebSocket"
+123: 
+124:         // Theme
+125:         binding.tvCurrentTheme.text = when (preferences.appTheme) {
+126:             "dark" -> "Stark Navy HUD"
+127:             "stealth" -> "Stealth Carbon OLED"
+128:             "red" -> "Arc Reactor Red"
+129:             "amethyst" -> "Amethyst Cyberpunk"
+130:             "sunset" -> "Sunset Amber"
+131:             "custom" -> "Custom (${preferences.customThemeColor})"
+132:             else -> "Light Theme"
+133:         }
+134:         binding.tvStudioSummary.text = "Core: ${preferences.orbCorePreset.uppercase()} • Theme: ${preferences.appTheme.uppercase()}"
+135: 
+136:         // Frosted Glass Blur FX Switch
+137:         binding.switchBlurEffect.isChecked = preferences.isBlurEffectEnabled
+138:     }
+139: 
+140:     private fun setupClickListeners() {
+141:         // Frosted Glass Blur FX Switch Listener
+142:         binding.switchBlurEffect.setOnCheckedChangeListener { _, isChecked ->
+143:             preferences.isBlurEffectEnabled = isChecked
+144:             val msg = if (isChecked) "Frosted Glass Blur FX Enabled" else "Frosted Glass Blur FX Disabled"
+145:             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+146:         }
+147: 
+148:         // Profile Card -> Change Name
+149:         binding.cardProfile.setOnClickListener {
+150:             showEditNameDialog()
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

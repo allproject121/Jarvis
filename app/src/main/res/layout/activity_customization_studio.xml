@@ -1,0 +1,2744 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/customizationStudioRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/themeBg">
+
+    <!-- Top App Bar / Header -->
+    <RelativeLayout
+        android:id="@+id/layoutStudioHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="10dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_jarvis_icon_square"
+            android:src="@drawable/ic_back"
+            app:tint="?attr/themeTextPrimary"
+            android:contentDescription="Back" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="STARK HUD STUDIO"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.08" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ENERGY CORE &amp; HUD CONFIG"
+                android:textColor="?attr/themeAccent"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif"
+                android:letterSpacing="0.06"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnResetDefaults"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:text="RESET"
+            android:textColor="?attr/themeTextMuted"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:background="?attr/selectableItemBackground"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="8dp" />
+    </RelativeLayout>
+
+    <!-- Scrollable Content -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollStudio"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:overScrollMode="never"
+        android:paddingBottom="90dp"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toBottomOf="@id/layoutStudioHeader"
+        app:layout_constraintBottom_toTopOf="@id/layoutBottomAction">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="6dp">
+
+            <!-- 1. Live Interactive WebGL Orb Preview Card -->
+            <LinearLayout
+                android:id="@+id/cardLivePreview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_jarvis_action_card"
+                android:paddingVertical="14dp"
+                android:paddingHorizontal="12dp"
+                android:layout_marginBottom="14dp">
+
+                <FrameLayout
+                    android:layout_width="160dp"
+                    android:layout_height="160dp"
+                    android:layout_gravity="center">
+
+                    <View
+                        android:id="@+id/previewHaloRing"
+                        android:layout_width="140dp"
+                        android:layout_height="140dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_jarvis_orb_halo" />
+
+                    <WebView
+                        android:id="@+id/previewOrbWebView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:background="@android:color/transparent" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_status_badge"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="5dp"
+                    android:layout_marginTop="8dp">
+
+                    <View
+                        android:layout_width="6dp"
+                        android:layout_height="6dp"
+                        android:background="@drawable/bg_jarvis_mic_center"
+                        android:backgroundTint="?attr/themeAccent" />
+
+                    <TextView
+                        android:id="@+id/tvPreviewPresetName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CORE: STARK CYAN"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.08"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginStart="6dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 2. Segmented Navigation Chips (Tabs) -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:overScrollMode="never"
+                android:scrollbars="none"
+                android:layout_marginBottom="14dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tabChipOrb"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:gravity="center"
+                        android:text="CORE ORB"
+                        android:textColor="?attr/themeAccent"
+                        android:textStyle="bold"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_jarvis_chip"
+                        android:paddingHorizontal="16dp"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/tabChipLiveAi"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:gravity="center"
+                        android:text="LIVE 3D &amp; VAULT"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textStyle="bold"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingHorizontal="16dp"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/tabChipArc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:gravity="center"
+                        android:text="ARC REACTOR"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textStyle="bold"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingHorizontal="16dp"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/tabChipTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:gravity="center"
+                        android:text="HUD THEME"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textStyle="bold"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingHorizontal="16dp"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/tabChipWidgets"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:gravity="center"
+                        android:text="HUD WIDGETS"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textStyle="bold"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingHorizontal="16dp"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/tabChipAudio"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:gravity="center"
+                        android:text="AUDIO &amp; AI"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textStyle="bold"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingHorizontal="16dp" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- ================= TAB 1: CORE ORB ================= -->
+            <LinearLayout
+                android:id="@+id/containerTabOrb"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AI COMPANION ENTITY FORM"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="8dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:id="@+id/btnEntityOrb"
+                        android:layout_width="0dp"
+                        android:layout_height="42dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="🌌 ORB"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textStyle="bold"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_jarvis_chip"
+                        android:layout_marginEnd="2dp" />
+
+                    <TextView
+                        android:id="@+id/btnEntityAiGirl"
+                        android:layout_width="0dp"
+                        android:layout_height="42dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="🌸 ANIME"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textStyle="bold"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:layout_marginHorizontal="2dp" />
+
+                    <TextView
+                        android:id="@+id/btnEntityArcReactor"
+                        android:layout_width="0dp"
+                        android:layout_height="42dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="⚡ ARC"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textStyle="bold"
+                        android:textSize="10sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:layout_marginHorizontal="2dp" />
+
+                    <TextView
+                        android:id="@+id/btnEntityCustom3d"
+                        android:layout_width="0dp"
+                        android:layout_height="42dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="✨ 3D PHOTO"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textStyle="bold"
+                        android:textSize="9.5sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:layout_marginStart="2dp" />
+                </LinearLayout>
+
+                <!-- Custom 3D Avatar Universal Media & Real 3D Model Controls -->
+                <LinearLayout
+                    android:id="@+id/layoutCustom3dMediaControls"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="12dp"
+                    android:layout_marginBottom="16dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CUSTOM 3D MODEL &amp; HOLOGRAM ASSETS"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="10.5sp"
+                        android:letterSpacing="0.08"
+                        android:fontFamily="sans-serif-medium"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="6dp" />
+
+                    <TextView
+                        android:id="@+id/tvStudioCustomMediaStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Supports real 3D models (.glb, .gltf, .obj, .stl, .fbx) &amp; media (JPG, PNG, GIF, MP4)."
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11sp"
+                        android:layout_marginBottom="10dp" />
+
+                    <!-- Action Buttons: Add Model, Add Media, Default Orb -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:id="@+id/btnStudioUpload3DModel"
+                            android:layout_width="0dp"
+                            android:layout_height="42dp"
+                            android:layout_weight="1.2"
+                            android:gravity="center"
+                            android:text="➕ ADD 3D MODEL"
+                            android:textColor="?attr/themeAccent"
+                            android:textStyle="bold"
+                            android:textSize="10.5sp"
+                            android:background="@drawable/bg_jarvis_chip"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:id="@+id/btnStudioUploadMedia"
+                            android:layout_width="0dp"
+                            android:layout_height="42dp"
+                            android:layout_weight="0.8"
+                            android:gravity="center"
+                            android:text="📁 PHOTO"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textStyle="bold"
+                            android:textSize="10.5sp"
+                            android:background="@drawable/bg_jarvis_row_item"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:id="@+id/btnStudioDeleteMedia"
+                            android:layout_width="wrap_content"
+                            android:layout_height="42dp"
+                            android:gravity="center"
+                            android:text="CLEAR ALL"
+                            android:textColor="#EF4444"
+                            android:textStyle="bold"
+                            android:textSize="10sp"
+                            android:background="@drawable/bg_jarvis_row_item"
+                            android:paddingHorizontal="10dp" />
+                    </LinearLayout>
+
+                    <!-- Instant Default Orb Button -->
+                    <TextView
+                        android:id="@+id/btnSwitchToDefaultOrb"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:gravity="center"
+                        android:text="⚡ USE DEFAULT ORB (ARC REACTOR CORE)"
+                        android:textColor="?attr/themeAccent"
+                        android:textStyle="bold"
+                        android:textSize="11sp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Saved 3D Models Collection Header -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SAVED 3D MODELS COLLECTION"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="10sp"
+                        android:letterSpacing="0.08"
+                        android:fontFamily="sans-serif-medium"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="6dp" />
+
+                    <!-- Saved Models Dynamic Container -->
+                    <LinearLayout
+                        android:id="@+id/layoutSavedModelsList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvNoSavedModels"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="No custom 3D models saved yet. Default is the Quantum Arc Reactor Orb. Tap '➕ ADD 3D MODEL' to add your GLB, OBJ, STL, or FBX models."
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="10.5sp"
+                            android:lineSpacingExtra="2dp"
+                            android:paddingVertical="8dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CORE &amp; ARC REACTOR ENERGY PALETTE"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Presets & Color Customizer Grid -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="12dp"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- Row 1: Cyan, Crimson, Quantum -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:id="@+id/presetCyan"
+                            android:layout_width="0dp"
+                            android:layout_height="42dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="Cyan Arc"
+                            android:textColor="#22D3EE"
+                            android:textStyle="bold"
+                            android:textSize="11.5sp"
+                            android:background="@drawable/bg_jarvis_chip"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:id="@+id/presetCrimson"
+                            android:layout_width="0dp"
+                            android:layout_height="42dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="Crimson"
+                            android:textColor="#FF4D5E"
+                            android:textStyle="bold"
+                            android:textSize="11.5sp"
+                            android:background="@drawable/bg_jarvis_row_item"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:id="@+id/presetViolet"
+                            android:layout_width="0dp"
+                            android:layout_height="42dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="Quantum"
+                            android:textColor="#C084FC"
+                            android:textStyle="bold"
+                            android:textSize="11.5sp"
+                            android:background="@drawable/bg_jarvis_row_item" />
+                    </LinearLayout>
+
+                    <!-- Row 2: Emerald, Arc White, Solar Amber -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:id="@+id/presetEmerald"
+                            android:layout_width="0dp"
+                            android:layout_height="42dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="Emerald"
+                            android:textColor="#10B981"
+                            android:textStyle="bold"
+                            android:textSize="11.5sp"
+                            android:background="@drawable/bg_jarvis_row_item"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:id="@+id/presetWhite"
+                            android:layout_width="0dp"
+                            android:layout_height="42dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="Arc White"
+                            android:textColor="#BAE6FD"
+                            android:textStyle="bold"
+                            android:textSize="11.5sp"
+                            android:background="@drawable/bg_jarvis_row_item"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:id="@+id/presetSunset"
+                            android:layout_width="0dp"
+                            android:layout_height="42dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="Amber"
+                            android:textColor="#FF6A3D"
+                            android:textStyle="bold"
+                            android:textSize="11.5sp"
+                            android:background="@drawable/bg_jarvis_row_item" />
+                    </LinearLayout>
+
+                    <!-- Row 3: Stealth Carbon & Liquid Pearl -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:id="@+id/presetStealth"
+                            android:layout_width="0dp"
+                            android:layout_height="42dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="Stealth Dark"
+                            android:textColor="#38BDF8"
+                            android:textStyle="bold"
+                            android:textSize="11.5sp"
+                            android:background="@drawable/bg_jarvis_row_item"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:id="@+id/presetLight"
+                            android:layout_width="0dp"
+                            android:layout_height="42dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="Pearl Light"
+                            android:textColor="#2F6BFF"
+                            android:textStyle="bold"
+                            android:textSize="11.5sp"
+                            android:background="@drawable/bg_jarvis_row_item" />
+                    </LinearLayout>
+
+                    <!-- Custom Hex Color Input Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <EditText
+                            android:id="@+id/etCustomColorHex"
+                            android:layout_width="0dp"
+                            android:layout_height="42dp"
+                            android:layout_weight="1"
+                            android:hint="#00FFEE"
+                            android:textColorHint="?attr/themeTextMuted"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:fontFamily="monospace"
+                            android:background="@drawable/bg_jarvis_input_field"
+                            android:paddingHorizontal="12dp"
+                            android:inputType="textCapCharacters|textNoSuggestions"
+                            android:maxLength="7"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:id="@+id/btnApplyCustomColor"
+                            android:layout_width="wrap_content"
+                            android:layout_height="42dp"
+                            android:gravity="center"
+                            android:text="APPLY"
+                            android:textColor="?attr/themeAccent"
+                            android:textStyle="bold"
+                            android:textSize="11.5sp"
+                            android:background="@drawable/bg_jarvis_chip"
+                            android:paddingHorizontal="16dp" />
+                    </LinearLayout>
+
+                    <!-- Quick Color Swatches -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingVertical="4dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Swatches:"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="11sp"
+                            android:layout_marginEnd="10dp" />
+
+                        <View
+                            android:id="@+id/swatchGold"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:background="@drawable/bg_jarvis_mic_center"
+                            android:backgroundTint="#F59E0B"
+                            android:layout_marginEnd="10dp" />
+
+                        <View
+                            android:id="@+id/swatchPink"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:background="@drawable/bg_jarvis_mic_center"
+                            android:backgroundTint="#EC4899"
+                            android:layout_marginEnd="10dp" />
+
+                        <View
+                            android:id="@+id/swatchLime"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:background="@drawable/bg_jarvis_mic_center"
+                            android:backgroundTint="#84CC16"
+                            android:layout_marginEnd="10dp" />
+
+                        <View
+                            android:id="@+id/swatchOrange"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:background="@drawable/bg_jarvis_mic_center"
+                            android:backgroundTint="#FF7700"
+                            android:layout_marginEnd="10dp" />
+
+                        <View
+                            android:id="@+id/swatchIndigo"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:background="@drawable/bg_jarvis_mic_center"
+                            android:backgroundTint="#6366F1" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Orb Dynamics Sliders -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CORE PARTICLE DYNAMICS"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- Core Energy Resonance Slider -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="4dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Core Energy Resonance"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvResonanceVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="84%"
+                            android:textColor="?attr/themeAccent"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <SeekBar
+                        android:id="@+id/sliderCoreResonance"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="100"
+                        android:progress="84"
+                        android:progressTint="?attr/themeAccent"
+                        android:thumbTint="?attr/themeAccent"
+                        android:splitTrack="false"
+                        android:layout_marginBottom="14dp" />
+
+                    <!-- Speed Slider -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="4dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Rotation &amp; Swirl Speed"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvOrbSpeedVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1.0x"
+                            android:textColor="?attr/themeAccent"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <SeekBar
+                        android:id="@+id/sliderOrbSpeed"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="23"
+                        android:progress="8"
+                        android:progressTint="?attr/themeAccent"
+                        android:thumbTint="?attr/themeAccent"
+                        android:splitTrack="false"
+                        android:layout_marginBottom="14dp" />
+
+                    <!-- Glow Radiance Slider -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="4dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Holographic Glow &amp; Aura"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvOrbGlowVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1.0x"
+                            android:textColor="?attr/themeAccent"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <SeekBar
+                        android:id="@+id/sliderOrbGlow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="18"
+                        android:progress="8"
+                        android:progressTint="?attr/themeAccent"
+                        android:thumbTint="?attr/themeAccent"
+                        android:splitTrack="false"
+                        android:layout_marginBottom="14dp" />
+
+                    <!-- Scale Slider -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="4dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Core Particle Scale"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvOrbScaleVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1.0x"
+                            android:textColor="?attr/themeAccent"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <SeekBar
+                        android:id="@+id/sliderOrbScale"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="12"
+                        android:progress="6"
+                        android:progressTint="?attr/themeAccent"
+                        android:thumbTint="?attr/themeAccent"
+                        android:splitTrack="false" />
+                </LinearLayout>
+
+                <!-- Orb Component Anatomy & Toggles Card -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ORB COMPONENT ANATOMY &amp; TOGGLES"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- Switch 1: Core Particle Cloud -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Core Particle Cloud"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Central volumetric 3D particle sphere"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchOrbCore"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!-- Switch 2: Glowing Atmospheric Halo -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Glowing Atmospheric Halo"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Backdrop radial neon glow and aura"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchOrbGlow"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!-- Switch 3: Orbital Rings System (Master) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="10dp">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Orbital Rings (Master)"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Master switch for all rotating rings"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchOrbRings"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!-- Sub-Switches: Ring 1, Ring 2, Ring 3 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="12dp"
+                        android:layout_marginBottom="8dp">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="• Inner Ring 1"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp" />
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchOrbRing1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="12dp"
+                        android:layout_marginBottom="8dp">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="• Middle Counter-Spin Ring 2"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp" />
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchOrbRing2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="12dp"
+                        android:layout_marginBottom="12dp">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="• 3D Gyroscope Ring 3"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp" />
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchOrbRing3"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!-- Switch 4: Orbital Satellite Dust -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Orbital Satellite Dust"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Floating space dust particles"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchOrbOrbitDust"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!-- Switch 5: Floor Contact Shadow -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Ground Floor Shadow"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Diffused ground contact shadow reflection"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchOrbShadow"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!-- Switch 6: Idle Breathing Pulse -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Idle Breathing Animation"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Rhythmic sine-wave breathing when idle"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchOrbIdleBreathing"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!-- Switch 7: 3D Touch Drag & Rotation -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="3D Touch Drag &amp; Rotation"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Touch and drag anywhere to inspect in 3D"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchOrbTouchDrag"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!-- Switch 8: Cinematic 50% Stage Height -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Cinematic 50% Screen Stage"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Expand home stage to 50% screen height"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchOrbCinematic50"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!-- Switch 9: 360° Continuous Auto-Rotation -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="360° Continuous Auto-Rotation"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Off keeps Anime Girl facing front; on spins in 360°"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchOrbAutoRotation"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 3D Companion Fleet / Multi-Orb Swarm Card -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="3D COMPANION FLEET / MULTI-ORB SWARM"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- Swarm Count Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Orbiting Companions Count"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                            <TextView
+                                android:id="@+id/tvCompanionDescription"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 / 4 (Solo central entity)"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/btnCompanionMinus"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:gravity="center"
+                                android:text="−"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textStyle="bold"
+                                android:textSize="18sp"
+                                android:background="@drawable/bg_jarvis_row_item" />
+
+                            <TextView
+                                android:id="@+id/tvCompanionCount"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:gravity="center"
+                                android:text="0"
+                                android:textColor="?attr/themeAccent"
+                                android:textStyle="bold"
+                                android:textSize="15sp"
+                                android:layout_marginHorizontal="6dp" />
+
+                            <TextView
+                                android:id="@+id/btnCompanionPlus"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:gravity="center"
+                                android:text="+"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textStyle="bold"
+                                android:textSize="18sp"
+                                android:background="@drawable/bg_jarvis_row_item" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Swarm Style Selector -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SWARM ENTITY STYLE"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btnCompanionOrb"
+                            android:layout_width="0dp"
+                            android:layout_height="38dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="✨ Plasma Orbs"
+                            android:textColor="?attr/themeAccent"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            android:background="@drawable/bg_jarvis_chip"
+                            android:layout_marginEnd="4dp" />
+
+                        <TextView
+                            android:id="@+id/btnCompanionDrone"
+                            android:layout_width="0dp"
+                            android:layout_height="38dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="⚡ Arc Drones"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            android:background="@drawable/bg_jarvis_row_item"
+                            android:layout_marginHorizontal="2dp" />
+
+                        <TextView
+                            android:id="@+id/btnCompanionWisp"
+                            android:layout_width="0dp"
+                            android:layout_height="38dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="🌸 Cyber Wisps"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            android:background="@drawable/bg_jarvis_row_item"
+                            android:layout_marginStart="4dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ================= TAB 2: LIVE 3D COMPANION & VAULT ================= -->
+            <LinearLayout
+                android:id="@+id/containerTabLiveAi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- 3D MODEL & COMPANION VAULT GALLERY (WALLPAPERS / SAVED MODELS) -->
+
+                <LinearLayout
+                    android:id="@+id/layoutModelVaultSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="12dp"
+                    android:layout_marginBottom="16dp">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="SAVED 3D MODELS &amp; ORB VAULT"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="11.5sp"
+                            android:letterSpacing="0.08"
+                            android:fontFamily="sans-serif-medium"
+                            android:textStyle="bold"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true" />
+
+                        <TextView
+                            android:id="@+id/tvVaultCountBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="3 SLOTS"
+                            android:textColor="?attr/themeAccent"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:background="@drawable/bg_jarvis_status_badge"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="3dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true" />
+                    </RelativeLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Models are preserved in your personal vault. Tap to activate, or tap delete to remove."
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11sp"
+                        android:layout_marginBottom="10dp" />
+
+                    <!-- Horizontal Scrollable Cards Container -->
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:overScrollMode="never"
+                        android:scrollbars="none"
+                        android:layout_marginBottom="12dp">
+
+                        <LinearLayout
+                            android:id="@+id/layoutVaultCardsContainer"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical" />
+                    </HorizontalScrollView>
+
+                    <!-- Quick Add & Import Button -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btnVaultImport3D"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="➕ IMPORT NEW 3D MODEL (.GLB)"
+                            android:textColor="?attr/themeAccent"
+                            android:textStyle="bold"
+                            android:textSize="10.5sp"
+                            android:background="@drawable/bg_jarvis_chip"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:id="@+id/btnVaultImportMedia"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:gravity="center"
+                            android:text="📁 PHOTO"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textStyle="bold"
+                            android:textSize="10.5sp"
+                            android:background="@drawable/bg_jarvis_row_item"
+                            android:paddingHorizontal="12dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Custom 3D Avatar Universal Media & Real 3D Model Controls -->
+
+                <!-- Live Interaction Showcase Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="12dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="LIVE COMPANION INTERACTIONS (REDMAGIC STYLE)"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="11sp"
+                        android:letterSpacing="0.08"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="• Touch / Poke Reactions: Tap the avatar on screen for 4 dynamic emotions (Wave, Bouncy Nod, Head Tilt, Blush Giggle).\n• Touch Drag Gaze Tracking: Companion head &amp; eyes follow your finger movements in real-time.\n• Speech Lip-Sync: Mouth syncs dynamically with Jarvis voice output."
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11.5sp"
+                        android:lineSpacingExtra="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ================= TAB 3: ARC REACTOR ================= -->
+            <LinearLayout
+                android:id="@+id/containerTabArc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MARK 50 ARC REACTOR CORE"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="14dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ARC REACTOR RESONANCE MODE"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11sp"
+                        android:letterSpacing="0.06"
+                        android:fontFamily="sans-serif-medium"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="14dp">
+
+                        <TextView
+                            android:id="@+id/btnPulseQuantum"
+                            android:layout_width="0dp"
+                            android:layout_height="38dp"
+                            android:layout_weight="1"
+                            android:text="QUANTUM"
+                            android:gravity="center"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:background="@drawable/bg_jarvis_chip"
+                            android:layout_marginEnd="4dp" />
+
+                        <TextView
+                            android:id="@+id/btnPulseOverdrive"
+                            android:layout_width="0dp"
+                            android:layout_height="38dp"
+                            android:layout_weight="1"
+                            android:text="OVERDRIVE"
+                            android:gravity="center"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="?attr/themeTextMuted"
+                            android:background="@drawable/bg_jarvis_row_item"
+                            android:layout_marginHorizontal="2dp" />
+
+                        <TextView
+                            android:id="@+id/btnPulseStealth"
+                            android:layout_width="0dp"
+                            android:layout_height="38dp"
+                            android:layout_weight="1"
+                            android:text="STEALTH"
+                            android:gravity="center"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="?attr/themeTextMuted"
+                            android:background="@drawable/bg_jarvis_row_item"
+                            android:layout_marginStart="4dp" />
+                    </LinearLayout>
+
+                    <!-- Audio Reactive Glow Switch -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Audio-Reactive Core Pulse"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Live dynamic glow reaction to microphone audio"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchAudioReactiveOrb"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ================= TAB 4: HUD THEME ================= -->
+            <LinearLayout
+                android:id="@+id/containerTabTheme"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="APP-WIDE HUD THEME"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="14dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/cardThemeNavy"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/bg_jarvis_chip"
+                        android:layout_marginBottom="8dp">
+
+                        <View
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:background="@drawable/bg_jarvis_mic_center"
+                            android:backgroundTint="#22D3EE" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="12dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Stark Navy HUD (Default)"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Deep navy-black + neon cyan &amp; violet"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/cardThemeStealth"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:layout_marginBottom="8dp">
+
+                        <View
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:background="@drawable/bg_jarvis_mic_center"
+                            android:backgroundTint="#38BDF8" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="12dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Stealth Carbon (OLED Black)"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Pure black battery-saver + ice blue"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/cardThemeRed"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:layout_marginBottom="8dp">
+
+                        <View
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:background="@drawable/bg_jarvis_mic_center"
+                            android:backgroundTint="#FF4D5E" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="12dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Arc Reactor Red (Mark 50)"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Deep obsidian ruby + crimson neon"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/cardThemeAmethyst"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:layout_marginBottom="8dp">
+
+                        <View
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:background="@drawable/bg_jarvis_mic_center"
+                            android:backgroundTint="#C084FC" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="12dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Amethyst Cyberpunk"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Midnight purple + neon magenta"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/cardThemeLight"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/bg_jarvis_row_item">
+
+                        <View
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:background="@drawable/bg_jarvis_mic_center"
+                            android:backgroundTint="#2F6BFF" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="12dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Liquid Pearl Light"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Frosted glass pearl + sapphire accent"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ================= TAB 3: HUD WIDGETS ================= -->
+            <LinearLayout
+                android:id="@+id/containerTabWidgets"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="HOME HUD MODULAR CARDS"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- Switch 1: Telemetry Card -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Stark Telemetry Card"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Live Battery, RAM load, and Data link telemetry"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchTelemetryWidget"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="?attr/themeCardBorder"
+                        android:layout_marginBottom="14dp" />
+
+                    <!-- Switch 2: Weather Card -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Live Weather Card"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Atmospheric temp, condition, humidity and city"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchWeatherWidget"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="?attr/themeCardBorder"
+                        android:layout_marginBottom="14dp" />
+
+                    <!-- Switch 3: Updates Section -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Updates &amp; Announcements"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Agent tasks, voice enrollment &amp; feature feed"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchUpdatesWidget"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="?attr/themeCardBorder"
+                        android:layout_marginVertical="14dp" />
+
+                    <!-- Switch 4: Frosted Glass Blur FX -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Frosted Glass Blur FX"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Hardware Gaussian blur on menus, navbar &amp; HUD cards"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchBlurEffectStudio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="?attr/themeCardBorder"
+                        android:layout_marginVertical="14dp" />
+
+                    <!-- Switch 5: Holographic HUD Scanlines -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Holographic HUD Scanlines"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Futuristic Stark holographic CRT scanline overlay"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchHoloScanlines"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ================= TAB 4: AUDIO & AI ================= -->
+            <LinearLayout
+                android:id="@+id/containerTabAudio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="HUD AUDIO &amp; FEEDBACK"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- Switch: HUD Sound Effects -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Holographic Sound Effects (SFX)"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Futuristic audio blips on tap, wake, and task completion"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchHudSounds"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <!-- Volume Slider -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="4dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="SFX Volume Level"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvHudVolumeVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="80%"
+                            android:textColor="?attr/themeAccent"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <SeekBar
+                        android:id="@+id/sliderHudVolume"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="100"
+                        android:progress="80"
+                        android:progressTint="?attr/themeAccent"
+                        android:thumbTint="?attr/themeAccent"
+                        android:splitTrack="false"
+                        android:layout_marginBottom="10dp" />
+
+                    <Button
+                        android:id="@+id/btnTestSound"
+                        android:layout_width="wrap_content"
+                        android:layout_height="38dp"
+                        android:text="TEST SOUND CHIME"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_jarvis_chip"
+                        android:paddingHorizontal="16dp"
+                        android:layout_gravity="end" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="?attr/themeCardBorder"
+                        android:layout_marginVertical="12dp" />
+
+                    <!-- Switch: Tactile HUD Haptics -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Tactile HUD Haptics"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Physical pulse clicks when tapping controls and buttons"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchHapticFeedback"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="VOICE &amp; WAKE SENSITIVITY"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="4dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Vosk Wake-Word Sensitivity"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvVoskVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.65"
+                            android:textColor="?attr/themeAccent"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <SeekBar
+                        android:id="@+id/sliderVoskSensitivity"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="13"
+                        android:progress="7"
+                        android:progressTint="?attr/themeAccent"
+                        android:thumbTint="?attr/themeAccent"
+                        android:splitTrack="false" />
+                </LinearLayout>
+
+                <!-- Assistant Name & Identity Card -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ASSISTANT NAME &amp; IDENTITY"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="12dp"
+                    android:layout_marginBottom="16dp">
+
+                    <EditText
+                        android:id="@+id/etStudioAssistantName"
+                        android:layout_width="match_parent"
+                        android:layout_height="46dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingHorizontal="14dp"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:hint="Assistant Name (e.g. JARVIS or JARVIS)"
+                        android:textColorHint="?attr/themeTextMuted"
+                        android:maxLines="1"
+                        android:inputType="textCapWords" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="10dp">
+
+                        <TextView
+                            android:id="@+id/btnNameChipJarvis"
+                            android:layout_width="0dp"
+                            android:layout_height="36dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="JARVIS"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textStyle="bold"
+                            android:textSize="11sp"
+                            android:background="@drawable/bg_jarvis_row_item"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:id="@+id/btnNameChipJarvisCompanion"
+                            android:layout_width="0dp"
+                            android:layout_height="36dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="JARVIS"
+                            android:textColor="?attr/themeAccent"
+                            android:textStyle="bold"
+                            android:textSize="11sp"
+                            android:background="@drawable/bg_jarvis_chip"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:id="@+id/btnNameChipFriday"
+                            android:layout_width="0dp"
+                            android:layout_height="36dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="FRIDAY"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textStyle="bold"
+                            android:textSize="11sp"
+                            android:background="@drawable/bg_jarvis_row_item" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AI VOICE PERSONA"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="12dp"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- Persona: JARVIS -->
+                    <LinearLayout
+                        android:id="@+id/cardPersonaJarvisCompanion"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/bg_jarvis_chip"
+                        android:layout_marginBottom="8dp">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_verified_badge"
+                            app:tint="?attr/themeAccent" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="12dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="JARVIS Companion Mode"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Loving companion &amp; secretary • Warm sweet voice (Aoede)"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="JARVIS"
+                            android:textColor="?attr/themeAccent"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:background="@drawable/bg_jarvis_status_badge"
+                            android:paddingHorizontal="7dp"
+                            android:paddingVertical="3dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/cardPersonaJarvis"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:layout_marginBottom="8dp">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_jarvis_logo"
+                            app:tint="?attr/themeAccent" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="12dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Stark J.A.R.V.I.S. (Prime)"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="British intelligence • Deep male voice (Puck)"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/cardPersonaFriday"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:layout_marginBottom="8dp">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_settings_voice"
+                            app:tint="?attr/themeAccent" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="12dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="F.R.I.D.A.Y. Tactical"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Adaptive defense AI • Female voice (Aoede)"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/cardPersonaEdith"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/bg_jarvis_row_item">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_settings_shield"
+                            app:tint="?attr/themeAccent" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="12dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="E.D.I.T.H. Defense System"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Global satellite defense • Confident voice (Charon)"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Section: Phone Home Screen Live Wallpaper -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PHONE HOME SCREEN LIVE WALLPAPER"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_card"
+                    android:padding="12dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Choose how your assistant is rendered directly on your phone's Home Screen &amp; Lock Screen:"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11.5sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Mode 1: Character Mode -->
+                    <LinearLayout
+                        android:id="@+id/cardWallpaperCharacter"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/bg_jarvis_chip"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:gravity="center"
+                            android:text="👤"
+                            android:textSize="18sp" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="10dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Live 3D Companion Mode (JARVIS / Jett)"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="13.5sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Holographic character on ground ring stand • Touch gaze tracking"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Mode 2: Arc Reactor Mode -->
+                    <LinearLayout
+                        android:id="@+id/cardWallpaperArcReactor"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:gravity="center"
+                            android:text="⚡"
+                            android:textSize="18sp" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="10dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Stark Arc Reactor HUD Mode"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="13.5sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Rotating concentric radar rings • Pulsing energy core"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btnStudioApplyLiveWallpaper"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:text="SET AS PHONE LIVE WALLPAPER"
+                        android:textColor="#070914"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.06"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:backgroundTint="?attr/themeAccent" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Bottom Sticky Apply & Save Action Bar -->
+    <FrameLayout
+        android:id="@+id/layoutBottomAction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/themeDockBg"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="14dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <Button
+            android:id="@+id/btnApplyAndSave"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="APPLY &amp; SAVE CONFIGURATION"
+            android:textColor="#070914"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:letterSpacing="0.06"
+            android:background="@drawable/bg_jarvis_pill_button"
+            android:backgroundTint="?attr/themeAccent" />
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

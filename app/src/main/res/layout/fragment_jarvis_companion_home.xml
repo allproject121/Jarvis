@@ -1,0 +1,657 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/jarvisScrollView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="#0B0416"
+    android:scrollbars="none"
+    android:clipToPadding="false"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="100dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- 1. Top Header with Title, Mode Switcher, and Actions -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="12dp">
+
+            <LinearLayout
+                android:id="@+id/jarvisHeaderTitleGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="JARVIS AI 5.2"
+                    android:textColor="#C084FC"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08" />
+
+                <TextView
+                    android:id="@+id/tvJarvisActivePersonaLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Companion Core · Online"
+                    android:textColor="#A855F7"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.03" />
+            </LinearLayout>
+
+            <!-- Mode Switcher Pill (Switches to Mode A: Jarvis) -->
+            <LinearLayout
+                android:id="@+id/btnSwitchToJarvisMode"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/bg_mode_switch_banner"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_sparkle"
+                    app:tint="#60A5FA"
+                    android:contentDescription="Jarvis icon" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="⚡ JARVIS MODE"
+                    android:textColor="#93C5FD"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.05" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <!-- 2. Central Ambient Glowing Orb & Waveform Section -->
+        <FrameLayout
+            android:id="@+id/layoutJarvisOrbContainer"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp">
+
+            <!-- Background Glowing Rings -->
+            <View
+                android:id="@+id/jarvisOrbGlowRing"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_jarvis_card"
+                android:alpha="0.3" />
+
+            <!-- Core Floating Orb Button -->
+            <FrameLayout
+                android:id="@+id/btnJarvisOrb"
+                android:layout_width="130dp"
+                android:layout_height="130dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_jarvis_mode_pill"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="12dp">
+
+                <ImageView
+                    android:id="@+id/ivJarvisOrbIcon"
+                    android:layout_width="54dp"
+                    android:layout_height="54dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_mic_jarvis"
+                    app:tint="#FFFFFF"
+                    android:contentDescription="Voice Orb" />
+            </FrameLayout>
+
+            <!-- Status Indicator at Bottom of Orb -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|center_horizontal"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tvJarvisVoiceStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TAP ORB TO TALK TO MAYA"
+                    android:textColor="#F3E8FF"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.06" />
+
+                <TextView
+                    android:id="@+id/tvJarvisVoiceSub"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PocketTTS 24kHz Native Vocoder Ready"
+                    android:textColor="#C084FC"
+                    android:textSize="11sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- 3. Character Carousel: Maya, Maya Pro, Maya Intimate, Friday, Venom -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="NEURAL PERSONAS &amp; VOICES"
+            android:textColor="#E9D5FF"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="10dp" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:clipToPadding="false"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- Maya Card -->
+                <LinearLayout
+                    android:id="@+id/cardCharMaya"
+                    android:layout_width="140dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/bg_jarvis_character_active"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🌸 MAYA"
+                        android:textColor="#F8FAFC"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sweet Companion\nHindi / Hinglish"
+                        android:textColor="#C084FC"
+                        android:textSize="11sp"
+                        android:layout_marginTop="4dp" />
+
+                    <TextView
+                        android:id="@+id/btnPreviewMaya"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_jarvis_mode_pill"
+                        android:gravity="center"
+                        android:padding="4dp"
+                        android:text="🔊 TEST VOICE"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Maya Pro Card -->
+                <LinearLayout
+                    android:id="@+id/cardCharMayaPro"
+                    android:layout_width="140dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/bg_jarvis_character_inactive"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⚡ MAYA PRO"
+                        android:textColor="#F8FAFC"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Executive Agent\nFast &amp; Crisp"
+                        android:textColor="#94A3B8"
+                        android:textSize="11sp"
+                        android:layout_marginTop="4dp" />
+
+                    <TextView
+                        android:id="@+id/btnPreviewMayaPro"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="#261042"
+                        android:gravity="center"
+                        android:padding="4dp"
+                        android:text="🔊 TEST VOICE"
+                        android:textColor="#C084FC"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Maya Intimate Card -->
+                <LinearLayout
+                    android:id="@+id/cardCharMayaIntimate"
+                    android:layout_width="140dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/bg_jarvis_character_inactive"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="❤️ INTIMATE"
+                        android:textColor="#F43F5E"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Secret Level 3\nPassionate Partner"
+                        android:textColor="#FDA4AF"
+                        android:textSize="11sp"
+                        android:layout_marginTop="4dp" />
+
+                    <TextView
+                        android:id="@+id/btnPreviewMayaIntimate"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="#4C0519"
+                        android:gravity="center"
+                        android:padding="4dp"
+                        android:text="🔒 CONFIGURE"
+                        android:textColor="#FDA4AF"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Friday Card -->
+                <LinearLayout
+                    android:id="@+id/cardCharFriday"
+                    android:layout_width="140dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/bg_jarvis_character_inactive"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🛡️ F.R.I.D.A.Y."
+                        android:textColor="#F8FAFC"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Cyber Protocol\nBritish AI Tone"
+                        android:textColor="#94A3B8"
+                        android:textSize="11sp"
+                        android:layout_marginTop="4dp" />
+
+                    <TextView
+                        android:id="@+id/btnPreviewFriday"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="#261042"
+                        android:gravity="center"
+                        android:padding="4dp"
+                        android:text="🔊 TEST VOICE"
+                        android:textColor="#C084FC"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Venom Card -->
+                <LinearLayout
+                    android:id="@+id/cardCharVenom"
+                    android:layout_width="140dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/bg_jarvis_character_inactive"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🖤 VENOM"
+                        android:textColor="#F8FAFC"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Deep Aggressive\nDark Symbiote"
+                        android:textColor="#94A3B8"
+                        android:textSize="11sp"
+                        android:layout_marginTop="4dp" />
+
+                    <TextView
+                        android:id="@+id/btnPreviewVenom"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="#261042"
+                        android:gravity="center"
+                        android:padding="4dp"
+                        android:text="🔊 TEST VOICE"
+                        android:textColor="#C084FC"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <!-- 4. Real Autonomous Capability Grid (Functional, No Placeholders!) -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AUTONOMOUS DIRECTIVES &amp; TOOLS"
+            android:textColor="#E9D5FF"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="10dp" />
+
+        <!-- 2x2 Grid using nested LinearLayouts for wide compatibility -->
+        <!-- Row 1: ChatGPT Image Macro & Gemini Media Macro -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="10dp">
+
+            <!-- Card 1: ChatGPT Image Macro -->
+            <LinearLayout
+                android:id="@+id/cardMacroChatGptImage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_jarvis_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎨 ChatGPT Image"
+                    android:textColor="#F8FAFC"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Autonomous prompt -> ChatGPT image generation &amp; download"
+                    android:textColor="#C084FC"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnRunChatGptImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="34dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_jarvis_mode_pill"
+                    android:text="EXECUTE"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Card 2: Gemini Media Macro -->
+            <LinearLayout
+                android:id="@+id/cardMacroGeminiMedia"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_jarvis_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎬 Gemini Video/Img"
+                    android:textColor="#F8FAFC"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Veo video &amp; Imagen generation macro via Gemini app"
+                    android:textColor="#C084FC"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnRunGeminiMedia"
+                    android:layout_width="match_parent"
+                    android:layout_height="34dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_jarvis_mode_pill"
+                    android:text="EXECUTE"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Row 2: Touch Guard Sentinel & PocketTTS Engine -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="10dp">
+
+            <!-- Card 3: Touch Guard Sentinel -->
+            <LinearLayout
+                android:id="@+id/cardTouchGuard"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_jarvis_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🚨 Touch Guard"
+                    android:textColor="#F8FAFC"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvTouchGuardStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Anti-theft motion detector: DISARMED"
+                    android:textColor="#94A3B8"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnToggleTouchGuard"
+                    android:layout_width="match_parent"
+                    android:layout_height="34dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_jarvis_mode_pill"
+                    android:text="ARM GUARD"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Card 4: PocketTTS Voice Engine -->
+            <LinearLayout
+                android:id="@+id/cardPocketTtsTest"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_jarvis_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎙️ PocketTTS Voice"
+                    android:textColor="#F8FAFC"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Offline 24kHz neural speech generator"
+                    android:textColor="#C084FC"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnTestPocketTts"
+                    android:layout_width="match_parent"
+                    android:layout_height="34dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_jarvis_mode_pill"
+                    android:text="TEST SPEECH"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Row 3: WhatsApp Dispatch & Biometric Watchman -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <!-- Card 5: WhatsApp Automation -->
+            <LinearLayout
+                android:id="@+id/cardWhatsAppAutomation"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_jarvis_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="💬 WhatsApp Reply"
+                    android:textColor="#F8FAFC"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Notification reading &amp; voice remote reply"
+                    android:textColor="#C084FC"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnOpenWhatsAppSettings"
+                    android:layout_width="match_parent"
+                    android:layout_height="34dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_jarvis_mode_pill"
+                    android:text="SETTINGS"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Card 6: Biometric Watchman -->
+            <LinearLayout
+                android:id="@+id/cardBiometricAppLock"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_jarvis_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔒 AppLock Shield"
+                    android:textColor="#F8FAFC"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Hardware biometric app protection"
+                    android:textColor="#C084FC"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnOpenBiometricLock"
+                    android:layout_width="match_parent"
+                    android:layout_height="34dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_jarvis_mode_pill"
+                    android:text="MANAGE LOCK"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

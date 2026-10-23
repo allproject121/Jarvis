@@ -1,0 +1,100 @@
+========================================================================
+MODEL_LICENSE.md, as published at https://huggingface.co/saryps-labs/pocket-tts-hindi
+========================================================================
+
+# Model license
+
+Pocket TTS Hindi model weights are licensed under the
+[Creative Commons Attribution 4.0 International license (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/legalcode).
+
+When sharing or adapting these weights, including converted or quantized ONNX
+versions, provide appropriate credit, link to the license, and indicate whether
+changes were made.
+
+Suggested attribution:
+
+> Pocket TTS Hindi by Saryps Labs, based on Kyutai Pocket TTS and trained with
+> AI4Bharat IndicVoices and Kathbath data. Licensed under CC BY 4.0.
+
+Software code and third-party components retain their respective licenses.
+See [NOTICE.md](NOTICE.md) for component attribution, pinned source revisions,
+and dataset licensing notes.
+
+========================================================================
+NOTICE.md, as published at https://huggingface.co/saryps-labs/pocket-tts-hindi
+========================================================================
+
+# Attribution and licenses
+
+This notice records component-level attribution for the public v0.1 research
+release. The Hindi model weights are released under CC BY 4.0. Component
+licenses continue to apply independently as described below.
+
+## Pocket TTS Hindi model weights
+
+- Project: Saryps Labs Pocket TTS Hindi
+- Repository: https://huggingface.co/saryps-labs/pocket-tts-hindi
+- License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+- License text: https://creativecommons.org/licenses/by/4.0/legalcode
+- Attribution: `Pocket TTS Hindi by Saryps Labs`
+- Changes in the ONNX edition: exported to ONNX and dynamically quantized to
+  INT8 for PocketTTS.cpp CPU inference
+
+## Pocket TTS
+
+- Project: Kyutai Pocket TTS
+- Repository: https://github.com/kyutai-labs/pocket-tts
+- Source model revision used for the frozen Mimi weights:
+  `39592ff23c9ef80098bb74895d104c26275fe2c9`
+- Code and model terms confirmed for this release: MIT
+- Use: model architecture, inference/training implementation, and Mimi codec
+  weights included in the final safetensors artifact
+- Copyright and MIT notice from Pocket TTS must be retained with redistributed
+  software components
+
+## AI4Bharat IndicVoices
+
+- Dataset: https://huggingface.co/datasets/ai4bharat/IndicVoices
+- Language configuration: Hindi
+- Pinned revision: `c96f9088f138cf89d419da7e8e643e1f05c00a87`
+- License declared by the pinned dataset card: CC BY 4.0
+- Training contribution: 381,496 utterances / 803.31 hours after preparation
+- Citation: Tahir Javed et al., *IndicVoices: Towards building an Inclusive
+  Multilingual Speech Dataset for Indian Languages*, ACL Findings, 2024
+
+## AI4Bharat Kathbath
+
+- Dataset: https://huggingface.co/datasets/ai4bharat/Kathbath
+- Language configuration: Hindi
+- Pinned revision: `5b9e92849222026d9141acba4e8434fe816396bf`
+- License declared by the pinned card metadata: CC BY 4.0
+- The same card's body describes IndicSUPERB packaging as CC0 and states that
+  AI4Bharat does not own the underlying raw text; both statements are retained
+  here rather than silently choosing one
+- Training contribution: 88,299 utterances / 128.81 hours after preparation
+- Citation: Tahir Javed et al., *IndicSUPERB: A Speech Processing Universal
+  Performance Benchmark for Indian Languages*, 2022
+
+## ONNX conversion contribution
+
+- Contributor: Jim Grimsby Jr.
+- Role: accessibility developer and maintainer of Sonata Sherpa Voices
+- Project: https://github.com/jbgrimsby/sonata-sherpa-voices
+- Contributor approved publication of the conversion documentation,
+  benchmarks, and ASR results under CC BY 4.0 by email on 2026-09-19; the
+  original contribution offered the converted ONNX model for hosting by
+  Saryps Labs
+- Runtime base: https://github.com/VolgaGerm/PocketTTS.cpp at commit
+  `e801e7d6c2692121a39e80ae525cb5265174a495`
+- A reviewed, Hindi-compatible source snapshot is bundled under
+  `onnx/runtime/` and retains the PocketTTS.cpp MIT license
+
+## Evaluation models
+
+- `openai/whisper-large-v3`: independent Hindi ASR evaluation
+- `theainerd/Wav2Vec2-large-xlsr-hindi`: preliminary ASR and alignment family
+- `microsoft/wavlm-base-plus-sv`: speaker-similarity evaluation
+- UTMOS-PyTorch: automatic speech-quality evaluation
+
+Evaluation-model outputs do not become part of the released inference model.
+Their names and versions should remain in the model card for reproducibility.

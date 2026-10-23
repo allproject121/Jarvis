@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/proposalDiffRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0A0E17">
+
+    <!-- Top App Bar -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="12dp"
+        android:background="#0F172A">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_jarvis_icon_square"
+            android:src="@drawable/ic_back"
+            app:tint="#F8FAFC"
+            android:contentDescription="Close" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="12dp">
+
+            <TextView
+                android:id="@+id/tvProposalTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Integration Proposal Diff"
+                android:textColor="#F8FAFC"
+                android:textSize="18sp"
+                android:fontFamily="sans-serif-medium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvProposalSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Feature Review"
+                android:textColor="#94A3B8"
+                android:textSize="12sp"
+                android:fontFamily="sans-serif"
+                android:singleLine="true"
+                android:ellipsize="middle" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnCopyDiff"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_jarvis_icon_square"
+            android:src="@drawable/ic_copy"
+            app:tint="#38BDF8"
+            android:contentDescription="Copy Complete Diff" />
+    </LinearLayout>
+
+    <!-- Security Gate Banner -->
+    <LinearLayout
+        android:id="@+id/layoutSecurityBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#1E1B4B"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvStatusBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PENDING_USER_APPROVAL"
+                android:textColor="#F59E0B"
+                android:textStyle="bold"
+                android:textSize="11sp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:background="#33F59E0B" />
+
+            <TextView
+                android:id="@+id/tvFileStats"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="6 files • 445 lines"
+                android:textColor="#38BDF8"
+                android:textSize="12sp"
+                android:fontFamily="monospace" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="🔒 Mandatory Security Gate: Code modifications will NOT be applied until explicit user approval via apply_integration_proposal."
+            android:textColor="#E2E8F0"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- Scrollable Diff Viewer -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="vertical">
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="horizontal">
+
+            <TextView
+                android:id="@+id/tvDiffContent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="11sp"
+                android:textColor="#CBD5E1"
+                android:padding="16dp"
+                android:textIsSelectable="true"
+                android:lineSpacingExtra="2dp" />
+        </HorizontalScrollView>
+    </ScrollView>
+
+</LinearLayout>

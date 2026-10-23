@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Mora — REDMAGIC Cyber AI Companion</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    #stage {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      touch-action: none;
+    }
+    canvas {
+      display: block; width: 100%; height: 100%; outline: none;
+    }
+    .hud-badge {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 0, 85, 0.4);
+      padding: 6px 14px; border-radius: 20px; color: #fff; font-size: 11px;
+      letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 8px;
+      backdrop-filter: blur(8px); pointer-events: none; transition: all 0.3s ease;
+    }
+    .hud-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: #FF0055;
+      box-shadow: 0 0 8px #FF0055;
+    }
+  </style>
+  <script src="three.min.js"></script>
+  <script src="GLTFLoader.js"></script>
+  <script src="mora_clips.js"></script>
+</head>
+<body>
+  <div id="stage">
+    <canvas id="c"></canvas>
+    <div class="hud-badge" id="hudBadge">
+      <span class="hud-dot" id="hudDot"></span>
+      <span id="hudState">MORA READY</span>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    "use strict";
+
+    /* =========================================================================
+       Mora 3D Scene & WebGL Setup
+       ========================================================================= */
+    const canvas = document.getElementById("c");
+    const stage = document.getElementById("stage");
+    const hudState = document.getElementById("hudState");
+    const hudDot = document.getElementById("hudDot");
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
+    // Position camera to frame Mora (upper body & face)
+    camera.position.set(0, 1.25, 2.15);
+    camera.lookAt(0, 1.15, 0);
+
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true, powerPreference: "high-performance" });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.0));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+
+    // REDMAGIC Cyberpunk Lighting: Warm Key Light + Cyber Magenta Rim + Electric Cyan Fill
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    scene.add(ambientLight);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.1);
+    keyLight.position.set(1.5, 3.0, 2.5);
+    scene.add(keyLight);
+
+    const cyberMagentaRim = new THREE.PointLight(0xff0055, 1.8, 8);
+    cyberMagentaRim.position.set(-2.0, 2.0, -1.5);
+    scene.add(cyberMagentaRim);
+
+    const electricCyanRim = new THREE.PointLight(0x00f0ff, 1.4, 8);
+    electricCyanRim.position.set(2.0, 1.5, -1.0);
+    scene.add(electricCyanRim);
+
+    // Subtle Cyber Energy Floor Grid / Pedestal
+    const ringGeo = new THREE.RingGeometry(0.35, 0.38, 48);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xff0055, side: THREE.DoubleSide, transparent: true, opacity: 0.35 });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.rotation.x = -Math.PI / 2;
+    ringMesh.position.y = 0.01;
+    scene.add(ringMesh);
+
+    // Floating Cyber Particles
+    const particleCount = 45;
+    const pGeo = new THREE.BufferGeometry();
+    const pPos = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      pPos[i] = (Math.random() - 0.5) * 2.2;
+      pPos[i + 1] = Math.random() * 2.0;
+      pPos[i + 2] = (Math.random() - 0.5) * 2.0;
+    }
+    pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
+    const pMat = new THREE.PointsMaterial({ color: 0xff0055, size: 0.022, transparent: true, opacity: 0.65 });
+    const particles = new THREE.Points(pGeo, pMat);
+    scene.add(particles);
+
+    /* =========================================================================
+       MoraCharacterController & Movement System
+       Independent, clean-room character controller for REDMAGIC Mora.
+       ========================================================================= */
+    class MoraCharacterController {
+      constructor(rootModel) {
+        this.root = rootModel;
+        this.bones = {};
+        this.restRotations = {};
+        this.morphMeshes = [];
+        this.morphMap = { mouthA: [], mouthO: [], mouthE: [], blink: [], joy: [] };
+        this.mixer = new THREE.AnimationMixer(this.root);
+        this.actions = {};
+        this.activeAction = null;
+        this.activeActionName = "idle";
+        this.hasClips = false;
+        this.hasMorphs = false;
+
+        // Kinematic living state
+        this.livingBreath = 0;
+        this.livingSway = 0;
+        this.headYaw = 0;
+        this.headPitch = 0;
+        this.headRoll = 0;
+        this.gazeX = 0;
+        this.gazeY = 0;
+        this.curGazeX = 0;
+        this.curGazeY = 0;
+        this.thinkingWeight = 0;
+
+        this.init();
+      }
+
+      init() {
+        const self = this;
+        const BONE_KEYS = {
+          hips: /j_bip_c_hips/i,
+          spine: /j_bip_c_spine/i,
+          chest: /j_bip_c_chest/i,
+          upperChest: /j_bip_c_upperchest/i,
+          neck: /j_bip_c_neck/i,
+          head: /j_bip_c_head/i,
+          leftUpperArm: /j_bip_l_upperarm/i,
+          leftForearm: /j_bip_l_lowerarm/i,
+          leftHand: /j_bip_l_hand/i,
+          rightUpperArm: /j_bip_r_upperarm/i,
+          rightForearm: /j_bip_r_lowerarm/i,
+          rightHand: /j_bip_r_hand/i,
+          leftThigh: /j_bip_l_upperleg/i,
+          leftCalf: /j_bip_l_lowerleg/i,
+          rightThigh: /j_bip_r_upperleg/i,
+          rightCalf: /j_bip_r_lowerleg/i
+        };
+
+        this.root.traverse(function(node) {
+          if (node.isMesh) {
+            node.castShadow = true;
+            node.receiveShadow = true;
+            if (node.material) {
+              const mats = Array.isArray(node.material) ? node.material : [node.material];
+              for (const mat of mats) {
+                if (node.isSkinnedMesh) {
+                  mat.skinning = true;
+                  mat.needsUpdate = true;
+                }
+                mat.roughness = 0.45;
+                mat.metalness = 0.15;
+              }
+            }
+            if (node.morphTargetDictionary && Object.keys(node.morphTargetDictionary).length > 0) {
+              self.morphMeshes.push(node);
+              self.hasMorphs = true;
+              const dict = node.morphTargetDictionary;
+              for (const [name, idx] of Object.entries(dict)) {
+                const ln = name.toLowerCase();
+                if (ln.includes("fcl_mth_a") || ln === "a" || ln === "aa") self.morphMap.mouthA.push({ mesh: node, idx });
+                else if (ln.includes("fcl_mth_o") || ln.includes("fcl_mth_u") || ln === "o" || ln === "u") self.morphMap.mouthO.push({ mesh: node, idx });
+                else if (ln.includes("fcl_mth_e") || ln.includes("fcl_mth_i") || ln === "e" || ln === "i") self.morphMap.mouthE.push({ mesh: node, idx });
+                else if (ln.includes("fcl_eye_close") || ln.includes("blink")) self.morphMap.blink.push({ mesh: node, idx });
+                else if (ln.includes("fcl_all_joy") || ln.includes("fcl_mth_joy") || ln.includes("joy")) self.morphMap.joy.push({ mesh: node, idx });
+              }
+            }
+          }
+
+          const nName = node.name || "";
+          for (const [key, regex] of Object.entries(BONE_KEYS)) {
+            if (!self.bones[key] && regex.test(nName)) {
+              self.bones[key] = node;
+              self.restRotations[key] = node.rotation.clone();
+              break;
+            }
+          }
+        });
+
+        console.log("MoraCharacterController initialized. Mapped joints:", Object.keys(this.bones).length, "Morph meshes:", this.morphMeshes.length);
+      }
+
+      setAnimations(clips) {
+        if (!clips || clips.length === 0) return;
+        for (let i = 0; i < clips.length; i++) {
+          const clip = clips[i];
+          const rawName = (clip.name || "").toLowerCase();
+          try {
+            const action = this.mixer.clipAction(clip);
+            action.setLoop(THREE.LoopRepeat);
+            this.actions[rawName] = action;
+            if (rawName.includes("idle")) this.actions["idle"] = action;
+            if (rawName.includes("talking") || rawName.includes("talk") || rawName.includes("speak")) {
+              this.actions["talking"] = action;
+              this.actions["talking_0"] = action;
+              this.actions["talking_1"] = action;
+            }
+            if (rawName.includes("wave")) this.actions["wave"] = action;
+            if (rawName.includes("joy") || rawName.includes("laugh") || rawName.includes("cheer")) this.actions["joy"] = action;
+            if (rawName.includes("learn") || rawName.includes("teach") || rawName.includes("thankful")) {
+              this.actions["learn"] = action;
+              this.actions["teach"] = action;
+            }
+            if (rawName.includes("dance")) this.actions["dance"] = action;
+            if (rawName.includes("thinking") || rawName.includes("think")) this.actions["thinking"] = action;
+            if (rawName.includes("crying") || rawName.includes("cry")) this.actions["crying"] = action;
+          } catch (e) {
+            console.warn("Error creating action for clip", clip.name, e);
+          }
+        }
+        this.hasClips = Object.keys(this.actions).length > 0;
+        console.log("Mora clips registered:", Object.keys(this.actions));
+        this.fadeToAction("idle", 0.1);
+      }
+
+      fadeToAction(name, duration) {
+        duration = duration !== undefined ? duration : 0.35;
+        const targetAction = this.actions[name] || this.actions["idle"];
+        if (!targetAction) return;
+
+        if (this.activeAction === targetAction) {
+          if (!targetAction.isRunning()) targetAction.play();
+          return;
+        }
+
+        const prev = this.activeAction;
+        this.activeAction = targetAction;
+        this.activeActionName = name;
+
+        targetAction.reset();
+        targetAction.setEffectiveTimeScale(1);
+        targetAction.setEffectiveWeight(1);
+        if (prev && prev !== targetAction) {
+          prev.crossFadeTo(targetAction, duration, true);
+        }
+        targetAction.play();
+      }
+
+      interrupt() {
+        // REDMAGIC Barge-In: Instantly zero mouth morphs and fade speech back to attentive listening
+        for (const item of this.morphMap.mouthA) item.mesh.morphTargetInfluences[item.idx] = 0;
+        for (const item of this.morphMap.mouthO) item.mesh.morphTargetInfluences[item.idx] = 0;
+        for (const item of this.morphMap.mouthE) item.mesh.morphTargetInfluences[item.idx] = 0;
+        if (this.hasClips) this.fadeToAction("idle", 0.15);
+        this.thinkingWeight = 0;
+      }
+
+      update(dt, time, state, audioLevel, activeReaction, reactionTimer) {
+        // 1. Cross-fade retargeted skeletal animation action based on state / reaction
+        if (this.hasClips) {
+          let desired = "idle";
+          if (activeReaction === "dance" || activeReaction === "rumba") desired = "dance";
+          else if (activeReaction === "joy" || activeReaction === "laugh") desired = "joy";
+          else if (activeReaction === "wave") desired = "wave";
+          else if (activeReaction === "teach" || activeReaction === "learn" || activeReaction === "nod") desired = "learn";
+          else if (activeReaction === "curious" || activeReaction === "thinking") desired = "thinking";
+          else if (activeReaction === "cry") desired = "crying";
+          else if (state === "speaking") {
+            desired = "talking";
+          } else if (state === "thinking") {
+            desired = "thinking";
+          } else {
+            desired = "idle";
+          }
+          this.fadeToAction(desired, 0.35);
+          this.mixer.update(dt);
+        }
+
+        // 2. Real-time Audio Lip-Sync (Active ONLY during speech)
+        const isSpeaking = (state === "speaking");
+        const rawVol = audioLevel > 0.015 ? audioLevel : 0;
+        const mouthAVal = isSpeaking ? Math.min(1.0, (rawVol > 0.015 ? rawVol * 3.2 : 0.45) + Math.abs(Math.sin(time * 11.5)) * 0.32) : 0;
+        const mouthOVal = isSpeaking ? Math.min(0.85, Math.abs(Math.cos(time * 7.5)) * (rawVol > 0.015 ? rawVol * 2.5 : 0.30)) : 0;
+        const mouthEVal = isSpeaking ? Math.min(0.75, Math.abs(Math.sin(time * 9.2)) * (rawVol > 0.015 ? rawVol * 2.0 : 0.22)) : 0;
+
+        // Natural eyelid blinking: ~120ms duration every 3.6s
+        const blinkPhase = time % 3.6;
+        const isBlinking = blinkPhase < 0.12 ? 1.0 : 0.0;
+        const gentleSmile = (activeReaction === "joy" || activeReaction === "teach" || activeReaction === "blush") ? 0.75 : 0.15;
+
+        for (const item of this.morphMap.mouthA) item.mesh.morphTargetInfluences[item.idx] = THREE.MathUtils.lerp(item.mesh.morphTargetInfluences[item.idx], mouthAVal, dt * 26);
+        for (const item of this.morphMap.mouthO) item.mesh.morphTargetInfluences[item.idx] = THREE.MathUtils.lerp(item.mesh.morphTargetInfluences[item.idx], mouthOVal, dt * 22);
+        for (const item of this.morphMap.mouthE) item.mesh.morphTargetInfluences[item.idx] = THREE.MathUtils.lerp(item.mesh.morphTargetInfluences[item.idx], mouthEVal, dt * 22);
+        for (const item of this.morphMap.blink)  item.mesh.morphTargetInfluences[item.idx] = THREE.MathUtils.lerp(item.mesh.morphTargetInfluences[item.idx], isBlinking, dt * 32);
+        for (const item of this.morphMap.joy)    item.mesh.morphTargetInfluences[item.idx] = THREE.MathUtils.lerp(item.mesh.morphTargetInfluences[item.idx], gentleSmile, dt * 10);
+
+        // 3. Additive Kinematics: Clamped Gaze Tracking & Conversational Head Tilts
+        if (this.hasClips && this.bones.head) {
+          const targetGazeX = this.gazeX * 0.38;
+          const targetGazeY = -this.gazeY * 0.26;
+          let tiltZ = 0, pitchX = 0;
+
+          if (state === "listening") {
+            tiltZ = 0.08;
+            pitchX = -0.04;
+          } else if (state === "thinking") {
+            tiltZ = -0.10;
+            pitchX = -0.06;
+          } else if (activeReaction === "wave") {
+            tiltZ = 0.06;
+          } else if (activeReaction === "teach" || activeReaction === "learn" || activeReaction === "nod") {
+            pitchX = -Math.abs(Math.sin(time * 3.2)) * 0.08;
+          } else if (activeReaction === "curious") {
+            tiltZ = 0.12;
+            pitchX = -0.04;
+          }
+
+          const speechNod = isSpeaking ? -Math.abs(Math.sin(time * 3.0)) * (0.02 + rawVol * 0.04) : 0;
+
+          this.curGazeX = THREE.MathUtils.lerp(this.curGazeX, targetGazeX, dt * 5.0);
+          this.curGazeY = THREE.MathUtils.lerp(this.curGazeY, targetGazeY + pitchX + speechNod, dt * 5.0);
+          this.headRoll = THREE.MathUtils.lerp(this.headRoll, tiltZ, dt * 5.0);
+
+          const clampedPitch = Math.max(-0.15, Math.min(0.08, this.curGazeY));
+          const clampedYaw = Math.max(-0.25, Math.min(0.25, this.curGazeX));
+          const clampedRoll = Math.max(-0.15, Math.min(0.15, this.headRoll));
+
+          const additiveQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(clampedPitch, clampedYaw, clampedRoll, 'YXZ'));
+          this.bones.head.quaternion.multiply(additiveQ);
+        }
+      }
+    }
+
+    /* =========================================================================
+       Scene Model Loading & State Management
+       ========================================================================= */
+    let moraController = null;
+    let moraModel = null;
+    let currentState = "idle";
+    let activeReaction = "none";
+    let reactionTimer = 0;
+    let extAudioLevel = 0;
+    let clock = new THREE.Clock();
+
+    function setMoraState(state) {
+      const prev = currentState;
+      currentState = state || "idle";
+      if (hudState) hudState.textContent = "MORA • " + currentState.toUpperCase();
+      if (hudDot) {
+        if (currentState === "speaking") hudDot.style.background = "#00F0FF";
+        else if (currentState === "listening") hudDot.style.background = "#10B981";
+        else if (currentState === "thinking") hudDot.style.background = "#F59E0B";
+        else hudDot.style.background = "#FF0055";
+      }
+
+      // Barge-in interruption
+      if (prev === "speaking" && currentState !== "speaking") {
+        extAudioLevel = 0;
+        if (moraController) moraController.interrupt();
+      }
+    }
+
+    function triggerMoraReaction(reaction) {
+      activeReaction = (reaction || "").toLowerCase();
+      if (activeReaction === "dance") reactionTimer = 7.5;
+      else if (activeReaction === "joy" || activeReaction === "laugh") reactionTimer = 6.5;
+      else if (activeReaction === "wave") reactionTimer = 4.1;
+      else if (activeReaction === "teach" || activeReaction === "learn") reactionTimer = 3.0;
+      else reactionTimer = 2.5;
+      console.log("Mora reaction triggered:", activeReaction, "duration:", reactionTimer);
+    }
+
+    // Touch & Poke Reaction Handler
+    let reactionCycle = 0;
+    function onTouchPoke() {
+      const pool = ["wave", "nod", "curious", "joy", "blush"];
+      reactionCycle = (reactionCycle + 1) % pool.length;
+      triggerMoraReaction(pool[reactionCycle]);
+      try {
+        if (window.Jarvis3DModelBridge && typeof window.Jarvis3DModelBridge.onModelTouchReact === "function") {
+          window.Jarvis3DModelBridge.onModelTouchReact();
+        }
+      } catch (_) {}
+    }
+
+    canvas.addEventListener("click", onTouchPoke);
+
+    // Pointer Drag Gaze Tracking
+    let dragging = false;
+    let lastX = 0, lastY = 0;
+    canvas.addEventListener("pointerdown", (e) => {
+      dragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+    });
+    canvas.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const dx = (e.clientX - lastX) / window.innerWidth;
+      const dy = (e.clientY - lastY) / window.innerHeight;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      if (moraController) {
+        moraController.gazeX = Math.max(-1, Math.min(1, moraController.gazeX + dx * 3.0));
+        moraController.gazeY = Math.max(-1, Math.min(1, moraController.gazeY + dy * 3.0));
+      }
+    });
+    const stopDrag = () => {
+      dragging = false;
+      if (moraController) {
+        moraController.gazeX = 0;
+        moraController.gazeY = 0;
+      }
+    };
+    canvas.addEventListener("pointerup", stopDrag);
+    canvas.addEventListener("pointercancel", stopDrag);
+
+    // Load Mora 3D Model (.glb)
+    const gltfLoader = new THREE.GLTFLoader();
+    console.log("Loading Mora 3D Model: models/mora.glb");
+    gltfLoader.load(
+      "models/mora.glb",
+      function(gltf) {
+        console.log("Mora 3D Model loaded successfully!");
+        moraModel = gltf.scene || gltf.scenes[0];
+
+        // Center and scale model nicely inside parent pivot facing camera
+        moraModel.position.set(0, 0, 0);
+        moraModel.scale.set(1.0, 1.0, 1.0);
+        moraModel.rotation.y = 0;
+
+        const characterPivot = new THREE.Group();
+        characterPivot.rotation.y = Math.PI;
+        characterPivot.add(moraModel);
+        scene.add(characterPivot);
+
+        moraController = new MoraCharacterController(moraModel);
+
+        // Load retargeted clips from mora_clips.js (or fallback to mora_animations.glb)
+        if (window.MORA_RETARGETED_CLIPS && window.MORA_RETARGETED_CLIPS.length > 0) {
+          console.log("Loading retargeted animation clips from window.MORA_RETARGETED_CLIPS...");
+          const parsedClips = window.MORA_RETARGETED_CLIPS.map(data => THREE.AnimationClip.parse(data));
+          console.log("Successfully parsed", parsedClips.length, "retargeted clips for Mora");
+          moraController.setAnimations(parsedClips);
+        } else {
+          console.log("Loading skeletal animations library: models/mora_animations.glb");
+          gltfLoader.load(
+            "models/mora_animations.glb",
+            function(animGltf) {
+              console.log("Loaded", animGltf.animations.length, "animations for Mora");
+              if (moraController && animGltf.animations) {
+                moraController.setAnimations(animGltf.animations);
+              }
+            },
+            undefined,
+            function(err) {
+              console.warn("Could not load animations library:", err);
+            }
+          );
+        }
+      },
+      undefined,
+      function(err) {
+        console.error("Error loading models/mora.glb:", err);
+      }
+    );
+
+    // Render & Animation Loop
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = clock.getDelta();
+      const time = clock.getElapsedTime();
+
+      // Animate floating cyber particles
+      particles.rotation.y = time * 0.04;
+      ringMesh.rotation.z = time * 0.15;
+
+      if (reactionTimer > 0) {
+        reactionTimer -= dt;
+        if (reactionTimer <= 0) {
+          activeReaction = "none";
+          reactionTimer = 0;
+        }
+      }
+
+      if (moraController) {
+        moraController.update(dt, time, currentState, extAudioLevel, activeReaction, reactionTimer);
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    function handleResize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+    window.addEventListener("resize", handleResize);
+
+    /* =========================================================================
+       Expose Dedicated Mora Companion Bridge Interface to Android
+       ========================================================================= */
+    window.MoraCompanion = {
+      setState: setMoraState,
+      setExternalAudio: (level) => { extAudioLevel = Math.max(0, Math.min(1, Number(level) || 0)); },
+      triggerReaction: triggerMoraReaction,
+      interrupt: () => {
+        setMoraState("listening");
+        if (moraController) moraController.interrupt();
+      },
+      getController: () => moraController,
+      getModel: () => moraModel
+    };
+
+    console.log("Mora Companion Bridge ready: window.MoraCompanion");
+  })();
+  </script>
+</body>
+</html>

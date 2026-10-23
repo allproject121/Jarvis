@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JARVIS — Interactive Animated System Architecture</title>
+  <style>
+    :root {
+      --bg-dark: #070b12;
+      --bg-card: rgba(13, 22, 38, 0.85);
+      --bg-card-hover: rgba(20, 35, 60, 0.95);
+      --border-cyan: rgba(0, 229, 255, 0.3);
+      --border-cyan-glow: #00e5ff;
+      --accent-cyan: #00e5ff;
+      --accent-purple: #a855f7;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* Top Control Bar */
+    header {
+      background: rgba(10, 16, 28, 0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-cyan);
+      height: 64px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .arc-reactor-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-cyan);
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle, #00e5ff33 0%, #000000 70%);
+      animation: reactorPulse 3s infinite alternate;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: #fff;
+    }
+
+    .brand-title span {
+      color: var(--accent-cyan);
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-chip {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-chip:hover, .btn-chip.active {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      background: rgba(0, 229, 255, 0.12);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.25);
+    }
+
+    .search-box {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 6px 14px;
+      color: #fff;
+      font-size: 12px;
+      width: 170px;
+      outline: none;
+      transition: all 0.25s;
+    }
+
+    .search-box:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+      width: 220px;
+    }
+
+    /* Main Workspace */
+    .workspace {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .canvas-viewport {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      background: radial-gradient(circle at 50% 50%, #0d1829 0%, #040810 100%);
+      cursor: grab;
+      overflow: hidden;
+    }
+
+    .canvas-viewport:active {
+      cursor: grabbing;
+    }
+
+    /* Canvas Grid */
+    .bg-grid {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(0, 229, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
+      pointer-events: none;
+    }
+
+    /* Diagram Stage Container (Pan & Zoom) */
+    #diagramStage {
+      position: absolute;
+      transform-origin: 0 0;
+      transition: transform 0.05s linear;
+      width: 1600px;
+      height: 1000px;
+    }
+
+    /* SVG Connectors */
+    #svgConnectors {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1600px;
+      height: 1000px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .flow-line {
+      fill: none;
+      stroke: rgba(0, 229, 255, 0.3);
+      stroke-width: 2.5;
+      stroke-dasharray: 6, 6;
+      animation: dashFlow 1.5s linear infinite;
+    }
+
+    .flow-line.highlight {
+      stroke: var(--accent-cyan);
+      stroke-width: 4;
+      filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.8));
+    }
+
+    .flow-line.failover {
+      stroke: var(--accent-amber);
+      stroke-dasharray: 4, 4;
+      animation: dashFlow 1s linear infinite reverse;
+    }
+
+    .flow-line.memory {
+      stroke: var(--accent-purple);
+    }
+
+    @keyframes dashFlow {
+      from { stroke-dashoffset: 24; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* Layer Swimlanes */
+    .layers-container {
+      position: absolute;
+      top: 20px;
+      left: 30px;
+      width: 1540px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      z-index: 20;
+    }
+
+    .tier-lane {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 16px 20px;
+      background: rgba(10, 18, 32, 0.55);
+      backdrop-filter: blur(8px);
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .tier-lane:hover {
+      border-color: rgba(0, 229, 255, 0.25);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .tier-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .tier-title {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tier-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: rgba(0, 229, 255, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+    }
+
+    .tier-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    /* Component Card */
+    .comp-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 14px 16px;
+      min-width: 220px;
+      flex: 1;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    }
+
+    .comp-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-cyan);
+      transform: translateY(-3px) scale(1.01);
+      box-shadow: 0 8px 24px rgba(0, 229, 255, 0.22);
+    }
+
+    .comp-card.active-selected {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.5), inset 0 0 10px rgba(0, 229, 255, 0.1);
+    }
+
+    .comp-card.faded {
+      opacity: 0.28;
+      filter: grayscale(80%);
+    }
+
+    .comp-card.highlight-trace {
+      border-color: #38bdf8;
+      box-shadow: 0 0 24px #38bdf888;
+      animation: pulseHighlight 1.5s infinite alternate;
+    }
+
+    @keyframes pulseHighlight {
+      0% { transform: scale(1); box-shadow: 0 0 15px #38bdf855; }
+      100% { transform: scale(1.03); box-shadow: 0 0 28px #38bdf8cc; }
+    }
+
+    .comp-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .comp-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .comp-latency {
+      font-size: 10px;
+      font-family: monospace;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+    }
+
+    .comp-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    .comp-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .comp-tag {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(0, 229, 255, 0.08);
+      color: #7dd3fc;
+      border: 1px solid rgba(0, 229, 255, 0.2);
+    }
+
+    /* Inspector Drawer (Right) */
+    .inspector-pane {
+      width: 380px;
+      background: rgba(10, 16, 28, 0.94);
+      backdrop-filter: blur(20px);
+      border-left: 1px solid var(--border-cyan);
+      height: 100%;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      z-index: 90;
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.6);
+      transform: translateX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .inspector-pane.closed {
+      transform: translateX(100%);
+    }
+
+    .inspector-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 16px;
+    }
+
+    .inspector-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .inspector-layer {
+      font-size: 11px;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    .btn-close-inspect {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .btn-close-inspect:hover {
+      color: #fff;
+    }
+
+    .inspect-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .inspect-box {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+
+    .inspect-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      color: #38bdf8;
+      background: #020617;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      overflow-x: auto;
+    }
+
+    .floating-hud-dock {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 80;
+    }
+
+    .hud-pill {
+      background: rgba(10, 18, 32, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-cyan);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-main);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green);
+    }
+
+    .zoom-controls {
+      position: absolute;
+      bottom: 24px;
+      right: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 80;
+    }
+
+    .btn-zoom {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(10, 18, 32, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .btn-zoom:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    @keyframes reactorPulse {
+      0% { box-shadow: 0 0 8px rgba(0, 229, 255, 0.4); }
+      100% { box-shadow: 0 0 22px rgba(0, 229, 255, 0.9); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Control Header -->
+  <header>
+    <div class="brand">
+      <div class="arc-reactor-badge">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title">JARVIS <span>ARCHIFY</span> ENGINE</div>
+        <div class="brand-sub">Interactive 3D Multi-Tier Cybernetic Operating System Map</div>
+      </div>
+    </div>
+
+    <!-- Path Tracers / Preset Filter Chips -->
+    <div class="toolbar-actions">
+      <button class="btn-chip active" onclick="setTrace('all')">🌐 All Layers</button>
+      <button class="btn-chip" onclick="setTrace('voice_action')">🎙️ Voice ➔ OS Action</button>
+      <button class="btn-chip" onclick="setTrace('failover')">⚡ Silent Failover</button>
+      <button class="btn-chip" onclick="setTrace('memory_rag')">💾 Vector RAG</button>
+      <button class="btn-chip" onclick="setTrace('godseye')">🛰️ God's Eye 3D</button>
+      <input type="text" class="search-box" id="nodeSearch" placeholder="Search modules..." oninput="handleSearch(this.value)">
+    </div>
+  </header>
+
+  <!-- Workspace Canvas -->
+  <div class="workspace">
+    <div class="canvas-viewport" id="viewport">
+      <div class="bg-grid"></div>
+
+      <!-- Diagram Canvas -->
+      <div id="diagramStage">
+        
+        <!-- SVG Connections Layer -->
+        <svg id="svgConnectors">
+          <!-- Flow Line 1: Mic to Vosk/Audio -->
+          <path id="path_mic_router" class="flow-line" d="M 230 870 C 230 750, 270 560, 270 480" />
+          <!-- Flow Line 2: Router to Gemini -->
+          <path id="path_router_gemini" class="flow-line" d="M 330 430 C 330 380, 260 380, 260 320" />
+          <!-- Flow Line 3: Router to Local SLM (Failover) -->
+          <path id="path_router_local" class="flow-line failover" d="M 390 430 C 390 380, 520 380, 520 320" />
+          <!-- Flow Line 4: Router to Memory RAG -->
+          <path id="path_router_rag" class="flow-line memory" d="M 430 480 C 430 550, 480 580, 480 620" />
+          <!-- Flow Line 5: Router to SuperCore OS Actions -->
+          <path id="path_router_supercore" class="flow-line" d="M 360 480 C 360 680, 580 750, 580 840" />
+          <!-- Flow Line 6: Gemini to God's Eye MCP -->
+          <path id="path_gemini_godseye" class="flow-line" d="M 360 260 C 360 210, 360 210, 360 160" />
+          <!-- Flow Line 7: SuperCore to ThreeJS Visualizer -->
+          <path id="path_supercore_threejs" class="flow-line" d="M 800 840 C 950 650, 950 250, 750 160" />
+        </svg>
+
+        <!-- Component Swimlanes -->
+        <div class="layers-container">
+
+          <!-- Layer 5: Viewports & 3D Holographic UI -->
+          <div class="tier-lane" id="lane_layer5">
+            <div class="tier-header">
+              <div class="tier-title" style="color: #38bdf8;">
+                <span>Layer 5 — Holographic 3D Viewport & Visual Avatar Matrix</span>
+              </div>
+              <span class="tier-badge">60 FPS WebGL / Three.js</span>
+            </div>
+            <div class="tier-cards">
+              <div class="comp-card" id="card_arc_core" onclick="inspectNode('arc_core')">
+                <div class="comp-top">
+                  <span class="comp-name">⚡ Stark Arc Reactor Core</span>
+                  <span class="comp-latency">16.6ms (60fps)</span>
+                </div>
+                <div class="comp-desc">Titanium rotating segmented rings, 10 copper wire coil blocks, central unibeam flare.</div>
+                <div class="comp-tags"><span class="comp-tag">Three.js</span><span class="comp-tag">WebGL</span><span class="comp-tag">orb.html</span></div>
+              </div>
+
+              <div class="comp-card" id="card_anime_girl" onclick="inspectNode('anime_girl')">
+                <div class="comp-top">
+                  <span class="comp-name">🌸 3D Anime AI Girl</span>
+                  <span class="comp-latency">Procedural Emotes</span>
+                </div>
+                <div class="comp-desc">Bouncing ahoge cowlick, expressive blushing eyes, dynamic lip-sync mouth aperture.</div>
+                <div class="comp-tags"><span class="comp-tag">Cel-Shaded</span><span class="comp-tag">Spring Physics</span><span class="comp-tag">Emotes</span></div>
+              </div>
+
+              <div class="comp-card" id="card_custom_3d" onclick="inspectNode('custom_3d')">
+                <div class="comp-top">
+                  <span class="comp-name">✨ Custom 3D Photo Medallion</span>
+                  <span class="comp-latency">Interactive Tilt</span>
+                </div>
+                <div class="comp-desc">Uploads any photo from device gallery into an interactive 3D hovering medallion with dust satellites.</div>
+                <div class="comp-tags"><span class="comp-tag">Alpha Mask</span><span class="comp-tag">CustomAvatarHelper</span><span class="comp-tag">360° Spin</span></div>
+              </div>
+
+              <div class="comp-card" id="card_floating_overlay" onclick="inspectNode('floating_overlay')">
+                <div class="comp-top">
+                  <span class="comp-name">🫧 System-Wide Floating HUD</span>
+                  <span class="comp-latency">Overlay Window</span>
+                </div>
+                <div class="comp-desc">17+ Animated HTML/JS companions floating 24/7 over any Android app with double-tap task pill.</div>
+                <div class="comp-tags"><span class="comp-tag">WindowManager</span><span class="comp-tag">Edge Snapping</span><span class="comp-tag">Singleton</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Layer 4: God's Eye View 3D Geospatial Intelligence -->
+          <div class="tier-lane" id="lane_layer4">
+            <div class="tier-header">
+              <div class="tier-title" style="color: #34d399;">
+                <span>Layer 4 — God's Eye View 3D Geospatial Intelligence Console</span>
+              </div>
+              <span class="tier-badge">CesiumJS WebGL 2 & Satellites</span>
+            </div>
+            <div class="tier-cards">
+              <div class="comp-card" id="card_cesium_globe" onclick="inspectNode('cesium_globe')">
+                <div class="comp-top">
+                  <span class="comp-name">🌍 CesiumJS 3D Earth Globe</span>
+                  <span class="comp-latency">Hardware WebGL</span>
+                </div>
+                <div class="comp-desc">Google Photorealistic 3D Tiles, atmospheric fog optical shaders, offline asset loader.</div>
+                <div class="comp-tags"><span class="comp-tag">Cesium 1.118</span><span class="comp-tag">WebViewAssetLoader</span><span class="comp-tag">GodsEyeActivity</span></div>
+              </div>
+
+              <div class="comp-card" id="card_satellite_telemetry" onclick="inspectNode('satellite_telemetry')">
+                <div class="comp-top">
+                  <span class="comp-name">🛰️ Live Telemetry Proxy</span>
+                  <span class="comp-latency">Real-Time Streams</span>
+                </div>
+                <div class="comp-desc">OpenSky flights, USGS seismic quakes, NASA FIRMS wildfires, NOAA Doppler radar, AIS vessels.</div>
+                <div class="comp-tags"><span class="comp-tag">adsb.lol</span><span class="comp-tag">GeoJSON</span><span class="comp-tag">In-App Proxy</span></div>
+              </div>
+
+              <div class="comp-card" id="card_cctv_catalog" onclick="inspectNode('cctv_catalog')">
+                <div class="comp-top">
+                  <span class="comp-name">📹 3,700+ CCTV Surveillance</span>
+                  <span class="comp-latency">HLS / Stills</span>
+                </div>
+                <div class="comp-desc">Worldwide traffic and security camera directory with HLS live video and synthetic HUD failover.</div>
+                <div class="comp-tags"><span class="comp-tag">cctv_sources.json</span><span class="comp-tag">HLS Streaming</span><span class="comp-tag">Fallback HUD</span></div>
+              </div>
+
+              <div class="comp-card" id="card_mcp_bridge" onclick="inspectNode('mcp_bridge')">
+                <div class="comp-top">
+                  <span class="comp-name">🔌 GodsEyeMcpClient Bridge</span>
+                  <span class="comp-latency">Sub-10ms Tool RPC</span>
+                </div>
+                <div class="comp-desc">Translates Gemini Live voice instructions into dynamic Cesium camera hash coordinates and layer toggles.</div>
+                <div class="comp-tags"><span class="comp-tag">Model Context Protocol</span><span class="comp-tag">Voice Orbit</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Layer 3: Dual-Brain AI & Smart Model Router -->
+          <div class="tier-lane" id="lane_layer3">
+            <div class="tier-header">
+              <div class="tier-title" style="color: #a855f7;">
+                <span>Layer 3 — Dual-Brain Neural Core & Smart Model Router</span>
+              </div>
+              <span class="tier-badge">Zero-Downtime Hot Switching</span>
+            </div>
+            <div class="tier-cards">
+              <div class="comp-card" id="card_model_router" onclick="inspectNode('model_router')">
+                <div class="comp-top">
+                  <span class="comp-name">🧠 ModelRouter Gateway</span>
+                  <span class="comp-latency">&lt;2ms Routing</span>
+                </div>
+                <div class="comp-desc">Inspects active network connectivity and seamlessly arbitrates requests between Cloud and Local AI.</div>
+                <div class="comp-tags"><span class="comp-tag">ConnectivityManager</span><span class="comp-tag">Context Injector</span><span class="comp-tag">Single Gateway</span></div>
+              </div>
+
+              <div class="comp-card" id="card_gemini_live" onclick="inspectNode('gemini_live')">
+                <div class="comp-top">
+                  <span class="comp-name">⚡ Gemini Live Multimodal</span>
+                  <span class="comp-latency">Sub-Second Audio</span>
+                </div>
+                <div class="comp-desc">Persistent bidirectional WebSocket streaming raw 16kHz PCM audio with voice barge-in and tool execution.</div>
+                <div class="comp-tags"><span class="comp-tag">gemini-3.1-flash-live</span><span class="comp-tag">WebSocket</span><span class="comp-tag">Full-Duplex</span></div>
+              </div>
+
+              <div class="comp-card" id="card_local_slm" onclick="inspectNode('local_slm')">
+                <div class="comp-top">
+                  <span class="comp-name">💻 Local On-Device SLM</span>
+                  <span class="comp-latency">100% Offline</span>
+                </div>
+                <div class="comp-desc">Llama-Android / MediaPipe GenAI running quantized 4-bit Gemma 2 2B / Qwen 2.5 on-device CPU/GPU.</div>
+                <div class="comp-tags"><span class="comp-tag">llama-android</span><span class="comp-tag">Zero Cloud Data</span><span class="comp-tag">Gemma 2 2B</span></div>
+              </div>
+
+              <div class="comp-card" id="card_silent_failover" onclick="inspectNode('silent_failover')">
+                <div class="comp-top">
+                  <span class="comp-name">🛡️ Silent Failover Engine</span>
+                  <span class="comp-latency">0ms Interruption</span>
+                </div>
+                <div class="comp-desc">Intercepts drops and 429 quota exhaustion. Silently engages Local AI without error popups; reconnects in 5s.</div>
+                <div class="comp-tags"><span class="comp-tag">startNetworkRestorationWatcher</span><span class="comp-tag">Hot Failover</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Layer 2: 3-Tier Semantic Memory & Knowledge Vault -->
+          <div class="tier-lane" id="lane_layer2">
+            <div class="tier-header">
+              <div class="tier-title" style="color: #f59e0b;">
+                <span>Layer 2 — 3-Tier Semantic Memory & Adaptive Self-Learning Core</span>
+              </div>
+              <span class="tier-badge">384-Dim On-Device RAG</span>
+            </div>
+            <div class="tier-cards">
+              <div class="comp-card" id="card_vector_rag" onclick="inspectNode('vector_rag')">
+                <div class="comp-top">
+                  <span class="comp-name">💾 384-Dim Vector RAG Engine</span>
+                  <span class="comp-latency">&lt;25ms Cosine Match</span>
+                </div>
+                <div class="comp-desc">On-device dense text vectorization with subword n-grams and normalized Cosine Similarity ranking.</div>
+                <div class="comp-tags"><span class="comp-tag">VectorMath.kt</span><span class="comp-tag">TextEmbeddingEngine</span><span class="comp-tag">RAG Prompt</span></div>
+              </div>
+
+              <div class="comp-card" id="card_academic_vault" onclick="inspectNode('academic_vault')">
+                <div class="comp-top">
+                  <span class="comp-name">📐 Academic Knowledge Vault</span>
+                  <span class="comp-latency">Instant Q&amp;A</span>
+                </div>
+                <div class="comp-desc">Complete Class 1-12 CBSE/HSC Science, Physics, Chemistry &amp; Math laws (Newton, Thermodynamics, Ohm, Einstein).</div>
+                <div class="comp-tags"><span class="comp-tag">Pre-Seeded RAG</span><span class="comp-tag">Whole-Word Match</span><span class="comp-tag">Science Heuristics</span></div>
+              </div>
+
+              <div class="comp-card" id="card_correction_tracker" onclick="inspectNode('correction_tracker')">
+                <div class="comp-top">
+                  <span class="comp-name">🎯 Adaptive Correction Tracker</span>
+                  <span class="comp-latency">Real-Time Learning</span>
+                </div>
+                <div class="comp-desc">Detects conversational corrections ("Nahi aise nahi"), extracts implicit rules, and injects into future prompts.</div>
+                <div class="comp-tags"><span class="comp-tag">Few-Shot Prompt</span><span class="comp-tag">Hinglish Parsing</span><span class="comp-tag">In-Context Rules</span></div>
+              </div>
+
+              <div class="comp-card" id="card_room_database" onclick="inspectNode('room_database')">
+                <div class="comp-top">
+                  <span class="comp-name">🗄️ Encrypted SQLite Room DB</span>
+                  <span class="comp-latency">Persistent Storage</span>
+                </div>
+                <div class="comp-desc">Stores user preferences, contacts, personal facts, and diurnal 24-hour habit action frequencies.</div>
+                <div class="comp-tags"><span class="comp-tag">Room 2.6.1</span><span class="comp-tag">EncryptedSharedPreferences</span><span class="comp-tag">JSON Backup</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Layer 1: SuperCore OS Automation & Voice Pipeline -->
+          <div class="tier-lane" id="lane_layer1">
+            <div class="tier-header">
+              <div class="tier-title" style="color: #ef4444;">
+                <span>Layer 1 — Jarvis SuperCore: OS Automation & Voice Pipeline</span>
+              </div>
+              <span class="tier-badge">System-Level Accessibility & Audio</span>
+            </div>
+            <div class="tier-cards">
+              <div class="comp-card" id="card_accessibility_svc" onclick="inspectNode('accessibility_svc')">
+                <div class="comp-top">
+                  <span class="comp-name">♿ JarvisAccessibilityService</span>
+                  <span class="comp-latency">Autonomous Gestures</span>
+                </div>
+                <div class="comp-desc">Taps by View ID, clicks visible text, types text with human keystroke intervals, scrolls, and locks screen.</div>
+                <div class="comp-tags"><span class="comp-tag">AccessibilityService</span><span class="comp-tag">UI Grounding</span><span class="comp-tag">Node Dumps</span></div>
+              </div>
+
+              <div class="comp-card" id="card_screen_vision" onclick="inspectNode('screen_vision')">
+                <div class="comp-top">
+                  <span class="comp-name">👁️ MediaProjection Screen Vision</span>
+                  <span class="comp-latency">Real-Time Frames</span>
+                </div>
+                <div class="comp-desc">Captures current screen bitmap buffer and streams to Gemini Vision for autonomous screen understanding.</div>
+                <div class="comp-tags"><span class="comp-tag">VirtualDisplay</span><span class="comp-tag">Multimodal Vision</span><span class="comp-tag">ScreenCaptureManager</span></div>
+              </div>
+
+              <div class="comp-card" id="card_vosk_audio" onclick="inspectNode('vosk_audio')">
+                <div class="comp-top">
+                  <span class="comp-name">🎙️ 16kHz Vosk Audio Pipeline</span>
+                  <span class="comp-latency">&lt;20ms PCM Buffer</span>
+                </div>
+                <div class="comp-desc">Continuous 16-bit linear PCM microphone capture, open-vocabulary Vosk ASR, and biometric speaker identification.</div>
+                <div class="comp-tags"><span class="comp-tag">AudioRecord</span><span class="comp-tag">model-en-us</span><span class="comp-tag">Speaker MFCC</span></div>
+              </div>
+
+              <div class="comp-card" id="card_guardian_security" onclick="inspectNode('guardian_security')">
+                <div class="comp-top">
+                  <span class="comp-name">🛡️ Touch Guard &amp; Emergency SOS</span>
+                  <span class="comp-latency">Hardware Sentinels</span>
+                </div>
+                <div class="comp-desc">Accelerometer motion detection with alarm siren &amp; stealth intruder selfie, plus one-tap GPS emergency SMS broadcast.</div>
+                <div class="comp-tags"><span class="comp-tag">CameraX Selfie</span><span class="comp-tag">SensorEventListener</span><span class="comp-tag">GPS SOS</span></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Floating Live Status HUD -->
+      <div class="floating-hud-dock">
+        <div class="hud-pill">
+          <div class="status-dot"></div>
+          <span>JARVIS OS: ONLINE (v1.9.2 - BUILD 148)</span>
+        </div>
+        <div class="hud-pill">
+          <span>AI CORE: AUTO_HYBRID (GEMINI + LOCAL SLM)</span>
+        </div>
+      </div>
+
+      <!-- Zoom Controls -->
+      <div class="zoom-controls">
+        <button class="btn-zoom" onclick="zoomIn()">+</button>
+        <button class="btn-zoom" onclick="zoomReset()">⟲</button>
+        <button class="btn-zoom" onclick="zoomOut()">−</button>
+      </div>
+
+    </div>
+
+    <!-- Inspector Drawer Panel -->
+    <div class="inspector-pane" id="inspectorPane">
+      <div class="inspector-header">
+        <div>
+          <div class="inspector-title" id="inspectTitle">Module Inspector</div>
+          <div class="inspector-layer" id="inspectLayer">Click any module to inspect technical specs</div>
+        </div>
+        <button class="btn-close-inspect" onclick="closeInspector()">✕</button>
+      </div>
+
+      <div>
+        <div class="inspect-section-title">Functional Description</div>
+        <div class="inspect-box" id="inspectDesc">Select a card in the diagram to inspect its operational architecture, latency, dependencies, and code implementation.</div>
+      </div>
+
+      <div>
+        <div class="inspect-section-title">Primary Source Code</div>
+        <div class="inspect-code" id="inspectFile">Select module to view file path</div>
+      </div>
+
+      <div>
+        <div class="inspect-section-title">Operational Latency &amp; Memory</div>
+        <div class="inspect-box" id="inspectLatency">N/A</div>
+      </div>
+
+      <div>
+        <div class="inspect-section-title">Key Capabilities &amp; APIs</div>
+        <div class="inspect-box" id="inspectApis">N/A</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Component Registry
+    const NODE_DATABASE = {
+      arc_core: {
+        title: "Stark Arc Reactor Mechanical Core",
+        layer: "Layer 5 — Holographic 3D Viewport",
+        desc: "Interactive 3D WebGL Stark Mark 85 Arc Reactor core built with Three.js r128. Features concentric rotating titanium segmented rings, 10 copper wire coil blocks around the circumference, central glowing lens and dynamic energy unibeam discharge flares. Dynamically pulses its resonance velocity according to live microphone audio amplitude.",
+        file: "app/src/main/assets/orb.html\napp/src/main/java/com/jarvis/assistant/ui/settings/CustomizationStudioActivity.kt",
+        latency: "16.6ms (Locked 60 FPS WebGL)",
+        apis: "Three.js r128, WebGL 2, Hardware Acceleration, coreEnergyResonance, HudSoundManager"
+      },
+      anime_girl: {
+        title: "🌸 3D Anime AI Female Companion",
+        layer: "Layer 5 — Holographic 3D Viewport",
+        desc: "Procedurally generated 3D cyber anime humanoid companion rendered in Three.js. Features soft porcelain cel-shaded skin, midnight indigo hair, cyber pilot blazer, glowing accents, sparkling anime eyes with dynamic specular highlights, rosy blushing cheeks, and a signature bouncing Ahoge (cowlick hair) with dynamic spring physics. Responds with 5 emotive states: idle, listening, thinking, speaking (lip-sync), and wave.",
+        file: "app/src/main/assets/orb.html (girlGroup mesh & procedural animation loops)",
+        latency: "Real-time procedural frame loops (&lt;16ms)",
+        apis: "Audio-reactive mouth aperture, Ahoge spring physics, cel-shaded materials, procedural gestures"
+      },
+      custom_3d: {
+        title: "✨ Custom 3D Photo Medallion Avatar",
+        layer: "Layer 5 — Holographic 3D Viewport",
+        desc: "Allows the user to upload any photo or graphic from the device gallery. CustomAvatarHelper center-crops, alpha-masks, and normalizes it into a 512x512 texture. Rendered as a 3D beveled titanium medallion with floating particle dust satellites, interactive touch drag, gyro tilt tracking, and tap-to-spin animations.",
+        file: "app/src/main/java/com/jarvis/assistant/util/CustomAvatarHelper.kt\napp/src/main/assets/overlay-toys/custom_3d.html",
+        latency: "Zero cloud lag (Local WebGL Base64 data URI)",
+        apis: "Android Photo Picker, Three.js TextureLoader, Touch/Pointer Drag, 360° spin gesture"
+      },
+      floating_overlay: {
+        title: "🫧 System-Wide Floating Companion Overlay HUD",
+        layer: "Layer 5 — Holographic 3D Viewport",
+        desc: "A floating companion avatar that stays active over any Android application via WindowManager TYPE_APPLICATION_OVERLAY. Supports 17+ animated HTML/JS characters + custom 3D photo avatar. Features free dragging, 4-edge snap docking (Left/Right/Top/Bottom), and double-tap flip between character and live task progress pill.",
+        file: "app/src/main/java/com/jarvis/assistant/ui/agent/TaskProgressOverlay.kt\napp/src/main/java/com/jarvis/assistant/ui/settings/OverlayAvatarActivity.kt",
+        latency: "Zero UI jank (FLAG_HARDWARE_ACCELERATED)",
+        apis: "WindowManager.LayoutParams, applyEdge(dockEdge), forceReloadAvatar, JavascriptInterface"
+      },
+      cesium_globe: {
+        title: "🌍 CesiumJS 3D Earth Globe",
+        layer: "Layer 4 — God's Eye View Geospatial Console",
+        desc: "High-performance CesiumJS WebGL 2 globe displaying Google Photorealistic 3D Tiles, terrain elevations, and atmospheric optical shaders. Bundled 100% offline inside the APK assets; loaded with domain origin isolation via Android WebViewAssetLoader.",
+        file: "app/src/main/assets/godseye/\napp/src/main/java/com/jarvis/assistant/ui/godseye/GodsEyeActivity.kt",
+        latency: "Hardware WebGL 2 rendering (~60 FPS)",
+        apis: "Cesium 1.118, Google 3D Tiles, WebViewAssetLoader, origin isolation (appassets.androidplatform.net)"
+      },
+      satellite_telemetry: {
+        title: "🛰️ Live Telemetry Feeds Proxy",
+        layer: "Layer 4 — God's Eye View Geospatial Console",
+        desc: "In-app proxy routes fetching live data feeds from global providers without requiring external Node or Termux servers. Tracks civilian and military flights (OpenSky & adsb.lol), real-time earthquakes (USGS), active wildfires (NASA FIRMS), Doppler weather radar (NOAA/Open-Meteo), and marine vessels (AIS).",
+        file: "app/src/main/java/com/jarvis/assistant/ui/godseye/GodsEyeActivity.kt (handleApiProxy)",
+        latency: "150ms - 450ms HTTP proxying with disk caching",
+        apis: "OpenSky Network, adsb.lol, USGS GeoJSON, NASA FIRMS, NOAA MRMS radar, AISStream"
+      },
+      cctv_catalog: {
+        title: "📹 3,700+ CCTV Surveillance Directory",
+        layer: "Layer 4 — God's Eye View Geospatial Console",
+        desc: "Comprehensive offline directory of over 3,700 public surveillance cameras across London, New York, Tokyo, Paris, Austin, Helsinki, and other cities. Plays live HLS video streams with automatic synthetic HUD telemetry failover if camera feeds are temporarily offline.",
+        file: "app/src/main/assets/godseye/cctv_sources.json",
+        latency: "Instant offline directory indexing",
+        apis: "HLS.js, DATEX2 traffic cameras, synthetic HUD fallback, camera clustering"
+      },
+      mcp_bridge: {
+        title: "🔌 GodsEyeMcpClient Voice Bridge",
+        layer: "Layer 4 — God's Eye View Geospatial Console",
+        desc: "Exposes 10 Model Context Protocol (MCP) tool function calls to Gemini Live. Voice commands like 'Jarvis, show flight radar' or 'Target Tokyo' smoothly reposition the 3D globe camera coordinates and activate layers via URL hash updates without reloading the WebGL page.",
+        file: "app/src/main/java/com/jarvis/assistant/ui/godseye/GodsEyeMcpClient.kt",
+        latency: "&lt;10ms local JSON-RPC dispatch",
+        apis: "open_gods_eye_view, gods_eye_show_view, gods_eye_aircraft_in_area, gods_eye_get_earthquakes"
+      },
+      model_router: {
+        title: "🧠 ModelRouter AI Gateway",
+        layer: "Layer 3 — Dual-Brain Neural Core",
+        desc: "The central intelligence routing gateway. Inspects active network capabilities (Wi-Fi, Cellular) via ConnectivityManager. Automatically routes queries to Gemini Live or OpenAI when online, and seamlessly hot-fails over to on-device Local SLMs when offline.",
+        file: "app/src/main/java/com/jarvis/assistant/ai/router/ModelRouter.kt",
+        latency: "&lt;2ms connectivity inspection",
+        apis: "ConnectivityManager, VectorMemoryEngine context injection, AiModelMode.AUTO_HYBRID"
+      },
+      gemini_live: {
+        title: "⚡ Gemini Live Multimodal WebSocket",
+        layer: "Layer 3 — Dual-Brain Neural Core",
+        desc: "Persistent full-duplex WebSocket connection to Google Gemini Live (gemini-3.1-flash-live-preview). Streams raw 16kHz 16-bit linear PCM audio with sub-second voice latency, continuous barge-in interruption detection, and real-time tool function calling.",
+        file: "app/src/main/java/com/jarvis/assistant/network/GeminiLiveWebSocket.kt",
+        latency: "Sub-second voice roundtrip (~400ms - 800ms)",
+        apis: "WebSocket, BidiAudioStream, ToolFunctionDeclaration, EncryptedSharedPreferences"
+      },
+      local_slm: {
+        title: "💻 Local On-Device SLM Engine",
+        layer: "Layer 3 — Dual-Brain Neural Core",
+        desc: "Runs quantized 4-bit small language models entirely on-device CPU/GPU with zero internet dependency via llama-android and Google MediaPipe GenAI. Tested with Gemma 2 2B, Qwen 2.5 1.5B/3B, and SmolLM2. Unloads weights automatically during cloud mode to conserve RAM.",
+        file: "app/src/main/java/com/jarvis/assistant/ai/local/LocalAiEngine.kt\napp/src/main/java/com/jarvis/assistant/ai/local/LocalModelManager.kt",
+        latency: "~25-45 tokens/sec on device NPU/GPU",
+        apis: "llama-android 5.1.0, ChatML/Gemma formatting, ModelDownloadState, MemoryUnload"
+      },
+      silent_failover: {
+        title: "🛡️ Silent Zero-Downtime Failover Engine",
+        layer: "Layer 3 — Dual-Brain Neural Core",
+        desc: "Intercepts network drops, offline transitions, and HTTP 429 quota limits in JarvisConversationService.kt. Instantly engages offline mode without showing error popups, keeping the microphone recording and activating on-device models. A background coroutine silently reconnects when internet returns.",
+        file: "app/src/main/java/com/jarvis/assistant/background/JarvisConversationService.kt (engageOfflineLocalAiMode)",
+        latency: "Zero disruption (0ms seamless transition)",
+        apis: "startNetworkRestorationWatcher, AudioRecord Hot Retention, Vosk finalResult extraction"
+      },
+      vector_rag: {
+        title: "💾 384-Dim On-Device Vector RAG Engine",
+        layer: "Layer 2 — 3-Tier Semantic Memory",
+        desc: "Computes 384-dimensional dense semantic vector representations of text queries on the device CPU without network downloads. Calculates normalized Cosine Similarity to find relevant past memories, facts, and routines conceptually even without exact keyword matches.",
+        file: "app/src/main/java/com/jarvis/assistant/ai/memory/VectorMemoryEngine.kt\napp/src/main/java/com/jarvis/assistant/ai/memory/TextEmbeddingEngine.kt",
+        latency: "&lt;25ms for 384-dim Cosine Similarity calculation",
+        apis: "VectorMath.cosineSimilarity, ScoredMemory, syncWithRoomMemories, buildMemoryRAGContext"
+      },
+      academic_vault: {
+        title: "📐 Academic Knowledge Vault (CBSE/HSC 1-12)",
+        layer: "Layer 2 — 3-Tier Semantic Memory",
+        desc: "Pre-seeded compendium of Class 1-12 Physics, Chemistry, and Mathematics laws and formulas: Newton's Laws, Universal Gravitation, Thermodynamics, Ohm's Law, Maxwell equations, Einstein's E=mc², Photoelectric Effect, De Broglie, and Calculus. Answers queries instantly offline.",
+        file: "app/src/main/java/com/jarvis/assistant/ai/memory/AcademicKnowledgeVault.kt",
+        latency: "&lt;5ms instant offline retrieval",
+        apis: "Whole-word token set matching, hasScienceIntent, Formula retrieval, Version pinning"
+      },
+      correction_tracker: {
+        title: "🎯 Adaptive Real-Time User Correction Tracker",
+        layer: "Layer 2 — 3-Tier Semantic Memory",
+        desc: "Monitors spoken conversational turns for user correction patterns ('nahi aise nahi', 'don't call Rohit, call Rahul'). Extracts the corrective behavioral rule and injects it into all future AI prompt matrices for permanent few-shot adaptation.",
+        file: "app/src/main/java/com/jarvis/assistant/ai/learning/UserCorrectionTracker.kt",
+        latency: "Instant in-memory rule indexing",
+        apis: "analyzeSpeechForCorrection, jarvis_learned_corrections, few-shot prompt injection"
+      },
+      room_database: {
+        title: "🗄️ Encrypted SQLite Room Database",
+        layer: "Layer 2 — 3-Tier Semantic Memory",
+        desc: "Persistent relational database storing structured facts, user habits, and conversational turns. Supports one-tap JSON backup and restore to the device Downloads folder.",
+        file: "app/src/main/java/com/jarvis/assistant/data/memory/AppDatabase.kt\napp/src/main/java/com/jarvis/assistant/data/backup/BackupManager.kt",
+        latency: "Indexed SQLite queries (&lt;10ms)",
+        apis: "Room 2.6.1, MemoryDao, BackupManager, EncryptedSharedPreferences"
+      },
+      accessibility_svc: {
+        title: "♿ JarvisAccessibilityService (Autonomous UI)",
+        layer: "Layer 1 — SuperCore OS Automation",
+        desc: "Autonomous Android OS navigation: finds interactive UI nodes by View ID or visible text, simulates human keystroke typing intervals, scrolls lists, injects directional swipe gestures, and navigates Home, Back, Recents, and Screen Lock.",
+        file: "app/src/main/java/com/jarvis/assistant/automation/accessibility/JarvisAccessibilityService.kt",
+        latency: "50ms - 150ms gesture injection",
+        apis: "AccessibilityNodeInfo, dispatchGesture, GLOBAL_ACTION_BACK, GLOBAL_ACTION_LOCK_SCREEN"
+      },
+      screen_vision: {
+        title: "👁️ MediaProjection Real-Time Screen Vision",
+        layer: "Layer 1 — SuperCore OS Automation",
+        desc: "Captures the active display buffer in real time using Android MediaProjection. Converts bitmaps into JPEG buffers and pipes them to Gemini Multimodal Vision for hands-free screen analysis ('Summarize this page', 'Explain this chart').",
+        file: "app/src/main/java/com/jarvis/assistant/vision/ScreenCaptureManager.kt",
+        latency: "100ms frame grab and token encoding",
+        apis: "MediaProjection, VirtualDisplay, ImageReader, FOREGROUND_SERVICE_MEDIA_PROJECTION"
+      },
+      vosk_audio: {
+        title: "🎙️ 16kHz Vosk Continuous Audio Pipeline",
+        layer: "Layer 1 — SuperCore OS Automation",
+        desc: "Records 16kHz 16-bit linear PCM audio in a low-latency coroutine channel. Features continuous open-vocabulary Vosk ASR, silence finalization (>450ms), and acoustic speaker verification with bundled MFCC models to identify the device owner.",
+        file: "app/src/main/java/com/jarvis/assistant/audio/AudioRecorder.kt\napp/src/main/java/com/jarvis/assistant/ai/local/OfflineVoiceConversationEngine.kt",
+        latency: "&lt;20ms PCM audio chunking",
+        apis: "AudioRecord, model-en-us, model-spk, DevanagariNormalizer, TextToSpeech en-IN/hi-IN"
+      },
+      guardian_security: {
+        title: "🛡️ Touch Guard Anti-Theft & Emergency SOS",
+        layer: "Layer 1 — SuperCore OS Automation",
+        desc: "Monitors accelerometer sensors while stationary. If moved, blasts a loud alarm siren and takes a stealth front-camera photo of the intruder. Emergency SOS instantly broadcasts high-accuracy GPS coordinates via SMS to emergency contacts.",
+        file: "app/src/main/java/com/jarvis/assistant/security/guardian/TouchGuardManager.kt\napp/src/main/java/com/jarvis/assistant/security/guardian/EmergencySosManager.kt",
+        latency: "Instant hardware interrupt",
+        apis: "Sensor.TYPE_ACCELEROMETER, CameraX stealth capture, FusedLocationProviderClient, SmsManager"
+      }
+    };
+
+    // Pan & Zoom Logic
+    let stage = document.getElementById('diagramStage');
+    let viewport = document.getElementById('viewport');
+    let scale = 0.95;
+    let panX = 40;
+    let panY = 20;
+    let isPanning = false;
+    let startX = 0, startY = 0;
+
+    function updateTransform() {
+      stage.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    }
+    updateTransform();
+
+    viewport.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.comp-card') || e.target.closest('.btn-zoom') || e.target.closest('.hud-pill')) return;
+      isPanning = true;
+      startX = e.clientX - panX;
+      startY = e.clientY - panY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isPanning) return;
+      panX = e.clientX - startX;
+      panY = e.clientY - startY;
+      updateTransform();
+    });
+
+    window.addEventListener('mouseup', () => { isPanning = false; });
+
+    viewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = 1.08;
+      if (e.deltaY < 0) {
+        scale = Math.min(scale * zoomFactor, 1.8);
+      } else {
+        scale = Math.max(scale / zoomFactor, 0.45);
+      }
+      updateTransform();
+    });
+
+    function zoomIn() { scale = Math.min(scale * 1.15, 1.8); updateTransform(); }
+    function zoomOut() { scale = Math.max(scale / 1.15, 0.45); updateTransform(); }
+    function zoomReset() { scale = 0.95; panX = 40; panY = 20; updateTransform(); }
+
+    // Inspector
+    function inspectNode(key) {
+      const data = NODE_DATABASE[key];
+      if (!data) return;
+
+      document.querySelectorAll('.comp-card').forEach(c => c.classList.remove('active-selected'));
+      const activeCard = document.getElementById('card_' + key);
+      if (activeCard) activeCard.classList.add('active-selected');
+
+      document.getElementById('inspectTitle').textContent = data.title;
+      document.getElementById('inspectLayer').textContent = data.layer;
+      document.getElementById('inspectDesc').textContent = data.desc;
+      document.getElementById('inspectFile').textContent = data.file;
+      document.getElementById('inspectLatency').textContent = data.latency;
+      document.getElementById('inspectApis').textContent = data.apis;
+
+      document.getElementById('inspectorPane').classList.remove('closed');
+    }
+
+    function closeInspector() {
+      document.getElementById('inspectorPane').classList.add('closed');
+      document.querySelectorAll('.comp-card').forEach(c => c.classList.remove('active-selected'));
+    }
+
+    // Path Tracing Presets (Archify-Style Flow Simulation)
+    function setTrace(type) {
+      document.querySelectorAll('.btn-chip').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const allCards = document.querySelectorAll('.comp-card');
+      const allLines = document.querySelectorAll('.flow-line');
+
+      allCards.forEach(c => {
+        c.classList.remove('highlight-trace', 'faded');
+      });
+      allLines.forEach(l => l.classList.remove('highlight'));
+
+      if (type === 'all') {
+        return;
+      }
+
+      // Fade out all non-trace cards
+      allCards.forEach(c => c.classList.add('faded'));
+
+      let traceNodes = [];
+      let traceLines = [];
+
+      if (type === 'voice_action') {
+        traceNodes = ['vosk_audio', 'model_router', 'gemini_live', 'accessibility_svc', 'arc_core'];
+        traceLines = ['path_mic_router', 'path_router_gemini', 'path_router_supercore', 'path_supercore_threejs'];
+      } else if (type === 'failover') {
+        traceNodes = ['vosk_audio', 'model_router', 'silent_failover', 'local_slm', 'accessibility_svc'];
+        traceLines = ['path_mic_router', 'path_router_local', 'path_router_supercore'];
+      } else if (type === 'memory_rag') {
+        traceNodes = ['model_router', 'vector_rag', 'academic_vault', 'correction_tracker', 'room_database'];
+        traceLines = ['path_router_rag'];
+      } else if (type === 'godseye') {
+        traceNodes = ['model_router', 'gemini_live', 'mcp_bridge', 'cesium_globe', 'satellite_telemetry', 'cctv_catalog'];
+        traceLines = ['path_router_gemini', 'path_gemini_godseye'];
+      }
+
+      traceNodes.forEach(id => {
+        const card = document.getElementById('card_' + id);
+        if (card) {
+          card.classList.remove('faded');
+          card.classList.add('highlight-trace');
+        }
+      });
+
+      traceLines.forEach(id => {
+        const line = document.getElementById(id);
+        if (line) line.classList.add('highlight');
+      });
+    }
+
+    // Real-Time Search Filter
+    function handleSearch(query) {
+      const q = query.trim().toLowerCase();
+      const allCards = document.querySelectorAll('.comp-card');
+
+      if (!q) {
+        allCards.forEach(c => c.classList.remove('faded', 'highlight-trace'));
+        return;
+      }
+
+      allCards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (text.includes(q)) {
+          card.classList.remove('faded');
+          card.classList.add('highlight-trace');
+        } else {
+          card.classList.add('faded');
+          card.classList.remove('highlight-trace');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

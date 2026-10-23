@@ -1,0 +1,197 @@
+Created At: 2026-10-18T08:37:54+05:30
+Completed At: 2026-10-18T08:37:54+05:30
+File Path: `file:///c:/Users/Roshan/Documents/Jarvis/app/src/main/java/com/jarvis/assistant/ui/settings/SettingsFragment.kt`
+Total Lines: 339
+Total Bytes: 14321
+Showing lines 151 to 339
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+151:         }
+152: 
+153:         // Voice Status Chip on Profile Card -> Opens Voice Enrollment
+154:         binding.chipProfileVoiceStatus.setOnClickListener {
+155:             startActivity(Intent(requireContext(), VoiceEnrollmentActivity::class.java))
+156:         }
+157: 
+158:         // JARVIS Agent Matrix & Protocols
+159:         binding.rowSuperCore.setOnClickListener {
+160:             com.jarvis.assistant.util.HudSoundManager.playTapSound()
+161:             startActivity(Intent(requireContext(), com.jarvis.assistant.ui.supercore.SuperCoreActivity::class.java))
+162:         }
+163: 
+164:         binding.rowMatrixTools.setOnClickListener {
+165:             startActivity(Intent(requireContext(), com.jarvis.assistant.ui.matrix.JarvisMatrixActivity::class.java))
+166:         }
+167: 
+168:         // Section 1: AI & Voice Intelligence
+169:         binding.rowOwnerVoice.setOnClickListener {
+170:             startActivity(Intent(requireContext(), VoiceEnrollmentActivity::class.java))
+171:         }
+172: 
+173:         binding.rowLanguage.setOnClickListener {
+174:             showLanguageDialog()
+175:         }
+176: 
+177:         binding.rowPersonaVoice.setOnClickListener {
+178:             startActivity(Intent(requireContext(), PersonaActivity::class.java))
+179:         }
+180: 
+181:         binding.switchSilentMode.setOnCheckedChangeListener { _, isChecked ->
+182:             preferences.isSilentExecutionMode = isChecked
+183:             val msg = if (isChecked) "Silent Execution Mode Enabled" else "Silent Execution Mode Disabled"
+184:             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+185:         }
+186: 
+187:         // Section 2: System & Intelligence Data
+188:         binding.rowApiConnection.setOnClickListener {
+189:             startActivity(Intent(requireContext(), ApiConnectionActivity::class.java))
+190:         }
+191: 
+192:         binding.rowMemory.setOnClickListener {
+193:             startActivity(Intent(requireContext(), MemoryActivity::class.java))
+194:         }
+195: 
+196:         binding.rowPermissions.setOnClickListener {
+197:             startActivity(Intent(requireContext(), PermissionActivity::class.java))
+198:         }
+199: 
+200:         binding.rowOverlayAvatars.setOnClickListener {
+201:             startActivity(Intent(requireContext(), OverlayAvatarActivity::class.java))
+202:         }
+203: 
+204:         binding.rowApplications.setOnClickListener {
+205:             startActivity(Intent(requireContext(), HandsFreeActivity::class.java))
+206:         }
+207: 
+208:         // Section 3: Appearance & Security
+209:         binding.rowCustomizationStudio.setOnClickListener {
+210:             com.jarvis.assistant.util.HudSoundManager.playTapSound()
+211:             startActivity(Intent(requireContext(), CustomizationStudioActivity::class.java))
+212:         }
+213: 
+214:         binding.rowAppTheme.setOnClickListener {
+215:             ThemeSelectionBottomSheet.newInstance().show(childFragmentManager, ThemeSelectionBottomSheet.TAG)
+216:         }
+217: 
+218:         binding.rowPrivacyPolicy.setOnClickListener {
+219:             startActivity(Intent(requireContext(), PrivacyShieldActivity::class.java))
+220:         }
+221: 
+222:         binding.rowAppIdentity.setOnClickListener {
+223:             MaterialAlertDialogBuilder(requireContext())
+224:                 .setTitle("JARVIS App Identity")
+225:                 .setMessage(com.jarvis.assistant.security.AppIdentityVerifier.report(requireContext()))
+226:                 .setPositiveButton("Close", null)
+227:                 .show()
+228:         }
+229: 
+230:         // Developer Links Visibility Toggle
+231:         binding.switchDeveloperLinks.isChecked = preferences.showDeveloperLinks
+232:         binding.containerDeveloperLinks.visibility = if (preferences.showDeveloperLinks) View.VISIBLE else View.GONE
+233: 
+234:         binding.switchDeveloperLinks.setOnCheckedChangeListener { _, isChecked ->
+235:             preferences.showDeveloperLinks = isChecked
+236:             binding.containerDeveloperLinks.visibility = if (isChecked) View.VISIBLE else View.GONE
+237:         }
+238: 
+239:         binding.rowDeveloperLinksToggle.setOnClickListener {
+240:             binding.switchDeveloperLinks.toggle()
+241:         }
+242: 
+243:         // Developer Profile & Contact Buttons
+244:         binding.btnSocialEmail.setOnClickListener {
+245:             openEmail("tiwariroshan2601@gmail.com")
+246:         }
+247: 
+248:         binding.btnSocialGithub1.setOnClickListener {
+249:             openUrl("https://github.com/tiwwtiroshan121")
+250:         }
+251: 
+252:         binding.btnSocialGithub2.setOnClickListener {
+253:             openUrl("https://github.com/freeid2601-dotcom")
+254:         }
+255: 
+256:         binding.tvFooterCredit.setOnClickListener {
+257:             openUrl("https://github.com/tiwwtiroshan121")
+258:         }
+259:     }
+260: 
+261:     private fun showLanguageDialog() {
+262:         val languages = GeminiConstants.SUPPORTED_LANGUAGES.toTypedArray()
+263:         val currentIndex = languages.indexOfFirst { it.equals(preferences.language, ignoreCase = true) }.let { if (it >= 0) it else 0 }
+264: 
+265:         MaterialAlertDialogBuilder(requireContext())
+266:             .setTitle("Select Conversation Language")
+267:             .setSingleChoiceItems(languages, currentIndex) { dialog, which ->
+268:                 val chosen = languages[which]
+269:                 preferences.language = chosen
+270:                 binding.tvCurrentLanguage.text = chosen
+271:                 dialog.dismiss()
+272:             }
+273:             .setNegativeButton("Cancel", null)
+274:             .show()
+275:     }
+276: 
+277:     private fun showWakeWordDialog() {
+278:         MaterialAlertDialogBuilder(requireContext())
+279:             .setTitle("Wake Words & Sensitivity")
+280:             .setMessage("• Wake Words: 'Jarvis', 'Hey Jarvis'\n• Acoustic Trigger: Double Clap detection\n• Standby Mode: Low-power local Vosk offline engine\n\nWhen standby listening is active, Jarvis awakens instantly upon hearing your voice.")
+281:             .setPositiveButton("Got It", null)
+282:             .show()
+283:     }
+284: 
+285:     private fun showAppAutomationDialog() {
+286:         MaterialAlertDialogBuilder(requireContext())
+287:             .setTitle("Autonomous App Automation")
+288:             .setMessage("Jarvis is integrated with your device capabilities:\n\n• WhatsApp: Hands-free messaging & calls\n• YouTube: Search and playback automation\n• Phone Controls: Flashlight, Volume, Brightness, Bluetooth\n• Apps & Tools: Launch, search, and manage apps via voice")
+289:             .setPositiveButton("Close", null)
+290:             .show()
+291:     }
+292: 
+293:     private fun showEditNameDialog() {
+294:         val input = EditText(requireContext()).apply {
+295:             setText(preferences.userName.ifBlank { "Roshan" })
+296:             setSelection(text.length)
+297:         }
+298:         MaterialAlertDialogBuilder(requireContext())
+299:             .setTitle("Operator Name")
+300:             .setMessage("Enter the name Jarvis should use to address you:")
+301:             .setView(input)
+302:             .setPositiveButton("Save") { _, _ ->
+303:                 val newName = input.text.toString().trim()
+304:                 if (newName.isNotBlank()) {
+305:                     preferences.userName = newName
+306:                     loadUserData()
+307:                 }
+308:             }
+309:             .setNegativeButton("Cancel", null)
+310:             .show()
+311:     }
+312: 
+313:     private fun openEmail(email: String) {
+314:         try {
+315:             val intent = Intent(Intent.ACTION_SENDTO).apply {
+316:                 data = Uri.parse("mailto:$email")
+317:                 putExtra(Intent.EXTRA_SUBJECT, "Jarvis Assistant Inquiry")
+318:             }
+319:             startActivity(intent)
+320:         } catch (_: Exception) {
+321:             openUrl("mailto:$email")
+322:         }
+323:     }
+324: 
+325:     private fun openUrl(url: String) {
+326:         try {
+327:             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+328:             startActivity(intent)
+329:         } catch (_: Exception) {
+330:             Toast.makeText(requireContext(), "Unable to open link", Toast.LENGTH_SHORT).show()
+331:         }
+332:     }
+333: 
+334:     override fun onDestroyView() {
+335:         super.onDestroyView()
+336:         _binding = null
+337:     }
+338: }
+339: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

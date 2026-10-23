@@ -1,0 +1,79 @@
+Created At: 2026-10-18T08:16:10+05:30
+Completed At: 2026-10-18T08:16:11+05:30
+File Path: `file:///c:/Users/Roshan/Documents/Jarvis/app/src/main/res/layout/fragment_settings.xml`
+Total Lines: 1457
+Total Bytes: 69675
+Showing lines 190 to 260
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+190:                         android:layout_height="wrap_content"
+191:                         android:orientation="horizontal"
+192:                         android:gravity="center_vertical"
+193:                         android:background="@drawable/bg_jarvis_status_badge_green"
+194:                         android:paddingHorizontal="10dp"
+195:                         android:paddingVertical="5dp"
+196:                         android:layout_marginEnd="8dp">
+197: 
+198:                         <ImageView
+199:                             android:id="@+id/ivProfileVoiceBadgeIcon"
+200:                             android:layout_width="12dp"
+201:                             android:layout_height="12dp"
+202:                             android:src="@drawable/ic_verified_badge"
+203:                             app:tint="@color/status_green" />
+204: 
+205:                         <TextView
+206:                             android:id="@+id/tvProfileVoiceStatus"
+207:                             android:layout_width="wrap_content"
+208:                             android:layout_height="wrap_content"
+209:                             android:text="VOICE ENROLLED"
+210:                             android:textColor="@color/status_green"
+211:                             android:textSize="10sp"
+212:                             android:textStyle="bold"
+213:                             android:fontFamily="sans-serif-medium"
+214:                             android:letterSpacing="0.05"
+215:                             android:layout_marginStart="5dp" />
+216:                     </LinearLayout>
+217: 
+218:                     <!-- Persona Chip -->
+219:                     <LinearLayout
+220:                         android:layout_width="wrap_content"
+221:                         android:layout_height="wrap_content"
+222:                         android:orientation="horizontal"
+223:                         android:gravity="center_vertical"
+224:                         android:background="@drawable/bg_jarvis_status_badge"
+225:                         android:paddingHorizontal="10dp"
+226:                         android:paddingVertical="5dp">
+227: 
+228:                         <ImageView
+229:                             android:layout_width="12dp"
+230:                             android:layout_height="12dp"
+231:                             android:src="@drawable/ic_settings_voice"
+232:                             app:tint="?attr/themeAccent" />
+233: 
+234:                         <TextView
+235:                             android:id="@+id/tvProfilePersonaChip"
+236:                             android:layout_width="wrap_content"
+237:                             android:layout_height="wrap_content"
+238:                             android:text="JARVIS PRO"
+239:                             android:textColor="?attr/themeAccent"
+240:                             android:textSize="10sp"
+241:                             android:textStyle="bold"
+242:                             android:fontFamily="sans-serif-medium"
+243:                             android:letterSpacing="0.05"
+244:                             android:layout_marginStart="5dp" />
+245:                     </LinearLayout>
+246:                 </LinearLayout>
+247:             </LinearLayout>
+248: 
+249:             <!-- SECTION 1: VOICE & NEURAL INTELLIGENCE -->
+250:             <TextView
+251:                 android:layout_width="wrap_content"
+252:                 android:layout_height="wrap_content"
+253:                 android:text="VOICE &amp; NEURAL INTELLIGENCE"
+254:                 android:textColor="?attr/themeTextMuted"
+255:                 android:textSize="11sp"
+256:                 android:letterSpacing="0.08"
+257:                 android:fontFamily="sans-serif-medium"
+258:                 android:textStyle="bold"
+259:                 android:layout_marginBottom="8dp" />
+260: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#040810">
+
+    <ImageView
+        android:id="@+id/ivLockShield"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:src="@drawable/ic_verified_badge"
+        app:tint="#00E5FF"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/tvProtocolHeader"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        android:layout_marginBottom="24dp" />
+
+    <TextView
+        android:id="@+id/tvProtocolHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="JARVIS PROTOCOL 7"
+        android:textColor="#00E5FF"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.15"
+        app:layout_constraintTop_toBottomOf="@+id/ivLockShield"
+        app:layout_constraintBottom_toTopOf="@+id/tvAppLockTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/tvAppLockTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="32dp"
+        android:text="Security Verification Required"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@+id/tvProtocolHeader"
+        app:layout_constraintBottom_toTopOf="@+id/btnAuthenticate"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="36dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAuthenticate"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginHorizontal="48dp"
+        android:text="Authenticate (Face / Biometric / PIN)"
+        android:textColor="#040810"
+        android:backgroundTint="#00E5FF"
+        app:cornerRadius="28dp"
+        android:textAllCaps="false"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@+id/tvAppLockTitle"
+        app:layout_constraintBottom_toTopOf="@+id/btnCancelHome"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnCancelHome"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Exit to Home"
+        android:textColor="#80D8FF"
+        app:layout_constraintTop_toBottomOf="@+id/btnAuthenticate"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

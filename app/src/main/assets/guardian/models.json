@@ -1,0 +1,34 @@
+{
+ "version": 1,
+ "base": "https://getmaya.online/models/guardian/",
+ "models": [
+  {
+   "id": "rdn2b6s",
+   "label": "Powerful",
+   "file": "rdn2b6s.tflite",
+   "cohort": "cohort_rdn2b6s.bin",
+   "bytes": 27050368,
+   "cohort_bytes": 153616,
+   "sha256": "2c4d63404fc2db013140c825213bbde66ea3024c4bc491c5ca69526cd3c3b8e3",
+   "cohort_sha256": "788204cd8563372d2862b83c86088a96efaee2d6a264f5e3627af6e717fcb21d",
+   "logisticA": 3.6055,
+   "logisticB": 2.785,
+   "window_sec": 3,
+   "note": "ReDimNet2-B6, 3 s window. Most accurate (Hindi phone speech: 1.7% error at 1 s vs 6.7%, 0.6% in echo vs 2.6%). Heavier on the processor - about a second per check on a mid-range phone. 26 MB."
+  },
+  {
+   "id": "ecapa6s",
+   "label": "Medium",
+   "file": "ecapa6s.tflite",
+   "cohort": "cohort.bin",
+   "bytes": 43932668,
+   "cohort_bytes": 153616,
+   "sha256": "1aecfbac1569f83d9f6ea889912667b9d3f40ecd2557ede1b90d26da2bf30d8a",
+   "cohort_sha256": "19abccae38e6fe6a98d9aa83e40b8e40a4606ae1c3aa0768fc22f30b574dace7",
+   "logisticA": 4.1612,
+   "logisticB": 3.6431,
+   "window_sec": 6,
+   "note": "ECAPA-TDNN, 6 s window. Lighter on the processor (better for budget phones), less accurate in noise. The model every phone used before 5.1.23. 42 MB."
+  }
+ ]
+}

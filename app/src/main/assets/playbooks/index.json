@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "id": "daily-briefing",
+      "name": "Daily Briefing",
+      "description": "Comprehensive morning update including weather, battery, unread messages, and scheduled events",
+      "file": "daily-briefing.md",
+      "trigger_phrases": ["good morning", "daily briefing", "aaj ka update", "morning brief"]
+    },
+    {
+      "id": "whatsapp-pro",
+      "name": "WhatsApp Pro Secretary",
+      "description": "Zero-friction WhatsApp automation: read incoming messages, send instant texts, voice replies",
+      "file": "whatsapp-pro.md",
+      "trigger_phrases": ["send whatsapp", "whatsapp padho", "whatsapp message", "reply on whatsapp"]
+    },
+    {
+      "id": "call-secretary",
+      "name": "Smart Call Secretary",
+      "description": "Announces caller identity, manages hands-free calling, and handles driving mode auto-replies",
+      "file": "call-secretary.md",
+      "trigger_phrases": ["who is calling", "call secretary", "phone uthao", "call cut karo"]
+    },
+    {
+      "id": "chatgpt-image-gen",
+      "name": "Autonomous AI Image & Video Generator",
+      "description": "Drives ChatGPT or Gemini app via UI automation to create and download generated images to gallery",
+      "file": "chatgpt-image-gen.md",
+      "trigger_phrases": ["generate image", "image banao", "chatgpt image", "gemini image"]
+    },
+    {
+      "id": "music-dj",
+      "name": "Universal Music DJ",
+      "description": "Hands-free music search and autoplay across Spotify, YouTube Music, and Gaana",
+      "file": "music-dj.md",
+      "trigger_phrases": ["play song", "gaana bajao", "play music", "spotify play"]
+    },
+    {
+      "id": "phone-care",
+      "name": "Phone Care & Sentry",
+      "description": "Monitors battery health, thermal load, storage space, and arms anti-theft touch guard",
+      "file": "phone-care.md",
+      "trigger_phrases": ["phone status", "battery status", "phone ka khayal", "arm touch guard"]
+    },
+    {
+      "id": "photo-share",
+      "name": "Quick Photo Share",
+      "description": "Locates recent photos or screenshots and shares them directly with chosen contacts",
+      "file": "photo-share.md",
+      "trigger_phrases": ["share photo", "photo bhejo", "screenshot bhejo", "send last pic"]
+    },
+    {
+      "id": "study-focus",
+      "name": "Deep Study & Focus Sentry",
+      "description": "Engages focus mode, silences notifications, sets work timers, and plays concentration audio",
+      "file": "study-focus.md",
+      "trigger_phrases": ["focus mode", "study mode", "padhai ka time", "do not disturb"]
+    }
+  ]
+}

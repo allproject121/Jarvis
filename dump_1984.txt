@@ -1,0 +1,108 @@
+Created At: 2026-10-18T08:16:06+05:30
+Completed At: 2026-10-18T08:16:06+05:30
+File Path: `file:///c:/Users/Roshan/Documents/Jarvis/app/src/main/res/layout/fragment_settings.xml`
+Total Lines: 1457
+Total Bytes: 69675
+Showing lines 1 to 100
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: <?xml version="1.0" encoding="utf-8"?>
+2: <androidx.constraintlayout.widget.ConstraintLayout
+3:     xmlns:android="http://schemas.android.com/apk/res/android"
+4:     xmlns:app="http://schemas.android.com/apk/res-auto"
+5:     android:layout_width="match_parent"
+6:     android:layout_height="match_parent"
+7:     android:background="?attr/themeBg"
+8:     android:paddingStart="20dp"
+9:     android:paddingEnd="20dp"
+10:     android:paddingTop="16dp"
+11:     android:paddingBottom="100dp">
+12: 
+13:     <!-- Ambient Liquid Glass Glow Fields (Soft luminous refractions behind glass) -->
+14:     <View
+15:         android:id="@+id/glowOrbTopRight"
+16:         android:layout_width="280dp"
+17:         android:layout_height="280dp"
+18:         android:layout_marginTop="-70dp"
+19:         android:layout_marginEnd="-70dp"
+20:         android:background="?attr/themeGlowBlob1"
+21:         app:layout_constraintTop_toTopOf="parent"
+22:         app:layout_constraintEnd_toEndOf="parent" />
+23: 
+24:     <View
+25:         android:id="@+id/glowOrbCenterLeft"
+26:         android:layout_width="260dp"
+27:         android:layout_height="260dp"
+28:         android:layout_marginStart="-80dp"
+29:         android:background="?attr/themeGlowBlob2"
+30:         app:layout_constraintTop_toTopOf="parent"
+31:         app:layout_constraintBottom_toBottomOf="parent"
+32:         app:layout_constraintStart_toStartOf="parent" />
+33: 
+34:     <View
+35:         android:id="@+id/glowOrbBottom"
+36:         android:layout_width="280dp"
+37:         android:layout_height="280dp"
+38:         android:layout_marginBottom="-60dp"
+39:         android:layout_marginEnd="-40dp"
+40:         android:background="?attr/themeGlowBlob3"
+41:         app:layout_constraintBottom_toBottomOf="parent"
+42:         app:layout_constraintEnd_toEndOf="parent" />
+43: 
+44:     <!-- Top Header -->
+45:     <LinearLayout
+46:         android:id="@+id/layoutHeader"
+47:         android:layout_width="match_parent"
+48:         android:layout_height="wrap_content"
+49:         android:orientation="horizontal"
+50:         android:gravity="center_vertical"
+51:         app:layout_constraintTop_toTopOf="parent">
+52: 
+53:         <LinearLayout
+54:             android:layout_width="0dp"
+55:             android:layout_height="wrap_content"
+56:             android:layout_weight="1"
+57:             android:orientation="vertical">
+58: 
+59:             <TextView
+60:                 android:id="@+id/tvSettingsTitle"
+61:                 android:layout_width="wrap_content"
+62:                 android:layout_height="wrap_content"
+63:                 android:text="Settings &amp; Intelligence"
+64:                 android:textColor="?attr/themeTextPrimary"
+65:                 android:textSize="22sp"
+66:                 android:fontFamily="sans-serif-medium"
+67:                 android:textStyle="bold" />
+68: 
+69:             <TextView
+70:                 android:layout_width="wrap_content"
+71:                 android:layout_height="wrap_content"
+72:                 android:text="System preferences &amp; neural configuration"
+73:                 android:textColor="?attr/themeTextMuted"
+74:                 android:textSize="12sp"
+75:                 android:fontFamily="sans-serif"
+76:                 android:layout_marginTop="2dp" />
+77:         </LinearLayout>
+78: 
+79:         <ImageView
+80:             android:layout_width="28dp"
+81:             android:layout_height="28dp"
+82:             android:src="@drawable/ic_sparkle"
+83:             app:tint="?attr/themeAccent"
+84:             android:contentDescription="AI" />
+85:     </LinearLayout>
+86: 
+87:     <ScrollView
+88:         android:layout_width="match_parent"
+89:         android:layout_height="0dp"
+90:         android:layout_marginTop="16dp"
+91:         android:scrollbars="none"
+92:         app:layout_constraintTop_toBottomOf="@id/layoutHeader"
+93:         app:layout_constraintBottom_toBottomOf="parent">
+94: 
+95:         <LinearLayout
+96:             android:layout_width="match_parent"
+97:             android:layout_height="wrap_content"
+98:             android:orientation="vertical"
+99:             android:paddingBottom="32dp">
+100: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

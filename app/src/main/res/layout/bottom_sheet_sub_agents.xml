@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_jarvis_menu_glass"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="24dp">
+
+    <!-- Visor Handle -->
+    <View
+        android:layout_width="44dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/bg_jarvis_row_item"
+        android:layout_marginBottom="14dp" />
+
+    <!-- Header -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true">
+
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_jarvis_icon_square">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_code_chip"
+                    app:tint="?attr/themeAccent"
+                    android:contentDescription="Subagents" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AUTONOMOUS SUB-AGENTS"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="15.5sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.06"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Modular reasoning engines &amp; workers"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11.5sp"
+                    android:fontFamily="sans-serif"
+                    android:layout_marginTop="1dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnCloseSubAgents"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_jarvis_icon_square"
+            android:src="@drawable/ic_close"
+            android:padding="8dp"
+            app:tint="?attr/themeTextMuted"
+            android:contentDescription="Close" />
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/themeCardBorder"
+        android:layout_marginBottom="12dp" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="520dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- AGENT 1: NOUS HERMES 2 PRO AGENT -->
+            <LinearLayout
+                android:id="@+id/cardHermesAgent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="12dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Nous Hermes 2 Pro Agent"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14.5sp"
+                        android:textStyle="bold"
+                        android:layout_alignParentStart="true" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ON-DEVICE ACTIVE"
+                        android:textColor="@color/status_green"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:backgroundTint="#1B382B"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp"
+                        android:layout_alignParentEnd="true" />
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Autonomous multi-step reasoning loop (up to 5 steps). Intercepts &lt;tool_call&gt; tags, queries phone sensors, and executes actions with self-reflection."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="12sp"
+                    android:layout_marginTop="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Engine: Llama.cpp ARM64 • Model: Hermes 2 Pro 1.5B Q4_K_M"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="11sp"
+                    android:layout_marginTop="6dp" />
+
+                <Button
+                    android:id="@+id/btnTestHermesAgent"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:text="TEST AUTONOMOUS REASONING LOOP"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_jarvis_pill_button"
+                    android:textColor="#FFFFFF" />
+            </LinearLayout>
+
+            <!-- AGENT 2: PYTHON & LINUX SANDBOX AGENT -->
+            <LinearLayout
+                android:id="@+id/cardPythonAgent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="12dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Termux Python Sandbox Agent"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14.5sp"
+                        android:textStyle="bold"
+                        android:layout_alignParentStart="true" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SANDBOX READY"
+                        android:textColor="@color/primary_cyan"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:backgroundTint="#0E2D3E"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp"
+                        android:layout_alignParentEnd="true" />
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Executes Python scripts, math solvers, and Linux shell commands in an isolated environment with standard output capture."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="12sp"
+                    android:layout_marginTop="6dp" />
+
+                <Button
+                    android:id="@+id/btnOpenPythonSandbox"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:text="OPEN LINUX PYTHON RUNNER"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:textColor="?attr/themeTextPrimary" />
+            </LinearLayout>
+
+            <!-- AGENT 3: VISION GROUNDING & SCREEN UI AGENT -->
+            <LinearLayout
+                android:id="@+id/cardVisionAgent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="12dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="UI Grounding &amp; Vision Agent"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14.5sp"
+                        android:textStyle="bold"
+                        android:layout_alignParentStart="true" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ACCESSIBILITY LINKED"
+                        android:textColor="#CE93D8"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:backgroundTint="#311B92"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp"
+                        android:layout_alignParentEnd="true" />
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Analyzes Android accessibility tree and screenshot pixels to locate buttons, input fields, and perform autonomous click &amp; scroll navigation."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="12sp"
+                    android:layout_marginTop="6dp" />
+
+                <Button
+                    android:id="@+id/btnTestVisionGrounding"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:text="TEST SCREEN UI GROUNDING"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:textColor="?attr/themeTextPrimary" />
+            </LinearLayout>
+
+            <!-- AGENT 4: AUTONOMOUS MACRO WORKFLOW AGENT -->
+            <LinearLayout
+                android:id="@+id/cardMacroAgent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Autonomous Macro Agent"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14.5sp"
+                        android:textStyle="bold"
+                        android:layout_alignParentStart="true" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="WORKFLOW ENGINE"
+                        android:textColor="#FFB74D"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:backgroundTint="#3E2723"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp"
+                        android:layout_alignParentEnd="true" />
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Chains multi-step external workflows: opens ChatGPT for image prompts, launches WhatsApp for instant messages, and triggers background camera captures."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="12sp"
+                    android:layout_marginTop="6dp" />
+
+                <Button
+                    android:id="@+id/btnOpenMacroConsole"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:text="OPEN MACRO WORKFLOW CONSOLE"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:textColor="?attr/themeTextPrimary" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

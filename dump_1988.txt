@@ -1,0 +1,69 @@
+Created At: 2026-10-18T08:16:15+05:30
+Completed At: 2026-10-18T08:16:15+05:30
+File Path: `file:///c:/Users/Roshan/Documents/Jarvis/app/src/main/res/layout/fragment_settings.xml`
+Total Lines: 1457
+Total Bytes: 69675
+Showing lines 260 to 320
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+260: 
+261:             <LinearLayout
+262:                 android:layout_width="match_parent"
+263:                 android:layout_height="wrap_content"
+264:                 android:orientation="vertical"
+265:                 android:background="@drawable/bg_jarvis_card"
+266:                 android:paddingStart="10dp"
+267:                 android:paddingEnd="10dp"
+268:                 android:paddingTop="10dp"
+269:                 android:paddingBottom="10dp"
+270:                 android:layout_marginBottom="22dp">
+271: 
+272:                 <!-- Row 0: JARVIS Agent Matrix & Protocols -->
+273:                 <LinearLayout
+274:                     android:id="@+id/rowMatrixTools"
+275:                     android:layout_width="match_parent"
+276:                     android:layout_height="wrap_content"
+277:                     android:orientation="horizontal"
+278:                     android:gravity="center_vertical"
+279:                     android:paddingStart="12dp"
+280:                     android:paddingEnd="12dp"
+281:                     android:paddingTop="12dp"
+282:                     android:paddingBottom="12dp"
+283:                     android:layout_marginTop="3dp"
+284:                     android:layout_marginBottom="6dp"
+285:                     android:background="@drawable/bg_jarvis_row_item"
+286:                     android:clickable="true"
+287:                     android:focusable="true">
+288: 
+289:                     <FrameLayout
+290:                         android:layout_width="38dp"
+291:                         android:layout_height="38dp"
+292:                         android:background="@drawable/bg_jarvis_icon_square">
+293: 
+294:                         <ImageView
+295:                             android:layout_width="22dp"
+296:                             android:layout_height="22dp"
+297:                             android:layout_gravity="center"
+298:                             android:src="@drawable/ic_code_chip"
+299:                             app:tint="?attr/themeAccent"
+300:                             android:contentDescription="JARVIS Matrix" />
+301:                     </FrameLayout>
+302: 
+303:                     <LinearLayout
+304:                         android:layout_width="0dp"
+305:                         android:layout_height="wrap_content"
+306:                         android:layout_weight="1"
+307:                         android:orientation="vertical"
+308:                         android:layout_marginStart="14dp">
+309: 
+310:                         <LinearLayout
+311:                             android:layout_width="wrap_content"
+312:                             android:layout_height="wrap_content"
+313:                             android:orientation="horizontal"
+314:                             android:gravity="center_vertical">
+315: 
+316:                             <TextView
+317:                                 android:layout_width="wrap_content"
+318:                                 android:layout_height="wrap_content"
+319:                                 android:text="JARVIS Agent Matrix &amp; Protocols"
+320:                                 android:textColor="?attr/themeTextPrimary"
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
