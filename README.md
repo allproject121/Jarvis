@@ -83,7 +83,7 @@ You do **not** need Android Studio or a developer machine to experience JARVIS. 
 
 > [!TIP]
 > **✨ LIVE INTERACTIVE ANIMATED ARCHITECTURE MAP (ARCHIFY STYLE):**
-> Experience this architecture as a live, interactive, animated visual map with glowing data packet flows, real-time path tracing, and clickable module inspection by opening [`docs/architecture/interactive_architecture.html`](docs/architecture/interactive_architecture.html) or double-clicking [`architecture.html`](architecture.html) in any browser!
+> Experience this architecture as a live, interactive, animated visual map with glowing data packet flows, real-time path tracing, and clickable module inspection by opening [`docs/architecture/interactive_architecture.html`](docs/architecture/interactive_architecture.html) in any browser!
 
 <p align="center">
   <img src="docs/assets/jarvis-architecture-animated.svg" width="100%" alt="JARVIS Cybernetic Operating System — Animated Architecture Diagram" style="border-radius: 16px; box-shadow: 0 12px 36px rgba(0, 229, 255, 0.3);" />
