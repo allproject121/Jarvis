@@ -9,16 +9,16 @@
 
 [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2028--35)-00E5FF?style=for-the-badge&logo=android&logoColor=white)](https://android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin%201.9%20%7C%20Java%2017-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org)
-[![Build APK](https://img.shields.io/badge/GitHub%20Actions-Auto%20Build%20APK-10B981?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/tiwariroshan121/Jarvis/actions/workflows/build-apk.yml)
-[![Download Jarvis Beta Version APK](https://img.shields.io/badge/Download-Jarvis%20Beta%20Version%20APK-00E5FF?style=for-the-badge&logo=android&logoColor=black)](https://github.com/tiwariroshan121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk)
-[![Architecture](https://img.shields.io/badge/Dual--Brain-Cloud%20%2B%20100%25%20Offline-FF6D00?style=for-the-badge&logo=cpu&logoColor=white)](https://github.com/tiwariroshan121/Jarvis)
+[![Build APK](https://img.shields.io/badge/GitHub%20Actions-Auto%20Build%20APK-10B981?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/allproject121/Jarvis/actions/workflows/build-apk.yml)
+[![Download Jarvis Beta Version APK](https://img.shields.io/badge/Download-Jarvis%20Beta%20Version%20APK-00E5FF?style=for-the-badge&logo=android&logoColor=black)](https://github.com/allproject121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk)
+[![Architecture](https://img.shields.io/badge/Dual--Brain-Cloud%20%2B%20100%25%20Offline-FF6D00?style=for-the-badge&logo=cpu&logoColor=white)](https://github.com/allproject121/Jarvis)
 [![License](https://img.shields.io/badge/License-Roshan%20TAMCL%20v1.0-E91E63?style=for-the-badge&logo=open-source-initiative&logoColor=white)](LICENSE)
 [![Architect](https://img.shields.io/badge/Architect-Roshan%20Tiwari-FF1744?style=for-the-badge&logo=github&logoColor=white)](https://github.com/tiwariroshan121)
 
 ---
 
-> ### 📲 [Download Jarvis Beta Version APK (v1.0.0-beta)](https://github.com/tiwariroshan121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk)
-> **Direct APK Download:** [`Jarvis-Beta-Version.apk`](https://github.com/tiwariroshan121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk) (351 MB) • **GitHub Release:** [Releases ➔ Jarvis Beta Version](https://github.com/tiwariroshan121/Jarvis/releases/tag/v1.0.0-beta)  
+> ### 📲 [Download Jarvis Beta Version APK (v1.0.0-beta)](https://github.com/allproject121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk)
+> **Direct APK Download:** [`Jarvis-Beta-Version.apk`](https://github.com/allproject121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk) (351 MB) • **Repository Package:** [`package/Jarvis-Beta-Version.apk`](package/Jarvis-Beta-Version.apk) • **GitHub Release:** [Releases ➔ Jarvis Beta Version](https://github.com/allproject121/Jarvis/releases/tag/v1.0.0-beta)  
 > *Ready-to-install Android APK with full 3D Arc Reactor, God's Eye Reconnaissance, and offline neural engine.*
 
 </div>
@@ -67,15 +67,16 @@ You do **not** need Android Studio or a developer machine to experience JARVIS. 
 
 <div align="center">
 
-[![Download Jarvis Beta Version APK](https://img.shields.io/badge/📲%20DOWNLOAD%20JARVIS%20BETA%20VERSION%20APK-00E5FF?style=for-the-badge&logo=android&logoColor=black)](https://github.com/tiwariroshan121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk)
+[![Download Jarvis Beta Version APK](https://img.shields.io/badge/📲%20DOWNLOAD%20JARVIS%20BETA%20VERSION%20APK-00E5FF?style=for-the-badge&logo=android&logoColor=black)](https://github.com/allproject121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk)
 
-*Direct APK Download: [**Jarvis-Beta-Version.apk (351 MB)**](https://github.com/tiwariroshan121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk)*  
-*Official Release Page: [**github.com/tiwariroshan121/Jarvis/releases/tag/v1.0.0-beta**](https://github.com/tiwariroshan121/Jarvis/releases/tag/v1.0.0-beta)*
+*Direct APK Download: [**Jarvis-Beta-Version.apk (351 MB)**](https://github.com/allproject121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk)*  
+*Repository File Download: [**package/Jarvis-Beta-Version.apk**](package/Jarvis-Beta-Version.apk)*  
+*Official Release Page: [**github.com/allproject121/Jarvis/releases/tag/v1.0.0-beta**](https://github.com/allproject121/Jarvis/releases/tag/v1.0.0-beta)*
 
 </div>
 
 ### ⚡ 3-Step Phone Installation:
-1. **Download:** Tap [**Jarvis-Beta-Version.apk**](https://github.com/tiwariroshan121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk) on your Android phone to download the 351 MB package directly.
+1. **Download:** Tap [**Jarvis-Beta-Version.apk**](https://github.com/allproject121/Jarvis/releases/download/v1.0.0-beta/Jarvis-Beta-Version.apk) on your Android phone to download the 351 MB package directly.
 2. **Install:** Tap the downloaded file in your browser or file manager (if prompted, enable *"Allow from this source"*).
 3. **Grant Core Permissions:** Launch JARVIS and grant:
    - 🎤 **Microphone:** For continuous voice recognition & Gemini Live conversation.
@@ -761,7 +762,7 @@ This section provides an honest, production-grade engineering disclosure of ever
 You don't need Android Studio or SDKs installed to get the latest build:
 1. Push your changes to `main` (or trigger via **Actions** > **Build and Publish Debug APK** > **Run workflow**).
 2. GitHub Actions sets up Java 17, Gradle 8.9, builds the debug APK, and attaches it as an artifact (`app-debug-apk`).
-3. The workflow automatically publishes a new release under [**Releases**](https://github.com/tiwariroshan121/Jarvis/releases/latest) with the direct `.apk` ready for phone download.
+3. The workflow automatically publishes a new release under [**Releases**](https://github.com/allproject121/Jarvis/releases/latest) with the direct `.apk` ready for phone download.
 
 ---
 
@@ -774,7 +775,7 @@ You don't need Android Studio or SDKs installed to get the latest build:
 
 #### 1. Clone the Repository
 ```bash
-git clone https://github.com/tiwariroshan121/Jarvis.git
+git clone https://github.com/allproject121/Jarvis.git
 cd Jarvis
 ```
 
@@ -847,7 +848,7 @@ To unlock the full autonomous power of JARVIS, grant permissions in **Settings >
 * **GitHub Profile:** [@tiwariroshan121](https://github.com/tiwariroshan121)
 * **Secondary GitHub:** [@freeid2601-dotcom](https://github.com/freeid2601-dotcom)
 * **Email:** [tiwariroshan2601@gmail.com](mailto:tiwariroshan2601@gmail.com)
-* **Project Repository:** [https://github.com/tiwariroshan121/Jarvis](https://github.com/tiwariroshan121/Jarvis)
+* **Project Repository:** [https://github.com/allproject121/Jarvis](https://github.com/allproject121/Jarvis)
 
 ---
 
@@ -858,4 +859,3 @@ To unlock the full autonomous power of JARVIS, grant permissions in **Settings >
 **⭐ If you like this project, star it on GitHub! ⭐**
 
 </div>
-"# Jarvis" 
