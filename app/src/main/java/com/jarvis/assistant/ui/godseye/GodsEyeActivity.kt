@@ -1,4 +1,4 @@
-package com.jarvis.assistant.ui.godseye
+﻿package com.jarvis.assistant.ui.godseye
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -37,6 +37,7 @@ import java.io.ByteArrayInputStream
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URLDecoder
+import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -122,7 +123,20 @@ class GodsEyeActivity : AppCompatActivity() {
 
     private val cctvMediaCache = object : LinkedHashMap<String, CachedMedia>(32, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, CachedMedia>?): Boolean {
-            return size > 120
+            return size > 150
+        }
+    }
+
+    private val cctvHealthMap = java.util.concurrent.ConcurrentHashMap<String, JSONObject>()
+
+    private fun recordCctvHealth(cameraId: String, status: String, sourceKind: String, label: String, message: String) {
+        cctvHealthMap[cameraId] = JSONObject().apply {
+            put("cameraId", cameraId)
+            put("status", status)
+            put("sourceKind", sourceKind)
+            put("label", label)
+            put("message", message)
+            put("timestamp", System.currentTimeMillis())
         }
     }
 
@@ -178,6 +192,14 @@ class GodsEyeActivity : AppCompatActivity() {
         binding.btnApiHub.setOnClickListener {
             val hubSheet = GodsEyeApiHubBottomSheet()
             hubSheet.show(supportFragmentManager, "GodsEyeApiHubBottomSheet")
+        }
+
+        binding.btnAutoTour.setOnClickListener {
+            toggleAutoTour()
+        }
+
+        binding.btnAutoTourNext.setOnClickListener {
+            nextAutoTourScene()
         }
 
         binding.btnReload.setOnClickListener {
@@ -397,7 +419,7 @@ class GodsEyeActivity : AppCompatActivity() {
 
                     pendingAction?.let { action ->
                         pendingAction = null
-                        executeActionInWebView(action)
+                        executeActionInWebView(action.toString())
                     }
 
                     // Probe WebGL availability inside WebView to catch driver crashes
@@ -577,7 +599,36 @@ class GodsEyeActivity : AppCompatActivity() {
             }
 
             if (path.startsWith("/api/cctv/health")) {
-                return jsonResponse("{\"cameras\":[]}", corsHeaders)
+                val arr = JSONArray()
+                cctvHealthMap.values.forEach { arr.put(it) }
+                val resp = JSONObject().apply {
+                    put("cameras", arr)
+                }
+                return jsonResponse(resp.toString(), corsHeaders, 200)
+            }
+
+            if (path.startsWith("/api/cctv/stream/")) {
+                val rawCameraId = path.removePrefix("/api/cctv/stream/").substringBefore("?").trim()
+                val cameraId = try { URLDecoder.decode(rawCameraId, "UTF-8") } catch (_: Exception) { rawCameraId }
+                val cam = GodsEyeMcpClient.findCamera(cameraId)
+                val streamUrl = cam?.url.orEmpty()
+                val snapshotUrl = cam?.snapshotUrl?.ifBlank { cam.url }.orEmpty()
+                val resolved = if (streamUrl.isNotBlank() || snapshotUrl.isNotBlank()) {
+                    CameraUrlInfo(streamUrl, snapshotUrl, cam?.feedType ?: "image")
+                } else {
+                    resolveCameraUrls(cameraId)
+                }
+                val isVideo = resolved.feedType == "video" || resolved.feedType == "mp4" || resolved.feedType == "hls" ||
+                              resolved.streamUrl.endsWith(".mp4") || resolved.streamUrl.endsWith(".m3u8") || resolved.streamUrl.contains(".m3u8?")
+                val payload = JSONObject().apply {
+                    put("id", cameraId)
+                    put("feedType", if (isVideo) (if (resolved.feedType == "hls" || resolved.streamUrl.contains(".m3u8")) "hls" else "mp4") else "image")
+                    put("mediaUrl", if (isVideo) "/api/cctv/media/${URLEncoder.encode(cameraId, "UTF-8")}" else JSONObject.NULL)
+                    put("frameUrl", "/api/cctv/frame/${URLEncoder.encode(cameraId, "UTF-8")}")
+                    put("provider", cam?.pack ?: "Configured source")
+                    put("sourceKind", if (cam?.url?.isNotBlank() == true) "configured" else "fallback")
+                }
+                return jsonResponse(payload.toString(), corsHeaders, 200)
             }
 
             if (path.startsWith("/api/cctv/frame/")) {
@@ -1592,6 +1643,56 @@ class GodsEyeActivity : AppCompatActivity() {
             }
         }
 
+        // 10. Texas DOT (TxDOT ITS)
+        if (cameraId.startsWith("txdot-") || packHint == "txdot") {
+            val parts = cameraId.removePrefix("txdot-").split("-", limit = 2)
+            val district = if (parts.isNotEmpty()) parts[0].uppercase() else "SAT"
+            val rawIcd = if (parts.size > 1) {
+                try {
+                    String(android.util.Base64.decode(parts[1], android.util.Base64.DEFAULT), Charsets.UTF_8)
+                } catch (_: Exception) { parts[1] }
+            } else ""
+            val encodedIcd = URLEncoder.encode(rawIcd.ifBlank { "Wurzbach Pkwy at Blanco Rd" }, "UTF-8")
+            val txdotUrl = "https://its.txdot.gov/its/DistrictIts/GetCctvSnapshotByIcdId?icdId=$encodedIcd&districtCode=$district"
+            return CameraUrlInfo(txdotUrl, txdotUrl, "image")
+        }
+
+        // 11. Hong Kong Transport Department
+        if (cameraId.startsWith("hk-") || packHint == "hk") {
+            val id = cameraId.removePrefix("hk-").uppercase()
+            val jpgUrl = "https://tdcctv.data.one.gov.hk/$id.JPG"
+            return CameraUrlInfo(jpgUrl, jpgUrl, "image")
+        }
+
+        // 12. City of Toronto (RESCU cameras)
+        if (cameraId.startsWith("toronto-") || packHint == "toronto") {
+            val id = cameraId.removePrefix("toronto-")
+            val locId = if (id.startsWith("loc")) id else "loc$id"
+            val jpgUrl = "https://opendata.toronto.ca/transportation/tmc/rescucameraimages/CameraImages/$locId.jpg"
+            return CameraUrlInfo(jpgUrl, jpgUrl, "image")
+        }
+
+        // 13. Estonia Tarktee
+        if (cameraId.startsWith("ee-tarktee-") || packHint == "tarktee") {
+            val id = cameraId.removePrefix("ee-tarktee-")
+            val jpgUrl = "https://tarktee.transpordiamet.ee/images/$id/$id.jpg"
+            return CameraUrlInfo(jpgUrl, jpgUrl, "image")
+        }
+
+        // 14. King County WA
+        if (cameraId.startsWith("kingcounty-") || packHint == "kingcounty") {
+            val id = cameraId.removePrefix("kingcounty-")
+            val jpgUrl = "https://info.kingcounty.gov/transportation/kcdot/traffic/cameras/images/$id.jpg"
+            return CameraUrlInfo(jpgUrl, jpgUrl, "image")
+        }
+
+        // 15. Washington State DOT (WSDOT)
+        if (cameraId.startsWith("wsdot-") || packHint == "wsdot") {
+            val id = cameraId.removePrefix("wsdot-")
+            val jpgUrl = "https://images.wsdot.wa.gov/nw/$id.jpg"
+            return CameraUrlInfo(jpgUrl, jpgUrl, "image")
+        }
+
         return CameraUrlInfo("", "", "image")
     }
 
@@ -1607,6 +1708,72 @@ class GodsEyeActivity : AppCompatActivity() {
             Log.e(TAG, "Failed to stream cctv_sources.json: ${e.message}", e)
             jsonResponse("{\"trimmedPacks\":[],\"sources\":[]}", corsHeaders)
         }
+    }
+
+    private fun fetchCctvBytes(targetUrl: String): Pair<ByteArray, String>? {
+        if (targetUrl.isBlank() || !targetUrl.startsWith("http")) return null
+        try {
+            val reqBuilder = Request.Builder()
+                .url(targetUrl)
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+                .header("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,application/json,*/*;q=0.8")
+
+            if (targetUrl.contains("txdot.gov")) {
+                reqBuilder.header("Referer", "https://its.txdot.gov/")
+            } else if (targetUrl.contains("dot.ca.gov")) {
+                reqBuilder.header("Referer", "https://cwwp2.dot.ca.gov/")
+            } else if (targetUrl.contains("trafficcam.calgary.ca")) {
+                reqBuilder.header("Referer", "https://trafficcam.calgary.ca/")
+            } else if (targetUrl.contains("data.one.gov.hk")) {
+                reqBuilder.header("Referer", "https://tdcctv.data.one.gov.hk/")
+            }
+
+            val resp = okHttpClient.newCall(reqBuilder.build()).execute()
+            if (resp.isSuccessful) {
+                val raw = resp.body?.bytes()
+                if (raw != null && raw.isNotEmpty()) {
+                    var mime = resp.header("Content-Type")?.split(";")?.firstOrNull()?.trim() ?: "image/jpeg"
+                    var finalBytes = raw
+
+                    // Check for TxDOT JSON base64 snippet envelope
+                    if (targetUrl.contains("txdot.gov") || mime.contains("json") || (raw.size > 15 && raw[0] == '{'.code.toByte())) {
+                        try {
+                            val jsonStr = String(raw, Charsets.UTF_8)
+                            val json = JSONObject(jsonStr)
+                            var snippet = json.optString("snippet", "")
+                            if (snippet.startsWith("data:image/jpeg;base64,", ignoreCase = true)) {
+                                snippet = snippet.substringAfter(",")
+                            }
+                            if (snippet.isNotBlank()) {
+                                val decoded = android.util.Base64.decode(snippet, android.util.Base64.DEFAULT)
+                                if (decoded != null && decoded.isNotEmpty()) {
+                                    finalBytes = decoded
+                                    mime = "image/jpeg"
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "TxDOT JSON base64 parse notice: ${e.message}")
+                        }
+                    }
+
+                    // Check if raster image magic bytes match
+                    val isRaster = (finalBytes.size >= 4 &&
+                        ((finalBytes[0] == 0xFF.toByte() && finalBytes[1] == 0xD8.toByte() && finalBytes[2] == 0xFF.toByte()) ||
+                         (finalBytes[0] == 0x89.toByte() && finalBytes[1] == 0x50.toByte() && finalBytes[2] == 0x4E.toByte()) ||
+                         (finalBytes[0] == 'R'.code.toByte() && finalBytes[1] == 'I'.code.toByte() && finalBytes[2] == 'F'.code.toByte()) ||
+                         (finalBytes[0] == 'G'.code.toByte() && finalBytes[1] == 'I'.code.toByte() && finalBytes[2] == 'F'.code.toByte())))
+
+                    if (isRaster || mime.startsWith("image/")) {
+                        return Pair(finalBytes, mime)
+                    }
+                }
+            } else {
+                Log.w(TAG, "Upstream CCTV returned HTTP ${resp.code} for $targetUrl")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Upstream CCTV fetch error for $targetUrl: ${e.message}")
+        }
+        return null
     }
 
     private fun handleCctvFrame(
@@ -1635,42 +1802,51 @@ class GodsEyeActivity : AppCompatActivity() {
             val headers = HashMap(corsHeaders).apply {
                 put("Cache-Control", "public, max-age=15")
                 put("X-CCTV-Live", "true")
+                put("X-CCTV-Source", "upstream-image")
             }
             return WebResourceResponse(cached.mime, "UTF-8", 200, "OK", headers, ByteArrayInputStream(cached.bytes))
         }
 
-        if (targetUrl.isNotBlank() && targetUrl.startsWith("http")) {
-            try {
-                val upstreamReq = Request.Builder()
-                    .url(targetUrl)
-                    .header("User-Agent", "Mozilla/5.0 (Android; Mobile; rv:120.0) Gecko/120.0 Firefox/120.0")
-                    .header("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8")
-                    .build()
-                val upstreamResp = okHttpClient.newCall(upstreamReq).execute()
-                if (upstreamResp.isSuccessful) {
-                    val rawBody = upstreamResp.body?.bytes()
-                    if (rawBody != null && rawBody.isNotEmpty()) {
-                        val mime = upstreamResp.header("Content-Type")?.split(";")?.firstOrNull()?.trim() ?: "image/jpeg"
-                        synchronized(cctvMediaCache) {
-                            cctvMediaCache[targetUrl] = CachedMedia(rawBody, mime, System.currentTimeMillis())
-                        }
-                        val headers = HashMap(corsHeaders).apply {
-                            put("Cache-Control", "public, max-age=15")
-                            put("X-CCTV-Live", "true")
-                        }
-                        return WebResourceResponse(mime, "UTF-8", 200, "OK", headers, ByteArrayInputStream(rawBody))
-                    }
-                }
-                Log.w(TAG, "Upstream CCTV frame fetch returned ${upstreamResp.code} for $targetUrl")
-            } catch (e: Exception) {
-                Log.w(TAG, "Upstream CCTV frame fetch failed for $targetUrl: ${e.message}")
+        // 1. Try primary resolved target URL
+        var fetched = fetchCctvBytes(targetUrl)
+
+        // 2. If primary failed and there is an alternate snapshot/stream URL, try alternate
+        if (fetched == null && resolved.streamUrl.isNotBlank() && resolved.streamUrl != targetUrl) {
+            fetched = fetchCctvBytes(resolved.streamUrl)
+        }
+
+        // 3. If still failed and camera ID matches a known regional pattern, try fallback resolver
+        if (fetched == null) {
+            val alt = resolveCameraUrls(cameraId)
+            val altTarget = alt.snapshotUrl.ifBlank { alt.streamUrl }
+            if (altTarget.isNotBlank() && altTarget != targetUrl && altTarget != resolved.streamUrl) {
+                fetched = fetchCctvBytes(altTarget)
             }
+        }
+
+        if (fetched != null) {
+            val (bytes, mime) = fetched
+            synchronized(cctvMediaCache) {
+                cctvMediaCache[targetUrl] = CachedMedia(bytes, mime, System.currentTimeMillis())
+            }
+            val headers = HashMap(corsHeaders).apply {
+                put("Cache-Control", "public, max-age=15")
+                put("X-CCTV-Live", "true")
+                put("X-CCTV-Source", "upstream-image")
+            }
+            recordCctvHealth(cameraId, "ok", "snapshot", label, "Live snapshot feed active")
+            return WebResourceResponse(mime, "UTF-8", 200, "OK", headers, ByteArrayInputStream(bytes))
         }
 
         // Honest offline / unconfigured fallback message
         val status = if (targetUrl.isBlank()) "FEED NOT CONFIGURED" else "STREAM OFFLINE"
+        recordCctvHealth(cameraId, "degraded", "synthetic", label, status)
         val svg = buildSyntheticCctvSvg(cameraId, label, city, status)
-        return WebResourceResponse("image/svg+xml", "UTF-8", 200, "OK", corsHeaders, ByteArrayInputStream(svg.toByteArray()))
+        val headers = HashMap(corsHeaders).apply {
+            put("Cache-Control", "no-cache")
+            put("X-CCTV-Source", "synthetic")
+        }
+        return WebResourceResponse("image/svg+xml", "UTF-8", 200, "OK", headers, ByteArrayInputStream(svg.toByteArray()))
     }
 
     private fun handleCctvMedia(
@@ -1687,12 +1863,21 @@ class GodsEyeActivity : AppCompatActivity() {
             resolveCameraUrls(cameraId)
         }
         val targetUrl = resolved.streamUrl.ifBlank { resolved.snapshotUrl }
+
+        // Fast reject for still image cameras so HTML video players fail fast and switch to image frames immediately
+        val isVideo = resolved.feedType == "video" || resolved.feedType == "mp4" || resolved.feedType == "hls" ||
+                      targetUrl.endsWith(".mp4") || targetUrl.endsWith(".m3u8") || targetUrl.contains(".m3u8?")
+        if (!isVideo || resolved.feedType == "image") {
+            return jsonResponse("{\"error\":\"no_media_url\",\"message\":\"Still camera; use frame endpoint\"}", corsHeaders, 404)
+        }
+
         if (targetUrl.isBlank() || !targetUrl.startsWith("http")) {
             return jsonResponse("{\"error\":\"no_media_url\",\"message\":\"No live video stream configured for camera $cameraId\"}", corsHeaders, 404)
         }
 
         // A. Handle HLS Playlists
         if (resolved.feedType == "hls" || targetUrl.endsWith(".m3u8") || targetUrl.contains(".m3u8?")) {
+            recordCctvHealth(cameraId, "ok", "live", cam?.name ?: cameraId, "Live HLS stream connected")
             return handleCctvHlsManifest(targetUrl, corsHeaders)
         }
 
@@ -1712,13 +1897,14 @@ class GodsEyeActivity : AppCompatActivity() {
             } else {
                 val reqBuilder = Request.Builder()
                     .url(targetUrl)
-                    .header("User-Agent", "Mozilla/5.0 (Android; Mobile; rv:120.0) Gecko/120.0 Firefox/120.0")
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
 
                 val upstreamResp = okHttpClient.newCall(reqBuilder.build()).execute()
                 if (!upstreamResp.isSuccessful) {
                     val code = upstreamResp.code
                     upstreamResp.close()
                     Log.w(TAG, "Upstream CCTV media fetch returned HTTP $code for $targetUrl")
+                    recordCctvHealth(cameraId, "degraded", "upstream", cam?.name ?: cameraId, "Upstream HTTP $code")
                     return jsonResponse("{\"error\":\"upstream_failed\",\"status\":$code,\"message\":\"Feed unavailable (HTTP $code)\"}", corsHeaders, code)
                 }
 
@@ -1739,6 +1925,8 @@ class GodsEyeActivity : AppCompatActivity() {
             headers["Accept-Ranges"] = "bytes"
             headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
             headers["X-CCTV-Live"] = "true"
+            headers["X-CCTV-Source"] = "live-media"
+            recordCctvHealth(cameraId, "ok", "live", cam?.name ?: cameraId, "Live video stream connected")
 
             val rangeHeader = request.requestHeaders?.entries?.firstOrNull { it.key.equals("range", ignoreCase = true) }?.value
 
@@ -2197,7 +2385,7 @@ class GodsEyeActivity : AppCompatActivity() {
                     "LISTENING" -> "Listening to you..."
                     "THINKING" -> "Processing request..."
                     "SPEAKING" -> "Jarvis speaking..."
-                    "READY" -> "Jarvis Online · Tap mic or say 'Hey Jarvis'"
+                    "READY" -> "Jarvis Online Â· Tap mic or say 'Hey Jarvis'"
                     else -> "Voice Standby"
                 }
                 val js = "(function() { if (typeof window.__updateJarvisVoiceStatus === 'function') { window.__updateJarvisVoiceStatus('$stateName', '$detail', $level); } })();"
@@ -2221,14 +2409,164 @@ class GodsEyeActivity : AppCompatActivity() {
         startJarvisStateObserver()
     }
 
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent?): Boolean {
+        if (ev?.action == android.view.MotionEvent.ACTION_DOWN || ev?.action == android.view.MotionEvent.ACTION_MOVE) {
+            lastUserTouchTime = System.currentTimeMillis()
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
+    // =========================================================================
+    // AUTONOMOUS SENTINEL TOUR ENGINE (Automated Planetary Layer & Scene Cycling)
+    // =========================================================================
+
+    data class AutoTourScene(
+        val domainTag: String,
+        val label: String,
+        val latitude: Double,
+        val longitude: Double,
+        val altitude: Double,
+        val heading: Double,
+        val pitch: Double,
+        val enableLayers: List<String>,
+        val cctvId: String? = null,
+        val durationSeconds: Int = 14
+    )
+
+    private val autoTourScenes = listOf(
+        AutoTourScene("FLIGHTS", "LIVE COMMERCIAL AVIATION", 40.7128, -74.0060, 220000.0, 0.0, -45.0, listOf("flights", "daynight")),
+        AutoTourScene("LONDON CCTV", "LONDON TRAFALGAR CAM", 51.5080, -0.1281, 1500.0, 45.0, -55.0, listOf("cctv", "traffic"), "00001.06502"),
+        AutoTourScene("SEISMIC", "USGS GLOBAL EARTHQUAKES", 35.6762, 139.6503, 800000.0, 0.0, -65.0, listOf("earthquakes", "plate_boundaries")),
+        AutoTourScene("SPACE", "KENNEDY LAUNCHPAD & ISS", 28.5729, -80.6490, 350000.0, 90.0, -45.0, listOf("satellites", "launches")),
+        AutoTourScene("TEXAS CCTV", "AUSTIN MUNICIPAL CAM", 30.2672, -97.7431, 1800.0, 0.0, -50.0, listOf("cctv"), "354"),
+        AutoTourScene("MARITIME", "SINGAPORE STRAIT AIS", 1.2500, 103.8500, 100000.0, 120.0, -50.0, listOf("vessels", "marine_traffic")),
+        AutoTourScene("WEATHER", "RAINVIEWER RADAR & STORMS", 25.0000, -80.0000, 950000.0, 0.0, -65.0, listOf("weather", "cyclones", "wind")),
+        AutoTourScene("ARCTIC CCTV", "FINLAND LAPLAND E75 CAM", 68.9059, 27.0288, 2500.0, 180.0, -45.0, listOf("cctv"), "C1455101")
+    )
+
+    private var isAutoTourActive = false
+    private var currentTourIndex = 0
+    private var autoTourJob: kotlinx.coroutines.Job? = null
+    private var lastUserTouchTime = 0L
+
+    fun isAutoTourRunning(): Boolean = isAutoTourActive
+
+    fun toggleAutoTour() {
+        if (isAutoTourActive) {
+            stopAutoTour()
+        } else {
+            startAutoTour()
+        }
+    }
+
+    fun startAutoTour() {
+        isAutoTourActive = true
+        binding.btnAutoTour.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#00E5FF"))
+        binding.btnAutoTour.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#050811"))
+        binding.layoutAutoTourHud.visibility = View.VISIBLE
+        launchTourCycle()
+    }
+
+    fun stopAutoTour() {
+        isAutoTourActive = false
+        autoTourJob?.cancel()
+        autoTourJob = null
+        binding.btnAutoTour.backgroundTintList = null
+        binding.btnAutoTour.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#64FFDA"))
+        binding.layoutAutoTourHud.visibility = View.GONE
+    }
+
+    fun nextAutoTourScene() {
+        if (!isAutoTourActive) {
+            startAutoTour()
+            return
+        }
+        currentTourIndex = (currentTourIndex + 1) % autoTourScenes.size
+        launchTourCycle()
+    }
+
+    private fun launchTourCycle() {
+        autoTourJob?.cancel()
+        autoTourJob = lifecycleScope.launch {
+            while (isAutoTourActive) {
+                val scene = autoTourScenes[currentTourIndex % autoTourScenes.size]
+                executeTourScene(scene)
+
+                var remainingSeconds = scene.durationSeconds
+                while (remainingSeconds > 0 && isAutoTourActive) {
+                    val isPausedByTouch = System.currentTimeMillis() - lastUserTouchTime < 10000L
+                    if (isPausedByTouch) {
+                        binding.tvAutoTourBadge.text = "⏸ PAUSED (${scene.domainTag})"
+                    } else {
+                        binding.tvAutoTourBadge.text = "⟳ AUTO: ${scene.domainTag} (${remainingSeconds}s)"
+                        remainingSeconds--
+                    }
+                    kotlinx.coroutines.delay(1000L)
+                }
+
+                currentTourIndex = (currentTourIndex + 1) % autoTourScenes.size
+            }
+        }
+    }
+
+    private fun executeTourScene(scene: AutoTourScene) {
+        val action = JSONObject().apply {
+            put("trace_id", "tour_${scene.domainTag.lowercase()}_${System.currentTimeMillis()}")
+            val cam = JSONObject().apply {
+                put("latitude", scene.latitude)
+                put("longitude", scene.longitude)
+                put("altitude", scene.altitude)
+                put("heading", scene.heading)
+                put("pitch", scene.pitch)
+                put("duration", 3.0)
+            }
+            put("camera", cam)
+            put("enable_layers", JSONArray(scene.enableLayers))
+            if (scene.cctvId != null) {
+                put("cctv", scene.cctvId)
+            }
+        }
+        executeActionInWebView(action.toString())
+
+        // Also evaluate direct Cesium JS flyTo fallback for 100% reliability
+        val flyJs = """
+            (function() {
+                try {
+                    if (window.__godsEyeView && typeof window.__godsEyeView.flyTo === 'function') {
+                        window.__godsEyeView.flyTo({
+                            latitude: ${scene.latitude},
+                            longitude: ${scene.longitude},
+                            altitude: ${scene.altitude},
+                            heading: ${scene.heading},
+                            pitch: ${scene.pitch},
+                            duration: 3.0
+                        });
+                    }
+                    var layers = ${JSONArray(scene.enableLayers)};
+                    if (window.__dataManager && typeof window.__dataManager.setEnabled === 'function') {
+                        for (var i = 0; i < layers.length; i++) {
+                            try { window.__dataManager.setEnabled(layers[i], true, { origin: 'external' }); } catch(e){}
+                        }
+                    }
+                    ${if (scene.cctvId != null) "if (window.__godsEyeView && typeof window.__godsEyeView.selectCamera === 'function') { window.__godsEyeView.selectCamera('${scene.cctvId}'); }" else ""}
+                } catch(e) {
+                    console.warn('[AutoTour] JS dispatch error:', e);
+                }
+            })();
+        """.trimIndent()
+        binding.webViewGodsEye.evaluateJavascript(flyJs, null)
+    }
+
     override fun onPause() {
         super.onPause()
+        stopAutoTour()
         stopJarvisStateObserver()
         binding.webViewGodsEye.onPause()
         binding.webViewGodsEye.pauseTimers()
     }
 
     override fun onDestroy() {
+        stopAutoTour()
         stopJarvisStateObserver()
         if (activeInstance == this) {
             activeInstance = null

@@ -100,15 +100,40 @@
                     android:layout_height="wrap_content"
                     android:layout_centerInParent="true"
                     android:orientation="vertical"
-                    android:gravity="center">
+                    android:gravity="center"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
 
-                    <ImageView
-                        android:id="@+id/ivHeaderJarvisLogo"
-                        android:layout_width="114dp"
-                        android:layout_height="32dp"
-                        android:src="@drawable/ic_jarvis_logo"
-                        android:scaleType="fitCenter"
-                        android:contentDescription="Jarvis Logo" />
+                    <FrameLayout
+                        android:id="@+id/layoutJarvisLogoTouch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:clipChildren="false"
+                        android:clipToPadding="false"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <!-- Glowing Neon Shadow Pulse Layer (Animates on tap) -->
+                        <ImageView
+                            android:id="@+id/ivHeaderJarvisLogoShadow"
+                            android:layout_width="142dp"
+                            android:layout_height="44dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_jarvis_brand_logo"
+                            android:scaleType="fitCenter"
+                            android:alpha="0.0"
+                            android:importantForAccessibility="no" />
+
+                        <!-- Main High-Tech JARVIS Logo -->
+                        <ImageView
+                            android:id="@+id/ivHeaderJarvisLogo"
+                            android:layout_width="134dp"
+                            android:layout_height="40dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_jarvis_brand_logo"
+                            android:scaleType="fitCenter"
+                            android:contentDescription="JARVIS Logo" />
+                    </FrameLayout>
 
                     <TextView
                         android:id="@+id/tvGreeting"
@@ -116,11 +141,11 @@
                         android:layout_height="wrap_content"
                         android:text="Welcome, Roshan"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="13sp"
+                        android:textSize="12sp"
                         android:textStyle="bold"
                         android:fontFamily="sans-serif-medium"
-                        android:letterSpacing="0.04"
-                        android:layout_marginTop="2dp" />
+                        android:letterSpacing="0.06"
+                        android:layout_marginTop="1dp" />
                 </LinearLayout>
 
                 <!-- Right: Quick Access Buttons (Hidden per user request) -->

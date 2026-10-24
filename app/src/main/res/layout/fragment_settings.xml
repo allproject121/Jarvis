@@ -136,7 +136,7 @@
                         android:id="@+id/tvProfileSubtitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="JARVIS OPERATOR • PRIMARY USER"
+                        android:text="JARVIS OPERATOR â€¢ PRIMARY USER"
                         android:textColor="?attr/themeTextMuted"
                         android:textSize="11sp"
                         android:letterSpacing="0.04"
@@ -392,7 +392,7 @@
                             android:id="@+id/tvCurrentAssistantName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="JARVIS • Tap to customize"
+                            android:text="JARVIS â€¢ Tap to customize"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -468,7 +468,7 @@
                             android:id="@+id/tvCurrentPersona"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Roshan Mode • Voice: Puck"
+                            android:text="Roshan Mode â€¢ Voice: Puck"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -618,7 +618,7 @@
                             android:id="@+id/tvJarvisModeSubtitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Affectionate companion &amp; secretary • Live 3D avatar &amp; sweet voice"
+                            android:text="Affectionate companion &amp; secretary â€¢ Live 3D avatar &amp; sweet voice"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -1020,7 +1020,7 @@
                             android:id="@+id/tvOwnerVoiceSubtitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Voice Profile Active • Only you can speak"
+                            android:text="Voice Profile Active â€¢ Only you can speak"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -2139,7 +2139,7 @@
                             android:id="@+id/tvStudioSummary"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Core: QUANTUM • Theme: STARK NAVY HUD"
+                            android:text="Core: QUANTUM â€¢ Theme: STARK NAVY HUD"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -2442,7 +2442,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="PC ⇄ Phone Ollama Hub"
+                            android:text="PC â‡„ Phone Ollama Hub"
                             android:textColor="?attr/themeTextPrimary"
                             android:textSize="15sp"
                             android:fontFamily="sans-serif-medium"
@@ -2728,7 +2728,7 @@
                             android:id="@+id/tvCurrentModel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Gemini Live WebSocket • Ollama Local"
+                            android:text="Gemini Live WebSocket â€¢ Ollama Local"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -2746,6 +2746,90 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="?attr/themeCardBorder" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?attr/themeCardBorder" />
+
+                <!-- Row: Planetary APIs & Sensor Directory -->
+                <LinearLayout
+                    android:id="@+id/rowGlobalApiCatalog"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="12dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_jarvis_icon_square">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_code_chip"
+                            app:tint="?attr/themeAccent"
+                            android:contentDescription="Planetary APIs" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="14dp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Planetary APIs &amp; Sensor Hub"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="15sp"
+                                android:fontFamily="sans-serif-medium"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvApiCatalogCountBadge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:background="#152438"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="1dp"
+                                android:text="24 APIS"
+                                android:textColor="#00E5FF"
+                                android:textSize="9sp"
+                                android:fontFamily="monospace"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="All repo intelligence APIs, endpoints &amp; live diagnostics"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_arrow_right"
+                        app:tint="?attr/themeTextMuted"
+                        android:contentDescription="Open" />
+                </LinearLayout>
 
                 <!-- Row: Mem0 Memory Activity -->
                 <LinearLayout
@@ -2852,7 +2936,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Created by Roshan Sir • Open repositories"
+                            android:text="Created by Roshan Sir â€¢ Open repositories"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -2907,7 +2991,7 @@
                 android:id="@+id/tvFooterCredit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="JARVIS v5.2.34 • ARCHITECTURE BY ROSHAN SIR • ALL SYSTEMS NOMINAL"
+                android:text="JARVIS v5.2.34 â€¢ ARCHITECTURE BY ROSHAN SIR â€¢ ALL SYSTEMS NOMINAL"
                 android:textColor="?attr/themeTextMuted"
                 android:textSize="10sp"
                 android:letterSpacing="0.06"

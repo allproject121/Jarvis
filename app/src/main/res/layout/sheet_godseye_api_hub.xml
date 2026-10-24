@@ -96,6 +96,78 @@
             android:orientation="vertical">
 
             <!-- ========================================== -->
+            <!-- 0. AUTO-CYCLE SENTINEL PATROL MODE         -->
+            <!-- ========================================== -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                app:cardBackgroundColor="#0B132B"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#00E5FF"
+                app:strokeWidth="1.5dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_auto_cycle"
+                            app:tint="#00E5FF"
+                            android:contentDescription="Auto Patrol" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="AUTONOMOUS SENTINEL TOUR"
+                                android:textColor="#00E5FF"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:fontFamily="monospace" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Automatically cycles through flights, live CCTV, earthquakes, space launches &amp; storms"
+                                android:textColor="#94A3B8"
+                                android:textSize="10.5sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnToggleAutoTourHub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:text="START ⟳"
+                            android:textColor="#050811"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:fontFamily="monospace"
+                            android:backgroundTint="#00E5FF"
+                            app:cornerRadius="8dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ========================================== -->
             <!-- 1. SPACE ROCKET LAUNCHES (LAUNCH LIBRARY 2) -->
             <!-- ========================================== -->
             <LinearLayout
@@ -113,7 +185,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🚀 ORBITAL ROCKET LAUNCHES"
+                        android:text="ðŸš€ ORBITAL ROCKET LAUNCHES"
                         android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -146,7 +218,7 @@
                     android:id="@+id/btnConnectLaunches"
                     android:layout_width="match_parent"
                     android:layout_height="38dp"
-                    android:text="DIRECT CONNECT • FETCH LAUNCHES"
+                    android:text="DIRECT CONNECT â€¢ FETCH LAUNCHES"
                     android:textColor="#0F141C"
                     android:textSize="11sp"
                     android:textStyle="bold"
@@ -190,7 +262,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="📻 WORLDWIDE LIVE RADIO"
+                        android:text="ðŸ“» WORLDWIDE LIVE RADIO"
                         android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -329,7 +401,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="✈️ AIRCRAFT INTEL &amp; ROUTE LOOKUP"
+                        android:text="âœˆï¸ AIRCRAFT INTEL &amp; ROUTE LOOKUP"
                         android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -433,7 +505,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🌀 NOAA TROPICAL CYCLONES"
+                        android:text="ðŸŒ€ NOAA TROPICAL CYCLONES"
                         android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -515,7 +587,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🌐 GDELT REAL-TIME GEO-INTEL"
+                        android:text="ðŸŒ GDELT REAL-TIME GEO-INTEL"
                         android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -572,6 +644,61 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:layout_marginTop="8dp" />
+            </LinearLayout>
+
+            <!-- ========================================== -->
+            <!-- 6. WORLDWIDE REAL CCTV SURVEILLANCE        -->
+            <!-- ========================================== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_godseye_hud_card"
+                android:padding="14dp"
+                android:layout_marginBottom="14dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ðŸ“¹ WORLDWIDE LIVE CCTV FEEDS"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="LIVE FEEDS"
+                        android:textColor="#10B981"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:background="#132E27"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true" />
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Real verified live street &amp; highway cameras. Select any camera to engage 3D globe tracking &amp; live frame projection."
+                    android:textColor="#94A3B8"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+
+                <LinearLayout
+                    android:id="@+id/containerCctvPresets"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="10dp" />
             </LinearLayout>
 
         </LinearLayout>

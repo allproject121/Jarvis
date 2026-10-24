@@ -95,6 +95,11 @@ class HomeFragment : Fragment() {
             true
         }
 
+        // Center JARVIS Interactive Brand Logo & Glow Effect
+        binding.layoutJarvisLogoTouch.setOnClickListener {
+            triggerJarvisLogoClickEffect()
+        }
+
         binding.btnTopMatrix.setOnClickListener {
             HudSoundManager.playTapSound()
             startActivity(Intent(requireContext(), com.jarvis.assistant.ui.matrix.JarvisMatrixActivity::class.java))
@@ -712,8 +717,75 @@ class HomeFragment : Fragment() {
         }
         binding.tvGreeting.text = "$timeGreeting, $userName"
 
+        // Dynamic Brand Logo & Shadow Tinting
+        val brandColor = resolveActiveThemeColor()
+        binding.ivHeaderJarvisLogo.setColorFilter(brandColor)
+        binding.ivHeaderJarvisLogoShadow.setColorFilter(brandColor)
+
         val currentLang = preferences.language.ifBlank { "Auto" }
         binding.tvQuickLanguageStatus.text = if (currentLang.contains("Auto", ignoreCase = true)) "Auto" else currentLang
+    }
+
+    private fun resolveActiveThemeColor(): Int {
+        val customHex = preferences.customThemeColor
+        if (preferences.appTheme == "custom" && !customHex.isNullOrBlank()) {
+            try { return android.graphics.Color.parseColor(customHex) } catch (_: Exception) {}
+        }
+        return com.jarvis.assistant.util.ThemeManager.getThemeAccentColor(context)
+    }
+
+    private fun triggerJarvisLogoClickEffect() {
+        val b = _binding ?: return
+        com.jarvis.assistant.util.HudSoundManager.playTapSound()
+        try {
+            val vibrator = requireContext().getSystemService(android.os.Vibrator::class.java)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                vibrator?.vibrate(android.os.VibrationEffect.createOneShot(28, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(28)
+            }
+        } catch (_: Throwable) {}
+
+        // 1. Tactile bounce animation on the logo
+        b.ivHeaderJarvisLogo.animate()
+            .scaleX(0.88f)
+            .scaleY(0.88f)
+            .setDuration(90)
+            .withEndAction {
+                b.ivHeaderJarvisLogo.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(220)
+                    .setInterpolator(android.view.animation.OvershootInterpolator(2.5f))
+                    .start()
+            }
+            .start()
+
+        // 2. Holographic Neon Shadow Burst Animation
+        val brandColor = resolveActiveThemeColor()
+        b.ivHeaderJarvisLogoShadow.setColorFilter(brandColor)
+        b.ivHeaderJarvisLogoShadow.apply {
+            scaleX = 1.0f
+            scaleY = 1.0f
+            alpha = 0.95f
+            animate()
+                .scaleX(1.4f)
+                .scaleY(1.4f)
+                .alpha(0.0f)
+                .setDuration(450)
+                .setInterpolator(android.view.animation.DecelerateInterpolator())
+                .start()
+        }
+
+        // 3. Status Feedback
+        com.google.android.material.snackbar.Snackbar.make(
+            b.root,
+            "✦ JARVIS CORE ONLINE • ALL SYSTEMS NOMINAL",
+            com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
+        ).setBackgroundTint(brandColor)
+         .setTextColor(android.graphics.Color.WHITE)
+         .show()
     }
 
     private fun showLanguageDialog() {
@@ -1041,9 +1113,11 @@ class HomeFragment : Fragment() {
 
     private fun renderTaskFallback(snapshot: com.jarvis.assistant.automation.agent.AgentTaskSnapshot?) {
         val panel = taskFallbackPanel ?: return
-        val show = snapshot != null && !android.provider.Settings.canDrawOverlays(requireContext())
-        panel.visibility = if (show) View.VISIBLE else View.GONE
-        if (!show || snapshot == null) return
+        if (snapshot == null || android.provider.Settings.canDrawOverlays(requireContext())) {
+            panel.visibility = View.GONE
+            return
+        }
+        panel.visibility = View.VISIBLE
         val activeStep = snapshot.steps.firstOrNull { it.stepId == snapshot.currentStepId }?.title ?: snapshot.currentStatus
         val checklist = snapshot.steps.take(4).joinToString("\n") { step ->
             val mark = if (step.status == com.jarvis.assistant.automation.agent.TaskStepStatus.COMPLETED) "✓" else "○"
