@@ -609,7 +609,8 @@ class CustomizationStudioActivity : AppCompatActivity() {
                 customColorHex = pair.first
                 selectedTheme = pair.second
                 selectedPreset = if (pair.second == "red") "crimson" else "custom"
-                updatePresetUI("custom")
+                updatePresetUI(selectedPreset)
+                updateThemeUI(selectedTheme)
                 applyPreviewOrbParams()
                 binding.customizationStudioRoot.setBackgroundColor(ThemeManager.getThemeBgColor(selectedTheme, customColorHex))
             }
