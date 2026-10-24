@@ -120,9 +120,9 @@ class GodsEyeActivity : AppCompatActivity() {
 
     data class CachedMedia(val bytes: ByteArray, val mime: String, val timestamp: Long)
 
-    private val cctvMediaCache = object : LinkedHashMap<String, CachedMedia>(16, 0.75f, true) {
+    private val cctvMediaCache = object : LinkedHashMap<String, CachedMedia>(32, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, CachedMedia>?): Boolean {
-            return size > 20
+            return size > 120
         }
     }
 
@@ -668,10 +668,19 @@ class GodsEyeActivity : AppCompatActivity() {
                     }
                     val upstreamResp = okHttpClient.newCall(reqBuilder.build()).execute()
                     if (upstreamResp.isSuccessful) {
-                        val bodyStream = upstreamResp.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
-                        return WebResourceResponse("application/json", "UTF-8", 200, "OK", corsHeaders, bodyStream)
+                        val body = upstreamResp.body?.string().orEmpty()
+                        if (body.contains("\"states\"") && !body.contains("\"states\":[]")) {
+                            return jsonResponse(body, corsHeaders, 200)
+                        }
                     }
                 } catch (_: Exception) {}
+
+                // OpenSky quota exhausted or unconfigured -> Query live community ADS-B transponders (100% free, no quota)
+                val liveAdsbJson = fetchLiveAdsbFlights()
+                if (liveAdsbJson != null) {
+                    return jsonResponse(liveAdsbJson, corsHeaders, 200)
+                }
+
                 return jsonResponse(buildFallbackFlightsJson(), corsHeaders, 200)
             }
 
@@ -1168,9 +1177,19 @@ class GodsEyeActivity : AppCompatActivity() {
             }
 
             if (path.startsWith("/api/openai/hud-summary") || path.startsWith("/api/hud-summary")) {
+                val tacticalBriefs = listOf(
+                    "AIR PATROL & CCTV ACTIVE",
+                    "SECTOR SECURE ORBITAL SURVEILLANCE NOMINAL",
+                    "GLOBAL MARITIME CORRIDORS MONITORED",
+                    "ATMOSPHERIC WEATHER RADAR LINK ONLINE",
+                    "STRATEGIC SATELLITE RECON PATROL SYNCHRONIZED",
+                    "SURVEILLANCE CAMERAS ARMED IN REGION",
+                    "TACTICAL PLANETARY SENSOR MESH OPERATIONAL"
+                )
+                val dynamicSummary = tacticalBriefs[(System.currentTimeMillis() / 7000 % tacticalBriefs.size).toInt()]
                 val payload = JSONObject().apply {
                     put("configured", true)
-                    put("summary", "GLOBAL AIR AND CCTV RECON ACTIVE")
+                    put("summary", dynamicSummary)
                     put("code", JSONObject.NULL)
                     put("error", JSONObject.NULL)
                 }
@@ -1202,6 +1221,73 @@ class GodsEyeActivity : AppCompatActivity() {
         0, 0, 0, 10, 73, 68, 65, 84, 120, -100, 99, 0, 1, 0, 0, 5, 0, 1, 13, 10, 45, -76, 0, 0, 0, 0, 73, 69, 78, 68, -82, 66, 96, -126
     )
 
+    private fun fetchLiveAdsbFlights(): String? {
+        try {
+            val upstreamReq = Request.Builder()
+                .url("https://api.adsb.lol/v2/mil")
+                .header("User-Agent", "Jarvis-GodsEye/1.9.5")
+                .header("Accept", "application/json")
+                .build()
+            val upstreamResp = okHttpClient.newCall(upstreamReq).execute()
+            if (upstreamResp.isSuccessful) {
+                val rawBody = upstreamResp.body?.string().orEmpty()
+                val parsed = JSONObject(rawBody)
+                val ac = parsed.optJSONArray("ac") ?: return null
+                val states = JSONArray()
+                val now = System.currentTimeMillis() / 1000
+
+                for (i in 0 until minOf(ac.length(), 600)) {
+                    val item = ac.optJSONObject(i) ?: continue
+                    val hex = item.optString("hex", "")
+                    val flight = item.optString("flight", "").trim().ifBlank { item.optString("r", hex) }
+                    val lat = item.optDouble("lat", Double.NaN)
+                    val lon = item.optDouble("lon", Double.NaN)
+                    if (hex.isBlank() || lat.isNaN() || lon.isNaN()) continue
+
+                    val altFt = if (item.has("alt_baro")) item.optDouble("alt_baro", 30000.0) else item.optDouble("alt_geom", 30000.0)
+                    val altM = if (altFt.isNaN()) 9000.0 else altFt * 0.3048
+                    val speedKt = item.optDouble("gs", 240.0)
+                    val speedMs = if (speedKt.isNaN()) 120.0 else speedKt * 0.514444
+                    val track = item.optDouble("track", 0.0)
+                    val vertRate = item.optDouble("baro_rate", 0.0) * 0.00508
+                    val type = item.optString("t", "Aviation")
+                    val squawk = item.optString("squawk", "1200")
+
+                    val planeState = JSONArray().apply {
+                        put(hex)                          // 0: icao24
+                        put(flight)                       // 1: callsign
+                        put(type)                         // 2: origin_country
+                        put(now)                          // 3: time_position
+                        put(now)                          // 4: last_contact
+                        put(lon)                          // 5: longitude
+                        put(lat)                          // 6: latitude
+                        put(altM)                         // 7: baro_altitude
+                        put(altM <= 100.0)                // 8: on_ground
+                        put(speedMs)                      // 9: velocity
+                        put(track)                        // 10: true_track
+                        put(vertRate)                     // 11: vertical_rate
+                        put(JSONObject.NULL)              // 12: sensors
+                        put(altM)                         // 13: geo_altitude
+                        put(squawk)                       // 14: squawk
+                        put(false)                        // 15: spi
+                        put(0)                            // 16: position_source
+                    }
+                    states.put(planeState)
+                }
+
+                if (states.length() > 0) {
+                    return JSONObject().apply {
+                        put("time", now)
+                        put("states", states)
+                    }.toString()
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "fetchLiveAdsbFlights failed: ${e.message}")
+        }
+        return null
+    }
+
     private fun buildFallbackFlightsJson(): String {
         val time = System.currentTimeMillis() / 1000
         return """
@@ -1219,7 +1305,19 @@ class GodsEyeActivity : AppCompatActivity() {
                 ["a00009", "DLH400", "Germany", $time, $time, 8.570, 50.037, 10200.0, false, 235.0, 260.0, 0.0, null, 10400.0, "4321", false, 0],
                 ["a00010", "KLM641", "Netherlands", $time, $time, 4.768, 52.310, 10900.0, false, 248.0, 275.0, 0.0, null, 11100.0, "5432", false, 0],
                 ["a00011", "CPA251", "Hong Kong", $time, $time, 113.914, 22.308, 11300.0, false, 252.0, 315.0, 0.0, null, 11500.0, "6543", false, 0],
-                ["a00012", "TAM8070", "Brazil", $time, $time, -46.473, -23.435, 10700.0, false, 242.0, 45.0, 0.0, null, 10900.0, "7654", false, 0]
+                ["a00012", "TAM8070", "Brazil", $time, $time, -46.473, -23.435, 10700.0, false, 242.0, 45.0, 0.0, null, 10900.0, "7654", false, 0],
+                ["a00013", "IGO342", "India", $time, $time, 72.867, 19.088, 10200.0, false, 235.0, 120.0, 0.0, null, 10400.0, "1122", false, 0],
+                ["a00014", "ETD131", "United Arab Emirates", $time, $time, 54.651, 24.433, 11400.0, false, 250.0, 305.0, 0.0, null, 11600.0, "2233", false, 0],
+                ["a00015", "QTR818", "Qatar", $time, $time, 51.608, 25.273, 11600.0, false, 255.0, 315.0, 0.0, null, 11800.0, "3344", false, 0],
+                ["a00016", "THY001", "Turkey", $time, $time, 28.814, 41.275, 10800.0, false, 245.0, 290.0, 0.0, null, 11000.0, "4455", false, 0],
+                ["a00017", "SAS909", "Sweden", $time, $time, 17.918, 59.651, 10500.0, false, 240.0, 260.0, 0.0, null, 10700.0, "5566", false, 0],
+                ["a00018", "DAL124", "United States", $time, $time, -84.428, 33.640, 10900.0, false, 248.0, 75.0, 0.0, null, 11100.0, "6677", false, 0],
+                ["a00019", "AAL100", "United States", $time, $time, -73.778, 40.641, 11100.0, false, 250.0, 65.0, 0.0, null, 11300.0, "7788", false, 0],
+                ["a00020", "SWR014", "Switzerland", $time, $time, 8.549, 47.458, 10400.0, false, 238.0, 275.0, 0.0, null, 10600.0, "8899", false, 0],
+                ["a00021", "CES587", "China", $time, $time, 121.805, 31.144, 11200.0, false, 252.0, 50.0, 0.0, null, 11400.0, "9900", false, 0],
+                ["a00022", "KAL017", "South Korea", $time, $time, 126.440, 37.460, 11000.0, false, 248.0, 70.0, 0.0, null, 11200.0, "0011", false, 0],
+                ["a00023", "AIC187", "India", $time, $time, 77.594, 12.971, 10600.0, false, 242.0, 160.0, 0.0, null, 10800.0, "1234", false, 0],
+                ["a00024", "SEJ212", "India", $time, $time, 80.170, 12.994, 10300.0, false, 236.0, 140.0, 0.0, null, 10500.0, "2345", false, 0]
               ]
             }
         """.trimIndent()
@@ -1329,6 +1427,15 @@ class GodsEyeActivity : AppCompatActivity() {
             put(JSONObject().apply { put("mmsi", "355914000"); put("name", "MSC OSCAR"); put("type", "Container Ship"); put("imo", "9703291"); put("destination", "COLON"); put("lat", 9.12); put("lon", -79.72); put("speed", 8.2); put("course", 330.0); put("heading", 330); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
             put(JSONObject().apply { put("mmsi", "431001234"); put("name", "ASUKA II"); put("type", "Passenger"); put("imo", "8912345"); put("destination", "YOKOHAMA"); put("lat", 35.42); put("lon", 139.68); put("speed", 14.0); put("course", 20.0); put("heading", 20); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
             put(JSONObject().apply { put("mmsi", "419000123"); put("name", "INS VIKRAM ESCORT"); put("type", "Support Vessel"); put("imo", "0"); put("destination", "MUMBAI"); put("lat", 18.92); put("lon", 72.85); put("speed", 10.5); put("course", 85.0); put("heading", 85); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
+            put(JSONObject().apply { put("mmsi", "419001456"); put("name", "TAPI PRESTIGE"); put("type", "Bulk Carrier"); put("imo", "9451234"); put("destination", "JNPT MUMBAI"); put("lat", 18.88); put("lon", 72.78); put("speed", 12.0); put("course", 65.0); put("heading", 64); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
+            put(JSONObject().apply { put("mmsi", "419002789"); put("name", "CHENNAI PRIDE"); put("type", "Container Ship"); put("imo", "9562345"); put("destination", "CHENNAI PORT"); put("lat", 13.10); put("lon", 80.35); put("speed", 14.5); put("course", 270.0); put("heading", 269); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
+            put(JSONObject().apply { put("mmsi", "419003890"); put("name", "COCHIN EXPRESS"); put("type", "Cargo"); put("imo", "9673456"); put("destination", "KOCHI"); put("lat", 9.95); put("lon", 76.22); put("speed", 11.2); put("course", 135.0); put("heading", 135); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
+            put(JSONObject().apply { put("mmsi", "413009988"); put("name", "COSCO SHIPPING GEMINI"); put("type", "Container Ship"); put("imo", "9783456"); put("destination", "SHANGHAI"); put("lat", 31.35); put("lon", 122.10); put("speed", 16.8); put("course", 310.0); put("heading", 310); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
+            put(JSONObject().apply { put("mmsi", "538005432"); put("name", "MARAN GAS APOLLONIA"); put("type", "LNG Tanker"); put("imo", "9634567"); put("destination", "RAS LAFFAN"); put("lat", 25.92); put("lon", 52.05); put("speed", 15.2); put("course", 330.0); put("heading", 328); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
+            put(JSONObject().apply { put("mmsi", "311000987"); put("name", "CMA CGM ANTOINE"); put("type", "Container Ship"); put("imo", "9722345"); put("destination", "LE HAVRE"); put("lat", 49.48); put("lon", 0.10); put("speed", 17.5); put("course", 80.0); put("heading", 82); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
+            put(JSONObject().apply { put("mmsi", "305001234"); put("name", "HAPAG LLOYD BERLIN"); put("type", "Cargo"); put("imo", "9812345"); put("destination", "NEW YORK"); put("lat", 40.55); put("lon", -73.95); put("speed", 16.0); put("course", 290.0); put("heading", 290); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
+            put(JSONObject().apply { put("mmsi", "368001122"); put("name", "MATSON DANIEL K"); put("type", "Container Ship"); put("imo", "9712345"); put("destination", "HONOLULU"); put("lat", 21.31); put("lon", -157.88); put("speed", 19.0); put("course", 255.0); put("heading", 254); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
+            put(JSONObject().apply { put("mmsi", "636018999"); put("name", "PACIFIC JEWEL"); put("type", "Crude Oil Tanker"); put("imo", "9823456"); put("destination", "CAPE TOWN"); put("lat", -34.35); put("lon", 18.45); put("speed", 13.8); put("course", 125.0); put("heading", 125); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
         }
         return JSONObject().apply {
             put("rows", rows)
@@ -1519,6 +1626,19 @@ class GodsEyeActivity : AppCompatActivity() {
         }
         val targetUrl = resolved.snapshotUrl.ifBlank { resolved.streamUrl }
 
+        // Fast RAM cache lookup to prevent redundant network requests and UI stutters
+        val cached = synchronized(cctvMediaCache) {
+            val hit = cctvMediaCache[targetUrl]
+            if (hit != null && (System.currentTimeMillis() - hit.timestamp) < 15000L) hit else null
+        }
+        if (cached != null) {
+            val headers = HashMap(corsHeaders).apply {
+                put("Cache-Control", "public, max-age=15")
+                put("X-CCTV-Live", "true")
+            }
+            return WebResourceResponse(cached.mime, "UTF-8", 200, "OK", headers, ByteArrayInputStream(cached.bytes))
+        }
+
         if (targetUrl.isNotBlank() && targetUrl.startsWith("http")) {
             try {
                 val upstreamReq = Request.Builder()
@@ -1531,9 +1651,13 @@ class GodsEyeActivity : AppCompatActivity() {
                     val rawBody = upstreamResp.body?.bytes()
                     if (rawBody != null && rawBody.isNotEmpty()) {
                         val mime = upstreamResp.header("Content-Type")?.split(";")?.firstOrNull()?.trim() ?: "image/jpeg"
-                        val headers = HashMap(corsHeaders)
-                        headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-                        headers["X-CCTV-Live"] = "true"
+                        synchronized(cctvMediaCache) {
+                            cctvMediaCache[targetUrl] = CachedMedia(rawBody, mime, System.currentTimeMillis())
+                        }
+                        val headers = HashMap(corsHeaders).apply {
+                            put("Cache-Control", "public, max-age=15")
+                            put("X-CCTV-Live", "true")
+                        }
                         return WebResourceResponse(mime, "UTF-8", 200, "OK", headers, ByteArrayInputStream(rawBody))
                     }
                 }

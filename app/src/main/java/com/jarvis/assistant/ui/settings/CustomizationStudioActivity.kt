@@ -39,6 +39,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
     private var companionCount = 0
     private var companionType = "orb"
     private var selectedWallpaperMode = "character"
+    private var hasUserChangedEntityInStudio = false
 
     private val pickStudioMediaLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
@@ -146,7 +147,8 @@ class CustomizationStudioActivity : AppCompatActivity() {
                         .setPositiveButton("Delete") { _, _ ->
                             HudSoundManager.playTapSound()
                             com.jarvis.assistant.util.ModelVaultManager.deleteVaultItem(this, item.id)
-                            selectedEntityType = preferences.orbEntityType
+                            // If device has mora_cyber for home, default Studio to "orb" so user can see & customize the live Core Orb!
+        selectedEntityType = if (preferences.orbEntityType == "mora_cyber") "orb" else preferences.orbEntityType
                             updateEntityTypeUI(selectedEntityType)
                             populateVaultCardsUI()
                             refreshCustomMediaStatusUI()
@@ -162,6 +164,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
 
             cardView.setOnClickListener {
                 HudSoundManager.playTapSound()
+                hasUserChangedEntityInStudio = true
                 com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, item.id)
                 selectedEntityType = item.category
                 updateEntityTypeUI(selectedEntityType)
@@ -259,7 +262,8 @@ class CustomizationStudioActivity : AppCompatActivity() {
         selectedPreset = preferences.orbCorePreset
         selectedTheme = preferences.appTheme
         customColorHex = preferences.customThemeColor
-        selectedEntityType = preferences.orbEntityType
+        // If device has mora_cyber for home, default Studio to "orb" so user can see & customize the live Core Orb!
+        selectedEntityType = if (preferences.orbEntityType == "mora_cyber") "orb" else preferences.orbEntityType
         companionCount = preferences.orbCompanionCount
         companionType = preferences.orbCompanionType
 
@@ -379,8 +383,17 @@ class CustomizationStudioActivity : AppCompatActivity() {
                     view?.postDelayed({ applyPreviewOrbParams() }, 150)
                 }
 
+                try {
+                    android.webkit.WebView.setWebContentsDebuggingEnabled(com.jarvis.assistant.BuildConfig.DEBUG)
+                } catch (_: Throwable) {}
+                try {
+                    resumeTimers()
+                    onResume()
+                } catch (_: Throwable) {}
+
                 addJavascriptInterface(com.jarvis.assistant.util.Jarvis3DModelBridge(this@CustomizationStudioActivity), "Jarvis3DModelBridge")
                 loadUrl(JarvisWebViewClient.ORB_URL)
+                com.jarvis.assistant.util.HudAnimationHelper.startBreathingHalo(binding.previewHaloRing)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error initializing preview Orb WebView", e)
@@ -394,7 +407,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             val glow = getCurrentGlow()
             val scale = getCurrentScale()
             val resonance = getCurrentResonance()
-            val autoRotation = if (selectedEntityType == "custom_3d" || selectedEntityType == "ai_girl" || selectedEntityType == "hinata_anime" || selectedEntityType == "hinata_anime") false else binding.switchOrbAutoRotation.isChecked
+            val autoRotation = if (selectedEntityType == "custom_3d" || selectedEntityType == "ai_girl" || selectedEntityType == "hinata_anime") false else true
 
             val togglesJson = org.json.JSONObject().apply {
                 put("core", binding.switchOrbCore.isChecked)
@@ -760,6 +773,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
         // Entity Form Click Listeners
         binding.btnEntityOrb.setOnClickListener {
             HudSoundManager.playTapSound()
+            hasUserChangedEntityInStudio = true
             selectedEntityType = "orb"
             com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ORB.id)
             updateEntityTypeUI("orb")
@@ -768,6 +782,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
         }
         binding.btnEntityAiGirl.setOnClickListener {
             HudSoundManager.playTapSound()
+            hasUserChangedEntityInStudio = true
             selectedEntityType = "ai_girl"
             com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, com.jarvis.assistant.util.ModelVaultManager.BUILTIN_LIVE_COMPANION.id)
             updateEntityTypeUI("ai_girl")
@@ -776,6 +791,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
         }
         binding.btnEntityArcReactor.setOnClickListener {
             HudSoundManager.playTapSound()
+            hasUserChangedEntityInStudio = true
             selectedEntityType = "arc_reactor"
             com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ARC_REACTOR.id)
             updateEntityTypeUI("arc_reactor")
@@ -784,6 +800,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
         }
         binding.btnEntityCustom3d.setOnClickListener {
             HudSoundManager.playTapSound()
+            hasUserChangedEntityInStudio = true
             selectedEntityType = "custom_3d"
             val custom = com.jarvis.assistant.util.ModelVaultManager.getVaultItems(this).firstOrNull { !it.isBuiltin }
             if (custom != null) {
@@ -1225,11 +1242,13 @@ class CustomizationStudioActivity : AppCompatActivity() {
         binding.btnApplyAndSave.setOnClickListener {
             try {
                 // Save Orb Settings & Entity Type
-                preferences.userExplicitlyChoseEntity = true
-                preferences.orbEntityType = selectedEntityType
-                val targetVaultItem = com.jarvis.assistant.util.ModelVaultManager.getVaultItems(this).find { it.category == selectedEntityType }
-                if (targetVaultItem != null) {
-                    com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, targetVaultItem.id)
+                if (hasUserChangedEntityInStudio || preferences.orbEntityType != "mora_cyber") {
+                    preferences.userExplicitlyChoseEntity = true
+                    preferences.orbEntityType = selectedEntityType
+                    val targetVaultItem = com.jarvis.assistant.util.ModelVaultManager.getVaultItems(this).find { it.category == selectedEntityType }
+                    if (targetVaultItem != null) {
+                        com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, targetVaultItem.id)
+                    }
                 }
                 preferences.orbShowCore = binding.switchOrbCore.isChecked
                 preferences.orbShowGlow = binding.switchOrbGlow.isChecked
@@ -1460,6 +1479,22 @@ class CustomizationStudioActivity : AppCompatActivity() {
 
             binding.layoutSavedModelsList.addView(card)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        try {
+            binding.previewOrbWebView.onResume()
+            binding.previewOrbWebView.resumeTimers()
+            applyPreviewOrbParams()
+        } catch (_: Throwable) {}
+    }
+
+    override fun onPause() {
+        super.onPause()
+        try {
+            binding.previewOrbWebView.onPause()
+        } catch (_: Throwable) {}
     }
 
     override fun onDestroy() {

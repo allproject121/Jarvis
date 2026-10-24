@@ -2963,27 +2963,7 @@ function updateOrb(dt){
     }
   }
 
-  if (entityType === "orb") {
-    ring1.position.set(0, 0, 0);
-    ring1.rotation.x = 0;
-    ring1.rotation.y = 0;
-    ring2.position.set(0, 0, 0);
-    ring2.rotation.x = 0;
-    ring2.rotation.y = 0;
-    ring3.position.set(0, 0, 0);
-    ring3.rotation.x = 1.05;
-
-    pointsMesh.visible = effCore;
-    glow.visible = effGlow;
-    ring1.visible = showRings && effRing1;
-    ring2.visible = showRings && effRing2;
-    ring3.visible = showRings && effRing3;
-    orbitPts.visible = cfg.orbitDust;
-    if (aiGirlGroup) aiGirlGroup.visible = false;
-    if (arcReactorGroup) arcReactorGroup.visible = false;
-    if (customPhotoGroup) customPhotoGroup.visible = false;
-    if (customModelGroup) customModelGroup.visible = false;
-  } else if (entityType === "arc_reactor") {
+  if (entityType === "arc_reactor") {
     pointsMesh.visible = false;
     glow.visible = cfg.glow;
     ring1.visible = false;
@@ -3072,6 +3052,27 @@ function updateOrb(dt){
       if (customModelGroup) customModelGroup.visible = false;
       if (customPhotoGroup) customPhotoGroup.visible = false;
     }
+  } else {
+    // Default fallback: FULL 3D HOLOGRAPHIC CORE ORB
+    ring1.position.set(0, 0, 0);
+    ring1.rotation.x = 0;
+    ring1.rotation.y = 0;
+    ring2.position.set(0, 0, 0);
+    ring2.rotation.x = 0;
+    ring2.rotation.y = 0;
+    ring3.position.set(0, 0, 0);
+    ring3.rotation.x = 1.05;
+
+    pointsMesh.visible = effCore;
+    glow.visible = effGlow;
+    ring1.visible = showRings && effRing1;
+    ring2.visible = showRings && effRing2;
+    ring3.visible = showRings && effRing3;
+    orbitPts.visible = cfg.orbitDust;
+    if (aiGirlGroup) aiGirlGroup.visible = false;
+    if (arcReactorGroup) arcReactorGroup.visible = false;
+    if (customPhotoGroup) customPhotoGroup.visible = false;
+    if (customModelGroup) customModelGroup.visible = false;
   }
 }
 
@@ -3238,6 +3239,14 @@ window.JarvisOrb={
     try{
       const obj = typeof toggles==="string"?JSON.parse(toggles):toggles;
       Object.assign(componentToggles, obj);
+      if (entityType === "orb" || !["arc_reactor", "custom_3d", "ai_girl", "hinata_anime"].includes(entityType)) {
+        if (pointsMesh) pointsMesh.visible = componentToggles.core !== false;
+        if (glow) glow.visible = componentToggles.glow !== false;
+        if (ring1) ring1.visible = (componentToggles.rings !== false) && (componentToggles.ring1 !== false);
+        if (ring2) ring2.visible = (componentToggles.rings !== false) && (componentToggles.ring2 !== false);
+        if (ring3) ring3.visible = (componentToggles.rings !== false) && (componentToggles.ring3 !== false);
+        if (orbitPts) orbitPts.visible = componentToggles.orbitDust !== false;
+      }
     }catch(_){}
   },
   triggerReaction: triggerReaction,
