@@ -180,7 +180,7 @@ object ThemeManager {
                             h in 206f..255f -> Triple(R.style.Theme_JarvisAssistant_Indigo, Color.parseColor("#050614"), false)
                             h in 256f..295f -> Triple(R.style.Theme_JarvisAssistant_Amethyst, Color.parseColor("#0B061A"), false)
                             h in 296f..344f -> Triple(R.style.Theme_JarvisAssistant_Pink, Color.parseColor("#0E0308"), false)
-                            else -> Triple(R.style.Theme_JarvisAssistant_Red, Color.parseColor("#0E0307"), false)
+                            else -> Triple(R.style.Theme_JarvisAssistant_Red, Color.parseColor("#140407"), false)
                         }
                     }
                 } catch (_: Exception) {
