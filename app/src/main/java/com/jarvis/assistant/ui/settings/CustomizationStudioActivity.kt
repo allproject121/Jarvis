@@ -1192,6 +1192,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
         binding.btnApplyAndSave.setOnClickListener {
             try {
                 // Save Orb Settings & Entity Type
+                preferences.userExplicitlyChoseEntity = true
                 preferences.orbEntityType = selectedEntityType
                 val targetVaultItem = com.jarvis.assistant.util.ModelVaultManager.getVaultItems(this).find { it.category == selectedEntityType }
                 if (targetVaultItem != null) {

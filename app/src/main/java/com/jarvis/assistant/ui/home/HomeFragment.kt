@@ -123,7 +123,9 @@ class HomeFragment : Fragment() {
 
         binding.btnExitZenMode.setOnClickListener {
             HudSoundManager.playTapSound()
-            toggleZenMode()
+            preferences.hideAllHomeCards = false
+            isZenModeActive = false
+            applyZenModeState(animated = true)
         }
 
         binding.btnDismissLiveError.setOnClickListener {
@@ -141,7 +143,8 @@ class HomeFragment : Fragment() {
         }
         // Default to 3D Mora Cyber Character on Home Screen per user specification
         try {
-            if (preferences.orbEntityType == "orb") {
+            val explicitChoice = preferences.userExplicitlyChoseEntity
+            if (!explicitChoice || preferences.orbEntityType == "orb" || preferences.orbEntityType == "ai_girl") {
                 preferences.orbEntityType = "mora_cyber"
                 com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(requireContext(), com.jarvis.assistant.util.ModelVaultManager.BUILTIN_MORA.id)
             }
@@ -161,6 +164,7 @@ class HomeFragment : Fragment() {
             } catch (_: Throwable) {}
         }
 
+        applyCustomizationPreferences()
         setupOrbWebView()
 
         // Action Buttons
@@ -494,6 +498,11 @@ class HomeFragment : Fragment() {
 
         // Master Clean Immersion Mode or Zen Mode hides all bottom cards
         val hideAll = isZenModeActive || preferences.hideAllHomeCards
+        b.btnToggleZenMode.setImageResource(
+            if (hideAll) R.drawable.ic_zen_mode_active else R.drawable.ic_zen_mode
+        )
+        b.btnExitZenMode.visibility = if (hideAll) View.VISIBLE else View.GONE
+
         if (hideAll) {
             b.layoutHomeCardsContainer.visibility = View.GONE
         } else {
@@ -1045,7 +1054,12 @@ class HomeFragment : Fragment() {
     }
 
     fun toggleZenMode() {
-        isZenModeActive = !isZenModeActive
+        if (preferences.hideAllHomeCards) {
+            preferences.hideAllHomeCards = false
+            isZenModeActive = false
+        } else {
+            isZenModeActive = !isZenModeActive
+        }
         applyZenModeState(animated = true)
     }
 
@@ -1053,11 +1067,12 @@ class HomeFragment : Fragment() {
         val b = _binding ?: return
         val density = resources.displayMetrics.density
         val isMora = preferences.orbEntityType == "mora_cyber"
+        val hideCards = isZenModeActive || preferences.hideAllHomeCards
 
         b.btnToggleZenMode.setImageResource(
-            if (isZenModeActive) R.drawable.ic_zen_mode_active else R.drawable.ic_zen_mode
+            if (hideCards) R.drawable.ic_zen_mode_active else R.drawable.ic_zen_mode
         )
-        b.btnExitZenMode.visibility = if (isZenModeActive) View.VISIBLE else View.GONE
+        b.btnExitZenMode.visibility = if (hideCards) View.VISIBLE else View.GONE
 
                 b.btnSwitchToJarvisMode.visibility = View.GONE
 
@@ -1067,7 +1082,7 @@ class HomeFragment : Fragment() {
 
         hudViews.forEach { view ->
             if (animated) {
-                if (isZenModeActive) {
+                if (hideCards) {
                     view.animate().alpha(0f).setDuration(220).withEndAction {
                         view.visibility = View.GONE
                     }.start()
@@ -1077,12 +1092,12 @@ class HomeFragment : Fragment() {
                     view.animate().alpha(1f).setDuration(250).start()
                 }
             } else {
-                view.visibility = if (isZenModeActive) View.GONE else View.VISIBLE
-                view.alpha = if (isZenModeActive) 0f else 1f
+                view.visibility = if (hideCards) View.GONE else View.VISIBLE
+                view.alpha = if (hideCards) 0f else 1f
             }
         }
 
-                if (!isZenModeActive && !preferences.hideAllHomeCards) {
+        if (!hideCards) {
             b.layoutHomeCardsContainer.visibility = View.VISIBLE
             b.layoutStatusIndicator.visibility = if (preferences.showStatusIndicatorWidget) View.VISIBLE else View.GONE
             b.cardWeather.visibility = if (preferences.showWeatherWidget) View.VISIBLE else View.GONE
@@ -1091,7 +1106,7 @@ class HomeFragment : Fragment() {
             b.layoutTacticalProtocols.visibility = if (preferences.showProtocolsWidget) View.VISIBLE else View.GONE
             b.layoutUpdatesSectionHeader.visibility = if (preferences.showUpdatesWidget) View.VISIBLE else View.GONE
             b.layoutUpdatesContainer.visibility = if (preferences.showUpdatesWidget) View.VISIBLE else View.GONE
-        } else if (preferences.hideAllHomeCards) {
+        } else {
             b.layoutHomeCardsContainer.visibility = View.GONE
         }
 

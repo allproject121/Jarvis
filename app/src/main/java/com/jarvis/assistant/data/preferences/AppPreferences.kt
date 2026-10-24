@@ -510,6 +510,10 @@ class AppPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_HIDE_ALL_HOME_CARDS, false)
         set(value) = prefs.edit().putBoolean(KEY_HIDE_ALL_HOME_CARDS, value).apply()
 
+    var userExplicitlyChoseEntity: Boolean
+        get() = prefs.getBoolean("key_user_explicitly_chose_entity", false)
+        set(value) = prefs.edit().putBoolean("key_user_explicitly_chose_entity", value).apply()
+
     var isHudSoundEnabled: Boolean
         get() = prefs.getBoolean(KEY_HUD_SOUND_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_HUD_SOUND_ENABLED, value).apply()

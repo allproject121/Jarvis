@@ -47,7 +47,7 @@ object HudAnimationHelper {
      */
     fun playCascadeEntrance(views: List<Pair<out View?, Float>>, baseDelay: Long = 40L) {
         views.forEachIndexed { index, (view, transY) ->
-            if (view != null) {
+            if (view != null && view.visibility == View.VISIBLE) {
                 view.alpha = 0f
                 view.translationY = transY
                 view.animate().cancel()

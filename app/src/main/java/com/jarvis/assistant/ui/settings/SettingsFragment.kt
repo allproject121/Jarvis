@@ -1118,6 +1118,7 @@ class SettingsFragment : Fragment() {
                 HudSoundManager.playTapSound()
                 when (which) {
                     0 -> {
+                        preferences.userExplicitlyChoseEntity = true
                         preferences.orbEntityType = if (isChecked) "mora_cyber" else "orb"
                         if (isChecked) {
                             com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(requireContext(), com.jarvis.assistant.util.ModelVaultManager.BUILTIN_MORA.id)
