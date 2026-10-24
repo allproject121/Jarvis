@@ -2579,6 +2579,9 @@ const THEMES={
  cyan:{bg:"radial-gradient(120% 80% at 50% 35%,#171c40 0%,#0a0d1f 60%,#04050d 100%)",fg:"#e8ecff",sub:"#8f98c8",glass:"rgba(255,255,255,.07)",gb:"rgba(255,255,255,.12)",chip:"#aab3e6",t:["#22d3ee","#8b5cf6","#3b82f6"],add:true,sh:"rgba(34,211,238,.25)",pal:[[.08,.12,.42],[.20,.45,1],[.05,.88,1],[.72,.25,1]]},
  crimson:{bg:"radial-gradient(120% 80% at 50% 35%,#2a0a10 0%,#120508 60%,#050203 100%)",fg:"#ffe8ea",sub:"#c98a92",glass:"rgba(255,255,255,.07)",gb:"rgba(255,120,130,.18)",chip:"#f0a8b0",t:["#ff4d5e","#ff2d6f","#ff8a5c"],add:true,sh:"rgba(255,60,80,.2)",pal:[[.55,.05,.10],[.95,.15,.20],[1,.45,.30],[1,.25,.55]]},
  red:{bg:"radial-gradient(120% 80% at 50% 35%,#2a0a10 0%,#120508 60%,#050203 100%)",fg:"#ffe8ea",sub:"#c98a92",glass:"rgba(255,255,255,.07)",gb:"rgba(255,120,130,.18)",chip:"#f0a8b0",t:["#ff4d5e","#ff2d6f","#ff8a5c"],add:true,sh:"rgba(255,60,80,.2)",pal:[[.55,.05,.10],[.95,.15,.20],[1,.45,.30],[1,.25,.55]]},
+ ruby:{bg:"radial-gradient(120% 80% at 50% 35%,#2a0a10 0%,#120508 60%,#050203 100%)",fg:"#ffe8ea",sub:"#c98a92",glass:"rgba(255,255,255,.07)",gb:"rgba(255,120,130,.18)",chip:"#f0a8b0",t:["#ff4d5e","#ff2d6f","#ff8a5c"],add:true,sh:"rgba(255,60,80,.2)",pal:[[.55,.05,.10],[.95,.15,.20],[1,.45,.30],[1,.25,.55]]},
+ arc_red:{bg:"radial-gradient(120% 80% at 50% 35%,#2a0a10 0%,#120508 60%,#050203 100%)",fg:"#ffe8ea",sub:"#c98a92",glass:"rgba(255,255,255,.07)",gb:"rgba(255,120,130,.18)",chip:"#f0a8b0",t:["#ff4d5e","#ff2d6f","#ff8a5c"],add:true,sh:"rgba(255,60,80,.2)",pal:[[.55,.05,.10],[.95,.15,.20],[1,.45,.30],[1,.25,.55]]},
+ pearl_white:{bg:"radial-gradient(120% 80% at 50% 35%,#131e2b 0%,#080e16 60%,#020406 100%)",fg:"#f0f9ff",sub:"#bae6fd",glass:"rgba(255,255,255,.09)",gb:"rgba(186,230,253,.22)",chip:"#e0f2fe",t:["#38bdf8","#bae6fd","#ffffff"],add:true,sh:"rgba(224,242,254,.3)",pal:[[.15,.25,.45],[.45,.70,.95],[.85,.95,1],[1,1,1]]},
  violet:{bg:"radial-gradient(120% 80% at 50% 35%,#1f0a28 0%,#0d0412 60%,#040106 100%)",fg:"#fae8ff",sub:"#c084fc",glass:"rgba(255,255,255,.07)",gb:"rgba(216,180,254,.18)",chip:"#e9d5ff",t:["#c084fc","#a855f7","#ec4899"],add:true,sh:"rgba(192,132,252,.25)",pal:[[.20,.05,.35],[.55,.15,.85],[.85,.25,1],[.95,.40,.85]]},
  amethyst:{bg:"radial-gradient(120% 80% at 50% 35%,#1f0a28 0%,#0d0412 60%,#040106 100%)",fg:"#fae8ff",sub:"#c084fc",glass:"rgba(255,255,255,.07)",gb:"rgba(216,180,254,.18)",chip:"#e9d5ff",t:["#c084fc","#a855f7","#ec4899"],add:true,sh:"rgba(192,132,252,.25)",pal:[[.20,.05,.35],[.55,.15,.85],[.85,.25,1],[.95,.40,.85]]},
  emerald:{bg:"radial-gradient(120% 80% at 50% 35%,#05251a 0%,#02100b 60%,#010503 100%)",fg:"#e6fffa",sub:"#6ee7b7",glass:"rgba(255,255,255,.07)",gb:"rgba(110,231,183,.18)",chip:"#a7f3d0",t:["#10b981","#34d399","#06b6d4"],add:true,sh:"rgba(16,185,129,.25)",pal:[[.02,.25,.15],[.08,.65,.35],[.25,.95,.60],[.10,.85,.95]]},
@@ -2601,7 +2604,8 @@ function applyTheme(name,custom){
     customHex = custom.startsWith("#") ? custom : ("#" + custom);
   }
 
-  let t = (name && THEMES[name]) ? Object.assign({}, THEMES[name]) : Object.assign({}, THEMES.dark);
+  const normalizedName = (name || "").toLowerCase();
+  let t = (normalizedName && THEMES[normalizedName]) ? Object.assign({}, THEMES[normalizedName]) : Object.assign({}, THEMES.dark);
 
   if(customHex){
     try{
@@ -2626,13 +2630,14 @@ function applyTheme(name,custom){
         ];
       }
 
-      const baseTheme=light?THEMES.light:THEMES.dark;
+      const isRedLike = (normalizedName === "red" || normalizedName === "crimson" || normalizedName === "ruby" || normalizedName === "arc_red" || (hsl.s >= 0.15 && (hsl.h <= 0.05 || hsl.h >= 0.95)));
+      const baseTheme = isRedLike ? THEMES.crimson : ((normalizedName && THEMES[normalizedName]) ? THEMES[normalizedName] : (light ? THEMES.light : THEMES.dark));
       t=Object.assign({},baseTheme,{
         bg:customHex,
         fg:light?"#0f172a":"#ffffff",
         sub:light?"#475569":"#cbd5e1",
         glass:light?"rgba(255,255,255,.65)":"rgba(255,255,255,.14)",
-        gb:light?"rgba(255,255,255,.85)":"rgba(255,255,255,.22)",
+        gb:isRedLike ? "rgba(255,120,130,.25)" : (light?"rgba(255,255,255,.85)":"rgba(255,255,255,.22)"),
         chip:light?"#1e293b":"#f1f5f9",
         pal:pal,
         add:!light,
@@ -2642,10 +2647,10 @@ function applyTheme(name,custom){
           "#"+new THREE.Color(pal[3][0],pal[3][1],pal[3][2]).getHexString()
         ]
       });
-      themeName="custom";
+      themeName = (normalizedName && THEMES[normalizedName]) ? normalizedName : "custom";
     }catch(_){}
   }else{
-    themeName=(name && THEMES[name]) ? name : "dark";
+    themeName=(normalizedName && THEMES[normalizedName]) ? normalizedName : "dark";
   }
 
   const r=document.documentElement.style;

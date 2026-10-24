@@ -646,6 +646,14 @@
                             android:layout_marginEnd="10dp" />
 
                         <View
+                            android:id="@+id/swatchRed"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:background="@drawable/bg_jarvis_mic_center"
+                            android:backgroundTint="#FF4D5E"
+                            android:layout_marginEnd="10dp" />
+
+                        <View
                             android:id="@+id/swatchGold"
                             android:layout_width="26dp"
                             android:layout_height="26dp"

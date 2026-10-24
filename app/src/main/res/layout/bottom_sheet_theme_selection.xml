@@ -398,6 +398,14 @@
                     android:layout_marginTop="12dp">
 
                     <View
+                        android:id="@+id/swatchRed"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/bg_jarvis_chip"
+                        android:backgroundTint="#FF4D5E" />
+
+                    <View
                         android:id="@+id/swatch1"
                         android:layout_width="32dp"
                         android:layout_height="32dp"

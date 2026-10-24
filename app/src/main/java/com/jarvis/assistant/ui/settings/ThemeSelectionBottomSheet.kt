@@ -63,6 +63,7 @@ class ThemeSelectionBottomSheet : BottomSheetDialogFragment() {
         }
 
         // Quick Swatches
+        binding.swatchRed.setOnClickListener { applyCustomColor("#FF4D5E") }
         binding.swatch1.setOnClickListener { applyCustomColor("#F59E0B") }
         binding.swatch2.setOnClickListener { applyCustomColor("#10B981") }
         binding.swatch3.setOnClickListener { applyCustomColor("#EC4899") }
@@ -87,18 +88,19 @@ class ThemeSelectionBottomSheet : BottomSheetDialogFragment() {
 
         val hsv = FloatArray(3)
         Color.colorToHSV(parsed, hsv)
+        val h = hsv[0]
         val s = hsv[1]
         val v = hsv[2]
 
         val targetTheme = when {
             s < 0.15f && v > 0.65f -> "pearl_white"
             s < 0.15f && v <= 0.65f -> "stealth"
+            (h in 345f..360f || h in 0f..15f) || hex.equals("#FF4D5E", ignoreCase = true) || hex.equals("#FF0000", ignoreCase = true) -> "red"
             hex.equals("#F59E0B", ignoreCase = true) -> "gold"
             hex.equals("#10B981", ignoreCase = true) || hex.equals("#84CC16", ignoreCase = true) -> "emerald"
             hex.equals("#EC4899", ignoreCase = true) -> "pink"
             hex.equals("#FF7700", ignoreCase = true) -> "orange"
             hex.equals("#6366F1", ignoreCase = true) -> "indigo"
-            hex.equals("#FF4D5E", ignoreCase = true) -> "red"
             hex.equals("#C084FC", ignoreCase = true) || hex.equals("#A855F7", ignoreCase = true) -> "amethyst"
             hex.equals("#22D3EE", ignoreCase = true) -> "dark"
             else -> "custom"
@@ -122,7 +124,7 @@ class ThemeSelectionBottomSheet : BottomSheetDialogFragment() {
 
     private fun selectTheme(themeKey: String, themeName: String) {
         preferences.appTheme = themeKey
-        val hex = ThemeManager.getThemeAccentHex()
+        val hex = if (themeKey == "red" || themeKey == "crimson") "#FF4D5E" else ThemeManager.getThemeAccentHex()
         preferences.customThemeColor = hex
         updateCheckmarks(themeKey)
         Toast.makeText(requireContext(), "Theme set to $themeName", Toast.LENGTH_SHORT).show()
@@ -131,7 +133,7 @@ class ThemeSelectionBottomSheet : BottomSheetDialogFragment() {
         val homeFrag = mainActivity?.supportFragmentManager?.fragments
             ?.filterIsInstance<HomeFragment>()
             ?.firstOrNull()
-        homeFrag?.setOrbTheme(themeKey, null)
+        homeFrag?.setOrbTheme(themeKey, hex)
 
         dismiss()
         activity?.recreate()

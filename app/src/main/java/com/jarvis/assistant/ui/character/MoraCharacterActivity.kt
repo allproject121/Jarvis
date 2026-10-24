@@ -49,6 +49,7 @@ class MoraCharacterActivity : AppCompatActivity() {
         }
         binding = ActivityMoraCharacterBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
 
         setupTopBar()
         setupButtons()
@@ -127,9 +128,14 @@ class MoraCharacterActivity : AppCompatActivity() {
             webViewClient = JarvisWebViewClient(this@MoraCharacterActivity) { _, _ ->
                 isPageLoaded = true
                 setMoraState("idle")
+                val theme = JarvisApp.instance.preferences.appTheme
+                val hex = JarvisApp.instance.preferences.customThemeColor
+                evaluateJavascript("if(window.MoraCompanion && window.MoraCompanion.setTheme){ window.MoraCompanion.setTheme('" + theme + "', '" + hex + "'); }", null)
             }
 
-            loadUrl(MORA_URL)
+            val currentTheme = JarvisApp.instance.preferences.appTheme
+            val currentHex = JarvisApp.instance.preferences.customThemeColor
+            loadUrl(MORA_URL + "?theme=" + currentTheme + "&hex=" + android.net.Uri.encode(currentHex))
         }
     }
 

@@ -404,7 +404,7 @@ class HomeFragment : Fragment() {
             }
             try {
                 val initialUrl = if (preferences.orbEntityType == "mora_cyber") {
-                    com.jarvis.assistant.util.JarvisWebViewClient.MORA_URL
+                    "${com.jarvis.assistant.util.JarvisWebViewClient.MORA_URL}?theme=${preferences.appTheme}&hex=${android.net.Uri.encode(preferences.customThemeColor)}"
                 } else {
                     com.jarvis.assistant.util.JarvisWebViewClient.ORB_URL
                 }
@@ -431,7 +431,11 @@ class HomeFragment : Fragment() {
         activity?.runOnUiThread {
             val hex = if (themeKey == "custom" && !customHex.isNullOrBlank()) customHex else customHex ?: ""
             val activeTheme = if (themeKey == "custom" && hex.isNotBlank()) hex else themeKey
-            binding.orbWebView.evaluateJavascript("window.JarvisOrb && window.JarvisOrb.setTheme('$activeTheme', '$hex');", null)
+            binding.orbWebView.evaluateJavascript(
+                "if(window.MoraCompanion && window.MoraCompanion.setTheme){ window.MoraCompanion.setTheme('$activeTheme', '$hex'); } " +
+                "if(window.JarvisOrb && window.JarvisOrb.setTheme){ window.JarvisOrb.setTheme('$activeTheme', '$hex'); if(window.JarvisOrb.setPreset){ window.JarvisOrb.setPreset('$activeTheme', '$hex'); } }",
+                null
+            )
         }
     }
 
@@ -523,7 +527,7 @@ class HomeFragment : Fragment() {
 
         val isMora = preferences.orbEntityType == "mora_cyber"
         val desiredUrl = if (isMora) {
-            com.jarvis.assistant.util.JarvisWebViewClient.MORA_URL
+            "${com.jarvis.assistant.util.JarvisWebViewClient.MORA_URL}?theme=${preferences.appTheme}&hex=${android.net.Uri.encode(preferences.customThemeColor)}"
         } else {
             com.jarvis.assistant.util.JarvisWebViewClient.ORB_URL
         }
@@ -645,7 +649,9 @@ class HomeFragment : Fragment() {
                         "window.JarvisOrb.setScale($scale); " +
                         "window.JarvisOrb.setTheme('$activeTheme', '$customHex'); " +
                         "window.JarvisOrb.setPreset('$activeTheme', '$customHex'); " +
-                        "window.JarvisOrb.setResonance($resonanceLevel); }",
+                        "window.JarvisOrb.setResonance($resonanceLevel); } " +
+                        "if(window.MoraCompanion && window.MoraCompanion.setTheme){ " +
+                        "window.MoraCompanion.setTheme('$activeTheme', '$customHex'); }",
                 null
             )
         }
