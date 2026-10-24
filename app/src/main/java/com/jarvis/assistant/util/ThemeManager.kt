@@ -47,7 +47,7 @@ object ThemeManager {
             "pink", "rose", "jarvis_rose" -> Color.parseColor("#EC4899")
             "orange" -> Color.parseColor("#FF7700")
             "indigo" -> Color.parseColor("#6366F1")
-            "red", "ruby" -> Color.parseColor("#FF4D5E")
+            "red", "ruby", "crimson", "arc_red", "crimson_ruby" -> Color.parseColor("#FF4D5E")
             "amethyst", "purple", "neon_purple" -> Color.parseColor("#C084FC")
             "sunset" -> Color.parseColor("#FF6A3D")
             "dark", "obsidian" -> Color.parseColor("#22D3EE")
@@ -80,7 +80,7 @@ object ThemeManager {
             "pink", "rose", "jarvis_rose" -> Color.parseColor("#0E0308")
             "orange" -> Color.parseColor("#0E0602")
             "indigo" -> Color.parseColor("#050614")
-            "red", "ruby" -> Color.parseColor("#0E0307")
+            "red", "ruby", "crimson", "arc_red", "crimson_ruby" -> Color.parseColor("#140407")
             "amethyst", "purple", "neon_purple" -> Color.parseColor("#0B061A")
             "dark", "obsidian" -> Color.parseColor("#070914")
             "custom" -> {
@@ -103,7 +103,7 @@ object ThemeManager {
                             h in 206f..255f -> Color.parseColor("#050614") // indigo
                             h in 256f..295f -> Color.parseColor("#0B061A") // amethyst
                             h in 296f..344f -> Color.parseColor("#0E0308") // pink
-                            else -> Color.parseColor("#0E0307") // red
+                            else -> Color.parseColor("#140407") // red
                         }
                     }
                 } catch (_: Exception) {
@@ -148,8 +148,8 @@ object ThemeManager {
             "indigo" ->
                 Triple(R.style.Theme_JarvisAssistant_Indigo, Color.parseColor("#050614"), false)
 
-            "red", "ruby" ->
-                Triple(R.style.Theme_JarvisAssistant_Red, Color.parseColor("#0E0307"), false)
+            "red", "ruby", "crimson", "arc_red", "crimson_ruby" ->
+                Triple(R.style.Theme_JarvisAssistant_Red, Color.parseColor("#140407"), false)
 
             "amethyst", "purple", "neon_purple" ->
                 Triple(R.style.Theme_JarvisAssistant_Amethyst, Color.parseColor("#0B061A"), false)
