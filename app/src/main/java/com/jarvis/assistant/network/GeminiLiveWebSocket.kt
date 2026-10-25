@@ -484,7 +484,9 @@ class GeminiLiveWebSocket(
                         // 10. call_contact
                         put(JSONObject().apply {
                             put("name", "call_contact")
-                            put("description", "Places a standard phone call to a saved contact by spoken name, e.g. \"call mom\", \"call Rahul\", \"phone Dad\".")
+                            put("description", "Places a standard phone call to a saved contact by spoken name, e.g. \"call mom\", \"call Rahul\", \"phone Dad\". " +
+                                "If several contacts share the name, JARVIS resolves it from its memory of who the user calls and calls the right one without asking. " +
+                                "Only if the choice is genuinely ambiguous you will receive the candidate list — then ask ONE short question, and repeat this call with contact_number set to the user's choice.")
                             put("parameters", JSONObject().apply {
                                 put("type", "OBJECT")
                                 put("properties", JSONObject().apply {
@@ -492,8 +494,87 @@ class GeminiLiveWebSocket(
                                         put("type", "STRING")
                                         put("description", "The contact's name as the user said it, e.g. \"mom\", \"Rahul\".")
                                     })
+                                    put("contact_number", JSONObject().apply {
+                                        put("type", "STRING")
+                                        put("description", "Optional. The exact phone number of the intended contact, taken from a previous find_contacts result or from the user's own answer. Use this only to disambiguate same-name contacts.")
+                                    })
                                 })
                                 put("required", JSONArray().put("contact_name"))
+                            })
+                        })
+
+                        // 10b. find_contacts
+                        put(JSONObject().apply {
+                            put("name", "find_contacts")
+                            put("description", "Searches the user's saved contacts and returns matching contacts with their phone numbers, labels (Mobile/Home/Work/Primary) and how often the user calls them. " +
+                                "Use this BEFORE calling when you are unsure which contact the user means, when several contacts share a name, or when the user asks \"who is in my contacts\". " +
+                                "It never places a call.")
+                            put("parameters", JSONObject().apply {
+                                put("type", "OBJECT")
+                                put("properties", JSONObject().apply {
+                                    put("query", JSONObject().apply {
+                                        put("type", "STRING")
+                                        put("description", "Name or partial name to look up, e.g. \"Rahul\", \"mom\", \"doctor\".")
+                                    })
+                                    put("limit", JSONObject().apply {
+                                        put("type", "INTEGER")
+                                        put("description", "Maximum number of contacts to return. Defaults to 8.")
+                                    })
+                                })
+                                put("required", JSONArray().put("query"))
+                            })
+                        })
+
+                        // 10c. list_available_models
+                        put(JSONObject().apply {
+                            put("name", "list_available_models")
+                            put("description", "Lists every AI core installed inside JARVIS — Gemini Live, ChatGPT (OpenAI GPT-4o), the Local Host AI running Ollama on the user's own PC, the on-device offline SLM, and the Hermes autonomous agent — " +
+                                "together with whether each one is currently READY or UNAVAILABLE and why. Use it when the user asks what JARVIS can do, which models are installed, or whether the local brain works.")
+                            put("parameters", JSONObject().apply {
+                                put("type", "OBJECT")
+                                put("properties", JSONObject())
+                            })
+                        })
+
+                        // 10d. delegate_to_model
+                        put(JSONObject().apply {
+                            put("name", "delegate_to_model")
+                            put("description", "Hands a self-contained task to another AI core inside JARVIS and returns its answer. " +
+                                "Brain keys: 'local_host' (Ollama on the user's PC — private, large model), 'chatgpt' (OpenAI GPT-4o — deep reasoning), 'local_offline' (on-device SLM), 'hermes' (autonomous multi-step planner). " +
+                                "Use this when the user explicitly asks you to use the local model / another model, or when a task is better served by a different brain. " +
+                                "The task must be fully self-contained because the other core does not share this conversation.")
+                            put("parameters", JSONObject().apply {
+                                put("type", "OBJECT")
+                                put("properties", JSONObject().apply {
+                                    put("model", JSONObject().apply {
+                                        put("type", "STRING")
+                                        put("description", "Which core to use: 'local_host', 'chatgpt', 'local_offline' or 'hermes'. Leave blank to use the user's pinned preference.")
+                                    })
+                                    put("task", JSONObject().apply {
+                                        put("type", "STRING")
+                                        put("description", "The complete, self-contained task for the other core, including every piece of context it needs.")
+                                    })
+                                })
+                                put("required", JSONArray().put("model").put("task"))
+                            })
+                        })
+
+                        // 10e. switch_model
+                        put(JSONObject().apply {
+                            put("name", "switch_model")
+                            put("description", "Pins JARVIS to one specific AI core for all delegated work from now on. " +
+                                "Core keys: 'local_host' (Ollama on the user's own PC), 'chatgpt' (OpenAI GPT-4o), 'local_offline' (on-device SLM), 'hermes' (autonomous planner). " +
+                                "Pass an empty string to clear the pin and go back to using Gemini Live for everything. " +
+                                "Use it when the user says something like 'from now on use the local model', 'sab kuch local model se karo', or 'switch to ChatGPT'.")
+                            put("parameters", JSONObject().apply {
+                                put("type", "OBJECT")
+                                put("properties", JSONObject().apply {
+                                    put("model", JSONObject().apply {
+                                        put("type", "STRING")
+                                        put("description", "Core key to switch to: 'local_host', 'chatgpt', 'local_offline', 'hermes', or an empty string to clear the preference.")
+                                    })
+                                })
+                                put("required", JSONArray().put("model"))
                             })
                         })
 
@@ -1700,7 +1781,20 @@ class GeminiLiveWebSocket(
             })
         }
         val json = setup.toString()
+        val declaredToolNames = setup.optJSONObject("setup")?.optJSONArray("tools")
+            ?.optJSONObject(0)?.optJSONArray("functionDeclarations")
+            ?.let { arr -> (0 until arr.length()).mapNotNull { arr.optJSONObject(it)?.optString("name") } }
+            ?: emptyList()
         Log.d(TAG, "Sending BidiSetup payload to Gemini Live with tools")
+        Log.i(
+            TAG,
+            "Gemini Live setup: ${declaredToolNames.size} tools declared | " +
+                "find_contacts=${declaredToolNames.contains("find_contacts")} " +
+                "list_available_models=${declaredToolNames.contains("list_available_models")} " +
+                "delegate_to_model=${declaredToolNames.contains("delegate_to_model")} " +
+                "switch_model=${declaredToolNames.contains("switch_model")} | " +
+                "prompt=${effectivePrompt.length} chars"
+        )
         ws.send(json)
     }
 

@@ -136,7 +136,7 @@
                         android:id="@+id/tvProfileSubtitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="JARVIS OPERATOR â€¢ PRIMARY USER"
+                        android:text="JARVIS OPERATOR • PRIMARY USER"
                         android:textColor="?attr/themeTextMuted"
                         android:textSize="11sp"
                         android:letterSpacing="0.04"
@@ -392,7 +392,7 @@
                             android:id="@+id/tvCurrentAssistantName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="JARVIS â€¢ Tap to customize"
+                            android:text="JARVIS • Tap to customize"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -468,7 +468,7 @@
                             android:id="@+id/tvCurrentPersona"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Roshan Mode â€¢ Voice: Puck"
+                            android:text="Roshan Mode • Voice: Puck"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -618,7 +618,7 @@
                             android:id="@+id/tvJarvisModeSubtitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Affectionate companion &amp; secretary â€¢ Live 3D avatar &amp; sweet voice"
+                            android:text="Affectionate companion &amp; secretary • Live 3D avatar &amp; sweet voice"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -1020,7 +1020,7 @@
                             android:id="@+id/tvOwnerVoiceSubtitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Voice Profile Active â€¢ Only you can speak"
+                            android:text="Voice Profile Active • Only you can speak"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -2139,7 +2139,7 @@
                             android:id="@+id/tvStudioSummary"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Core: QUANTUM â€¢ Theme: STARK NAVY HUD"
+                            android:text="Core: QUANTUM • Theme: STARK NAVY HUD"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -2505,7 +2505,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="PC â‡„ Phone Ollama Hub"
+                            android:text="PC ⇄ Phone Ollama Hub"
                             android:textColor="?attr/themeTextPrimary"
                             android:textSize="15sp"
                             android:fontFamily="sans-serif-medium"
@@ -2791,7 +2791,7 @@
                             android:id="@+id/tvCurrentModel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Gemini Live WebSocket â€¢ Ollama Local"
+                            android:text="Gemini Live WebSocket • Ollama Local"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -2999,7 +2999,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Created by Roshan Sir â€¢ Open repositories"
+                            android:text="Created by Roshan Sir • Open repositories"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -3054,7 +3054,7 @@
                 android:id="@+id/tvFooterCredit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="JARVIS v5.2.34 â€¢ ARCHITECTURE BY ROSHAN SIR â€¢ ALL SYSTEMS NOMINAL"
+                android:text="JARVIS v5.2.34 • ARCHITECTURE BY ROSHAN SIR • ALL SYSTEMS NOMINAL"
                 android:textColor="?attr/themeTextMuted"
                 android:textSize="10sp"
                 android:letterSpacing="0.06"

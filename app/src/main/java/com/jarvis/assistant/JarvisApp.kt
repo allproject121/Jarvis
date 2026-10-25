@@ -20,6 +20,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class JarvisApp : Application() {
 
@@ -60,6 +61,20 @@ class JarvisApp : Application() {
 
     lateinit var vectorMemoryEngine: com.jarvis.assistant.ai.memory.VectorMemoryEngine
         private set
+
+    /**
+     * Completes once the vector memory core has been hydrated from the Room
+     * database.
+     *
+     * The Gemini Live system prompt is assembled shortly after the service
+     * starts, which can race the background hydration. The prompt builder waits
+     * on this signal (with a short timeout) so the very first session already
+     * carries the user's core memory instead of an empty block.
+     */
+    @Volatile
+    var memoryCoreReady = false
+        private set
+    val memoryCoreHydration = kotlinx.coroutines.CompletableDeferred<Unit>()
 
     lateinit var localAiEngine: com.jarvis.assistant.ai.local.LocalAiEngine
         private set
@@ -126,6 +141,52 @@ class JarvisApp : Application() {
         localAiEngine = com.jarvis.assistant.ai.local.LocalAiEngine.getInstance(this, appScope)
         modelRouter = com.jarvis.assistant.ai.router.ModelRouter.getInstance(this, appScope)
         offlineVoiceEngine = com.jarvis.assistant.ai.local.OfflineVoiceConversationEngine.getInstance(this, appScope)
+
+        // Bind the vector memory core to the database so every saved memory is
+        // semantically searchable, and hydrate the in-memory index from Room.
+        // Without this the index starts empty on every cold start and JARVIS
+        // forgets everything it learned in previous sessions.
+        memoryRepository.attachVectorEngine(vectorMemoryEngine)
+        appScope.launch(Dispatchers.IO) {
+            runCatching {
+                val stored = memoryRepository.getAllMemories()
+                if (stored.isNotEmpty()) {
+                    vectorMemoryEngine.syncWithRoomMemories(stored)
+                }
+                android.util.Log.i(
+                    "JarvisApp",
+                    "Memory core hydrated: ${stored.size} memories loaded, ${vectorMemoryEngine.indexedMemoryCount()} indexed for semantic recall."
+                )
+            }.onFailure {
+                android.util.Log.w("JarvisApp", "Memory core hydration failed: ${it.message}")
+            }
+            memoryCoreReady = true
+            memoryCoreHydration.complete(Unit)
+        }
+
+        // Startup diagnostics: prove which AI cores are live and whether the
+        // contact directory is reachable, so a failing capability is visible in
+        // the log instead of silently degrading at conversation time.
+        appScope.launch(Dispatchers.IO) {
+            runCatching {
+                val brains = com.jarvis.assistant.ai.router.AiBrainService.listBrains(this@JarvisApp)
+                android.util.Log.i(
+                    "JarvisApp",
+                    "AI cores: " + brains.joinToString(" | ") {
+                        "${it.key}=${if (it.available) "READY" else "UNAVAILABLE"} (${it.status})"
+                    }
+                )
+            }.onFailure { android.util.Log.w("JarvisApp", "AI core probe failed: ${it.message}") }
+
+            runCatching {
+                val probe = com.jarvis.assistant.util.ContactCaller.searchContacts(this@JarvisApp, "a", 200)
+                android.util.Log.i(
+                    "JarvisApp",
+                    "Contact directory probe: ${probe.size} contacts reachable" +
+                        (if (probe.isEmpty()) " — READ_CONTACTS may not be granted yet." else "")
+                )
+            }.onFailure { android.util.Log.w("JarvisApp", "Contact probe failed: ${it.message}") }
+        }
 
         // Pre-sync existing Room database memories into vector cache and seed Academic Vault
         com.jarvis.assistant.ai.memory.AcademicKnowledgeVault.seedVaultAsync(

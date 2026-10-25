@@ -2686,7 +2686,7 @@ class GodsEyeActivity : AppCompatActivity() {
                     "LISTENING" -> "Listening to you..."
                     "THINKING" -> "Processing request..."
                     "SPEAKING" -> "Jarvis speaking..."
-                    "READY" -> "Jarvis Online Â· Tap mic or say 'Hey Jarvis'"
+                    "READY" -> "Jarvis Online · Tap mic or say 'Hey Jarvis'"
                     else -> "Voice Standby"
                 }
                 val js = "(function() { if (typeof window.__updateJarvisVoiceStatus === 'function') { window.__updateJarvisVoiceStatus('$stateName', '$detail', $level); } })();"

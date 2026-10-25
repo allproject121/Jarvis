@@ -146,8 +146,49 @@ class VectorMemoryEngine private constructor(
         return sb.toString().trim()
     }
 
+    /**
+     * Query-independent "core memory" block for the system prompt.
+     *
+     * [buildMemoryRAGContext] needs a user query to rank memories, but the
+     * system prompt is built before the user has said anything — so a query-free
+     * variant is required. This returns the most recently written memories
+     * (across every category) so the assistant starts the session already
+     * knowing what it learned last time.
+     */
+    fun buildCoreMemoryContext(limit: Int = 12): String {
+        val entries = memoryIndex.values
+            .sortedByDescending { it.timestamp }
+            .take(limit)
+        if (entries.isEmpty()) return ""
+
+        val sb = StringBuilder()
+        sb.append("[CORE MEMORY — WHAT YOU KNOW ABOUT THE USER]:\n")
+        for (entry in entries) {
+            sb.append("- ").append(entry.rawText).append("\n")
+        }
+        return sb.toString().trim()
+    }
+
     fun clearIndex() {
         memoryIndex.clear()
         _indexedCount.value = 0
     }
+
+    /**
+     * Non-suspend snapshot of every indexed memory text.
+     *
+     * Used by callers that must read the memory core synchronously (e.g. contact
+     * disambiguation on the main-thread call path) where a suspending cosine
+     * search is not available. Prefer [searchSimilarMemories] when the caller can
+     * suspend — this returns raw text and does not rank by relevance.
+     */
+    fun snapshotRawMemories(): List<String> =
+        memoryIndex.values.map { it.rawText }
+
+    /**
+     * Number of memories currently held in the vector index.
+     * A value of 0 after a process restart means the index was never hydrated
+     * from the Room database — see [syncWithRoomMemories].
+     */
+    fun indexedMemoryCount(): Int = memoryIndex.size
 }

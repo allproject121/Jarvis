@@ -2822,11 +2822,46 @@ canvas.addEventListener("pointercancel",()=>{ dragging=false; targetGazeX=0; tar
 /* Interactive Tap / Poke Touch Reactions & Event-driven Reactions */
 function triggerReaction(type) {
   type = (type || "").toLowerCase();
+
+  // Normalise the reaction vocabulary emitted by the Android layer to the
+  // emote names this renderer actually implements. Unmapped names would
+  // otherwise fall through to the neutral default with no visible feedback.
+  const REACTION_ALIASES = {
+    dance: "dance",
+    rumba: "rumba",
+    clap: "success",
+    clapping: "success",
+    thankful: "blush",
+    thank: "blush",
+    grateful: "blush",
+    excited: "success",
+    celebrate: "success",
+    party: "success",
+    cry: "crying",
+    crying: "crying",
+    sad: "sad",
+    executing: "teach",
+    learning: "teach",
+    stop: "none"
+  };
+  if (Object.prototype.hasOwnProperty.call(REACTION_ALIASES, type)) {
+    type = REACTION_ALIASES[type];
+  }
+
   activeEmote = type;
+  if (type === "none") {
+    // Explicit stop: clear any in-flight emote instead of holding the neutral pose.
+    emoteTimer = 0;
+    customModelReactionTimer = 0;
+    console.log("TriggerReaction: cleared emote");
+    return;
+  }
   if (type === "wave") emoteTimer = 2.4;
   else if (type === "teach" || type === "learning") emoteTimer = 2.6;
   else if (type === "joy" || type === "laugh") emoteTimer = 2.4;
   else if (type === "success") emoteTimer = 2.4;
+  else if (type === "dance" || type === "rumba") emoteTimer = 4.0;
+  else if (type === "crying" || type === "sad") emoteTimer = 3.0;
   else if (type === "failed") emoteTimer = 2.2;
   else if (type === "listening") emoteTimer = 2.0;
   else if (type === "thinking") emoteTimer = 2.5;

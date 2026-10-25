@@ -31,6 +31,7 @@ class AppPreferences(context: Context) {
 
     init {
         migrateApiKeyToEncryptedStorage()
+        migrateStaleLocalEndpoint()
         val current = prefs.getString(KEY_MODEL, null)
         if (current == null || current !in GeminiConstants.SUPPORTED_MODELS) {
             prefs.edit().putString(KEY_MODEL, GeminiConstants.DEFAULT_MODEL).apply()
@@ -41,6 +42,15 @@ class AppPreferences(context: Context) {
         private const val PREF_NAME = "jarvis_prefs"
         private const val ENCRYPTED_API_PREF_NAME = "jarvis_secure_api_prefs"
         private const val TAG = "AppPreferences"
+
+        /** Local Ollama / vLLM endpoint. Use `adb reverse tcp:11434 tcp:11434`. */
+        const val DEFAULT_CUSTOM_ENDPOINT = "http://127.0.0.1:11434"
+
+        /** Previously hard-coded home-Wi-Fi PC address; migrated away on init. */
+        private const val LEGACY_WIFI_ENDPOINT = "http://192.168.0.101:11434"
+
+        /** Default local model tag (must exist in the user's Ollama install). */
+        const val DEFAULT_LOCAL_HOST_MODEL = "qwen3.8:27b"
         private const val KEY_API_KEY = "key_api_key"
         private const val KEY_MODEL = "key_model"
         private const val KEY_VOICE = "key_voice"
@@ -106,6 +116,7 @@ class AppPreferences(context: Context) {
         private const val KEY_GODS_EYE_OPENSKY_CLIENT_ID = "key_gods_eye_opensky_client_id"
         private const val KEY_GODS_EYE_OPENSKY_CLIENT_SECRET = "key_gods_eye_opensky_client_secret"
         private const val KEY_AI_MODEL_MODE = "key_ai_model_mode"
+        private const val KEY_PREFERRED_BRAIN = "key_preferred_brain"
         private const val KEY_OPENAI_API_KEY = "key_openai_api_key"
         private const val KEY_ORB_ENTITY_TYPE = "key_orb_entity_type"
         private const val KEY_ORB_SHOW_CORE = "key_orb_show_core"
@@ -163,6 +174,17 @@ class AppPreferences(context: Context) {
     var aiModelMode: String
         get() = prefs.getString(KEY_AI_MODEL_MODE, "AUTO_HYBRID") ?: "AUTO_HYBRID"
         set(value) = prefs.edit().putString(KEY_AI_MODEL_MODE, value).apply()
+
+    /**
+     * The AI core the user has pinned JARVIS to for delegated work.
+     *
+     * Blank means "no preference — use Gemini Live (this conversation)" which is
+     * the default. Setting it to e.g. "local_host" makes JARVIS route every
+     * delegated task to the Ollama server on the user's own PC.
+     */
+    var preferredBrain: String
+        get() = prefs.getString(KEY_PREFERRED_BRAIN, "") ?: ""
+        set(value) = prefs.edit().putString(KEY_PREFERRED_BRAIN, value).apply()
 
     var openAiApiKey: String
         get() = secureApiPrefs?.getString(KEY_OPENAI_API_KEY, null) ?: prefs.getString(KEY_OPENAI_API_KEY, "") ?: ""
@@ -527,11 +549,26 @@ class AppPreferences(context: Context) {
         set(value) = prefs.edit().putFloat(KEY_VOSK_SENSITIVITY, value.coerceIn(0.1f, 1f)).apply()
 
     var customEndpoint: String
-        get() = prefs.getString(KEY_CUSTOM_ENDPOINT, "http://192.168.0.101:11434")?.ifBlank { "http://192.168.0.101:11434" } ?: "http://192.168.0.101:11434"
+        get() = prefs.getString(KEY_CUSTOM_ENDPOINT, DEFAULT_CUSTOM_ENDPOINT)?.ifBlank { DEFAULT_CUSTOM_ENDPOINT } ?: DEFAULT_CUSTOM_ENDPOINT
         set(value) = prefs.edit().putString(KEY_CUSTOM_ENDPOINT, value.trim()).apply()
 
+    /**
+     * Replaces the previously hard-coded home-Wi-Fi endpoint with the loopback
+     * default. The old value pinned the phone to one DHCP-assigned PC address
+     * (192.168.0.101); that address changes whenever the router reassigns it,
+     * silently breaking the local-Ollama bridge. Loopback works with
+     * `adb reverse tcp:11434 tcp:11434` and is stable across reboots.
+     */
+    private fun migrateStaleLocalEndpoint() {
+        val stored = prefs.getString(KEY_CUSTOM_ENDPOINT, null) ?: return
+        if (stored == LEGACY_WIFI_ENDPOINT) {
+            prefs.edit().putString(KEY_CUSTOM_ENDPOINT, DEFAULT_CUSTOM_ENDPOINT).apply()
+            Log.i(TAG, "Migrated stale local endpoint $stored -> $DEFAULT_CUSTOM_ENDPOINT")
+        }
+    }
+
     var localHostModel: String
-        get() = prefs.getString("local_host_model", "qwen3.8:27b") ?: "qwen3.8:27b"
+        get() = prefs.getString("local_host_model", DEFAULT_LOCAL_HOST_MODEL) ?: DEFAULT_LOCAL_HOST_MODEL
         set(value) = prefs.edit().putString("local_host_model", value.trim()).apply()
 
     var userBirthday: String

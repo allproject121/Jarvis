@@ -34,6 +34,16 @@ class ModelRouter private constructor(
     companion object {
         private const val TAG = "ModelRouter"
 
+        /**
+         * Default Ollama / vLLM endpoint used when the user has not configured one.
+         * 127.0.0.1 works with `adb reverse tcp:11434 tcp:11434`, which is the
+         * recommended bridge because it survives Wi-Fi IP changes.
+         */
+        const val DEFAULT_LOCAL_ENDPOINT = "http://127.0.0.1:11434"
+
+        /** Default local model tag (must exist in the user's Ollama install). */
+        const val DEFAULT_LOCAL_MODEL = "qwen3.8:27b"
+
         @Volatile
         private var instance: ModelRouter? = null
 
@@ -96,8 +106,8 @@ class ModelRouter private constructor(
         val mode = _currentMode.value
         val hasNet = isNetworkAvailable()
         val app = context.applicationContext as? com.jarvis.assistant.JarvisApp
-        val endpoint = app?.preferences?.customEndpoint?.ifBlank { "http://127.0.0.1:11434" } ?: "http://127.0.0.1:11434"
-        val localModel = app?.preferences?.localHostModel?.ifBlank { "qwen2.5:14b" } ?: "qwen2.5:14b"
+        val endpoint = app?.preferences?.customEndpoint?.ifBlank { DEFAULT_LOCAL_ENDPOINT } ?: DEFAULT_LOCAL_ENDPOINT
+        val localModel = app?.preferences?.localHostModel?.ifBlank { DEFAULT_LOCAL_MODEL } ?: DEFAULT_LOCAL_MODEL
         val geminiKey = app?.preferences?.apiKey?.trim().orEmpty()
 
         when (mode) {

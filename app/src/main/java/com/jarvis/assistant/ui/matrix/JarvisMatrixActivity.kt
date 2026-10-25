@@ -120,10 +120,10 @@ class JarvisMatrixActivity : AppCompatActivity() {
 
     private fun checkAccessibilityStatus() {
         if (!JarvisAccessibilityService.isEnabled()) {
-            binding.tvMacroStatus.text = "âš ï¸ Accessibility Service OFF. Tap macro button to enable."
+            binding.tvMacroStatus.text = "⚠️ Accessibility Service OFF. Tap macro button to enable."
             binding.tvMacroStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_orange_light))
         } else {
-            binding.tvMacroStatus.text = "âœ… JARVIS Accessibility Service is ACTIVE."
+            binding.tvMacroStatus.text = "✅ JARVIS Accessibility Service is ACTIVE."
             binding.tvMacroStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
         }
     }
@@ -171,11 +171,11 @@ class JarvisMatrixActivity : AppCompatActivity() {
                         binding.ivGeneratedAiImage.setImageBitmap(bitmap)
                         binding.ivGeneratedAiImage.visibility = View.VISIBLE
                         binding.layoutAiImageActions.visibility = View.VISIBLE
-                        binding.tvAiImageStatus.text = "âœ… Image Generated Successfully (Flux Model)"
+                        binding.tvAiImageStatus.text = "✅ Image Generated Successfully (Flux Model)"
                         Toast.makeText(this@JarvisMatrixActivity, "AI Image Generated! Tap Save to keep it in App/Gallery.", Toast.LENGTH_SHORT).show()
                     } else {
                         binding.layoutAiImageActions.visibility = View.GONE
-                        binding.tvAiImageStatus.text = "âŒ Generation failed. Check internet connection."
+                        binding.tvAiImageStatus.text = "❌ Generation failed. Check internet connection."
                         Toast.makeText(this@JarvisMatrixActivity, "Image generation failed.", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -381,7 +381,7 @@ class JarvisMatrixActivity : AppCompatActivity() {
 
         // --- 6. On-Device PocketTTS Neural Voice Engine ---
         binding.btnPhraseHindi.setOnClickListener {
-            binding.etPocketTtsInput.setText("à¤¨à¤®à¤¸à¥à¤¤à¥‡ à¤¸à¤°, à¤®à¥ˆà¤‚ à¤œà¤¾à¤°à¥à¤µà¤¿à¤¸ à¤¹à¥‚à¤à¥¤ à¤‘à¤² à¤¸à¤¿à¤¸à¥à¤Ÿà¤®à¥à¤¸ à¤¨à¥‰à¤®à¤¿à¤¨à¤²à¥¤")
+            binding.etPocketTtsInput.setText("नमस्ते सर, मैं जार्विस हूँ। ऑल सिस्टम्स नॉमिनल।")
         }
 
         binding.btnPhraseEnglish.setOnClickListener {
@@ -631,8 +631,8 @@ class JarvisMatrixActivity : AppCompatActivity() {
                 bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 95, out)
             }
 
-            binding.tvAiImageStatus.text = "âœ… Saved to Pictures/JARVIS & App Storage!"
-            Toast.makeText(this, "ðŸ’¾ Image Saved to Device Gallery and App Storage!", Toast.LENGTH_LONG).show()
+            binding.tvAiImageStatus.text = "✅ Saved to Pictures/JARVIS & App Storage!"
+            Toast.makeText(this, "💾 Image Saved to Device Gallery and App Storage!", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
             Toast.makeText(this, "Save error: ${e.message}", Toast.LENGTH_SHORT).show()
         }

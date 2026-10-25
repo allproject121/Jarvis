@@ -15,6 +15,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.jarvis.assistant.JarvisApp
 import com.jarvis.assistant.R
 import com.jarvis.assistant.data.model.GeminiConstants
+import com.jarvis.assistant.data.preferences.AppPreferences
 import com.jarvis.assistant.databinding.ActivityApiConnectionBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -145,17 +146,18 @@ class ApiConnectionActivity : AppCompatActivity() {
         }
 
         binding.btnFillWifi.setOnClickListener {
-            binding.etCustomEndpoint.setText("http://192.168.0.101:11434")
-            Toast.makeText(this, "Set to Home Wi-Fi PC (192.168.0.101)", Toast.LENGTH_SHORT).show()
+            binding.etCustomEndpoint.setText(AppPreferences.DEFAULT_CUSTOM_ENDPOINT)
+            Toast.makeText(this, "Set to USB ADB Reverse (127.0.0.1) - run: adb reverse tcp:11434 tcp:11434", Toast.LENGTH_LONG).show()
         }
 
         binding.btnFillAdb.setOnClickListener {
-            binding.etCustomEndpoint.setText("http://127.0.0.1:11434")
-            Toast.makeText(this, "Set to USB ADB Reverse (127.0.0.1)", Toast.LENGTH_SHORT).show()
+            binding.etCustomEndpoint.setText(AppPreferences.DEFAULT_CUSTOM_ENDPOINT)
+            Toast.makeText(this, "Set to USB ADB Reverse (127.0.0.1) - run: adb reverse tcp:11434 tcp:11434", Toast.LENGTH_LONG).show()
         }
 
         binding.btnTestLocalHost.setOnClickListener {
-            val endpoint = binding.etCustomEndpoint.text?.toString()?.trim() ?: "http://192.168.0.101:11434"
+            val endpoint = binding.etCustomEndpoint.text?.toString()?.trim().orEmpty()
+                .ifBlank { AppPreferences.DEFAULT_CUSTOM_ENDPOINT }
             testLocalHost(endpoint)
         }
 

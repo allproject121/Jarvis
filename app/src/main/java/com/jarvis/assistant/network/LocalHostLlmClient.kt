@@ -2,6 +2,7 @@ package com.jarvis.assistant.network
 
 import android.util.Log
 import com.jarvis.assistant.data.model.ChatTurn
+import com.jarvis.assistant.data.preferences.AppPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -173,7 +174,7 @@ class LocalHostLlmClient {
 
         // Request root JSON
         val rootJson = JSONObject().apply {
-            put("model", modelName.ifBlank { "qwen3.8:27b" })
+            put("model", modelName.ifBlank { AppPreferences.DEFAULT_LOCAL_HOST_MODEL })
             put("messages", messages)
             put("stream", true)
             put("options", JSONObject().apply {

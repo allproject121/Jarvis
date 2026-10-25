@@ -99,7 +99,7 @@ class SettingsFragment : Fragment() {
     private fun loadUserData() {
         val userName = preferences.userName.ifBlank { "Roshan" }
         val isCompanion = preferences.isJarvisCompanionMode
-        binding.tvProfileSubtitle.text = if (isCompanion) "JARVIS PROTOCOL Ã¢â‚¬Â¢ PERSONAL COMPANION" else "JARVIS OPERATOR Ã¢â‚¬Â¢ PRIMARY USER"
+        binding.tvProfileSubtitle.text = if (isCompanion) "JARVIS PROTOCOL • PERSONAL COMPANION" else "JARVIS OPERATOR • PRIMARY USER"
         binding.tvProfilePersonaChip.text = if (isCompanion) "JARVIS MODE" else "${preferences.personality.uppercase(Locale.ROOT)} MODE"
 
         // Switch states
@@ -135,8 +135,8 @@ class SettingsFragment : Fragment() {
         }
 
         // Section 1: Assistant & Persona
-        val directLabel = if (preferences.isDirectAutonomousMode) "Ã¢Å¡Â¡ Direct Mode" else "Safe Mode"
-        binding.tvCurrentAssistantName.text = "${preferences.assistantName} (${preferences.personality.capitalize(Locale.ROOT)}) Ã¢â‚¬Â¢ $directLabel"
+        val directLabel = if (preferences.isDirectAutonomousMode) "⚡ Direct Mode" else "Safe Mode"
+        binding.tvCurrentAssistantName.text = "${preferences.assistantName} (${preferences.personality.capitalize(Locale.ROOT)}) • $directLabel"
         binding.tvVoiceEngineBadge.text = com.jarvis.assistant.ai.router.AiModelMode.fromString(preferences.aiModelMode).displayName
         binding.tvSecretSettingsBadge.text = if (preferences.isSecretSettingsEnabled) "INTIMACY LV ${preferences.secretIntimacyLevel}" else "DISABLED"
         binding.tvCurrentLanguage.text = preferences.language.uppercase(Locale.ROOT)
@@ -207,7 +207,7 @@ class SettingsFragment : Fragment() {
             preferences.activateJarvisCompanionMode(isChecked)
             loadUserData()
             (activity as? MainActivity)?.switchExperienceMode(preferences.experienceMode)
-            val msg = if (isChecked) "JARVIS Companion Mode activated Ã¢â‚¬Â¢ Sweet voice & Live 3D Companion" else "Jarvis System Mode activated"
+            val msg = if (isChecked) "JARVIS Companion Mode activated • Sweet voice & Live 3D Companion" else "Jarvis System Mode activated"
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
         }
 
@@ -247,7 +247,7 @@ class SettingsFragment : Fragment() {
         binding.switchDirectAutonomousMode.setOnCheckedChangeListener { _, isChecked ->
             preferences.isDirectAutonomousMode = isChecked
             val msg = if (isChecked) {
-                "Ã¢Å¡Â¡ Direct Autonomous Execution Mode ACTIVE (Zero confirmations, instant actions)"
+                "⚡ Direct Autonomous Execution Mode ACTIVE (Zero confirmations, instant actions)"
             } else {
                 "Safe Mode active (Commands require confirmation)"
             }
@@ -380,7 +380,7 @@ class SettingsFragment : Fragment() {
 
         binding.switchBatterySaver.setOnCheckedChangeListener { _, isChecked ->
             preferences.isBatterySaverEnabled = isChecked
-            val msg = if (isChecked) "Battery saver active Ã¢â‚¬â€ Background polling throttled" else "Battery saver disabled Ã¢â‚¬â€ Full performance"
+            val msg = if (isChecked) "Battery saver active — Background polling throttled" else "Battery saver disabled — Full performance"
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
         }
 
@@ -452,12 +452,12 @@ class SettingsFragment : Fragment() {
         val secretStatus = if (preferences.isSecretSettingsEnabled) "LV ${preferences.secretIntimacyLevel}" else "OFF"
 
         val options = arrayOf(
-            "Ã°Å¸ÂÂ·Ã¯Â¸Â Assistant Name: ${preferences.assistantName}",
-            "Ã°Å¸Å½Â­ Persona: ${preferences.personality.capitalize(Locale.ROOT)}",
-            "Ã¢Å¡Â¡ Direct Autonomous Execution: $directStatus",
-            "Ã°Å¸â€â€™ Secret Settings (Companion / Intimacy): $secretStatus",
-            "Ã°Å¸Å’Â Spoken Language: ${preferences.language}",
-            "Ã°Å¸Â§Â  Neural Memory Vault (Mem0 & Muse)"
+            "🏷️ Assistant Name: ${preferences.assistantName}",
+            "🎭 Persona: ${preferences.personality.capitalize(Locale.ROOT)}",
+            "⚡ Direct Autonomous Execution: $directStatus",
+            "🔒 Secret Settings (Companion / Intimacy): $secretStatus",
+            "🌐 Spoken Language: ${preferences.language}",
+            "🧠 Neural Memory Vault (Mem0 & Muse)"
         )
 
         MaterialAlertDialogBuilder(requireContext())
@@ -666,11 +666,11 @@ class SettingsFragment : Fragment() {
 
     private fun showVoiceEngineDialog() {
         val engines = arrayOf(
-            "Ã°Å¸Â§Â  On-Device Local SLM (Qwen 2.5 Ã¢â‚¬Â¢ 100% Offline Ã¢â‚¬Â¢ llama.cpp)",
-            "Ã°Å¸Â¤â€“ Hermes Autonomous Agent (Multi-step Tool Calling)",
-            "Ã¢Å¡Â¡ Cloud Gemini Live (Low-latency Bidirectional WebSocket)",
-            "Ã°Å¸â€â€ž Auto Hybrid (Cloud with Zero-delay Local Failover)",
-            "Ã°Å¸â€™Â» Workstation PC Core (Ollama 11434 / LAN)"
+            "🧠 On-Device Local SLM (Qwen 2.5 • 100% Offline • llama.cpp)",
+            "🤖 Hermes Autonomous Agent (Multi-step Tool Calling)",
+            "⚡ Cloud Gemini Live (Low-latency Bidirectional WebSocket)",
+            "🔄 Auto Hybrid (Cloud with Zero-delay Local Failover)",
+            "💻 Workstation PC Core (Ollama 11434 / LAN)"
         )
         val engineModes = arrayOf(
             com.jarvis.assistant.ai.router.AiModelMode.LOCAL_OFFLINE,
@@ -706,7 +706,7 @@ class SettingsFragment : Fragment() {
         val models = com.jarvis.assistant.ai.local.LocalAiConfig.AVAILABLE_MODELS
         val modelItems = models.map { m ->
             val ready = modelManager.isModelReady(m.id)
-            val status = if (ready) "Ã¢Å“â€¦ READY (Installed)" else "Ã¢Â¬â€¡Ã¯Â¸Â Download (${m.formattedSize})"
+            val status = if (ready) "✅ READY (Installed)" else "⬇️ Download (${m.formattedSize})"
             "${m.name}\n$status"
         }.toTypedArray()
 
@@ -732,9 +732,9 @@ class SettingsFragment : Fragment() {
                 } else {
                     MaterialAlertDialogBuilder(requireContext())
                         .setTitle("Download ${selectedModel.name}")
-                        .setMessage("Download on-device GGUF weights (${selectedModel.formattedSize})?\n\n${selectedModel.description}\n\nÃ¢â‚¬Â¢ Zero cloud dependency\nÃ¢â‚¬Â¢ 20+ tokens/second on Dimensity 7200\nÃ¢â‚¬Â¢ Full device control & WhatsApp offline")
+                        .setMessage("Download on-device GGUF weights (${selectedModel.formattedSize})?\n\n${selectedModel.description}\n\n• Zero cloud dependency\n• 20+ tokens/second on Dimensity 7200\n• Full device control & WhatsApp offline")
                         .setPositiveButton("Start Download") { _, _ ->
-                            Toast.makeText(requireContext(), "Starting download of ${selectedModel.name}Ã¢â‚¬Â¦", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Starting download of ${selectedModel.name}…", Toast.LENGTH_SHORT).show()
                             modelManager.setActiveModel(selectedModel.id)
                             modelManager.downloadModel(selectedModel.id)
                             showActiveDownloadProgressDialog(selectedModel)
@@ -766,11 +766,11 @@ class SettingsFragment : Fragment() {
                         dialog.setMessage("Downloading GGUF weights...\n\nProgress: ${state.progressPercent}%\nDownloaded: ${dlMb} MB / ${totMb} MB\n\nYou can keep this dialog open or tap 'Run in Background'.")
                     }
                     is com.jarvis.assistant.ai.local.ModelDownloadState.Completed -> {
-                        dialog.setMessage("Ã¢Å“â€¦ Download & GGUF header verification complete!\n\n${model.name} is installed and ready for 100% offline inference.")
+                        dialog.setMessage("✅ Download & GGUF header verification complete!\n\n${model.name} is installed and ready for 100% offline inference.")
                         Toast.makeText(requireContext(), "${model.name} is ready for offline use!", Toast.LENGTH_LONG).show()
                     }
                     is com.jarvis.assistant.ai.local.ModelDownloadState.Error -> {
-                        dialog.setMessage("Ã¢ÂÅ’ Download failed:\n${state.message}\n\nPlease check your internet connection and try again.")
+                        dialog.setMessage("❌ Download failed:\n${state.message}\n\nPlease check your internet connection and try again.")
                     }
                     else -> {}
                 }
@@ -804,12 +804,12 @@ class SettingsFragment : Fragment() {
 
     private fun showSkillsDialog() {
         val skillOptions = arrayOf(
-            "Ã°Å¸Å½Â¨ ChatGPT Image Generator (Autonomous Macro)",
-            "Ã°Å¸Å½Â¬ Gemini Video & Image Creator (Veo & Imagen Macro)",
-            "Ã°Å¸â€™Â¬ WhatsApp Hands-Free Voice Dispatcher",
-            "Ã°Å¸Å½â„¢Ã¯Â¸Â PocketTTS On-Device Voice Engine",
-            "Ã°Å¸Å¡Â¨ Touch Guard Anti-Theft Sentinel",
-            "Ã°Å¸â€œâ€¹ View All Autonomous Macros & Directives"
+            "🎨 ChatGPT Image Generator (Autonomous Macro)",
+            "🎬 Gemini Video & Image Creator (Veo & Imagen Macro)",
+            "💬 WhatsApp Hands-Free Voice Dispatcher",
+            "🎙️ PocketTTS On-Device Voice Engine",
+            "🚨 Touch Guard Anti-Theft Sentinel",
+            "📋 View All Autonomous Macros & Directives"
         )
 
         MaterialAlertDialogBuilder(requireContext())
@@ -848,7 +848,7 @@ class SettingsFragment : Fragment() {
                 val promptText = input.text.toString().trim()
                 val repo = com.jarvis.assistant.automation.macro.MacroRepository(requireContext())
                 val engine = com.jarvis.assistant.automation.macro.MacroEngine(requireContext(), repo)
-                Toast.makeText(requireContext(), "Executing macro '$macroName'Ã¢â‚¬Â¦", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Executing macro '$macroName'…", Toast.LENGTH_SHORT).show()
                 lifecycleScope.launch {
                     val result = withContext(Dispatchers.Default) {
                         engine.executeMacroByName(macroName, mapOf(paramKey to promptText))
@@ -1000,11 +1000,11 @@ class SettingsFragment : Fragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Connected Accounts & Connectors")
             .setMessage(
-                "Ã¢â‚¬Â¢ GitHub Integration: Active (Roshan Tiwari)\n" +
-                "Ã¢â‚¬Â¢ Telegram Bridge: Active (Bot Controller)\n" +
-                "Ã¢â‚¬Â¢ Notion Workspace: Synchronized\n" +
-                "Ã¢â‚¬Â¢ Spotify & YouTube Music: Hands-free playback ready\n" +
-                "Ã¢â‚¬Â¢ Termux Command Bridge: Granted"
+                "• GitHub Integration: Active (Roshan Tiwari)\n" +
+                "• Telegram Bridge: Active (Bot Controller)\n" +
+                "• Notion Workspace: Synchronized\n" +
+                "• Spotify & YouTube Music: Hands-free playback ready\n" +
+                "• Termux Command Bridge: Granted"
             )
             .setPositiveButton("Manage") { _, _ ->
                 Toast.makeText(requireContext(), "All connectors are healthy.", Toast.LENGTH_SHORT).show()
@@ -1020,7 +1020,7 @@ class SettingsFragment : Fragment() {
             .setMessage(
                 "Touch Guard monitors your phone with the accelerometer sensor.\n\n" +
                 "If anyone picks up or moves the phone while you are away, Touch Guard sounds a loud siren alarm and takes an intruder selfie.\n\n" +
-                "Current Status: ${if (isArmed) "Ã°Å¸â€Â´ ARMED" else "Ã¢Å¡Âª DISARMED"}"
+                "Current Status: ${if (isArmed) "🔴 ARMED" else "⚪ DISARMED"}"
             )
             .setPositiveButton(if (isArmed) "DISARM" else "ARM SENTRY") { _, _ ->
                 if (isArmed) {
@@ -1053,7 +1053,7 @@ class SettingsFragment : Fragment() {
                 Toast.makeText(requireContext(), "Emergency contacts saved", Toast.LENGTH_SHORT).show()
             }
             .setNeutralButton("TEST SOS DISPATCH") { _, _ ->
-                EmergencySosManager.triggerSos(requireContext(), "28.6139Ã‚Â° N, 77.2090Ã‚Â° E")
+                EmergencySosManager.triggerSos(requireContext(), "28.6139° N, 77.2090° E")
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -1070,7 +1070,7 @@ class SettingsFragment : Fragment() {
         } else {
             val items = photos.take(10).map { f ->
                 val date = SimpleDateFormat("dd MMM, HH:mm:ss", Locale.US).format(Date(f.lastModified()))
-                "$date Ã¢â‚¬â€ Intruder Attempt"
+                "$date — Intruder Attempt"
             }.toTypedArray()
 
             MaterialAlertDialogBuilder(requireContext())
@@ -1162,9 +1162,9 @@ class SettingsFragment : Fragment() {
             .setTitle("Driving Mode Sentinel")
             .setMessage(
                 "When Driving Mode is active (or when car Bluetooth connects):\n\n" +
-                "Ã¢â‚¬Â¢ Incoming phone calls are politely rejected\n" +
-                "Ã¢â‚¬Â¢ Caller automatically receives an SMS: 'I am currently driving and will get back to you soon.'\n" +
-                "Ã¢â‚¬Â¢ Jarvis verbally announces caller name through your car audio\n\n" +
+                "• Incoming phone calls are politely rejected\n" +
+                "• Caller automatically receives an SMS: 'I am currently driving and will get back to you soon.'\n" +
+                "• Jarvis verbally announces caller name through your car audio\n\n" +
                 "Hands-free driving protection is active."
             )
             .setPositiveButton("OK", null)
@@ -1190,12 +1190,12 @@ class SettingsFragment : Fragment() {
 
             withContext(Dispatchers.Main) {
                 MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("PC Ã¢â€¡â€ž Phone Hub")
+                    .setTitle("PC ⇄ Phone Hub")
                     .setMessage(
-                        "Ã¢â‚¬Â¢ Local Host Bridge: http://127.0.0.1:11434\n" +
-                        "Ã¢â‚¬Â¢ Live Ping Status: $pingResult\n" +
-                        "Ã¢â‚¬Â¢ ADB Reverse Port: tcp:11434 tcp:11434\n" +
-                        "Ã¢â‚¬Â¢ Wireless ADB: Supported\n\n" +
+                        "• Local Host Bridge: http://127.0.0.1:11434\n" +
+                        "• Live Ping Status: $pingResult\n" +
+                        "• ADB Reverse Port: tcp:11434 tcp:11434\n" +
+                        "• Wireless ADB: Supported\n\n" +
                         "Your Windows Ollama instance runs locally on port 11434 with zero internet dependency."
                     )
                     .setPositiveButton("Refresh") { _, _ -> showPcHubDialog() }

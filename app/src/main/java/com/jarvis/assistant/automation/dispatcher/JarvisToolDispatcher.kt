@@ -362,10 +362,78 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                             }
                             val success = callResult is ContactCaller.CallResult.Success
                             resultJson.put("success", success)
-                            resultJson.put("message", "Call status: $callResult")
+                            resultJson.put(
+                                "message",
+                                when (callResult) {
+                                    is ContactCaller.CallResult.Success ->
+                                        "Calling ${callResult.contact.name} (${callResult.contact.label.ifBlank { "saved contact" }})."
+                                    is ContactCaller.CallResult.MultipleMatches ->
+                                        "Ambiguous: ${callResult.candidates.size} contacts named '$nameArg'. " +
+                                            callResult.candidates.joinToString("; ") {
+                                                "${it.contact.name} (${it.contact.label.ifBlank { "saved" }}, ends ${it.contact.last4}" +
+                                                    (if (it.affinityCount > 0) ", called ${it.affinityCount}x" else "") + ")"
+                                            }
+                                    is ContactCaller.CallResult.NoMatch -> "No saved contact matched '$nameArg'."
+                                    is ContactCaller.CallResult.MissingContactsPermission -> "Contacts permission not granted."
+                                    is ContactCaller.CallResult.MissingCallPermission -> "Phone call permission not granted."
+                                    is ContactCaller.CallResult.CallFailed -> "Could not place the call."
+                                }
+                            )
+                            if (callResult is ContactCaller.CallResult.MultipleMatches) {
+                                resultJson.put("candidates", org.json.JSONArray().apply {
+                                    callResult.candidates.forEach { cand ->
+                                        put(org.json.JSONObject().apply {
+                                            put("name", cand.contact.name)
+                                            put("number", cand.contact.number)
+                                            put("last4", cand.contact.last4)
+                                            put("label", cand.contact.label)
+                                            put("times_called", cand.affinityCount)
+                                            put("why", cand.reason)
+                                        })
+                                    }
+                                })
+                            }
                         } else {
                             isSuccess = false
                             errorMessage = "Missing contact name"
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        }
+                    }
+
+                    "find_contacts" -> {
+                        val query = args.optString("query", "").ifBlank { args.optString("name", "") }
+                        if (query.isNotBlank()) {
+                            val limit = if (args.has("limit")) args.optInt("limit", 8).coerceIn(1, 20) else 8
+                            val candidates = withContext(Dispatchers.Main) {
+                                ContactCaller.searchContacts(context, query, limit)
+                            }
+                            resultJson.put("success", candidates.isNotEmpty())
+                            resultJson.put("count", candidates.size)
+                            resultJson.put("contacts", org.json.JSONArray().apply {
+                                candidates.forEach { cand ->
+                                    put(org.json.JSONObject().apply {
+                                        put("name", cand.contact.name)
+                                        put("number", cand.contact.number)
+                                        put("last4", cand.contact.last4)
+                                        put("label", cand.contact.label)
+                                        put("times_called", cand.affinityCount)
+                                        put("why", cand.reason)
+                                    })
+                                }
+                            })
+                            resultJson.put(
+                                "message",
+                                if (candidates.isEmpty()) "No saved contact matched '$query'."
+                                else "Found ${candidates.size} contact(s) matching '$query': " +
+                                    candidates.joinToString("; ") {
+                                        "${it.contact.name} (${it.contact.label.ifBlank { "saved" }}, ends ${it.contact.last4}" +
+                                            (if (it.affinityCount > 0) ", called ${it.affinityCount}x" else "") + ")"
+                                    }
+                            )
+                        } else {
+                            isSuccess = false
+                            errorMessage = "Missing contact query"
                             resultJson.put("success", false)
                             resultJson.put("message", errorMessage)
                         }
@@ -490,11 +558,15 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                     }
 
                     // ── 6. SURVEILLANCE & GODS EYE MCP ─────────────────────────
-                    "gods_eye_select_camera" -> {
+                    "gods_eye_select_camera",
+                    "gods_eye_get_space_weather",
+                    "gods_eye_get_subsea_cables",
+                    "gods_eye_get_public_transit",
+                    "gods_eye_start_auto_tour" -> {
                         val cameraResult = com.jarvis.assistant.ui.godseye.GodsEyeMcpClient.executeTool(name, args)
                         resultJson.put("success", true)
                         resultJson.put("data", cameraResult)
-                        resultJson.put("message", "Gods Eye camera selection executed.")
+                        resultJson.put("message", "Gods Eye tool '$name' executed.")
                     }
 
                     // ── 7. PRACTICAL DEVICE INFORMATION QUERIES ───────────────

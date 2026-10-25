@@ -362,7 +362,7 @@
                         android:id="@+id/etCustomEndpoint"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="http://192.168.0.101:11434"
+                        android:hint="http://127.0.0.1:11434"
                         android:inputType="textUri"
                         android:textColor="?attr/themeTextPrimary"
                         android:textSize="14sp"

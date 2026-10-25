@@ -108,4 +108,20 @@ class HabitPatternProfiler private constructor(context: Context) {
         sb.append("At this hour, user typically engages in: ").append(predictions.joinToString(", ")).append(".\n")
         return sb.toString().trim()
     }
+
+    /**
+     * Total lifetime count per tracked action (across all hours).
+     *
+     * Used by the contact resolver to read back the call habits JARVIS learned
+     * ("call_rahul_sharma_4321" → 7) instead of writing them and never
+     * consulting them again.
+     */
+    fun getActionCountsSnapshot(): Map<String, Int> {
+        val counts = mutableMapOf<String, Int>()
+        for ((action, freq) in habits) {
+            val total = freq.hourlyCounts.values.sum()
+            if (total > 0) counts[action] = total
+        }
+        return counts
+    }
 }

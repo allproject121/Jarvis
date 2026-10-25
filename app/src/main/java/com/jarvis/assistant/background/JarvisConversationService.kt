@@ -542,8 +542,23 @@ class JarvisConversationService : Service() {
     }
 
     // Pending tool call queue: tool calls are queued when owner voice verification hasn't completed yet
-    private data class PendingToolCall(val callId: String, val name: String, val args: JSONObject)
+    private data class PendingToolCall(
+        val callId: String,
+        val name: String,
+        val args: JSONObject,
+        val queuedAt: Long = System.currentTimeMillis()
+    )
     private val pendingToolCalls = java.util.concurrent.ConcurrentLinkedQueue<PendingToolCall>()
+
+    /**
+     * How long a tool call may sit in the owner-verification queue before JARVIS
+     * gives up on it and answers Gemini anyway.
+     *
+     * Without this watchdog a queued tool call never produced a functionResponse,
+     * so Gemini sat waiting for a reply that would never come and the whole turn
+     * silently died.
+     */
+    private val PENDING_TOOL_CALL_TIMEOUT_MS = 8_000L
 
     /** Real-time video and audio are concurrent input modalities in Gemini Live. */
     fun canSendVideoFrame(): Boolean {
@@ -787,6 +802,11 @@ class JarvisConversationService : Service() {
     private suspend fun generateCurrentSystemPrompt(): String {
         val app = application as? JarvisApp ?: return ""
         return withContext(Dispatchers.IO) {
+            // Wait (briefly) for the memory core to be hydrated from the database so
+            // the very first session already carries the user's real core memory.
+            if (!app.memoryCoreReady) {
+                kotlinx.coroutines.withTimeoutOrNull(4000L) { app.memoryCoreHydration.await() }
+            }
             val memoryContext = app.memoryManager.getSystemPromptContext()
             val favSong = app.memoryManager.resolveSongQuery("my favorite song")
             val basePrompt = com.jarvis.assistant.util.PromptGenerator.generateSystemPrompt(
@@ -804,8 +824,11 @@ class JarvisConversationService : Service() {
             // ── Self-Learning Vector & Neural Context Injections ──
             val learnedCorrections = com.jarvis.assistant.ai.learning.UserCorrectionTracker.getInstance(app).buildLearnedCorrectionContext()
             val habitContext = com.jarvis.assistant.ai.learning.HabitPatternProfiler.getInstance(app).buildHabitContext()
-            val vectorMemories = app.vectorMemoryEngine.buildMemoryRAGContext("")
-            val mem0Memories = app.mem0ToolBridge.buildPersistentProfileContext("")
+            // Query-independent core memory: the vector index is hydrated from the
+            // Room database on app start, so this is the user's real history and
+            // not an empty list. (A query-scoped RAG call cannot be used here —
+            // the system prompt is built before the user has said anything.)
+            val coreMemories = app.vectorMemoryEngine.buildCoreMemoryContext(14)
             val museGuidance = app.museExperienceEngine.buildExperienceContext("")
 
             buildString {
@@ -816,11 +839,8 @@ class JarvisConversationService : Service() {
                 if (habitContext.isNotBlank()) {
                     append("\n\n").append(habitContext)
                 }
-                if (vectorMemories.isNotBlank()) {
-                    append("\n\n").append(vectorMemories)
-                }
-                if (mem0Memories.isNotBlank() && mem0Memories != vectorMemories) {
-                    append("\n\n").append(mem0Memories)
+                if (coreMemories.isNotBlank()) {
+                    append("\n\n").append(coreMemories)
                 }
                 if (museGuidance.isNotBlank()) {
                     append("\n\n").append(museGuidance)
@@ -835,6 +855,12 @@ class JarvisConversationService : Service() {
                 append("\nYou possess complete, deep academic mastery over all CBSE & HSC textbooks, syllabus, and concepts from Class 1 through Class 12, especially Physics, Chemistry, and Mathematics (Newton's laws, Thermodynamics, Maxwell's Equations, Quantum Physics, Calculus, Organic Chemistry, etc.). Explain any formula, derivation, or problem step-by-step with supreme clarity.")
                 append("\n\n[SELF-LEARNING PROTOCOL]:")
                 append("\nYou are a self-learning AI assistant for Roshan Sir. Continuously learn Roshan Sir's habits, vocabulary, and preferred ways of doing things. When Roshan Sir gives an instruction, remembers a detail, or corrects you, adapt permanently without needing to be told twice.")
+            }.also { built ->
+                Log.i(
+                    "JarvisService",
+                    "System prompt built: ${built.length} chars | core memories: ${app.vectorMemoryEngine.indexedMemoryCount()} indexed / ${coreMemories.lines().count { it.startsWith("- ") }} injected | " +
+                        "self-knowledge block: ${built.contains("JARVIS OPERATING SYSTEM")} | act-first policy: ${built.contains("ACT FIRST, SPEAK AFTER")}"
+                )
             }
         }
     }
@@ -1506,6 +1532,7 @@ class JarvisConversationService : Service() {
                             if (!isDirect && preferences.isOwnerVoiceEnabled && preferences.hasOwnerVoiceProfile() && !isOwnerVerifiedOrAutonomous) {
                                 Log.w("JarvisService", "QUEUED tool call '$name' (callId=$callId): Owner verification pending, will execute after silence detection confirms speaker.")
                                 pendingToolCalls.add(PendingToolCall(callId, name, args))
+                                schedulePendingToolCallWatchdog(callId, name)
                                 return
                             }
                             handleToolCallExecution(callId, name, args)
@@ -1857,12 +1884,15 @@ class JarvisConversationService : Service() {
                     "click_ui_element", "type_text", "scroll_screen", "press_key",
                     "execute_connected_app_action"
                 )
-                if (isAutomationTool && autonomousHardStop) {
+                // Read-only recovery tools stay usable even when the loop guard trips, so
+                // JARVIS can re-observe reality and report the truth instead of going mute.
+                val isRecoveryTool = name == "inspect_screen" || name == "task_completed"
+                if (isAutomationTool && autonomousHardStop && !isRecoveryTool) {
                     Log.w("JarvisService", "Automation tool '$name' refused: hard stop is active.")
                     liveWebSocket?.sendToolResponse(callId, name, JSONObject().apply {
                         put("success", false)
-                        put("autonomous_status", "STOPPED")
-                        put("message", "STOPPED: automation was halted (repeated failures or too many steps). Do NOT call any more tools. Tell the user honestly, in one or two short sentences, what you actually completed and where you got stuck, then wait for their next instruction.")
+                        put("autonomous_status", "REPLAN_REQUIRED")
+                        put("message", "LOOP GUARD TRIPPED: you repeated the same failing action and it is now blocked. Do NOT call '$name' again. Call `inspect_screen` to see the CURRENT state, then try a genuinely DIFFERENT route to the goal (a different app, a different element, a back-navigation). If no different route exists, call `task_completed` and tell the user honestly, in one or two short sentences, exactly what you finished and what blocked you — never claim success you did not achieve.")
                     })
                     return@withTimeout
                 }
@@ -2325,18 +2355,148 @@ class JarvisConversationService : Service() {
 
                     "call_contact" -> {
                         val contact = args.optString("contact_name", "").trim()
+                        val explicitNumber = args.optString("contact_number", "").trim().ifBlank { null }
                         audioPlayer?.flush()
-                        val callResult = com.jarvis.assistant.util.ContactCaller.callContact(this@JarvisConversationService, contact)
+                        Log.i("JarvisService", "TOOL call_contact name='$contact' number='${explicitNumber ?: "-"}'")
+                        val callResult = com.jarvis.assistant.util.ContactCaller.callContact(
+                            this@JarvisConversationService,
+                            contact,
+                            explicitNumber
+                        )
+                        val successDetail = (callResult as? com.jarvis.assistant.util.ContactCaller.CallResult.Success)
+                            ?.let { " '${it.contact.name}' (${it.contact.number})" } ?: ""
+                        val ambiguityDetail = (callResult as? com.jarvis.assistant.util.ContactCaller.CallResult.MultipleMatches)
+                            ?.let { m ->
+                                " candidates=${m.candidates.size} [" +
+                                    m.candidates.joinToString(", ") { c -> "${c.contact.name}/${c.contact.last4}:${c.totalScore}" } +
+                                    "]"
+                            } ?: ""
+                        Log.i(
+                            "JarvisService",
+                            "TOOL call_contact -> ${callResult::class.java.simpleName}$successDetail$ambiguityDetail"
+                        )
                         val (ok, msg) = when (callResult) {
-                            is com.jarvis.assistant.util.ContactCaller.CallResult.Success -> Pair(true, "Calling ${callResult.contact.name}.")
-                            is com.jarvis.assistant.util.ContactCaller.CallResult.NoMatch -> Pair(false, "Could not find contact $contact.")
-                            is com.jarvis.assistant.util.ContactCaller.CallResult.MultipleMatches -> Pair(false, "Multiple contacts found for $contact.")
+                            is com.jarvis.assistant.util.ContactCaller.CallResult.Success -> {
+                                val label = callResult.contact.label.takeIf { it.isNotBlank() }
+                                val suffix = label?.let { " ($it, ending ${callResult.contact.last4})" } ?: ""
+                                val why = callResult.reason.takeIf { it.isNotBlank() }
+                                result.put("contact_name", callResult.contact.name)
+                                result.put("contact_number", callResult.contact.number)
+                                result.put("contact_label", callResult.contact.label)
+                                Pair(true, "Calling ${callResult.contact.name}$suffix." + (why?.let { " Chosen because $it." } ?: ""))
+                            }
+                            is com.jarvis.assistant.util.ContactCaller.CallResult.NoMatch -> Pair(false, "Could not find contact '$contact' in the saved contacts.")
+                            is com.jarvis.assistant.util.ContactCaller.CallResult.MultipleMatches -> {
+                                // Hand the model structured candidates so it can ask ONE precise
+                                // question instead of dumping the whole address book.
+                                val candidates = org.json.JSONArray()
+                                callResult.candidates.forEach { cand ->
+                                    candidates.put(org.json.JSONObject().apply {
+                                        put("name", cand.contact.name)
+                                        put("number", cand.contact.number)
+                                        put("last4", cand.contact.last4)
+                                        put("label", cand.contact.label)
+                                        put("times_called", cand.affinityCount)
+                                        put("why", cand.reason)
+                                    })
+                                }
+                                result.put("candidates", candidates)
+                                result.put("ambiguous", true)
+                                val lines = callResult.candidates.joinToString("; ") { cand ->
+                                    "${cand.contact.name} (${cand.contact.label.ifBlank { "saved" }}, ends ${cand.contact.last4})" +
+                                        (if (cand.affinityCount > 0) " — called ${cand.affinityCount}x" else "")
+                                }
+                                Pair(false, "There are ${callResult.candidates.size} contacts named '$contact' and JARVIS has no memory yet that picks one: $lines. Ask the user which one in ONE short question (mention the label or last 4 digits), then call again with contact_number set to their answer.")
+                            }
                             is com.jarvis.assistant.util.ContactCaller.CallResult.MissingContactsPermission -> Pair(false, "Contacts permission is not granted, so JARVIS cannot look up that saved contact.")
                             is com.jarvis.assistant.util.ContactCaller.CallResult.MissingCallPermission -> Pair(false, "Phone call permission is not granted.")
                             is com.jarvis.assistant.util.ContactCaller.CallResult.CallFailed -> Pair(false, "Could not place phone call.")
                         }
                         result.put("success", ok)
                         result.put("message", msg)
+                    }
+
+                    "find_contacts" -> {
+                        val query = args.optString("query", "").trim()
+                        val limit = if (args.has("limit")) args.optInt("limit", 8).coerceIn(1, 20) else 8
+                        Log.i("JarvisService", "TOOL find_contacts query='$query' limit=$limit")
+                        val candidates = com.jarvis.assistant.util.ContactCaller.searchContacts(
+                            this@JarvisConversationService,
+                            query,
+                            limit
+                        )
+                        Log.i(
+                            "JarvisService",
+                            "TOOL find_contacts -> ${candidates.size} hits [" +
+                                candidates.joinToString(", ") { "${it.contact.name}/${it.contact.last4}" } + "]"
+                        )
+                        val arr = org.json.JSONArray()
+                        candidates.forEach { cand ->
+                            arr.put(org.json.JSONObject().apply {
+                                put("name", cand.contact.name)
+                                put("number", cand.contact.number)
+                                put("last4", cand.contact.last4)
+                                put("label", cand.contact.label)
+                                put("times_called", cand.affinityCount)
+                                put("why", cand.reason)
+                            })
+                        }
+                        result.put("success", candidates.isNotEmpty())
+                        result.put("count", candidates.size)
+                        result.put("contacts", arr)
+                        result.put(
+                            "message",
+                            if (candidates.isEmpty()) "No saved contact matched '$query'."
+                            else "Found ${candidates.size} contact(s) matching '$query': " +
+                                candidates.joinToString("; ") { "${it.contact.name} (${it.contact.label.ifBlank { "saved" }}, ends ${it.contact.last4}" + (if (it.affinityCount > 0) ", called ${it.affinityCount}x" else "") + ")" }
+                        )
+                    }
+
+                    "list_available_models" -> {
+                        Log.i("JarvisService", "TOOL list_available_models")
+                        val brains = com.jarvis.assistant.ai.router.AiBrainService.listBrains(this@JarvisConversationService)
+                        val arr = org.json.JSONArray()
+                        brains.forEach { brain ->
+                            arr.put(org.json.JSONObject().apply {
+                                put("key", brain.key)
+                                put("name", brain.displayName)
+                                put("role", brain.role)
+                                put("available", brain.available)
+                                put("status", brain.status)
+                            })
+                        }
+                        result.put("success", true)
+                        result.put("cores", arr)
+                        result.put("message", com.jarvis.assistant.ai.router.AiBrainService.describeBrains(this@JarvisConversationService))
+                    }
+
+                    "delegate_to_model" -> {
+                        val modelKey = args.optString("model", "").trim()
+                        val task = args.optString("task", "").trim()
+                        Log.i("JarvisService", "TOOL delegate_to_model model='$modelKey' taskLen=${task.length}")
+                        val answer = com.jarvis.assistant.ai.router.AiBrainService.delegate(
+                            this@JarvisConversationService,
+                            modelKey,
+                            task
+                        )
+                        Log.i("JarvisService", "TOOL delegate_to_model -> ${answer.take(160)}")
+                        result.put("success", answer.isNotBlank())
+                        result.put("model", modelKey)
+                        result.put("result", answer)
+                        result.put("message", answer)
+                    }
+
+                    "switch_model" -> {
+                        val modelKey = args.optString("model", "").trim()
+                        Log.i("JarvisService", "TOOL switch_model model='$modelKey'")
+                        val status = com.jarvis.assistant.ai.router.AiBrainService.switchBrain(
+                            this@JarvisConversationService,
+                            modelKey
+                        )
+                        Log.i("JarvisService", "TOOL switch_model -> $status")
+                        result.put("success", status.startsWith("Switched") || status.startsWith("Cleared"))
+                        result.put("model", modelKey)
+                        result.put("message", status)
                     }
 
                     "set_volume" -> {
@@ -2630,6 +2790,10 @@ class JarvisConversationService : Service() {
                     "gods_eye_find_cctv_cameras",
                     "gods_eye_inspect_globe",
                     "gods_eye_control_layers",
+                    "gods_eye_get_space_weather",
+                    "gods_eye_get_subsea_cables",
+                    "gods_eye_get_public_transit",
+                    "gods_eye_start_auto_tour",
                     "gods_eye_select_camera" -> {
                         Log.i("JarvisService", "Executing God's Eye View MCP tool: $name with args: $args")
                         val mcpResult = com.jarvis.assistant.ui.godseye.GodsEyeMcpClient.executeTool(name, args)
@@ -3100,8 +3264,8 @@ class JarvisConversationService : Service() {
                             com.jarvis.assistant.automation.agent.AgentTaskEngine.State.FAILED,
                             "Autonomous safety limit reached after repeated failures or actions."
                         )
-                        result.put("autonomous_status", "STOPPED")
-                        result.put("system_directive", "HARD STOP: you are repeating actions or failing repeatedly. Do NOT call any more tools. Tell the user honestly, in one or two short sentences, what you actually completed and what went wrong (do NOT claim success), then wait for their next instruction.")
+                        result.put("autonomous_status", "REPLAN_REQUIRED")
+                        result.put("system_directive", "LOOP GUARD TRIPPED: you are repeating actions or failing repeatedly. Do NOT repeat the failed action. Call `inspect_screen` to see the CURRENT state, then attempt a DIFFERENT route to the goal. If no different route exists, call `task_completed` and report honestly in one or two short sentences what you actually completed and what blocked you. NEVER claim success you did not achieve.")
                     } else if (toolSuccess) {
                         result.put("autonomous_status", "EXECUTED")
                         result.put("system_directive", "AUTONOMOUS STEP $autonomousStepCount EXECUTED. OVERARCHING GOAL: '$autonomousTaskGoal'$otpNotice$bulkNotice. MANDATE: Inspect the screen. If the OVERARCHING GOAL is not yet 100% finished on screen, you MUST IMMEDIATELY take the next concrete action (click, type, scroll, wait for install/open). NEVER ABANDON THE TASK MID-WAY! NEVER call task_completed until the ultimate goal is fully achieved on screen!")
@@ -3280,6 +3444,30 @@ class JarvisConversationService : Service() {
             return false
         }
         return true
+    }
+
+    /**
+     * Watchdog for tool calls parked in the owner-verification queue.
+     *
+     * A queued tool call used to be dropped on the floor with no reply to Gemini,
+     * so the model waited forever and the turn died silently. This expires the
+     * call after a bounded wait and always sends a functionResponse so the
+     * conversation can continue.
+     */
+    private fun schedulePendingToolCallWatchdog(callId: String, name: String) {
+        serviceScope.launch(Dispatchers.IO) {
+            delay(PENDING_TOOL_CALL_TIMEOUT_MS)
+            val pending = pendingToolCalls.firstOrNull { it.callId == callId } ?: return@launch
+            pendingToolCalls.remove(pending)
+            Log.w(
+                "JarvisService",
+                "PENDING tool call '$name' (callId=$callId) expired after ${PENDING_TOOL_CALL_TIMEOUT_MS}ms: owner verification never completed."
+            )
+            liveWebSocket?.sendToolResponse(callId, name, JSONObject().apply {
+                put("success", false)
+                put("message", "Owner voice verification did not complete in time, so '$name' was NOT executed. Ask the user to repeat the command.")
+            })
+        }
     }
 
     /**

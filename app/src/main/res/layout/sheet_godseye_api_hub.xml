@@ -185,7 +185,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="ðŸš€ ORBITAL ROCKET LAUNCHES"
+                        android:text="🚀 ORBITAL ROCKET LAUNCHES"
                         android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -218,7 +218,7 @@
                     android:id="@+id/btnConnectLaunches"
                     android:layout_width="match_parent"
                     android:layout_height="38dp"
-                    android:text="DIRECT CONNECT â€¢ FETCH LAUNCHES"
+                    android:text="DIRECT CONNECT • FETCH LAUNCHES"
                     android:textColor="#0F141C"
                     android:textSize="11sp"
                     android:textStyle="bold"
@@ -262,7 +262,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="ðŸ“» WORLDWIDE LIVE RADIO"
+                        android:text="📻 WORLDWIDE LIVE RADIO"
                         android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -401,7 +401,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="âœˆï¸ AIRCRAFT INTEL &amp; ROUTE LOOKUP"
+                        android:text="✈️ AIRCRAFT INTEL &amp; ROUTE LOOKUP"
                         android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -505,7 +505,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="ðŸŒ€ NOAA TROPICAL CYCLONES"
+                        android:text="🌀 NOAA TROPICAL CYCLONES"
                         android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -587,7 +587,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="ðŸŒ GDELT REAL-TIME GEO-INTEL"
+                        android:text="🌐 GDELT REAL-TIME GEO-INTEL"
                         android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -664,7 +664,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="ðŸ“¹ WORLDWIDE LIVE CCTV FEEDS"
+                        android:text="📹 WORLDWIDE LIVE CCTV FEEDS"
                         android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold"
