@@ -1,0 +1,315 @@
+/* ==========================================================================
+   JARVIS 3D AI AVATAR HUD OVERLAY
+   Non-blocking, modular floating HUD overlay for Jarvis
+   ========================================================================== */
+
+#jarvis-avatar-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 340px;
+  height: 460px;
+  z-index: 9999;
+  pointer-events: none; /* Crucial: clicks outside pass through to Jarvis */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "JetBrains Mono", Consolas, monospace;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+/* Minimized Dock State: Collapses to a sleek mini floating HUD bar */
+#jarvis-avatar-container.minimized {
+  transform: translateY(calc(100% - 46px));
+}
+
+#jarvis-avatar-container.minimized .jarvis-avatar-canvas,
+#jarvis-avatar-container.minimized .jarvis-avatar-ground-ring,
+#jarvis-avatar-container.minimized .jarvis-avatar-speech-bubble,
+#jarvis-avatar-container.minimized .jarvis-avatar-controls {
+  opacity: 0;
+  pointer-events: none !important;
+}
+
+#jarvis-avatar-container.hidden {
+  opacity: 0;
+  pointer-events: none !important;
+  transform: translateY(30px) scale(0.95);
+}
+
+/* The Futuristic Glassmorphism HUD Card */
+.jarvis-avatar-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  background: radial-gradient(circle at 50% 25%, rgba(13, 27, 42, 0.55) 0%, rgba(5, 10, 20, 0.85) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  box-shadow: 
+    0 14px 44px rgba(0, 0, 0, 0.65),
+    inset 0 0 20px rgba(0, 240, 255, 0.10),
+    0 0 1px 1px rgba(0, 240, 255, 0.4);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+/* Sci-fi Corner Brackets */
+.jarvis-avatar-card::before,
+.jarvis-avatar-card::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  z-index: 10;
+  border-color: #00f0ff;
+  border-style: solid;
+}
+.jarvis-avatar-card::before {
+  top: 8px;
+  left: 8px;
+  border-width: 2px 0 0 2px;
+}
+.jarvis-avatar-card::after {
+  bottom: 8px;
+  right: 8px;
+  border-width: 0 2px 2px 0;
+}
+
+/* Top Header Bar */
+.jarvis-avatar-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 46px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 20;
+  background: linear-gradient(180deg, rgba(5, 12, 24, 0.9) 0%, rgba(5, 12, 24, 0) 100%);
+  pointer-events: auto; /* Buttons & title are clickable */
+}
+
+.jarvis-avatar-title-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #00f0ff;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.jarvis-avatar-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00f0ff;
+  box-shadow: 0 0 10px #00f0ff;
+  animation: jarvisPulse 2s infinite ease-in-out;
+}
+
+@keyframes jarvisPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 8px #00f0ff; }
+  50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 16px #00f0ff, 0 0 24px rgba(0, 240, 255, 0.4); }
+}
+
+/* Control Action Buttons in Header */
+.jarvis-avatar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.jarvis-btn-icon {
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  color: #c9e9ff;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.jarvis-btn-icon:hover {
+  background: rgba(0, 240, 255, 0.25);
+  border-color: #00f0ff;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.jarvis-btn-icon.active {
+  background: rgba(0, 240, 255, 0.35);
+  border-color: #00f0ff;
+  color: #00f0ff;
+}
+
+/* 3D WebGL Canvas Layer */
+.jarvis-avatar-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: auto; /* Clickable for raycasting head pat & wave */
+  cursor: grab;
+  outline: none;
+  transition: opacity 0.3s ease;
+}
+
+.jarvis-avatar-canvas:active {
+  cursor: grabbing;
+}
+
+/* Holographic Rotating Sci-Fi Ring Ground */
+.jarvis-avatar-ground-ring {
+  position: absolute;
+  bottom: 45px;
+  left: 50%;
+  transform: translateX(-50%) rotateX(72deg);
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 2px dashed rgba(0, 240, 255, 0.45);
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.35), inset 0 0 20px rgba(0, 240, 255, 0.25);
+  pointer-events: none;
+  animation: jarvisRingSpin 14s linear infinite;
+  transition: opacity 0.3s ease;
+}
+
+@keyframes jarvisRingSpin {
+  0% { transform: translateX(-50%) rotateX(72deg) rotate(0deg); }
+  100% { transform: translateX(-50%) rotateX(72deg) rotate(360deg); }
+}
+
+/* Bottom Floating Control Bar */
+.jarvis-avatar-controls {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(5, 12, 24, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 12px;
+  padding: 0 10px;
+  z-index: 20;
+  pointer-events: auto;
+  transition: opacity 0.3s ease;
+}
+
+.jarvis-avatar-status-pill {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: #8edeff;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.jarvis-control-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.jarvis-control-pill-btn {
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #c9e9ff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.jarvis-control-pill-btn:hover {
+  background: rgba(0, 240, 255, 0.25);
+  border-color: #00f0ff;
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+}
+
+/* State Styling Accents */
+#jarvis-avatar-container[data-state="speaking"] .jarvis-avatar-pulse-dot {
+  background: #ff0055;
+  box-shadow: 0 0 14px #ff0055, 0 0 25px rgba(255, 0, 85, 0.6);
+}
+#jarvis-avatar-container[data-state="speaking"] .jarvis-avatar-card {
+  border-color: rgba(255, 0, 85, 0.4);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.65), 0 0 20px rgba(255, 0, 85, 0.25);
+}
+#jarvis-avatar-container[data-state="speaking"] .jarvis-avatar-title-badge {
+  color: #ff3377;
+  text-shadow: 0 0 8px rgba(255, 51, 119, 0.6);
+}
+
+#jarvis-avatar-container[data-state="listening"] .jarvis-avatar-pulse-dot {
+  background: #00ffaa;
+  box-shadow: 0 0 14px #00ffaa, 0 0 25px rgba(0, 255, 170, 0.6);
+}
+#jarvis-avatar-container[data-state="listening"] .jarvis-avatar-card {
+  border-color: rgba(0, 255, 170, 0.4);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.65), 0 0 20px rgba(0, 255, 170, 0.25);
+}
+#jarvis-avatar-container[data-state="listening"] .jarvis-avatar-title-badge {
+  color: #00ffaa;
+  text-shadow: 0 0 8px rgba(0, 255, 170, 0.6);
+}
+
+/* Floating speech bubble feedback */
+.jarvis-avatar-speech-bubble {
+  position: absolute;
+  top: 52px;
+  left: 14px;
+  right: 14px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(8, 18, 34, 0.92);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #ffffff;
+  font-size: 11px;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  z-index: 30;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.jarvis-avatar-speech-bubble.active {
+  opacity: 1;
+  transform: translateY(0);
+}

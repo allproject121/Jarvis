@@ -1,11 +1,16 @@
 package com.jarvis.assistant.ui.home
 
 import android.Manifest
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.animation.DecelerateInterpolator
+import android.view.animation.OvershootInterpolator
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -295,6 +300,12 @@ class MainActivity : AppCompatActivity() {
         if (currentTab == TAB_HOME && ((shouldBeCompanion && !isCompanionActive) || (!shouldBeCompanion && isCompanionActive))) {
             switchExperienceMode(prefs.experienceMode)
         }
+
+        if (isDockExpanded) {
+            binding.bottomDock.post {
+                moveLumaSpotlight(currentTab, animate = false)
+            }
+        }
     }
 
     private fun setupNavigationDock() {
@@ -304,12 +315,14 @@ class MainActivity : AppCompatActivity() {
         // Tab 4: God's Eye Tactical View (Replaces Settings as requested)
         binding.tabGodsEye.setOnClickListener {
             com.jarvis.assistant.util.HudSoundManager.playTapSound()
+            moveLumaSpotlight(998, animate = true)
             startActivity(Intent(this, com.jarvis.assistant.ui.godseye.GodsEyeActivity::class.java))
         }
 
         // Tab 5: Customization Studio (Direct access in dock)
         binding.tabStudio.setOnClickListener {
             com.jarvis.assistant.util.HudSoundManager.playTapSound()
+            moveLumaSpotlight(999, animate = true)
             startActivity(Intent(this, com.jarvis.assistant.ui.settings.CustomizationStudioActivity::class.java))
         }
 
@@ -322,16 +335,56 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
+        binding.btnToggleDockMode.setOnClickListener {
+            toggleDockMode()
+        }
+
+        binding.layoutCompactIsland.setOnClickListener {
+            expandLumaDock()
+        }
+
+        binding.ivIslandMic.setOnClickListener {
+            handleMicOrOrbClick()
+        }
+
         listOf(
             binding.tabHome,
             binding.tabChat,
             binding.tabMic,
             binding.tabGodsEye,
-            binding.tabStudio
+            binding.tabStudio,
+            binding.btnToggleDockMode,
+            binding.layoutCompactIsland
         ).forEach { com.jarvis.assistant.util.HudAnimationHelper.attachSpringTouch(it) }
+
+        binding.bottomDock.post {
+            moveLumaSpotlight(currentTab, animate = false)
+        }
+    }
+
+    fun setBottomDockVisibility(visible: Boolean, animated: Boolean = true) {
+        val dock = binding.bottomDock
+        if (animated) {
+            if (visible) {
+                dock.visibility = View.VISIBLE
+                dock.animate().alpha(1f).translationY(0f).setDuration(240).start()
+            } else {
+                val dist = dock.height.toFloat().takeIf { it > 0 } ?: (100f * resources.displayMetrics.density)
+                dock.animate().alpha(0f).translationY(dist).setDuration(200).withEndAction {
+                    dock.visibility = View.GONE
+                }.start()
+            }
+        } else {
+            dock.visibility = if (visible) View.VISIBLE else View.GONE
+            dock.alpha = if (visible) 1f else 0f
+            dock.translationY = if (visible) 0f else (dock.height.toFloat().takeIf { it > 0 } ?: (100f * resources.displayMetrics.density))
+        }
     }
 
     fun selectTab(tab: Int) {
+        if (tab != TAB_HOME) {
+            setBottomDockVisibility(true, animated = false)
+        }
         val previousTab = currentTab
         currentTab = tab
 
@@ -413,6 +466,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private var isDockExpanded = true
+
     private fun updateDockUI(tab: Int) {
         val tvAccent = android.util.TypedValue()
         theme.resolveAttribute(R.attr.themeAccent, tvAccent, true)
@@ -439,15 +494,25 @@ class MainActivity : AppCompatActivity() {
             if (isSelected) {
                 pill.setBackgroundResource(R.drawable.bg_dock_item_active)
                 pill.alpha = 0f
-                pill.scaleX = 0.88f
-                pill.scaleY = 0.88f
+                pill.scaleX = 0.90f
+                pill.scaleY = 0.90f
                 pill.animate()
                     .alpha(1f)
                     .scaleX(1f)
                     .scaleY(1f)
-                    .setDuration(240)
-                    .setInterpolator(android.view.animation.OvershootInterpolator(1.2f))
+                    .setDuration(240L)
+                    .setInterpolator(OvershootInterpolator(1.2f))
                     .start()
+
+                // Luma active SVG icon spring bounce (original SVGs preserved)
+                iv.animate().cancel()
+                iv.animate()
+                    .scaleX(1.18f)
+                    .scaleY(1.18f)
+                    .setDuration(240L)
+                    .setInterpolator(OvershootInterpolator(1.4f))
+                    .start()
+
                 iv.imageTintList = ColorStateList.valueOf(activeTextColor)
                 tv.setTextColor(activeTextColor)
                 tv.alpha = 1f
@@ -457,11 +522,181 @@ class MainActivity : AppCompatActivity() {
                 pill.alpha = 1f
                 pill.scaleX = 1f
                 pill.scaleY = 1f
+
+                // Inactive icon returns to 1.0x
+                iv.animate().cancel()
+                iv.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(200L)
+                    .start()
+
                 iv.imageTintList = ColorStateList.valueOf(inactiveColor)
                 tv.setTextColor(inactiveColor)
-                tv.alpha = 0.75f
+                tv.alpha = 0.72f
             }
         }
+
+        // Slide the radiant Luma spotlight to the active tab
+        moveLumaSpotlight(tab, animate = true)
+    }
+
+    private fun moveLumaSpotlight(tab: Int, animate: Boolean = true) {
+        val targetPill = when (tab) {
+            TAB_HOME -> binding.pillTabHome
+            TAB_CHAT -> binding.pillTabChat
+            998 -> binding.pillTabGodsEye
+            999 -> binding.pillTabStudio
+            else -> binding.pillTabHome
+        }
+
+        binding.dockTabsLayout.post {
+            if (isFinishing || isDestroyed) return@post
+            val targetLocation = IntArray(2)
+            val dockLocation = IntArray(2)
+            targetPill.getLocationOnScreen(targetLocation)
+            binding.bottomDock.getLocationOnScreen(dockLocation)
+
+            val pillCenterInDockX = (targetLocation[0] - dockLocation[0]) + (targetPill.width / 2f)
+            val density = resources.displayMetrics.density
+            val spotlightW = binding.ivLumaSpotlight.width.takeIf { it > 0 } ?: (68 * density).toInt()
+            val targetX = pillCenterInDockX - (spotlightW / 2f)
+
+            val tvAccent = android.util.TypedValue()
+            theme.resolveAttribute(R.attr.themeAccent, tvAccent, true)
+            val activeColor = if (tvAccent.data != 0) tvAccent.data else ContextCompat.getColor(this, R.color.accent_sapphire)
+            binding.ivLumaSpotlight.imageTintList = ColorStateList.valueOf(activeColor)
+
+            if (animate) {
+                binding.ivLumaSpotlight.animate().cancel()
+                binding.ivLumaSpotlight.animate()
+                    .translationX(targetX)
+                    .setDuration(300L)
+                    .setInterpolator(OvershootInterpolator(1.2f))
+                    .start()
+            } else {
+                binding.ivLumaSpotlight.translationX = targetX
+            }
+        }
+    }
+
+    fun toggleDockMode() {
+        com.jarvis.assistant.util.HudSoundManager.playTapSound()
+        if (isDockExpanded) {
+            collapseLumaDock()
+        } else {
+            expandLumaDock()
+        }
+    }
+
+    fun collapseLumaDock() {
+        if (!isDockExpanded) return
+        isDockExpanded = false
+
+        binding.btnToggleDockMode.animate().cancel()
+        binding.btnToggleDockMode.animate().alpha(0f).setDuration(120L).start()
+
+        val startWidth = binding.bottomDock.width
+        val density = resources.displayMetrics.density
+        val targetWidth = (168 * density).toInt()
+
+        val anim = ValueAnimator.ofInt(startWidth, targetWidth).apply {
+            duration = 280L
+            interpolator = DecelerateInterpolator()
+            addUpdateListener { va ->
+                val w = va.animatedValue as Int
+                val p = binding.bottomDock.layoutParams
+                p.width = w
+                binding.bottomDock.layoutParams = p
+            }
+        }
+        anim.start()
+
+        // Cross-fade to compact Dynamic Island capsule
+        binding.dockTabsLayout.animate().cancel()
+        binding.dockTabsLayout.animate().alpha(0f).setDuration(120L).withEndAction {
+            binding.dockTabsLayout.visibility = View.GONE
+        }.start()
+
+        binding.dockCurvedLine.animate().cancel()
+        binding.dockCurvedLine.animate().alpha(0f).setDuration(120L).withEndAction {
+            binding.dockCurvedLine.visibility = View.GONE
+        }.start()
+
+        binding.ivLumaSpotlight.animate().cancel()
+        binding.ivLumaSpotlight.animate().alpha(0f).setDuration(120L).start()
+
+        binding.layoutCompactIsland.visibility = View.VISIBLE
+        binding.layoutCompactIsland.alpha = 0f
+        binding.layoutCompactIsland.animate().cancel()
+        binding.layoutCompactIsland.animate()
+            .alpha(1f)
+            .setDuration(180L)
+            .setStartDelay(100L)
+            .start()
+    }
+
+    fun expandLumaDock() {
+        if (isDockExpanded) return
+        isDockExpanded = true
+
+        binding.btnToggleDockMode.animate().cancel()
+        binding.btnToggleDockMode.animate().alpha(1f).setDuration(240L).setStartDelay(100L).start()
+
+        val startWidth = binding.bottomDock.width
+        val density = resources.displayMetrics.density
+        val targetWidth = (binding.rootMainLayout.width - (28 * density).toInt()).coerceAtLeast((340 * density).toInt())
+
+        val anim = ValueAnimator.ofInt(startWidth, targetWidth).apply {
+            duration = 320L
+            interpolator = OvershootInterpolator(1.15f)
+            addUpdateListener { va ->
+                val w = va.animatedValue as Int
+                val p = binding.bottomDock.layoutParams
+                p.width = w
+                binding.bottomDock.layoutParams = p
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    val p = binding.bottomDock.layoutParams
+                    p.width = android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    binding.bottomDock.layoutParams = p
+                }
+            })
+        }
+        anim.start()
+
+        binding.layoutCompactIsland.animate().cancel()
+        binding.layoutCompactIsland.animate().alpha(0f).setDuration(100L).withEndAction {
+            binding.layoutCompactIsland.visibility = View.GONE
+        }.start()
+
+        binding.dockTabsLayout.visibility = View.VISIBLE
+        binding.dockTabsLayout.alpha = 0f
+        binding.dockTabsLayout.animate().cancel()
+        binding.dockTabsLayout.animate()
+            .alpha(1f)
+            .setDuration(240L)
+            .setStartDelay(80L)
+            .start()
+
+        binding.dockCurvedLine.visibility = View.VISIBLE
+        binding.dockCurvedLine.alpha = 0f
+        binding.dockCurvedLine.animate().cancel()
+        binding.dockCurvedLine.animate()
+            .alpha(1f)
+            .setDuration(240L)
+            .setStartDelay(80L)
+            .start()
+
+        binding.ivLumaSpotlight.animate().cancel()
+        binding.ivLumaSpotlight.animate()
+            .alpha(0.85f)
+            .setDuration(240L)
+            .setStartDelay(100L)
+            .start()
+
+        moveLumaSpotlight(currentTab, animate = true)
     }
 
     fun handleMicOrOrbClick() {

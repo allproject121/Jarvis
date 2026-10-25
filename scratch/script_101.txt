@@ -1,0 +1,81 @@
+(function(){try{
+var mc=document.modelContext||(typeof navigator!=="undefined"&&navigator.modelContext);if(!mc||typeof mc.registerTool!=="function")return;
+function text(t){return{content:[{type:"text",text:String(t)}]}}
+var tools=[
+  {
+    name: "search_21st_components",
+    description: "Search the 21st.dev catalog of React and Tailwind CSS components, templates and themes and open the results page in this tab. Use for queries like 'animated hero section' or 'pricing table shadcn'.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "What to search for, in plain words." }
+      },
+      required: ["query"]
+    },
+    annotations: { readOnlyHint: true },
+    execute: function (input) {
+      var q = String(input && input.query || "").trim();
+      if (!q) return text("A non-empty query is required.");
+      var url = "/community/components?q=" + encodeURIComponent(q);
+      location.assign(url);
+      return text("Opened search results for \"" + q + "\" at " + location.origin + url + ". The same results are readable as markdown via read_21st_page_markdown on a category or component path, or over the 21st MCP server (https://21st.dev/mcp.md).");
+    }
+  },
+  {
+    name: "read_21st_page_markdown",
+    description: "Read a supported 21st.dev page as lightweight markdown instead of HTML: a component (/@author/components/slug), an author (/@author), a library (/@owner/library/slug), a category (/community/components/s/tag), a current blog guide (/blog/slug), or /pricing, /mcp, /ai, /changelog. Defaults to the current page.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Site-relative path starting with '/'. Omit for the current page." }
+      }
+    },
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    execute: function (input) {
+      var path = String(input && input.path || location.pathname);
+      var resolved;
+      try { resolved = new URL(path, location.origin); } catch (e) { resolved = null; }
+      // Same-origin by construction: the URL parser, not a string check,
+      // decides where this points (so "/\evil.example" and "//evil.example"
+      // both fail here), and mode same-origin refuses cross-origin redirects.
+      if (!resolved || resolved.origin !== location.origin || path.charAt(0) !== "/") {
+        return Promise.resolve(text("path must be a site-relative path starting with '/'."));
+      }
+      var target = resolved.pathname === "/" ? "/" : resolved.pathname.replace(/\/$/, "");
+      var init = { headers: { accept: "text/markdown" }, credentials: "omit", mode: "same-origin" };
+      return fetch(target, init).then(function (res) {
+        var type = res.headers.get("content-type") || "";
+        if (!res.ok || type.indexOf("text/markdown") === -1) {
+          return text("No markdown twin for " + target + " (HTTP " + res.status + "). Try a component, author, library, category, blog, pricing, mcp, ai or changelog path.");
+        }
+        return res.text().then(text);
+      });
+    }
+  },
+  {
+    name: "get_21st_agent_setup",
+    description: "How a coding agent connects to 21st: the MCP server endpoint, the one-line CLI setup for Cursor, Claude Code, Codex, VS Code or Devin, where API keys come from, and the machine-readable discovery documents.",
+    inputSchema: { type: "object", properties: {} },
+    annotations: { readOnlyHint: true },
+    execute: function () {
+      return text([
+        "# Connect an agent to 21st",
+        "",
+        "One-line setup (prints, or with --write writes, your client's MCP config with a placeholder for the API key):",
+        "",
+        "    npx @21st-dev/cli@latest init --client <cursor|claude|codex|vscode|devin> [--write]",
+        "  (windsurf remains an alias for devin)",
+        "",
+        "Create the API key itself at https://21st.dev/mcp and paste it in.",
+        "- MCP endpoint (Streamable HTTP): https://21st.dev/api/mcp (read-only: https://21st.dev/api/mcp/readonly)",
+        "- Auth: OAuth 2.1 with dynamic client registration, or a 21st API key from https://21st.dev/mcp as x-api-key / Bearer. Details: https://21st.dev/auth.md",
+        "- REST API: OpenAPI at https://21st.dev/openapi.json; catalog at https://21st.dev/.well-known/api-catalog",
+        "- Agent resource catalog (ARD): https://21st.dev/.well-known/ard.json",
+        "- Skills for the CLI: https://21st.dev/.well-known/skills/index.json",
+        "- Product summary: https://21st.dev/llms.txt; supported pages offer markdown by appending .md or sending Accept: text/markdown"
+      ].join("\n"));
+    }
+  }
+];
+for(var i=0;i<tools.length;i++){try{var p=mc.registerTool(tools[i]);if(p&&typeof p.catch==="function")p.catch(function(){})}catch(e){}}
+}catch(e){}})()

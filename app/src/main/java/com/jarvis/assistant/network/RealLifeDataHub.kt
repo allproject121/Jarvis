@@ -883,4 +883,56 @@ object RealLifeDataHub {
 
         return result
     }
+
+    // =========================================================================
+    // 7. WIKIPEDIA KNOWLEDGE VAULT (PUBLIC REST API)
+    // =========================================================================
+
+    /**
+     * Retrieves an instant, verified summary for any person, technology, place, or historical event.
+     */
+    suspend fun getWikipediaSummary(query: String): JSONObject = withContext(Dispatchers.IO) {
+        val result = JSONObject()
+        val clean = query.trim().replace(" ", "_")
+        if (clean.isBlank()) {
+            result.put("success", false)
+            result.put("message", "Search query cannot be empty")
+            return@withContext result
+        }
+
+        try {
+            val encoded = URLEncoder.encode(clean, "UTF-8")
+            val url = "https://en.wikipedia.org/api/rest_v1/page/summary/$encoded"
+            val req = Request.Builder()
+                .url(url)
+                .header("User-Agent", "Jarvis-Assistant-Android/2.0 (contact@jarvis.ai)")
+                .header("Accept", "application/json")
+                .build()
+
+            httpClient.newCall(req).execute().use { resp ->
+                if (resp.isSuccessful) {
+                    val body = resp.body?.string().orEmpty()
+                    val json = JSONObject(body)
+                    val title = json.optString("title", query)
+                    val extract = json.optString("extract", "")
+                    val description = json.optString("description", "")
+
+                    if (extract.isNotBlank()) {
+                        result.put("success", true)
+                        result.put("title", title)
+                        result.put("description", description)
+                        result.put("extract", extract)
+                        result.put("summary", "Sir, according to global encyclopedia records for $title: $extract")
+                        return@withContext result
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Wikipedia summary fetch failed for '$query': ${e.message}")
+        }
+
+        result.put("success", false)
+        result.put("message", "No Wikipedia summary found for '$query'.")
+        result
+    }
 }

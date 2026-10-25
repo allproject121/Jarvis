@@ -204,6 +204,18 @@ class MoraCharacterActivity : AppCompatActivity() {
                 }
             }
         }
+
+        lifecycleScope.launch {
+            com.jarvis.assistant.automation.agent.AgentTaskEngine.taskState.collectLatest { snapshot ->
+                if (snapshot != null) {
+                    when (snapshot.currentStatus) {
+                        "COMPLETED" -> triggerMoraReaction("success")
+                        "FAILED", "BLOCKED" -> triggerMoraReaction("failed")
+                        "RUNNING", "EXECUTING", "PLANNING", "IN_PROGRESS" -> triggerMoraReaction("executing")
+                    }
+                }
+            }
+        }
     }
 
     private fun setMoraState(state: String) {

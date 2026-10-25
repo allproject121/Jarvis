@@ -17,6 +17,7 @@ class GitHubConnector(private val context: Context) {
         private const val BASE_URL = "https://api.github.com"
         private const val PREFS_NAME = "jarvis_github_prefs"
         private const val KEY_TOKEN = "github_personal_token"
+        private const val KEY_USERNAME = "github_username"
     }
 
     private val client = OkHttpClient.Builder()
@@ -30,6 +31,10 @@ class GitHubConnector(private val context: Context) {
         get() = prefs.getString(KEY_TOKEN, null)
         set(value) = prefs.edit().putString(KEY_TOKEN, value).apply()
 
+    var username: String
+        get() = prefs.getString(KEY_USERNAME, "tiwariroshan121") ?: "tiwariroshan121"
+        set(value) = prefs.edit().putString(KEY_USERNAME, value).apply()
+
     private fun newRequestBuilder(url: String): Request.Builder {
         val builder = Request.Builder().url(url)
             .header("Accept", "application/vnd.github.v3+json")
@@ -41,7 +46,8 @@ class GitHubConnector(private val context: Context) {
     }
 
     suspend fun listMyRepositories(): List<String> = withContext(Dispatchers.IO) {
-        val url = if (token.isNullOrBlank()) "$BASE_URL/users/HunterisLive-1/repos?sort=updated" else "$BASE_URL/user/repos?sort=updated"
+        val user = username.ifBlank { "tiwariroshan121" }
+        val url = if (token.isNullOrBlank()) "$BASE_URL/users/$user/repos?sort=updated" else "$BASE_URL/user/repos?sort=updated"
         val request = newRequestBuilder(url).build()
 
         try {

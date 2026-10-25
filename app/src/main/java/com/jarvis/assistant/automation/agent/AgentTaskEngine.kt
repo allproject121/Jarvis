@@ -111,16 +111,14 @@ object AgentTaskEngine {
 
             try {
                 val app = com.jarvis.assistant.JarvisApp.instance
-                if (app != null) {
-                    val isNonIdemp = TaskExecutionPolicy.isNonIdempotent(goal) ||
-                        listOf("send", "call", "delete", "remove", "bhejo").any { goal.lowercase().contains(it) }
-                    PersistentTaskStore.getInstance(app).createTask(
-                        taskId = context.taskId,
-                        request = goal,
-                        isNonIdempotent = isNonIdemp,
-                        initialPlan = titles
-                    )
-                }
+                val isNonIdemp = TaskExecutionPolicy.isNonIdempotent(goal) ||
+                    listOf("send", "call", "delete", "remove", "bhejo").any { goal.lowercase().contains(it) }
+                PersistentTaskStore.getInstance(app).createTask(
+                    taskId = context.taskId,
+                    request = goal,
+                    isNonIdempotent = isNonIdemp,
+                    initialPlan = titles
+                )
             } catch (e: Exception) {
                 Log.w(TAG, "PersistentTaskStore recording error on begin: ${e.message}")
             }
@@ -644,11 +642,9 @@ object AgentTaskEngine {
 
         try {
             val app = com.jarvis.assistant.JarvisApp.instance
-            if (app != null) {
-                val record = PersistentTaskStore.getInstance(app).getActiveTask()
-                if (record != null) {
-                    return "Active Task [${record.taskId.take(8)}]: \"${record.originalRequest}\" is ${record.status}. Current step: ${record.currentStep ?: "Unknown"}."
-                }
+            val record = PersistentTaskStore.getInstance(app).getActiveTask()
+            if (record != null) {
+                return "Active Task [${record.taskId.take(8)}]: \"${record.originalRequest}\" is ${record.status}. Current step: ${record.currentStep ?: "Unknown"}."
             }
         } catch (e: Exception) {
             Log.w(TAG, "Error fetching active task: ${e.message}")
@@ -668,20 +664,18 @@ object AgentTaskEngine {
 
         try {
             val app = com.jarvis.assistant.JarvisApp.instance
-            if (app != null) {
-                val store = PersistentTaskStore.getInstance(app)
-                val record = if (taskId != null) {
-                    store.getFailedTasks(20).find { it.taskId.startsWith(taskId, ignoreCase = true) }
-                        ?: store.getLatestTask()?.takeIf { it.taskId.startsWith(taskId, ignoreCase = true) }
-                } else {
-                    store.getActiveTask() ?: store.getLatestTask()
-                }
+            val store = PersistentTaskStore.getInstance(app)
+            val record = if (taskId != null) {
+                store.getFailedTasks(20).find { it.taskId.startsWith(taskId, ignoreCase = true) }
+                    ?: store.getLatestTask()?.takeIf { it.taskId.startsWith(taskId, ignoreCase = true) }
+            } else {
+                store.getActiveTask() ?: store.getLatestTask()
+            }
 
-                if (record != null) {
-                    val error = record.lastError?.let { " Error: $it." } ?: ""
-                    val evidence = record.verificationEvidence?.let { " Evidence: $it." } ?: ""
-                    return "Task \"${record.originalRequest}\" is ${record.status}. Current step: ${record.currentStep ?: "N/A"}.$error$evidence"
-                }
+            if (record != null) {
+                val error = record.lastError?.let { " Error: $it." } ?: ""
+                val evidence = record.verificationEvidence?.let { " Evidence: $it." } ?: ""
+                return "Task \"${record.originalRequest}\" is ${record.status}. Current step: ${record.currentStep ?: "N/A"}.$error$evidence"
             }
         } catch (e: Exception) {
             Log.w(TAG, "Error getting task status summary: ${e.message}")
@@ -692,19 +686,17 @@ object AgentTaskEngine {
     fun getFailedTasksSummary(limit: Int = 5): String {
         try {
             val app = com.jarvis.assistant.JarvisApp.instance
-            if (app != null) {
-                val failed = PersistentTaskStore.getInstance(app).getFailedTasks(limit)
-                if (failed.isEmpty()) {
-                    return "No recent failed tasks recorded."
-                }
-                val sb = StringBuilder("Recent failed tasks (${failed.size}):\n")
-                failed.forEachIndexed { idx, t ->
-                    sb.append("${idx + 1}. \"${t.originalRequest}\": ${t.lastError ?: "Failed during execution"}")
-                    if (t.recoveryAction != null) sb.append(" (Recovery: ${t.recoveryAction})")
-                    sb.append("\n")
-                }
-                return sb.toString().trim()
+            val failed = PersistentTaskStore.getInstance(app).getFailedTasks(limit)
+            if (failed.isEmpty()) {
+                return "No recent failed tasks recorded."
             }
+            val sb = StringBuilder("Recent failed tasks (${failed.size}):\n")
+            failed.forEachIndexed { idx, t ->
+                sb.append("${idx + 1}. \"${t.originalRequest}\": ${t.lastError ?: "Failed during execution"}")
+                if (t.recoveryAction != null) sb.append(" (Recovery: ${t.recoveryAction})")
+                sb.append("\n")
+            }
+            return sb.toString().trim()
         } catch (e: Exception) {
             Log.w(TAG, "Error getting failed tasks: ${e.message}")
         }
@@ -719,13 +711,11 @@ object AgentTaskEngine {
 
         try {
             val app = com.jarvis.assistant.JarvisApp.instance
-            if (app != null) {
-                val failed = PersistentTaskStore.getInstance(app).getFailedTasks(1).firstOrNull()
-                if (failed != null) {
-                    val reason = failed.lastError ?: "Unknown execution failure"
-                    val step = failed.currentStep?.let { " at step '$it'" } ?: ""
-                    return "The task \"${failed.originalRequest}\" failed$step: $reason. ${failed.recoveryAction ?: ""}".trim()
-                }
+            val failed = PersistentTaskStore.getInstance(app).getFailedTasks(1).firstOrNull()
+            if (failed != null) {
+                val reason = failed.lastError ?: "Unknown execution failure"
+                val step = failed.currentStep?.let { " at step '$it'" } ?: ""
+                return "The task \"${failed.originalRequest}\" failed$step: $reason. ${failed.recoveryAction ?: ""}".trim()
             }
         } catch (e: Exception) {
             Log.w(TAG, "Error getting failure reason: ${e.message}")

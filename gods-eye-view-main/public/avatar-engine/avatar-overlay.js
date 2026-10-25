@@ -26,7 +26,7 @@
   try {
     if (!THREE) {
       try {
-        THREE = await import('three');
+        THREE = await import(/* @vite-ignore */ 'three');
       } catch (e) {
         try {
           THREE = await import(`${rootEnginePath}/libs/three.module.min.js`);
@@ -37,7 +37,7 @@
     }
 
     try {
-      const gltfMod = await import('three/addons/loaders/GLTFLoader.js');
+      const gltfMod = await import(/* @vite-ignore */ 'three/addons/loaders/GLTFLoader.js');
       GLTFLoader = gltfMod.GLTFLoader;
     } catch (e) {
       try {
@@ -47,7 +47,7 @@
     }
 
     try {
-      const vrmMod = await import('@pixiv/three-vrm');
+      const vrmMod = await import(/* @vite-ignore */ '@pixiv/three-vrm');
       VRMLoaderPlugin = vrmMod.VRMLoaderPlugin;
     } catch (e) {
       try {

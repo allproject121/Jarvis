@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#070A10"
+    android:paddingHorizontal="16dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="24dp">
+
+    <!-- Top Drag Handle -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="14dp"
+        android:background="#223046" />
+
+    <!-- Header Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PLANETARY SENSOR &amp; API HUB"
+                    android:textColor="#00E5FF"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:fontFamily="monospace" />
+
+                <TextView
+                    android:id="@+id/tvTotalApiCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:background="#152438"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="1dp"
+                    android:text="24 FEEDS"
+                    android:textColor="#64FFDA"
+                    android:textSize="10sp"
+                    android:fontFamily="monospace"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="All repo intelligence APIs, endpoints &amp; live test diagnostics"
+                android:textColor="#8898AA"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Test All Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPingAllApis"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:backgroundTint="#132338"
+            android:fontFamily="monospace"
+            android:paddingHorizontal="10dp"
+            android:text="⚡ PING ALL"
+            android:textColor="#00E5FF"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            app:cornerRadius="8dp"
+            app:strokeColor="#00E5FF"
+            app:strokeWidth="1dp" />
+    </LinearLayout>
+
+    <!-- Category Filter Chips (Horizontal Scroll) -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="10dp"
+        android:scrollbars="none">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupCategories"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:singleSelection="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipAll"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:checked="true"
+                android:text="ALL (24)"
+                android:textColor="#00E5FF"
+                android:textSize="11sp"
+                app:chipBackgroundColor="#132338"
+                app:chipStrokeColor="#00E5FF"
+                app:chipStrokeWidth="1dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipAviation"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="AVIATION"
+                android:textColor="#C5D1DF"
+                android:textSize="11sp"
+                app:chipBackgroundColor="#0D111A"
+                app:chipStrokeColor="#1F2839"
+                app:chipStrokeWidth="1dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipCctv"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="CCTV"
+                android:textColor="#C5D1DF"
+                android:textSize="11sp"
+                app:chipBackgroundColor="#0D111A"
+                app:chipStrokeColor="#1F2839"
+                app:chipStrokeWidth="1dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipSpace"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="SPACE"
+                android:textColor="#C5D1DF"
+                android:textSize="11sp"
+                app:chipBackgroundColor="#0D111A"
+                app:chipStrokeColor="#1F2839"
+                app:chipStrokeWidth="1dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipWeather"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="WEATHER"
+                android:textColor="#C5D1DF"
+                android:textSize="11sp"
+                app:chipBackgroundColor="#0D111A"
+                app:chipStrokeColor="#1F2839"
+                app:chipStrokeWidth="1dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipSeismic"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="SEISMIC"
+                android:textColor="#C5D1DF"
+                android:textSize="11sp"
+                app:chipBackgroundColor="#0D111A"
+                app:chipStrokeColor="#1F2839"
+                app:chipStrokeWidth="1dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipDefense"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="DEFENSE"
+                android:textColor="#C5D1DF"
+                android:textSize="11sp"
+                app:chipBackgroundColor="#0D111A"
+                app:chipStrokeColor="#1F2839"
+                app:chipStrokeWidth="1dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipAudio"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="AUDIO"
+                android:textColor="#C5D1DF"
+                android:textSize="11sp"
+                app:chipBackgroundColor="#0D111A"
+                app:chipStrokeColor="#1F2839"
+                app:chipStrokeWidth="1dp" />
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
+    <!-- Search / Filter Box -->
+    <EditText
+        android:id="@+id/etSearchApis"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_cyber_detail_box"
+        android:hint="Search APIs by name, domain or keyword..."
+        android:textColorHint="#4B5E78"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:paddingHorizontal="12dp"
+        android:drawableStart="@android:drawable/ic_menu_search"
+        android:drawablePadding="8dp"
+        android:singleLine="true"
+        android:layout_marginBottom="10dp" />
+
+    <!-- RecyclerView for API items -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvApis"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp" />
+
+</LinearLayout>

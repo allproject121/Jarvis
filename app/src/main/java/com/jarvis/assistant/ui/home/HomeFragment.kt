@@ -133,6 +133,13 @@ class HomeFragment : Fragment() {
             applyZenModeState(animated = true)
         }
 
+        binding.btnExitZenModeTop.setOnClickListener {
+            HudSoundManager.playTapSound()
+            preferences.hideAllHomeCards = false
+            isZenModeActive = false
+            applyZenModeState(animated = true)
+        }
+
         binding.btnDismissLiveError.setOnClickListener {
             hideLiveErrorOverlay {
                 viewModel.clearLiveError()
@@ -160,7 +167,8 @@ class HomeFragment : Fragment() {
             binding.orbHaloRing.visibility = View.GONE
             try {
                 val density = resources.displayMetrics.density
-                val initialHeight = if (preferences.hideAllHomeCards) (520 * density).toInt() else (360 * density).toInt()
+                val screenHeight = resources.displayMetrics.heightPixels
+                val initialHeight = if (preferences.hideAllHomeCards) screenHeight else (360 * density).toInt()
                 val params = binding.orbContainer.layoutParams
                 if (params != null) {
                     params.height = initialHeight
@@ -445,7 +453,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun pushExternalAudio(amp: Float, bass: Float, high: Float) {
-        val isAvatar = preferences.orbEntityType in setOf("custom_3d", "ai_girl", "hinata_anime")
+        val isAvatar = preferences.orbEntityType in setOf("mora_cyber", "custom_3d", "ai_girl", "hinata_anime")
         if (!isPageLoaded || (!preferences.isAudioReactiveOrb && !isAvatar)) return
         val now = System.currentTimeMillis()
         if (now - lastAudioPushTime < 33L) return // ~30 calls per second throttle
@@ -480,6 +488,7 @@ class HomeFragment : Fragment() {
     override fun onPause() {
         super.onPause()
         binding.orbWebView.onPause()
+        (activity as? MainActivity)?.setBottomDockVisibility(true, animated = false)
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
@@ -496,13 +505,14 @@ class HomeFragment : Fragment() {
             binding.orbWebView.onPause()
             binding.orbWebView.visibility = View.GONE
             binding.root.visibility = View.GONE
+            (activity as? MainActivity)?.setBottomDockVisibility(true, animated = false)
         }
     }
 
     private fun applyCustomizationPreferences() {
         val b = _binding ?: return
 
-                // Mode Switcher Banner: Always hidden per user specification
+        // Mode Switcher Banner: Always hidden per user specification
         b.btnSwitchToJarvisMode.visibility = View.GONE
 
         // Master Clean Immersion Mode or Zen Mode hides all bottom cards
@@ -511,11 +521,26 @@ class HomeFragment : Fragment() {
             if (hideAll) R.drawable.ic_zen_mode_active else R.drawable.ic_zen_mode
         )
         b.btnExitZenMode.visibility = if (hideAll) View.VISIBLE else View.GONE
+        b.btnExitZenModeTop.visibility = if (hideAll) View.VISIBLE else View.GONE
+
+        val density = resources.displayMetrics.density
+        val screenHeight = resources.displayMetrics.heightPixels
+        val fullHeight = b.root.height.takeIf { it > 0 } ?: screenHeight
 
         if (hideAll) {
+            b.layoutHeader.visibility = View.GONE
             b.layoutHomeCardsContainer.visibility = View.GONE
+            b.homeScrollView.setPadding(0, 0, 0, 0)
+            (activity as? MainActivity)?.setBottomDockVisibility(false, animated = false)
         } else {
+            b.layoutHeader.visibility = View.VISIBLE
             b.layoutHomeCardsContainer.visibility = View.VISIBLE
+            val pStart = (18 * density).toInt()
+            val pTop = (14 * density).toInt()
+            val pBottom = (100 * density).toInt()
+            b.homeScrollView.setPadding(pStart, pTop, pStart, pBottom)
+            (activity as? MainActivity)?.setBottomDockVisibility(true, animated = false)
+
             b.layoutStatusIndicator.visibility = if (preferences.showStatusIndicatorWidget) View.VISIBLE else View.GONE
             b.cardWeather.visibility = if (preferences.showWeatherWidget) View.VISIBLE else View.GONE
             b.cardTelemetry.visibility = if (preferences.showTelemetryWidget) View.VISIBLE else View.GONE
@@ -544,14 +569,12 @@ class HomeFragment : Fragment() {
         }
 
         // Hide purple orb halo ring when Mora is active to avoid circle across character
-        b.orbHaloRing.visibility = if (isMora) View.GONE else View.VISIBLE
+        b.orbHaloRing.visibility = if (isMora || hideAll) View.GONE else View.VISIBLE
 
         // Dynamic Stage Height
         try {
-            val screenHeight = resources.displayMetrics.heightPixels
-            val density = resources.displayMetrics.density
-            val targetStageHeight = if (isZenModeActive || preferences.hideAllHomeCards) {
-                (520 * density).toInt().coerceAtMost((screenHeight * 0.70f).toInt())
+            val targetStageHeight = if (hideAll) {
+                fullHeight
             } else if (preferences.isOrbCinematic50) {
                 (screenHeight * 0.48f).toInt()
             } else if (isMora) {
@@ -559,14 +582,18 @@ class HomeFragment : Fragment() {
             } else {
                 (280 * density).toInt()
             }
-            val params = b.orbContainer.layoutParams
-            if (params != null && params.height != targetStageHeight) {
-                params.height = targetStageHeight
-                b.orbContainer.layoutParams = params
-                b.orbContainer.requestLayout()
-                b.orbWebView.postDelayed({
-                    b.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.resize){ window.JarvisOrb.resize(); }", null)
-                }, 200)
+            val params = b.orbContainer.layoutParams as? ViewGroup.MarginLayoutParams
+            if (params != null) {
+                params.topMargin = if (hideAll) 0 else (4 * density).toInt()
+                params.bottomMargin = if (hideAll) 0 else (6 * density).toInt()
+                if (params.height != targetStageHeight) {
+                    params.height = targetStageHeight
+                    b.orbContainer.layoutParams = params
+                    b.orbContainer.requestLayout()
+                    b.orbWebView.postDelayed({
+                        b.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.resize){ window.JarvisOrb.resize(); }", null)
+                    }, 200)
+                }
             }
         } catch (_: Exception) {}
 
@@ -805,6 +832,17 @@ class HomeFragment : Fragment() {
             .show()
     }
 
+    
+    fun triggerOrbReaction(reaction: String) {
+        if (!isPageLoaded) return
+        activity?.runOnUiThread {
+            binding.orbWebView.evaluateJavascript(
+                "if(window.JarvisOrb && window.JarvisOrb.triggerReaction){ window.JarvisOrb.triggerReaction('$reaction'); }",
+                null
+            )
+        }
+    }
+
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -812,10 +850,16 @@ class HomeFragment : Fragment() {
                     com.jarvis.assistant.automation.agent.AgentTaskEngine.taskState.collect { snapshot ->
                         renderTaskFallback(snapshot)
                         if (snapshot != null) {
-                            if (snapshot.currentStatus == "COMPLETED") {
-                                binding.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.triggerReaction){ window.JarvisOrb.triggerReaction('success'); }", null)
-                            } else if (snapshot.currentStatus in setOf("FAILED", "BLOCKED")) {
-                                binding.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.triggerReaction){ window.JarvisOrb.triggerReaction('failed'); }", null)
+                            when (snapshot.currentStatus) {
+                                "COMPLETED" -> {
+                                    binding.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.triggerReaction){ window.JarvisOrb.triggerReaction('success'); }", null)
+                                }
+                                "FAILED", "BLOCKED" -> {
+                                    binding.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.triggerReaction){ window.JarvisOrb.triggerReaction('failed'); }", null)
+                                }
+                                "RUNNING", "EXECUTING", "PLANNING", "IN_PROGRESS" -> {
+                                    binding.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.triggerReaction){ window.JarvisOrb.triggerReaction('executing'); }", null)
+                                }
                             }
                         }
                     }
@@ -832,21 +876,51 @@ class HomeFragment : Fragment() {
                         }
                     }
                 }
+                // Physical Avatar (Mora / Orb) Voice Intent & Body Control
                 launch {
                     com.jarvis.assistant.background.JarvisConversationService.liveUserTranscript.collect { transcript ->
                         if (transcript.isNotBlank()) {
                             val lower = transcript.lowercase().trim()
-                            if (lower.contains("hello") || lower.contains("hi jarvis") || lower.contains("hey jarvis") || lower.contains("namaste")) {
-                                binding.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.triggerReaction){ window.JarvisOrb.triggerReaction('wave'); }", null)
-                            } else if (lower.contains("thank") || lower.contains("shukriya") || lower.contains("good job") || lower.contains("awesome") || lower.contains("well done")) {
-                                binding.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.triggerReaction){ window.JarvisOrb.triggerReaction('joy'); }", null)
+                            if (lower.contains("dance") || lower.contains("nach") || lower.contains("naach")) {
+                                triggerOrbReaction("dance")
+                            } else if (lower.contains("hello") || lower.contains("hi jarvis") || lower.contains("hey jarvis") || lower.contains("namaste") || lower.contains("wave") || lower.contains("haath hilao")) {
+                                triggerOrbReaction("wave")
+                            } else if (lower.contains("clap") || lower.contains("taali") || lower.contains("taaliyan") || lower.contains("shabash")) {
+                                triggerOrbReaction("clapping")
+                            } else if (lower.contains("thank") || lower.contains("shukriya") || lower.contains("dhanyawad") || lower.contains("dhanyavad") || lower.contains("well done") || lower.contains("awesome")) {
+                                triggerOrbReaction("thankful")
+                            } else if (lower.contains("laugh") || lower.contains("hanso") || lower.contains("haso") || lower.contains("joke") || lower.contains("mazaak")) {
+                                triggerOrbReaction("joy")
+                            } else if (lower.contains("excited") || lower.contains("party") || lower.contains("celebrate") || lower.contains("kudo") || lower.contains("kudoo")) {
+                                triggerOrbReaction("excited")
+                            } else if (lower.contains("cry") || lower.contains("ro mat") || lower.contains("rona") || lower.contains("sad")) {
+                                triggerOrbReaction("crying")
                             } else if (lower.contains("remember") || lower.contains("from now on") || lower.contains("my preference") || lower.contains("aise karna") || lower.contains("seekh lo")) {
-                                binding.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.triggerReaction){ window.JarvisOrb.triggerReaction('teach'); }", null)
-                            } else if (lower.contains("stop") || lower.contains("chup") || lower.contains("ruko") || lower.contains("wait")) {
-                                binding.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.interrupt){ window.JarvisOrb.interrupt(); }", null)
-                            } else if (lower.contains("?") || lower.startsWith("what") || lower.startsWith("how") || lower.startsWith("why") || lower.startsWith("kya") || lower.startsWith("kaise")) {
-                                binding.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.triggerReaction){ window.JarvisOrb.triggerReaction('curious'); }", null)
+                                triggerOrbReaction("teach")
+                            } else if (lower.contains("stop") || lower.contains("chup") || lower.contains("ruko") || lower.contains("ruk jao") || lower.contains("bas") || lower.contains("band karo")) {
+                                binding.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.interrupt){ window.JarvisOrb.interrupt(); } if(window.JarvisOrb && window.JarvisOrb.triggerReaction){ window.JarvisOrb.triggerReaction('stop'); }", null)
+                            } else if (lower.contains("?") || lower.startsWith("what") || lower.startsWith("how") || lower.startsWith("why") || lower.startsWith("kya") || lower.startsWith("kaise") || lower.contains("socho")) {
+                                triggerOrbReaction("curious")
                             }
+                        }
+                    }
+                }
+                launch {
+                    com.jarvis.assistant.background.JarvisConversationService.liveAssistantResponse.collect { response ->
+                        if (response.isNotBlank()) {
+                            val lower = response.lowercase().trim()
+                            if (lower.contains("dancing") || lower.contains("dance for you") || lower.contains("dance karta") || lower.contains("dance karti") || lower.contains("nach raha")) {
+                                triggerOrbReaction("dance")
+                            } else if (lower.contains("namaste") || lower.contains("hello there")) {
+                                triggerOrbReaction("wave")
+                            }
+                        }
+                    }
+                }
+                launch {
+                    com.jarvis.assistant.background.JarvisConversationService.avatarAction.collect { action ->
+                        if (action.isNotBlank()) {
+                            triggerOrbReaction(action)
                         }
                     }
                 }
@@ -1134,11 +1208,12 @@ class HomeFragment : Fragment() {
     }
 
     fun toggleZenMode() {
-        if (preferences.hideAllHomeCards) {
+        if (preferences.hideAllHomeCards || isZenModeActive) {
             preferences.hideAllHomeCards = false
             isZenModeActive = false
         } else {
-            isZenModeActive = !isZenModeActive
+            isZenModeActive = true
+            preferences.hideAllHomeCards = true
         }
         applyZenModeState(animated = true)
     }
@@ -1153,32 +1228,44 @@ class HomeFragment : Fragment() {
             if (hideCards) R.drawable.ic_zen_mode_active else R.drawable.ic_zen_mode
         )
         b.btnExitZenMode.visibility = if (hideCards) View.VISIBLE else View.GONE
+        b.btnExitZenModeTop.visibility = if (hideCards) View.VISIBLE else View.GONE
+        b.btnSwitchToJarvisMode.visibility = View.GONE
 
-                b.btnSwitchToJarvisMode.visibility = View.GONE
+        (activity as? MainActivity)?.setBottomDockVisibility(!hideCards, animated = animated)
 
-        val hudViews = listOf(
-            b.layoutHomeCardsContainer
-        )
-
-        hudViews.forEach { view ->
-            if (animated) {
-                if (hideCards) {
-                    view.animate().alpha(0f).setDuration(220).withEndAction {
-                        view.visibility = View.GONE
-                    }.start()
-                } else {
-                    view.visibility = View.VISIBLE
-                    view.alpha = 0f
-                    view.animate().alpha(1f).setDuration(250).start()
-                }
+        // Animate Header out/in
+        if (animated) {
+            if (hideCards) {
+                b.layoutHeader.animate().alpha(0f).setDuration(180).withEndAction {
+                    b.layoutHeader.visibility = View.GONE
+                }.start()
             } else {
-                view.visibility = if (hideCards) View.GONE else View.VISIBLE
-                view.alpha = if (hideCards) 0f else 1f
+                b.layoutHeader.visibility = View.VISIBLE
+                b.layoutHeader.alpha = 0f
+                b.layoutHeader.animate().alpha(1f).setDuration(220).start()
             }
+        } else {
+            b.layoutHeader.visibility = if (hideCards) View.GONE else View.VISIBLE
+            b.layoutHeader.alpha = if (hideCards) 0f else 1f
+        }
+
+        // Animate Cards Container out/in
+        if (animated) {
+            if (hideCards) {
+                b.layoutHomeCardsContainer.animate().alpha(0f).setDuration(180).withEndAction {
+                    b.layoutHomeCardsContainer.visibility = View.GONE
+                }.start()
+            } else {
+                b.layoutHomeCardsContainer.visibility = View.VISIBLE
+                b.layoutHomeCardsContainer.alpha = 0f
+                b.layoutHomeCardsContainer.animate().alpha(1f).setDuration(220).start()
+            }
+        } else {
+            b.layoutHomeCardsContainer.visibility = if (hideCards) View.GONE else View.VISIBLE
+            b.layoutHomeCardsContainer.alpha = if (hideCards) 0f else 1f
         }
 
         if (!hideCards) {
-            b.layoutHomeCardsContainer.visibility = View.VISIBLE
             b.layoutStatusIndicator.visibility = if (preferences.showStatusIndicatorWidget) View.VISIBLE else View.GONE
             b.cardWeather.visibility = if (preferences.showWeatherWidget) View.VISIBLE else View.GONE
             b.cardTelemetry.visibility = if (preferences.showTelemetryWidget) View.VISIBLE else View.GONE
@@ -1186,13 +1273,22 @@ class HomeFragment : Fragment() {
             b.layoutTacticalProtocols.visibility = if (preferences.showProtocolsWidget) View.VISIBLE else View.GONE
             b.layoutUpdatesSectionHeader.visibility = if (preferences.showUpdatesWidget) View.VISIBLE else View.GONE
             b.layoutUpdatesContainer.visibility = if (preferences.showUpdatesWidget) View.VISIBLE else View.GONE
+        }
+
+        if (hideCards) {
+            b.homeScrollView.setPadding(0, 0, 0, 0)
+            b.homeScrollView.scrollTo(0, 0)
         } else {
-            b.layoutHomeCardsContainer.visibility = View.GONE
+            val pStart = (18 * density).toInt()
+            val pTop = (14 * density).toInt()
+            val pBottom = (100 * density).toInt()
+            b.homeScrollView.setPadding(pStart, pTop, pStart, pBottom)
         }
 
         val screenHeight = resources.displayMetrics.heightPixels
-        val targetStageHeight = if (isZenModeActive || preferences.hideAllHomeCards) {
-            (520 * density).toInt().coerceAtMost((screenHeight * 0.70f).toInt())
+        val fullHeight = b.root.height.takeIf { it > 0 } ?: screenHeight
+        val targetStageHeight = if (hideCards) {
+            fullHeight
         } else if (preferences.isOrbCinematic50) {
             (screenHeight * 0.48f).toInt()
         } else if (isMora) {
@@ -1201,25 +1297,32 @@ class HomeFragment : Fragment() {
             (280 * density).toInt()
         }
 
-        val currentParams = b.orbContainer.layoutParams
-        if (currentParams != null && currentParams.height != targetStageHeight) {
-            if (animated) {
-                val anim = android.animation.ValueAnimator.ofInt(currentParams.height, targetStageHeight)
-                anim.duration = 260
-                anim.addUpdateListener { va ->
-                    currentParams.height = va.animatedValue as Int
+        val currentParams = b.orbContainer.layoutParams as? ViewGroup.MarginLayoutParams
+        if (currentParams != null) {
+            currentParams.topMargin = if (hideCards) 0 else (4 * density).toInt()
+            currentParams.bottomMargin = if (hideCards) 0 else (6 * density).toInt()
+
+            if (currentParams.height != targetStageHeight) {
+                if (animated) {
+                    val anim = android.animation.ValueAnimator.ofInt(currentParams.height, targetStageHeight)
+                    anim.duration = 240
+                    anim.addUpdateListener { va ->
+                        currentParams.height = va.animatedValue as Int
+                        b.orbContainer.layoutParams = currentParams
+                    }
+                    anim.start()
+                } else {
+                    currentParams.height = targetStageHeight
                     b.orbContainer.layoutParams = currentParams
                 }
-                anim.start()
             } else {
-                currentParams.height = targetStageHeight
                 b.orbContainer.layoutParams = currentParams
             }
         }
 
         b.orbWebView.postDelayed({
             b.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.resize){ window.JarvisOrb.resize(); }", null)
-        }, 300)
+        }, 280)
     }
 
 }

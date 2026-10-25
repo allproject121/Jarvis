@@ -195,6 +195,14 @@ class JarvisConversationService : Service() {
         private val _wakeEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 4)
         val wakeEvents: SharedFlow<Unit> = _wakeEvents.asSharedFlow()
 
+        /** Physical Avatar (Mora/Orb) action events dispatched from voice, Gemini Live, or automation */
+        private val _avatarAction = MutableSharedFlow<String>(extraBufferCapacity = 8)
+        val avatarAction: SharedFlow<String> = _avatarAction.asSharedFlow()
+
+        fun dispatchAvatarAction(action: String) {
+            _avatarAction.tryEmit(action)
+        }
+
         fun setMicMuted(muted: Boolean) {
             activeInstance?.audioRecorder?.setMuted(muted)
         }
@@ -2896,6 +2904,16 @@ class JarvisConversationService : Service() {
                         }
                         if (com.jarvis.assistant.ui.godseye.GodsEyeActivity.activeInstance != null) {
                             com.jarvis.assistant.ui.godseye.GodsEyeActivity.dispatchAction(issRes.optString("action_json", ""))
+                        }
+                    }
+
+                    "get_wikipedia_summary" -> {
+                        val query = args.optString("query", "").ifBlank { args.optString("topic", "") }
+                        val wikiRes = com.jarvis.assistant.network.RealLifeDataHub.getWikipediaSummary(query)
+                        val keys = wikiRes.keys()
+                        while (keys.hasNext()) {
+                            val k = keys.next()
+                            result.put(k, wikiRes.get(k))
                         }
                     }
 

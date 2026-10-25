@@ -1,4 +1,4 @@
-﻿package com.jarvis.assistant.ui.godseye
+package com.jarvis.assistant.ui.godseye
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -192,6 +192,14 @@ class GodsEyeActivity : AppCompatActivity() {
         binding.btnApiHub.setOnClickListener {
             val hubSheet = GodsEyeApiHubBottomSheet()
             hubSheet.show(supportFragmentManager, "GodsEyeApiHubBottomSheet")
+        }
+
+        binding.btnOrientationToggle.setOnClickListener {
+            toggleScreenOrientation()
+        }
+
+        binding.btnHeroScene.setOnClickListener {
+            triggerHeroDemoMode()
         }
 
         binding.btnAutoTour.setOnClickListener {
@@ -409,6 +417,65 @@ class GodsEyeActivity : AppCompatActivity() {
                     """.trimIndent()
                     view?.evaluateJavascript(autoLayersScript, null)
 
+                    // =====================================================================
+                    // ULTRA-HD GRAPHICS ENGINE CALIBRATION & HIGH-DPI SHARPENING PIPELINE
+                    // =====================================================================
+                    val graphicsUpgradeScript = """
+                        (function() {
+                            var retries = 0;
+                            function applyGraphicsUpgrade() {
+                                try {
+                                    if (window.__godsEyeView && window.__godsEyeView.viewer) {
+                                        var v = window.__godsEyeView.viewer;
+                                        
+                                        // 1. Force 1.0x Full Native Pixel Resolution (remove 0.65x mobile downsampling)
+                                        v.resolutionScale = 1.0;
+                                        v.targetFrameRate = 60;
+                                        
+                                        // 2. High-Density Tile Mipmapping for Globe & Satellite Basemaps
+                                        if (v.scene && v.scene.globe) {
+                                            v.scene.globe.maximumScreenSpaceError = 1.2; // Default 2.0; lower forces ultra-crisp zoom tiles
+                                            v.scene.globe.tileCacheSize = 250;
+                                        }
+                                        
+                                        // 3. Google Photorealistic 3D Tiles High-LOD Threshold
+                                        if (window.__godsEyeView.tileset) {
+                                            window.__godsEyeView.tileset.maximumScreenSpaceError = 6; // Default 16; forces high-poly 3D models
+                                        }
+                                        
+                                        // 4. Hardware Anti-Aliasing (FXAA)
+                                        if (v.scene && v.scene.postProcessStages) {
+                                            v.scene.postProcessStages.fxaa.enabled = true;
+                                        }
+                                        
+                                        // 5. Activate GPU Unsharp-Mask Edge Sharpening
+                                        var sm = window.__godsEyeView.styleManager;
+                                        if (sm && typeof sm.setSharpenEnabled === 'function') {
+                                            sm.setSharpenEnabled(true);
+                                            if (typeof sm.setSharpenIntensity === 'function') sm.setSharpenIntensity(45);
+                                        } else {
+                                            var sharpenBtn = document.querySelector('[data-action="sharpen"], #sharpen-btn, .sharpen-btn');
+                                            if (sharpenBtn && !sharpenBtn.classList.contains('active')) sharpenBtn.click();
+                                        }
+                                        
+                                        // Request a render update to immediately redraw in high-res
+                                        if (v.scene && typeof v.scene.requestRender === 'function') {
+                                            v.scene.requestRender();
+                                        }
+                                        console.log('[Jarvis Graphics] Ultra-HD 1.0x Resolution + SSE 1.2 + GPU Sharpening Successfully Calibrated.');
+                                    } else if (retries < 30) {
+                                        retries++;
+                                        setTimeout(applyGraphicsUpgrade, 300);
+                                    }
+                                } catch(e) {
+                                    console.warn('[Jarvis Graphics] Calibration error:', e);
+                                }
+                            }
+                            applyGraphicsUpgrade();
+                        })();
+                    """.trimIndent()
+                    view?.evaluateJavascript(graphicsUpgradeScript, null)
+
                     val currentUrl = view?.url ?: url.orEmpty()
                     if (currentUrl.contains("#")) {
                         val initialHash = currentUrl.substringAfter("#")
@@ -509,11 +576,12 @@ class GodsEyeActivity : AppCompatActivity() {
                         return try {
                             val inputStream = assets.open(assetPath)
                             val mimeType = getMimeType(assetPath)
+                            val encoding = if (isTextMime(mimeType)) "UTF-8" else null
                             val responseHeaders = mapOf(
                                 "Access-Control-Allow-Origin" to "*",
                                 "Cache-Control" to "no-cache"
                             )
-                            WebResourceResponse(mimeType, "UTF-8", 200, "OK", responseHeaders, inputStream)
+                            WebResourceResponse(mimeType, encoding, 200, "OK", responseHeaders, inputStream)
                         } catch (e: Exception) {
                             Log.d(TAG, "Asset not found in bundle: $assetPath (falling back)")
                             null
@@ -547,7 +615,8 @@ class GodsEyeActivity : AppCompatActivity() {
                 "Access-Control-Allow-Methods" to "GET, OPTIONS",
                 "Access-Control-Allow-Headers" to "*"
             )
-            WebResourceResponse(mime, "UTF-8", upstreamResp.code, "OK", headers, bodyStream)
+            val encoding = if (isTextMime(mime)) "UTF-8" else null
+            WebResourceResponse(mime, encoding, upstreamResp.code, "OK", headers, bodyStream)
         } catch (e: Exception) {
             Log.w(TAG, "proxyDirect failed for $upstreamUrl: ${e.message}")
             null
@@ -579,7 +648,8 @@ class GodsEyeActivity : AppCompatActivity() {
                 val mime = termuxResponse.header("Content-Type", "application/json")?.split(";")?.firstOrNull()?.trim() ?: "application/json"
                 val headers = HashMap(corsHeaders)
                 termuxResponse.header("Cache-Control")?.let { headers["Cache-Control"] = it }
-                return WebResourceResponse(mime, "UTF-8", termuxResponse.code, "OK", headers, bodyStream)
+                val encoding = if (isTextMime(mime)) "UTF-8" else null
+                return WebResourceResponse(mime, encoding, termuxResponse.code, "OK", headers, bodyStream)
             }
         } catch (_: Exception) {
             // Termux server not reachable on port 4173; proceed to standalone direct proxy
@@ -689,19 +759,66 @@ class GodsEyeActivity : AppCompatActivity() {
                 }
             }
 
-            // --- C. AIRCRAFT TRACKING ---
-            if (path.startsWith("/api/military")) {
+            // --- C. AIRCRAFT TRACKING & HISTORICAL TRACES ---
+            if (path.startsWith("/api/military/track")) {
+                val hex = url.getQueryParameter("hex")?.trim()?.lowercase().orEmpty()
+                if (hex.matches(Regex("^[0-9a-f~]{6,7}$"))) {
+                    val suffix = hex.takeLast(2)
+                    val upstreamUrl = "https://adsb.lol/data/traces/$suffix/trace_full_$hex.json"
+                    try {
+                        val upstreamReq = Request.Builder()
+                            .url(upstreamUrl)
+                            .header("User-Agent", "Jarvis-GodsEye/1.8.7")
+                            .header("Accept", "application/json")
+                            .build()
+                        val upstreamResp = okHttpClient.newCall(upstreamReq).execute()
+                        if (upstreamResp.isSuccessful) {
+                            val body = upstreamResp.body?.string().orEmpty()
+                            return jsonResponse(body, corsHeaders, 200)
+                        }
+                    } catch (_: Exception) {}
+                }
+                return jsonResponse("{\"error\":\"Military track not available\"}", corsHeaders, 404)
+            }
+
+            if (path == "/api/military" || path == "/api/military/") {
                 val upstreamUrl = "https://api.adsb.lol/v2/mil"
                 val upstreamReq = Request.Builder()
                     .url(upstreamUrl)
-                    .header("User-Agent", "gods-eye-view-adsblol-proxy/1.0")
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36")
                     .header("Accept", "application/json")
                     .build()
                 val upstreamResp = okHttpClient.newCall(upstreamReq).execute()
                 if (upstreamResp.isSuccessful) {
-                    val bodyStream = upstreamResp.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
-                    return WebResourceResponse("application/json", "UTF-8", 200, "OK", corsHeaders, bodyStream)
+                    val body = upstreamResp.body?.string().orEmpty()
+                    GodsEyeApiHub.updateMilitaryContacts(body)
+                    return jsonResponse(body, corsHeaders, 200)
                 }
+            }
+
+            if (path.startsWith("/api/flights/track")) {
+                val icao24 = url.getQueryParameter("icao24")?.trim()?.lowercase().orEmpty()
+                if (icao24.matches(Regex("^[0-9a-f]{6}$"))) {
+                    val upstreamUrl = "https://opensky-network.org/api/tracks/all?icao24=$icao24&time=0"
+                    try {
+                        val reqBuilder = Request.Builder()
+                            .url(upstreamUrl)
+                            .header("User-Agent", "Jarvis-GodsEye/1.8.7")
+                            .header("Accept", "application/json")
+                        val userPrefs = com.jarvis.assistant.JarvisApp.instance.preferences
+                        val openskyUser = userPrefs.godsEyeOpenSkyClientId
+                        val openskySecret = userPrefs.godsEyeOpenSkyClientSecret
+                        if (openskyUser.isNotBlank() && openskySecret.isNotBlank()) {
+                            reqBuilder.header("Authorization", okhttp3.Credentials.basic(openskyUser, openskySecret))
+                        }
+                        val upstreamResp = okHttpClient.newCall(reqBuilder.build()).execute()
+                        if (upstreamResp.isSuccessful) {
+                            val body = upstreamResp.body?.string().orEmpty()
+                            return jsonResponse(body, corsHeaders, 200)
+                        }
+                    } catch (_: Exception) {}
+                }
+                return jsonResponse("{\"error\":\"Flight track not available\"}", corsHeaders, 404)
             }
 
             if (path.startsWith("/api/flights")) {
@@ -900,6 +1017,50 @@ class GodsEyeActivity : AppCompatActivity() {
             }
 
             if (path.startsWith("/api/weather/tile") || path.startsWith("/api/weather/image")) {
+                val product = url.getQueryParameter("product") ?: "radar"
+                val service = when (product) {
+                    "lightning" -> "lightning_detection"
+                    "clouds", "clouds-regional" -> "satellite"
+                    else -> "weather_radar"
+                }
+                val layer = when (product) {
+                    "lightning" -> "ldn_lightning_strike_density"
+                    "clouds" -> "global_longwave_imagery_mosaic"
+                    "clouds-regional" -> "goes_longwave_imagery"
+                    else -> "conus_base_reflectivity_mosaic"
+                }
+                val style = when (product) {
+                    "lightning" -> "lightning_density"
+                    "clouds" -> "reflectance"
+                    "clouds-regional" -> "goes-lir"
+                    else -> "weather_radar_base_reflectivity"
+                }
+                val bboxParam = url.getQueryParameter("bbox") ?: "-125,24,-66,49"
+                val timeParam = url.getQueryParameter("time")
+                val widthParam = url.getQueryParameter("size")?.substringBefore("x") ?: "1024"
+                val heightParam = url.getQueryParameter("size")?.substringAfter("x", "")?.ifBlank { null } ?: "512"
+                val upstreamUrl = StringBuilder("https://nowcoast.noaa.gov/geoserver/observations//ows?")
+                    .append("service=WMS&version=1.1.1&request=GetMap")
+                    .append("&layers=").append(layer)
+                    .append("&styles=").append(style)
+                    .append("&srs=EPSG:4326")
+                    .append("&bbox=").append(URLEncoder.encode(bboxParam, "UTF-8"))
+                    .append("&width=").append(widthParam)
+                    .append("&height=").append(heightParam)
+                    .append("&format=image/png&transparent=true")
+                if (!timeParam.isNullOrBlank()) {
+                    upstreamUrl.append("&time=").append(URLEncoder.encode(timeParam, "UTF-8"))
+                }
+                try {
+                    val req = Request.Builder().url(upstreamUrl.toString()).header("User-Agent", "Jarvis-GodsEye/1.9.5").build()
+                    val resp = okHttpClient.newCall(req).execute()
+                    if (resp.isSuccessful) {
+                        val stream = resp.body?.byteStream() ?: ByteArrayInputStream(TRANSPARENT_PNG)
+                        return WebResourceResponse("image/png", null, 200, "OK", corsHeaders, stream)
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "nowCOAST weather tile error: ")
+                }
                 return WebResourceResponse("image/png", null, 200, "OK", corsHeaders, ByteArrayInputStream(TRANSPARENT_PNG))
             }
 
@@ -966,12 +1127,9 @@ class GodsEyeActivity : AppCompatActivity() {
             }
 
             // --- P. TRANSIT CATALOG & FEEDS ---
-            if (path.startsWith("/api/transit/feeds")) {
-                return jsonResponse("{\"feeds\":[]}", corsHeaders, 200)
-            }
-
-            if (path.startsWith("/api/transit/vehicles/")) {
-                return jsonResponse("{\"vehicles\":[]}", corsHeaders, 200)
+            if (path.startsWith("/api/transit/feeds") || path.startsWith("/api/transit/vehicles")) {
+                val hubTransit = GodsEyeApiHub.handleProxyRequest(path, url, request, corsHeaders, okHttpClient)
+                if (hubTransit != null) return hubTransit
             }
 
             // --- Q. DIRECTIONS & ROUTING ---
@@ -1140,6 +1298,42 @@ class GodsEyeActivity : AppCompatActivity() {
                         }
                     } catch (_: Exception) {}
                 }
+
+                // Forward search query (e.g. q=Tokyo or q=London) -> Fallback to OpenStreetMap Nominatim
+                val searchQuery = url.getQueryParameter("q") ?: url.getQueryParameter("address")
+                if (!searchQuery.isNullOrBlank()) {
+                    try {
+                        val encodedQ = java.net.URLEncoder.encode(searchQuery.trim(), "UTF-8")
+                        val nominatimUrl = "https://nominatim.openstreetmap.org/search?q=$encodedQ&format=json&limit=5&addressdetails=1"
+                        val nomReq = Request.Builder()
+                            .url(nominatimUrl)
+                            .header("User-Agent", "Jarvis-GodsEye/1.8.7 (https://github.com/bilawalsidhu/gods-eye-view)")
+                            .build()
+                        val nomResp = okHttpClient.newCall(nomReq).execute()
+                        if (nomResp.isSuccessful) {
+                            val nomBody = nomResp.body?.string().orEmpty()
+                            val nomArr = JSONArray(nomBody)
+                            val googleFormattedArr = JSONArray()
+                            for (i in 0 until nomArr.length()) {
+                                val item = nomArr.optJSONObject(i) ?: continue
+                                val nLat = item.optDouble("lat", 0.0)
+                                val nLon = item.optDouble("lon", 0.0)
+                                val displayName = item.optString("display_name", searchQuery)
+                                googleFormattedArr.put(JSONObject().apply {
+                                    put("formatted_address", displayName)
+                                    put("geometry", JSONObject().apply {
+                                        put("location", JSONObject().apply { put("lat", nLat); put("lng", nLon) })
+                                    })
+                                })
+                            }
+                            val respObj = JSONObject().apply {
+                                put("status", if (googleFormattedArr.length() > 0) "OK" else "ZERO_RESULTS")
+                                put("results", googleFormattedArr)
+                            }
+                            return jsonResponse(respObj.toString(), corsHeaders, 200)
+                        }
+                    } catch (_: Exception) {}
+                }
                 return jsonResponse("{\"status\":\"ZERO_RESULTS\",\"results\":[]}", corsHeaders, 200)
             }
 
@@ -1222,9 +1416,40 @@ class GodsEyeActivity : AppCompatActivity() {
                 return jsonResponse(payload.toString(), corsHeaders, 200)
             }
 
-            // --- U. WEATHER EFFECTS & HUD SUMMARY ---
+            // --- U. WEATHER EFFECTS & HUD SUMMARY (Open-Meteo Cloud Cover, Rain & Turbulence) ---
             if (path.startsWith("/api/weather-effects")) {
-                return jsonResponse("{\"effects\":[],\"status\":\"nominal\"}", corsHeaders, 200)
+                val lat = url.getQueryParameter("latitude")?.toDoubleOrNull() ?: url.getQueryParameter("lat")?.toDoubleOrNull() ?: 20.0
+                val lon = url.getQueryParameter("longitude")?.toDoubleOrNull() ?: url.getQueryParameter("lon")?.toDoubleOrNull() ?: 0.0
+                val upstreamUrl = "https://api.open-meteo.com/v1/forecast?latitude=${String.format(java.util.Locale.US, "%.5f", lat)}&longitude=${String.format(java.util.Locale.US, "%.5f", lon)}&current=temperature_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,visibility&timezone=UTC"
+                try {
+                    val req = Request.Builder().url(upstreamUrl).header("User-Agent", "Jarvis-GodsEye/1.8.7").build()
+                    val resp = okHttpClient.newCall(req).execute()
+                    if (resp.isSuccessful) {
+                        val body = resp.body?.string().orEmpty()
+                        val json = JSONObject(body)
+                        val current = json.optJSONObject("current")
+                        if (current != null) {
+                            val payload = JSONObject().apply {
+                                put("status", "ready")
+                                put("retrievedAt", java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }.format(java.util.Date()))
+                                put("coordinates", JSONObject().apply {
+                                    put("latitude", lat)
+                                    put("longitude", lon)
+                                })
+                                put("weather", JSONObject().apply {
+                                    put("temperature", current.optDouble("temperature_2m", 20.0))
+                                    put("cloudCover", current.optDouble("cloud_cover", 10.0))
+                                    put("precipitation", current.optDouble("precipitation", 0.0))
+                                    put("weatherCode", current.optInt("weather_code", 0))
+                                    put("windSpeed", current.optDouble("wind_speed_10m", 5.0))
+                                    put("visibility", current.optDouble("visibility", 10000.0))
+                                })
+                            }
+                            return jsonResponse(payload.toString(), corsHeaders, 200)
+                        }
+                    }
+                } catch (_: Exception) {}
+                return jsonResponse("{\"status\":\"nominal\",\"effects\":[]}", corsHeaders, 200)
             }
 
             if (path.startsWith("/api/openai/hud-summary") || path.startsWith("/api/hud-summary")) {
@@ -1245,6 +1470,58 @@ class GodsEyeActivity : AppCompatActivity() {
                     put("error", JSONObject.NULL)
                 }
                 return jsonResponse(payload.toString(), corsHeaders, 200)
+            }
+
+            // --- V. SUBSEA FIBER-OPTIC CABLES & LANDING STATIONS ---
+            if (path.startsWith("/api/cables") || path.startsWith("/api/infrastructure/cables")) {
+                return try {
+                    val stream = assets.open("godseye/assets/cable-geo-i2PzBJi6.json")
+                    WebResourceResponse("application/json", "UTF-8", 200, "OK", corsHeaders, stream)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to load bundled cable-geo: ${e.message}")
+                    null
+                }
+            }
+
+            if (path.startsWith("/api/landing-points") || path.startsWith("/api/cables/landing-points")) {
+                return try {
+                    val stream = assets.open("godseye/assets/landing-point-geo-CiAWPhfe.json")
+                    WebResourceResponse("application/json", "UTF-8", 200, "OK", corsHeaders, stream)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+
+            // --- W. HYPERSCALE DATA CENTERS ---
+            if (path.startsWith("/api/datacenters") || path.startsWith("/api/infrastructure/datacenters")) {
+                return try {
+                    val stream = assets.open("godseye/assets/datacenters-CtzejECr.geojsonl")
+                    WebResourceResponse("application/x-ndjson", "UTF-8", 200, "OK", corsHeaders, stream)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to load bundled datacenters: ${e.message}")
+                    null
+                }
+            }
+
+            // --- X. HYDROELECTRIC DAMS & WATER INFRASTRUCTURE ---
+            if (path.startsWith("/api/dams") || path.startsWith("/api/infrastructure/dams")) {
+                return try {
+                    val stream = assets.open("godseye/assets/dams-B2lCjFgp.geojsonl")
+                    WebResourceResponse("application/x-ndjson", "UTF-8", 200, "OK", corsHeaders, stream)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to load bundled dams: ${e.message}")
+                    null
+                }
+            }
+
+            // --- Y. NOAA SWPC SOLAR SPACE WEATHER & GEOMAGNETIC K-INDEX ---
+            if (path.startsWith("/api/space/solar") || path.startsWith("/api/space-weather") || path.startsWith("/api/solar")) {
+                return proxyDirect(request, "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json")
+            }
+
+            // --- Z. REALTIME PUBLIC TRANSIT (MBTA / MASSDOT) ---
+            if (path.startsWith("/api/transit/mbta") || path.startsWith("/api/transit/boston")) {
+                return proxyDirect(request, "https://cdn.mbta.com/realtime/VehiclePositions.json")
             }
 
         } catch (e: Exception) {
@@ -1804,7 +2081,8 @@ class GodsEyeActivity : AppCompatActivity() {
                 put("X-CCTV-Live", "true")
                 put("X-CCTV-Source", "upstream-image")
             }
-            return WebResourceResponse(cached.mime, "UTF-8", 200, "OK", headers, ByteArrayInputStream(cached.bytes))
+            val encoding = if (isTextMime(cached.mime)) "UTF-8" else null
+            return WebResourceResponse(cached.mime, encoding, 200, "OK", headers, ByteArrayInputStream(cached.bytes))
         }
 
         // 1. Try primary resolved target URL
@@ -1835,7 +2113,8 @@ class GodsEyeActivity : AppCompatActivity() {
                 put("X-CCTV-Source", "upstream-image")
             }
             recordCctvHealth(cameraId, "ok", "snapshot", label, "Live snapshot feed active")
-            return WebResourceResponse(mime, "UTF-8", 200, "OK", headers, ByteArrayInputStream(bytes))
+            val encoding = if (isTextMime(mime)) "UTF-8" else null
+            return WebResourceResponse(mime, encoding, 200, "OK", headers, ByteArrayInputStream(bytes))
         }
 
         // Honest offline / unconfigured fallback message
@@ -2145,6 +2424,16 @@ class GodsEyeActivity : AppCompatActivity() {
         }
     }
 
+    private fun isTextMime(mime: String?): Boolean {
+        if (mime.isNullOrBlank()) return false
+        val lower = mime.lowercase()
+        return lower.startsWith("text/") ||
+               lower.contains("javascript") ||
+               lower.contains("json") ||
+               lower.contains("xml") ||
+               lower.contains("mpegurl")
+    }
+
     private fun showError(message: String) {
         runOnUiThread {
             isInitialPageLoaded = false
@@ -2197,6 +2486,14 @@ class GodsEyeActivity : AppCompatActivity() {
 
     fun executeActionInWebView(actionJson: String) {
         if (actionJson.isBlank()) return
+
+        try {
+            val rootObj = JSONObject(actionJson)
+            if (rootObj.optBoolean("start_auto_tour", false)) {
+                runOnUiThread { startAutoTour() }
+            }
+        } catch (_: Exception) {}
+
         if (!isInitialPageLoaded) {
             pendingAction = actionJson
             return
@@ -2222,6 +2519,10 @@ class GodsEyeActivity : AppCompatActivity() {
                         'wind': 'wind', 'traffic': 'traffic', 'transit': 'transit', 'bikeshare': 'bikeshare',
                         'radio': 'radio', 'military': 'military-installations', 'military-awareness': 'military-awareness',
                         'street-level': 'street-level', 'recent-imagery': 'recent-imagery',
+                        'cables': 'subsea-cables', 'subsea': 'subsea-cables', 'cable': 'subsea-cables', 'telecom': 'subsea-cables',
+                        'datacenters': 'datacenters', 'datacenter': 'datacenters', 'cloud': 'datacenters',
+                        'dams': 'hydro-dams', 'dam': 'hydro-dams', 'water': 'hydro-dams',
+                        'solar': 'solar-weather', 'space-weather': 'solar-weather', 'aurora': 'solar-weather',
                         'event-reconstruction': 'bhote-koshi-2026', 'event_reconstruction': 'bhote-koshi-2026',
                         'bhote-koshi': 'bhote-koshi-2026', 'bhote_koshi': 'bhote-koshi-2026', 'flood-reconstruction': 'bhote-koshi-2026'
                     };
@@ -2420,6 +2721,38 @@ class GodsEyeActivity : AppCompatActivity() {
     // AUTONOMOUS SENTINEL TOUR ENGINE (Automated Planetary Layer & Scene Cycling)
     // =========================================================================
 
+    private fun toggleScreenOrientation() {
+        val currentOrientation = resources.configuration.orientation
+        if (currentOrientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+            requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            binding.btnOrientationToggle.setColorFilter(Color.parseColor("#64FFDA"))
+            Toast.makeText(this, "HUD: PORTRAIT MODE (SENSOR LOCKED)", Toast.LENGTH_SHORT).show()
+        } else {
+            requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            binding.btnOrientationToggle.setColorFilter(Color.parseColor("#00E5FF"))
+            Toast.makeText(this, "HUD: WIDESCREEN TACTICAL HUD ENGAGED", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun triggerHeroDemoMode() {
+        Toast.makeText(this, "HERO DIVE: PINAL AIRPARK COCKPIT CHASE", Toast.LENGTH_SHORT).show()
+        val heroScene = autoTourScenes.firstOrNull { it.domainTag == "HERO COCKPIT" }
+            ?: AutoTourScene(
+                domainTag = "HERO COCKPIT",
+                label = "PINAL AIRPARK COCKPIT CHASE",
+                latitude = 32.5150,
+                longitude = -111.3250,
+                altitude = 11800.0,
+                heading = 310.0,
+                pitch = -35.0,
+                enableLayers = listOf("flights", "military", "satellites", "earthquakes", "daynight"),
+                durationSeconds = 20,
+                isCockpitMode = true,
+                enableScope = true
+            )
+        executeTourScene(heroScene)
+    }
+
     data class AutoTourScene(
         val domainTag: String,
         val label: String,
@@ -2430,18 +2763,26 @@ class GodsEyeActivity : AppCompatActivity() {
         val pitch: Double,
         val enableLayers: List<String>,
         val cctvId: String? = null,
-        val durationSeconds: Int = 14
+        val durationSeconds: Int = 14,
+        val isCockpitMode: Boolean = false,
+        val enableScope: Boolean = false
     )
 
     private val autoTourScenes = listOf(
+        AutoTourScene("HERO COCKPIT", "PINAL AIRPARK COCKPIT CHASE", 32.5150, -111.3250, 11800.0, 310.0, -35.0, listOf("flights", "military", "satellites", "earthquakes", "daynight"), durationSeconds = 20, isCockpitMode = true, enableScope = true),
         AutoTourScene("FLIGHTS", "LIVE COMMERCIAL AVIATION", 40.7128, -74.0060, 220000.0, 0.0, -45.0, listOf("flights", "daynight")),
         AutoTourScene("LONDON CCTV", "LONDON TRAFALGAR CAM", 51.5080, -0.1281, 1500.0, 45.0, -55.0, listOf("cctv", "traffic"), "00001.06502"),
         AutoTourScene("SEISMIC", "USGS GLOBAL EARTHQUAKES", 35.6762, 139.6503, 800000.0, 0.0, -65.0, listOf("earthquakes", "plate_boundaries")),
         AutoTourScene("SPACE", "KENNEDY LAUNCHPAD & ISS", 28.5729, -80.6490, 350000.0, 90.0, -45.0, listOf("satellites", "launches")),
+        AutoTourScene("SUBSEA CABLES", "TRANSATLANTIC TELECOM BACKBONE", 38.0000, -35.0000, 2500000.0, 0.0, -70.0, listOf("subsea-cables")),
         AutoTourScene("TEXAS CCTV", "AUSTIN MUNICIPAL CAM", 30.2672, -97.7431, 1800.0, 0.0, -50.0, listOf("cctv"), "354"),
         AutoTourScene("MARITIME", "SINGAPORE STRAIT AIS", 1.2500, 103.8500, 100000.0, 120.0, -50.0, listOf("vessels", "marine_traffic")),
         AutoTourScene("WEATHER", "RAINVIEWER RADAR & STORMS", 25.0000, -80.0000, 950000.0, 0.0, -65.0, listOf("weather", "cyclones", "wind")),
-        AutoTourScene("ARCTIC CCTV", "FINLAND LAPLAND E75 CAM", 68.9059, 27.0288, 2500.0, 180.0, -45.0, listOf("cctv"), "C1455101")
+        AutoTourScene("DATA CENTERS", "ASHBURN DATA CENTER ALLEY", 39.0438, -77.4874, 45000.0, 45.0, -45.0, listOf("datacenters")),
+        AutoTourScene("ARCTIC CCTV", "FINLAND LAPLAND E75 CAM", 68.9059, 27.0288, 2500.0, 180.0, -45.0, listOf("cctv"), "C1455101"),
+        AutoTourScene("AURORA & SPACE", "POLAR MAGNETOSPHERE SWPC", 64.1466, -21.9426, 800000.0, 0.0, -60.0, listOf("satellites")),
+        AutoTourScene("LIGHTNING", "GULF CONVECTIVE STORM MESH", 29.7604, -95.3698, 1200000.0, 0.0, -75.0, listOf("weather-radar", "weather-lightning")),
+        AutoTourScene("HONG KONG CCTV", "VICTORIA HARBOUR LIVE", 22.2855, 114.1577, 2000.0, 15.0, -45.0, listOf("cctv"), "HK-CAM-01")
     )
 
     private var isAutoTourActive = false
@@ -2555,6 +2896,44 @@ class GodsEyeActivity : AppCompatActivity() {
             })();
         """.trimIndent()
         binding.webViewGodsEye.evaluateJavascript(flyJs, null)
+
+        if (scene.enableScope) {
+            val scopeJs = """
+                (function() {
+                    try {
+                        var scopeBtn = document.querySelector('[data-action="scope"], #scope-btn, .scope-btn, [aria-label*="Scope" i], button[title*="Scope" i]');
+                        if (scopeBtn && !scopeBtn.classList.contains('active')) scopeBtn.click();
+                    } catch(e) {}
+                })();
+            """.trimIndent()
+            binding.webViewGodsEye.evaluateJavascript(scopeJs, null)
+        }
+
+        if (scene.isCockpitMode) {
+            val cockpitJs = """
+                (function() {
+                    setTimeout(function() {
+                        try {
+                            if (window.__executeGodsEyeAction) {
+                                window.__executeGodsEyeAction({
+                                    action: 'track_entity',
+                                    args: { query: 'closest', layerId: 'flights' }
+                                });
+                                setTimeout(function() {
+                                    try {
+                                        window.__executeGodsEyeAction({
+                                            action: 'control_cockpit',
+                                            args: { action: 'enter', targetLayer: 'flights' }
+                                        });
+                                    } catch(e) {}
+                                }, 1500);
+                            }
+                        } catch(e) {}
+                    }, 1800);
+                })();
+            """.trimIndent()
+            binding.webViewGodsEye.evaluateJavascript(cockpitJs, null)
+        }
     }
 
     override fun onPause() {

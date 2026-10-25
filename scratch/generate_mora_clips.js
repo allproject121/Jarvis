@@ -254,6 +254,22 @@ async function run() {
   const cryFbx = fbxLoader.parse(cryBuf.buffer.slice(cryBuf.byteOffset, cryBuf.byteOffset + cryBuf.byteLength), '');
   clips.push(retargetClip(cryFbx, cryFbx.animations[0], 'crying', 'relaxed', 'relaxed'));
 
+  // 9. Thankful / Namaste (Thankful.fbx)
+  const thankfulBuf = fs.readFileSync('research_repos/anime-ai/humanoid-animations/Thankful.fbx');
+  const thankfulFbx = fbxLoader.parse(thankfulBuf.buffer.slice(thankfulBuf.byteOffset, thankfulBuf.byteOffset + thankfulBuf.byteLength), '');
+  clips.push(retargetClip(thankfulFbx, thankfulFbx.animations[0], 'thankful', 'soft', 'soft'));
+
+  // 10. Clapping (Clapping.fbx)
+  const clapBuf = fs.readFileSync('research_repos/anime-ai/humanoid-animations/Clapping.fbx');
+  const clapFbx = fbxLoader.parse(clapBuf.buffer.slice(clapBuf.byteOffset, clapBuf.byteOffset + clapBuf.byteLength), '');
+  clips.push(retargetClip(clapFbx, clapFbx.animations[0], 'clapping', 'open', 'open'));
+
+  // 11. Excited (Excited.fbx)
+  const exciteBuf = fs.readFileSync('research_repos/anime-ai/humanoid-animations/Excited.fbx');
+  const exciteFbx = fbxLoader.parse(exciteBuf.buffer.slice(exciteBuf.byteOffset, exciteBuf.byteOffset + exciteBuf.byteLength), '');
+  clips.push(retargetClip(exciteFbx, exciteFbx.animations[0], 'excited', 'soft', 'soft'));
+
+
   console.log('Successfully retargeted all', clips.length, 'clips with posed fingers:');
   clips.forEach(c => {
     console.log(`- ${c.name}: duration ${c.duration.toFixed(2)}s, tracks ${c.tracks.length}`);

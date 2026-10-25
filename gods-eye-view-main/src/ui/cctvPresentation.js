@@ -155,6 +155,7 @@ export function _renderCctvState(state) {
         ? this._calBadgeLabel(activeCamera.calBadge)
         : '';
       const feedLabel = (activeCamera.feedType || 'snapshot').toUpperCase();
+      const projLabel = state?.showProjection !== false ? 'PROJ ON' : 'PROJ OFF';
       this._cctvMeta.textContent = `${activeCamera.city} · [ID: ${activeCamera.id}] [${feedLabel}] · HDG ${Math.round(activeCamera.headingDeg)}° · FOV ${Math.round(activeCamera.fovDeg)}° · RANGE ${Math.round(activeCamera.rangeM)}m · ${projLabel}${calBadge ? ` · ${calBadge}` : ''} · ${provider}${credit}${statusMsg}`;
     } else if (cameras.length > 0) {
       this._cctvMeta.textContent = enabled

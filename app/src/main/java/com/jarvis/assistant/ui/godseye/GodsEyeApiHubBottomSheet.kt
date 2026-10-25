@@ -1,4 +1,4 @@
-package com.jarvis.assistant.ui.godseye
+﻿package com.jarvis.assistant.ui.godseye
 
 import android.content.Intent
 import android.graphics.Color
@@ -69,6 +69,79 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
         setupAircraftSection()
         setupCyclonesSection()
         setupNewsSection()
+        setupCctvSection()
+        setupAutoTourSection()
+    }
+
+    // ==========================================
+    // 0. AUTONOMOUS SENTINEL PATROL
+    // ==========================================
+    private fun setupAutoTourSection() {
+        val act = activity as? GodsEyeActivity
+        val isRunning = act?.isAutoTourRunning() ?: false
+        updateAutoTourButtonState(isRunning)
+
+        binding.btnToggleAutoTourHub.setOnClickListener {
+            act?.let { gAct ->
+                gAct.toggleAutoTour()
+                val nowRunning = gAct.isAutoTourRunning()
+                updateAutoTourButtonState(nowRunning)
+                if (nowRunning) {
+                    dismiss()
+                }
+            }
+        }
+    }
+
+    private fun updateAutoTourButtonState(isRunning: Boolean) {
+        if (isRunning) {
+            binding.btnToggleAutoTourHub.text = "STOP ⏹"
+            binding.btnToggleAutoTourHub.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FF3D00"))
+            binding.btnToggleAutoTourHub.setTextColor(Color.WHITE)
+        } else {
+            binding.btnToggleAutoTourHub.text = "START ⟳"
+            binding.btnToggleAutoTourHub.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#00E5FF"))
+            binding.btnToggleAutoTourHub.setTextColor(Color.parseColor("#050811"))
+        }
+    }
+
+    // ==========================================
+    // 6. WORLDWIDE REAL CCTV SURVEILLANCE
+    // ==========================================
+    private fun setupCctvSection() {
+        val cameras = listOf(
+            Triple("354", "ðŸ‡ºðŸ‡¸ Austin, Texas â€¢ 5th St / Congress", "Live City HD Snapshot â€¢ Austin Mobility IoT"),
+            Triple("ca-d11-x13", "ðŸ‡ºðŸ‡¸ San Diego, California â€¢ I-5 First Ave", "Live Caltrans Highway Network â€¢ D11"),
+            Triple("tfl-00001.06502", "ðŸ‡¬ðŸ‡§ London, UK â€¢ Trafalgar Square", "Live Video â€¢ Transport for London (TfL JamCams)"),
+            Triple("hk-h107f", "ðŸ‡­ðŸ‡° Hong Kong â€¢ Connaught Road West", "Live Urban Stream â€¢ HK Transport Department"),
+            Triple("fi-c1455101", "ðŸ‡«ðŸ‡® Finland â€¢ Rovaniemi Revontuli (Arctic)", "Live Snow / Highway Cam â€¢ Fintraffic"),
+            Triple("calgary-222", "ðŸ‡¨ðŸ‡¦ Calgary, Canada â€¢ Downtown Transit", "Live City Traffic â€¢ Calgary Roads"),
+            Triple("no-vegvesen-3000051_1", "ðŸ‡³ðŸ‡´ Norway â€¢ SandsbrÃ¥ten Mountain Pass", "Live Nordic Highway â€¢ Statens Vegvesen")
+        )
+
+        binding.containerCctvPresets.removeAllViews()
+        cameras.forEach { (camId, title, desc) ->
+            val card = createInfoCard(
+                title = title,
+                subtitle = "ID: $camId",
+                details = "$desc\n[Tap to fly 3D globe & project feed]",
+                accentColor = "#10B981"
+            ) {
+                lifecycleScope.launch {
+                    try {
+                        val args = org.json.JSONObject().apply {
+                            put("camera_id", camId)
+                        }
+                        GodsEyeMcpClient.handleSelectCamera(args)
+                        Toast.makeText(requireContext(), "Centering God's Eye on $title...", Toast.LENGTH_SHORT).show()
+                        dismiss()
+                    } catch (e: Exception) {
+                        Toast.makeText(requireContext(), "Camera engage: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            binding.containerCctvPresets.addView(card)
+        }
     }
 
     // ==========================================
@@ -90,7 +163,7 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
                         launches.take(6).forEach { launch ->
                             val card = createInfoCard(
                                 title = launch.name,
-                                subtitle = "${launch.provider} • NET: ${formatIsoDate(launch.netTime)}",
+                                subtitle = "${launch.provider} â€¢ NET: ${formatIsoDate(launch.netTime)}",
                                 details = "Pad: ${launch.padName} (${launch.location})\nStatus: ${launch.status}\n${launch.missionDescription ?: ""}".trim(),
                                 accentColor = "#00D4FF"
                             )
@@ -176,9 +249,9 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
         }
 
         val tvMeta = TextView(requireContext()).apply {
-            val countryTag = if (station.country.isNotBlank()) "${station.country} • " else ""
+            val countryTag = if (station.country.isNotBlank()) "${station.country} â€¢ " else ""
             val codecTag = if (station.codec.isNotBlank()) "${station.codec} ${station.bitrate}kbps" else ""
-            text = "$countryTag$codecTag".trim().removeSuffix("•").trim()
+            text = "$countryTag$codecTag".trim().removeSuffix("â€¢").trim()
             setTextColor(Color.parseColor("#94A3B8"))
             textSize = 10f
         }
@@ -321,9 +394,9 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
                         sb.append("NOAA ACTIVE CYCLONES & STORMS (${storms.size})\n")
                         sb.append("=========================================\n")
                         storms.forEach { s ->
-                            sb.append("• ${s.name.uppercase()} (${s.classification})\n")
+                            sb.append("â€¢ ${s.name.uppercase()} (${s.classification})\n")
                             sb.append("  Wind: ${s.intensityKnots} kts | Pressure: ${s.pressureMb} mb\n")
-                            sb.append("  Position: ${s.latitude}°N, ${s.longitude}°W | Movement: ${s.movement}\n\n")
+                            sb.append("  Position: ${s.latitude}Â°N, ${s.longitude}Â°W | Movement: ${s.movement}\n\n")
                         }
                         binding.tvCyclonesResult.text = sb.toString().trim()
                     }
@@ -353,7 +426,7 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
                         articles.forEach { art ->
                             val card = createInfoCard(
                                 title = art.title,
-                                subtitle = "Source: ${art.domain} • ${art.publishedAt}",
+                                subtitle = "Source: ${art.domain} â€¢ ${art.publishedAt}",
                                 details = "Click to inspect source link",
                                 accentColor = "#A855F7",
                                 onClick = {

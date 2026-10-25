@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardApiItem"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    app:cardBackgroundColor="#0D111A"
+    app:cardCornerRadius="14dp"
+    app:cardElevation="0dp"
+    app:strokeColor="#1F2839"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <!-- COLLAPSED HEADER (Always Visible) -->
+        <LinearLayout
+            android:id="@+id/layoutHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Category & Status Dot -->
+            <View
+                android:id="@+id/dotStatus"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/bg_cyber_status_dot"
+                android:backgroundTint="#00E676" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvCategoryBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="#152438"
+                        android:paddingHorizontal="7dp"
+                        android:paddingVertical="2dp"
+                        android:text="AVIATION"
+                        android:textColor="#00E5FF"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:fontFamily="monospace"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvAuthBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="#132B1E"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp"
+                        android:text="100% Free"
+                        android:textColor="#00E676"
+                        android:textSize="9sp"
+                        android:fontFamily="sans-serif-medium" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvApiName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="OpenSky &amp; Community ADS-B Flights"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:id="@+id/tvApiShortSummary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Worldwide civilian aircraft transponders, altitude &amp; heading"
+                    android:textColor="#8A99AD"
+                    android:textSize="11sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+
+            <!-- Status Indicator / Latency -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="end"
+                android:layout_marginStart="8dp">
+
+                <TextView
+                    android:id="@+id/tvPingStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="READY"
+                    android:textColor="#64FFDA"
+                    android:textSize="10sp"
+                    android:fontFamily="monospace"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/btnToggleDetail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="#1B263B"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
+                    android:text="DETAIL ▾"
+                    android:textColor="#00E5FF"
+                    android:textSize="10sp"
+                    android:fontFamily="monospace"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- EXPANDABLE DETAIL CONTAINER (Visible only when expanded) -->
+        <LinearLayout
+            android:id="@+id/layoutDetailContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="12dp"
+            android:paddingTop="10dp"
+            android:background="@drawable/bg_cyber_detail_box"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#1B263B"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Hindi Explanation -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="KARYA (WHAT IT DOES):"
+                android:textColor="#00E5FF"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace" />
+
+            <TextView
+                android:id="@+id/tvDetailHindi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="Aasman me ud rahe sabhi planes ke transponder signal se unki live position, speed aur altitude track karta hai."
+                android:textColor="#E1E7F0"
+                android:textSize="12sp"
+                android:lineSpacingExtra="2dp" />
+
+            <!-- English Explanation -->
+            <TextView
+                android:id="@+id/tvDetailEnglish"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Worldwide live surveillance of commercial and private aircraft using Mode-S and 1090MHz ADS-B transponder data."
+                android:textColor="#9EABB8"
+                android:textSize="11sp" />
+
+            <!-- Role in Gods Eye View -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="GOD'S EYE: "
+                    android:textColor="#FFD600"
+                    android:textSize="10sp"
+                    android:fontFamily="monospace"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvGodsEyeRole"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Draws 3D jet aircraft models, altitude trails and callsigns."
+                    android:textColor="#C5D1DF"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- Technical URL & Provider -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="#0A0E17"
+                android:padding="8dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvProvider"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PROVIDER: OpenSky Network / ADSB.lol"
+                    android:textColor="#7C4DFF"
+                    android:textSize="10sp"
+                    android:fontFamily="monospace"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvEndpointUrl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="https://opensky-network.org/api/states/all?extended=1"
+                    android:textColor="#40C4FF"
+                    android:textSize="10sp"
+                    android:fontFamily="monospace"
+                    android:ellipsize="middle"
+                    android:singleLine="true" />
+            </LinearLayout>
+
+            <!-- Voice Command -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="VOICE: "
+                    android:textColor="#00E676"
+                    android:textSize="10sp"
+                    android:fontFamily="monospace"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvVoiceCommand"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="'Jarvis, scan air traffic' ya 'Hawa me ud rahe planes dikhao'"
+                    android:textColor="#8BE9FD"
+                    android:textSize="11sp"
+                    android:fontFamily="sans-serif-condensed" />
+            </LinearLayout>
+
+            <!-- Action Buttons: Ping, View Raw Data, Connect to Globe -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnTestPing"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:backgroundTint="#132338"
+                    android:fontFamily="monospace"
+                    android:paddingHorizontal="10dp"
+                    android:text="⚡ PING"
+                    android:textColor="#00E5FF"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="7dp"
+                    app:strokeColor="#00E5FF"
+                    app:strokeWidth="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnViewRawData"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:layout_marginStart="6dp"
+                    android:backgroundTint="#10192A"
+                    android:fontFamily="monospace"
+                    android:paddingHorizontal="10dp"
+                    android:text="📋 RAW DATA"
+                    android:textColor="#64FFDA"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="7dp"
+                    app:strokeColor="#64FFDA"
+                    app:strokeWidth="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnConnectGlobe"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:layout_marginStart="6dp"
+                    android:backgroundTint="#00E5FF"
+                    android:fontFamily="monospace"
+                    android:paddingHorizontal="10dp"
+                    android:text="🌐 CONNECT"
+                    android:textColor="#050811"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="7dp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvPingResultDetail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Tap to verify live server connection"
+                android:textColor="#68778D"
+                android:textSize="10sp"
+                android:fontFamily="monospace" />
+
+            <!-- Collapsible Raw Data Viewer Box -->
+            <TextView
+                android:id="@+id/tvRawDataBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="#050810"
+                android:fontFamily="monospace"
+                android:maxLines="10"
+                android:padding="8dp"
+                android:scrollbars="vertical"
+                android:text=""
+                android:textColor="#A0E5FF"
+                android:textSize="10sp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

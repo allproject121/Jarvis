@@ -85,9 +85,10 @@ class TermuxBridge(private val context: Context) {
                     Log.e(TAG, "Failed dispatching command to Termux: ${e.message}", e)
                     TermuxResultReceiver.unregisterCallback(execId)
                     if (continuation.isActive) {
-                        continuation.resume(
-                            TermuxResultReceiver.TermuxResult(-1, "", e.message ?: "Dispatch failed", System.currentTimeMillis()),
-                            null
+                        continuation.resumeWith(
+                            Result.success(
+                                TermuxResultReceiver.TermuxResult(-1, "", e.message ?: "Dispatch failed", System.currentTimeMillis())
+                            )
                         )
                     }
                 }

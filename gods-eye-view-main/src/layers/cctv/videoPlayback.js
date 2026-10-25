@@ -92,7 +92,7 @@ export function attachCctvVideo(
         return;
       }
       hls = new Hls({
-        enableWorker: true,
+        enableWorker: false,
         maxBufferLength: 24,
         maxMaxBufferLength: 30,
         backBufferLength: 0,

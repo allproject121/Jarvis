@@ -96,8 +96,9 @@ class ModelRouter private constructor(
         val mode = _currentMode.value
         val hasNet = isNetworkAvailable()
         val app = context.applicationContext as? com.jarvis.assistant.JarvisApp
-        val endpoint = app?.preferences?.customEndpoint?.ifBlank { "http://192.168.0.101:11434" } ?: "http://192.168.0.101:11434"
-        val localModel = app?.preferences?.localHostModel?.ifBlank { "qwen3.8:27b" } ?: "qwen3.8:27b"
+        val endpoint = app?.preferences?.customEndpoint?.ifBlank { "http://127.0.0.1:11434" } ?: "http://127.0.0.1:11434"
+        val localModel = app?.preferences?.localHostModel?.ifBlank { "qwen2.5:14b" } ?: "qwen2.5:14b"
+        val geminiKey = app?.preferences?.apiKey?.trim().orEmpty()
 
         when (mode) {
             AiModelMode.LOCAL_HOST -> {
@@ -151,12 +152,31 @@ class ModelRouter private constructor(
             }
 
             AiModelMode.GEMINI_LIVE -> {
-                if (!hasNet) {
+                if (hasNet && geminiKey.isNotBlank()) {
+                    Log.i(TAG, "Routing text chat to Gemini REST Core")
+                    _lastActiveProviderName.value = "Gemini Flash (Online)"
+                    _isOfflineFallbackActive.value = false
+                    try {
+                        val fullSysPrompt = (systemPrompt.ifBlank { "You are JARVIS, Tony Stark's sophisticated AI operating system." }) +
+                            (if (memoryContext.isNotBlank()) "\n\n$memoryContext" else "")
+                        val responseText = com.jarvis.assistant.ai.AiTextSynthesizer.synthesizeText(
+                            context = context,
+                            systemInstruction = fullSysPrompt,
+                            prompt = clean
+                        ) {
+                            "Sir, external Gemini telemetry returned empty. Falling back to local neural core."
+                        }
+                        emit(responseText)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Gemini online text error: ${e.message} -> Falling back")
+                        tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
+                    }
+                } else if (!hasNet) {
                     tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
                 } else {
                     _lastActiveProviderName.value = "Gemini Live"
                     _isOfflineFallbackActive.value = false
-                    emit("Sir, Gemini Live streaming session is active on the primary audio channel.")
+                    emit("Sir, Gemini API Key is not configured in Settings. Please set your Gemini API Key or switch to Local Offline mode.")
                 }
             }
 
@@ -171,6 +191,25 @@ class ModelRouter private constructor(
                             tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
                         }
                         .collect { emit(it) }
+                } else if (hasNet && geminiKey.isNotBlank()) {
+                    Log.i(TAG, "AUTO_HYBRID: Online network active -> Routing to Gemini Online")
+                    _lastActiveProviderName.value = "Gemini Flash (Online)"
+                    _isOfflineFallbackActive.value = false
+                    try {
+                        val fullSysPrompt = (systemPrompt.ifBlank { "You are JARVIS, Tony Stark's sophisticated AI operating system." }) +
+                            (if (memoryContext.isNotBlank()) "\n\n$memoryContext" else "")
+                        val responseText = com.jarvis.assistant.ai.AiTextSynthesizer.synthesizeText(
+                            context = context,
+                            systemInstruction = fullSysPrompt,
+                            prompt = clean
+                        ) {
+                            "Sir, external telemetry offline."
+                        }
+                        emit(responseText)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Gemini synthesis failed: ${e.message} -> Falling back")
+                        tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
+                    }
                 } else {
                     Log.i(TAG, "AUTO_HYBRID: Offline or no cloud key -> Engaging Local Host or Offline AI")
                     tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }

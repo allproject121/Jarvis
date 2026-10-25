@@ -1215,6 +1215,69 @@ class GeminiLiveWebSocket(
                             })
                         })
 
+                        // 35. gods_eye_get_space_weather
+                        put(JSONObject().apply {
+                            put("name", "gods_eye_get_space_weather")
+                            put("description", "Queries NOAA SWPC real-time solar space weather and geomagnetic activity (planetary Kp index). Use when user asks about solar storms, space weather, geomagnetic storms, or aurora visibility.")
+                            put("parameters", JSONObject().apply {
+                                put("type", "OBJECT")
+                                put("properties", JSONObject().apply {
+                                    put("show_on_globe", JSONObject().apply {
+                                        put("type", "BOOLEAN")
+                                        put("description", "True to fly Gods Eye to the polar auroral oval.")
+                                    })
+                                })
+                            })
+                        })
+
+                        // 36. gods_eye_get_subsea_cables
+                        put(JSONObject().apply {
+                            put("name", "gods_eye_get_subsea_cables")
+                            put("description", "Queries global submarine fiber-optic cables and landing stations. Use when user asks about undersea internet cables, telecom backbone, or subsea infrastructure.")
+                            put("parameters", JSONObject().apply {
+                                put("type", "OBJECT")
+                                put("properties", JSONObject().apply {
+                                    put("region", JSONObject().apply {
+                                        put("type", "STRING")
+                                        put("description", "Optional ocean or region (e.g. Atlantic, Pacific, India).")
+                                    })
+                                    put("show_on_globe", JSONObject().apply {
+                                        put("type", "BOOLEAN")
+                                        put("description", "True to display cables layer on Gods Eye globe.")
+                                    })
+                                })
+                            })
+                        })
+
+                        // 37. gods_eye_get_public_transit
+                        put(JSONObject().apply {
+                            put("name", "gods_eye_get_public_transit")
+                            put("description", "Queries real-time public transit vehicle positions (e.g. Boston MBTA GTFS-RT). Use when user asks about public transit, buses, or trains.")
+                            put("parameters", JSONObject().apply {
+                                put("type", "OBJECT")
+                                put("properties", JSONObject().apply {
+                                    put("city", JSONObject().apply {
+                                        put("type", "STRING")
+                                        put("description", "City or agency name (e.g. Boston).")
+                                    })
+                                    put("show_on_globe", JSONObject().apply {
+                                        put("type", "BOOLEAN")
+                                        put("description", "True to display live transit vehicles on Gods Eye globe.")
+                                    })
+                                })
+                            })
+                        })
+
+                        // 38. gods_eye_start_auto_tour
+                        put(JSONObject().apply {
+                            put("name", "gods_eye_start_auto_tour")
+                            put("description", "Activates the Autonomous Sentinel Tour on the Gods Eye 3D globe console, automatically cycling every 14s through 13 planetary sensor vantage points (flights, CCTV, earthquakes, space launches, cables, weather radar, lightning density).")
+                            put("parameters", JSONObject().apply {
+                                put("type", "OBJECT")
+                                put("properties", JSONObject())
+                            })
+                        })
+
                         // 35. add_memory (Mem0 Persistent Memory)
                         put(JSONObject().apply {
                             put("name", "add_memory")
@@ -1572,6 +1635,22 @@ class GeminiLiveWebSocket(
                             put("parameters", JSONObject().apply {
                                 put("type", "OBJECT")
                                 put("properties", JSONObject())
+                            })
+                        })
+
+                        // 50B. get_wikipedia_summary
+                        put(JSONObject().apply {
+                            put("name", "get_wikipedia_summary")
+                            put("description", "Retrieves verified encyclopedia knowledge, historical facts, biographies, scientific concepts, or definitions for any topic directly from Wikipedia public API.")
+                            put("parameters", JSONObject().apply {
+                                put("type", "OBJECT")
+                                put("properties", JSONObject().apply {
+                                    put("query", JSONObject().apply {
+                                        put("type", "STRING")
+                                        put("description", "The person, concept, place, technology, or topic to look up (e.g. 'Quantum Computing', 'Albert Einstein', 'James Webb Space Telescope').")
+                                    })
+                                })
+                                put("required", JSONArray().apply { put("query") })
                             })
                         })
 

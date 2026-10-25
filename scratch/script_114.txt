@@ -1,0 +1,1 @@
+self.__next_f.push([1,"2b:I[735919,[],\"IconMark\"]\n27:[\"$\",\"meta\",\"18\",{\"name\":\"twitter:image\",\"content\":\"https://21st.dev/og/component/ruixen.ui/futuristic-nav\"}]\n28:[\"$\",\"link\",\"19\",{\"rel\":\"icon\",\"href\":\"/favicon.ico\"}]\n29:[\"$\",\"link\",\"20\",{\"rel\":\"apple-touch-icon\",\"href\":\"/apple-touch-icon.png\"}]\n2a:[\"$\",\"$L2b\",\"21\",{}]\n"])

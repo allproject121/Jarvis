@@ -87,7 +87,7 @@ class JarvisAccessibilityService : AccessibilityService() {
                     suspendCancellableCoroutine { cont ->
                         s.takeScreenCapture { bmp ->
                             if (cont.isActive) {
-                                cont.resume(bmp, null)
+                                cont.resumeWith(Result.success(bmp))
                             }
                         }
                     }

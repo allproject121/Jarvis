@@ -19,8 +19,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Sleek Liquid Glass Floating Navigation Capsule -->
-    <LinearLayout
+    <!-- Sleek Liquid Glass Floating Navigation Capsule (LumaBar × Dynamic Island Hybrid) -->
+    <FrameLayout
         android:id="@+id/bottomDock"
         android:layout_width="match_parent"
         android:layout_height="64dp"
@@ -31,14 +31,44 @@
         android:elevation="12dp"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:orientation="horizontal"
-        android:paddingStart="6dp"
-        android:paddingEnd="6dp"
-        android:paddingTop="3dp"
-        android:paddingBottom="3dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- LumaBar Signature Sliding Radiant Glow Spotlight Layer -->
+        <ImageView
+            android:id="@+id/ivLumaSpotlight"
+            android:layout_width="68dp"
+            android:layout_height="56dp"
+            android:layout_gravity="center_vertical|start"
+            android:src="@drawable/bg_luma_spotlight"
+            android:scaleType="fitXY"
+            android:alpha="0.85"
+            android:contentDescription="Luma Radiant Spotlight" />
+
+        <!-- Dynamic Island Minimal Top Indicator Handle (Tap to toggle full dock / pill) -->
+        <View
+            android:id="@+id/btnToggleDockMode"
+            android:layout_width="36dp"
+            android:layout_height="3.5dp"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="3.5dp"
+            android:background="@drawable/bg_dock_indicator_handle"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- Full Expanded 5-Tab Navigation Row -->
+        <LinearLayout
+            android:id="@+id/dockTabsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp">
 
         <!-- Tab 1: Home -->
         <FrameLayout
@@ -252,7 +282,49 @@
             </LinearLayout>
         </FrameLayout>
 
-    </LinearLayout>
+        </LinearLayout>
+
+        <!-- Compact Dynamic Island Capsule View (Revealed when collapsed) -->
+        <LinearLayout
+            android:id="@+id/layoutCompactIsland"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingHorizontal="14dp"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true">
+
+            <View
+                android:id="@+id/ivIslandPulseDot"
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:background="@drawable/bg_dot_online" />
+
+            <TextView
+                android:id="@+id/tvIslandTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="JARVIS LUMA"
+                android:textSize="11sp"
+                android:fontFamily="sans-serif-medium"
+                android:textStyle="bold"
+                android:letterSpacing="0.12"
+                android:textColor="?attr/themeTextPrimary" />
+
+            <ImageView
+                android:id="@+id/ivIslandMic"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginStart="10dp"
+                android:src="@drawable/ic_mic_jarvis"
+                app:tint="?attr/themeAccent"
+                android:contentDescription="Voice Action" />
+        </LinearLayout>
+
+    </FrameLayout>
 
     <!-- Glowing Liquid Glass Curved Line arching over the center Mic button -->
     <com.jarvis.assistant.ui.widget.CurvedDockLineView

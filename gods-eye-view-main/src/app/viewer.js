@@ -123,14 +123,20 @@ export function createApplicationViewer({ container, creditContainer }) {
     infoBox: false,
     baseLayer: false,
     creditContainer,
-    msaaSamples: isMobile ? 1 : 2,
-    contextOptions: { webgl: { preserveDrawingBuffer: false } },
+    msaaSamples: 2,
+    contextOptions: { webgl: { preserveDrawingBuffer: false, antialias: true, powerPreference: 'high-performance' } },
   });
   try {
-    viewer.targetFrameRate = isMobile ? 30 : 60;
-    if (isMobile && typeof window !== 'undefined') {
-      const dpr = window.devicePixelRatio || 1;
-      viewer.resolutionScale = Math.max(0.65, Math.min(1.0, 1.5 / dpr));
+    viewer.targetFrameRate = 60;
+    // High-fidelity rendering: Use full 1.0 native resolution scale. Do NOT downsample to 0.65x on mobile.
+    viewer.resolutionScale = 1.0;
+    if (viewer.scene && viewer.scene.globe) {
+      viewer.scene.globe.maximumScreenSpaceError = 1.25;
+      viewer.scene.globe.tileCacheSize = 300;
+      viewer.scene.globe.loadingDescendantLimit = 25;
+    }
+    if (viewer.scene?.postProcessStages?.fxaa) {
+      viewer.scene.postProcessStages.fxaa.enabled = true;
     }
     // Before any tile builds a draw command: Cesium's per-vertex model
     // atmosphere fails to LINK on Apple's Metal backend and kills the

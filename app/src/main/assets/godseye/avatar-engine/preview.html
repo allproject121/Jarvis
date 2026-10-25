@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>JARVIS AI — Full Body Phone Avatar & Tsundere Reactions</title>
+  
+  <!-- Importmap for Three.js & @pixiv/three-vrm -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./libs/three.module.min.js",
+      "three/addons/loaders/GLTFLoader.js": "./libs/GLTFLoader.js",
+      "@pixiv/three-vrm": "./libs/three-vrm.module.min.js"
+    }
+  }
+  </script>
+
+  <!-- Avatar HUD Overlay Styles -->
+  <link rel="stylesheet" href="./avatar-overlay.css">
+
+  <style>
+    :root {
+      --bg: #070c16;
+      --card-bg: rgba(10, 20, 36, 0.82);
+      --cyan: #00f0ff;
+      --cyan-dim: rgba(0, 240, 255, 0.3);
+      --red-alert: #ff0055;
+      --emerald: #00ffaa;
+      --gold: #ffb700;
+      --font-mono: "JetBrains Mono", Consolas, "SF Mono", monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: #e2f1ff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 50% 25%, rgba(0, 90, 180, 0.22) 0%, transparent 60%),
+        linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+    }
+
+    .jarvis-main-layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px;
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 30px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .jarvis-main-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    header {
+      grid-column: 1 / -1;
+      border-bottom: 1px solid var(--cyan-dim);
+      padding-bottom: 14px;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .arc-symbol {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 2px solid var(--cyan);
+      box-shadow: 0 0 16px var(--cyan), inset 0 0 12px var(--cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .arc-symbol::after {
+      content: '';
+      width: 14px;
+      height: 14px;
+      background: var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 10px #fff;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #fff;
+      text-shadow: 0 0 12px var(--cyan);
+    }
+
+    .subtitle {
+      font-size: 11px;
+      color: #7ba3c4;
+      font-family: var(--font-mono);
+      margin-top: 2px;
+    }
+
+    .controls-column {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 240, 255, 0.22);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .card h2 {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .reaction-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+      gap: 10px;
+    }
+
+    button.reaction-btn {
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      border-radius: 8px;
+      padding: 11px 12px;
+      color: #e2f1ff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    button.reaction-btn:hover {
+      background: rgba(0, 240, 255, 0.22);
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    button.reaction-btn.pervert-btn {
+      border-color: rgba(255, 0, 85, 0.6);
+      background: rgba(255, 0, 85, 0.12);
+      color: #ff80aa;
+    }
+    button.reaction-btn.pervert-btn:hover {
+      background: rgba(255, 0, 85, 0.28);
+      border-color: var(--red-alert);
+      box-shadow: 0 0 16px rgba(255, 0, 85, 0.5);
+    }
+
+    button.reaction-btn.headpat-btn {
+      border-color: rgba(0, 255, 170, 0.5);
+      background: rgba(0, 255, 170, 0.1);
+      color: #a7f3d0;
+    }
+    button.reaction-btn.headpat-btn:hover {
+      background: rgba(0, 255, 170, 0.25);
+      border-color: var(--emerald);
+      box-shadow: 0 0 14px rgba(0, 255, 170, 0.4);
+    }
+
+    .notes-box {
+      margin-top: 12px;
+      font-size: 11.5px;
+      line-height: 1.5;
+      color: #9cbddb;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 10px 12px;
+      border-radius: 8px;
+      border-left: 3px solid var(--cyan);
+    }
+    .notes-box.alert {
+      border-left-color: var(--red-alert);
+      color: #ffb3c6;
+    }
+
+    .telemetry-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+    .telemetry-label { color: #7ba3c4; }
+    .telemetry-val { color: #fff; font-weight: 600; }
+    .telemetry-val.active { color: var(--emerald); }
+    .telemetry-val.alert { color: var(--red-alert); }
+
+    /* Phone Column */
+    .phone-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .phone-frame {
+      width: 360px;
+      height: 700px;
+      background: #000;
+      border-radius: 46px;
+      border: 8px solid #1c2738;
+      box-shadow: 
+        0 24px 60px rgba(0, 0, 0, 0.85),
+        0 0 0 2px rgba(0, 240, 255, 0.35),
+        inset 0 0 12px rgba(0, 0, 0, 0.9);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .phone-notch {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 24px;
+      background: #000;
+      border-radius: 14px;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .phone-camera {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #111;
+      border: 1px solid #222;
+    }
+
+    .phone-screen-content {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: radial-gradient(circle at 50% 30%, #0c172a 0%, #030611 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 42px 14px 20px;
+    }
+
+    .phone-header-info {
+      text-align: center;
+      z-index: 10;
+    }
+    .phone-hud-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: var(--cyan);
+      text-transform: uppercase;
+      text-shadow: 0 0 10px var(--cyan);
+    }
+    .phone-hud-sub {
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 3px;
+      font-family: var(--font-mono);
+    }
+
+    .phone-touch-hint {
+      position: absolute;
+      bottom: 22px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      font-family: var(--font-mono);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* Mount Avatar directly inside Phone screen mockup */
+    .phone-screen-content #jarvis-avatar-container {
+      position: absolute !important;
+      bottom: 8px !important;
+      right: 4px !important;
+      left: 4px !important;
+      width: calc(100% - 8px) !important;
+      height: 550px !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="jarvis-main-layout">
+    <header>
+      <div class="brand">
+        <div class="arc-symbol"></div>
+        <div>
+          <h1>JARVIS AI — FULL BODY PHONE AVATAR</h1>
+          <div class="subtitle">Complete 3D Humanoid Body • Head Pat & Tsundere "Pervert" Reactions</div>
+        </div>
+      </div>
+      <div style="font-family:var(--font-mono); font-size:11.5px; color:var(--emerald);">
+        ● FULL BODY MESH ACTIVE
+      </div>
+    </header>
+
+    <!-- Left Controls & Reaction Trigger Deck -->
+    <div class="controls-column">
+      
+      <!-- Zone Touch Reactions -->
+      <div class="card">
+        <h2>👇 Touch Reaction Zones (Phone Screen Taps)</h2>
+        <div class="reaction-grid">
+          <button class="reaction-btn headpat-btn" id="btnTestHeadPat">
+            <span>💆</span> Head Pat ("Pyaar Se")
+          </button>
+          <button class="reaction-btn pervert-btn" id="btnTestPervert">
+            <span>💢</span> Body Poke ("PERVERT!")
+          </button>
+          <button class="reaction-btn" id="btnTestLegs">
+            <span>🦵</span> Legs Touch ("Gudgudi")
+          </button>
+          <button class="reaction-btn" id="btnTestWave">
+            <span>👋</span> Wave / Salute
+          </button>
+        </div>
+        <div class="notes-box alert">
+          <strong>Pervert Reaction Test:</strong> Body ya chest par tap karne se character shocked hoke peeche hategi, dono haath chest par cross karegi aur bolegi: <em>"Arey! Kya kar rahe ho? Pervert kahin ke! 💢 Don't touch there Boss!"</em>
+        </div>
+      </div>
+
+      <!-- Conversational Voice Reactions -->
+      <div class="card">
+        <h2>🎙️ Voice Conversational Reactions</h2>
+        <div class="reaction-grid">
+          <button class="reaction-btn" id="rxHello">
+            <span>👋</span> "Hello / Hi"
+          </button>
+          <button class="reaction-btn" id="rxJoy">
+            <span>🥰</span> "Thanks / Good"
+          </button>
+          <button class="reaction-btn" id="rxDance">
+            <span>💃</span> "Dance / Groove"
+          </button>
+          <button class="reaction-btn pervert-btn" id="rxInterrupt">
+            <span>🛑</span> "Stop / Chup"
+          </button>
+        </div>
+        <div class="notes-box">
+          Phone par tap karne par <code>window.Jarvis3DModelBridge.onModelTouchReact()</code> call hoti hai, jisse Android app me tactical sound aur haptic vibration bajta hai!
+        </div>
+      </div>
+
+      <!-- Live Telemetry Card -->
+      <div class="card">
+        <h2>📡 Telemetry & Diagnostics</h2>
+        <div class="telemetry-row">
+          <span class="telemetry-label">Mesh Rendering:</span>
+          <span class="telemetry-val active" id="telMesh">FULL BODY (Head, Torso, Hips, Arms, Legs, Boots)</span>
+        </div>
+        <div class="telemetry-row">
+          <span class="telemetry-label">Active State:</span>
+          <span class="telemetry-val" id="telActiveState">IDLE</span>
+        </div>
+        <div class="telemetry-row">
+          <span class="telemetry-label">Last Reaction:</span>
+          <span class="telemetry-val alert" id="telReaction">NONE</span>
+        </div>
+        <div class="telemetry-row">
+          <span class="telemetry-label">Android Asset Location:</span>
+          <span class="telemetry-val">app/src/main/assets/vrm_character.html</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Phone Screen Viewport -->
+    <div class="phone-column">
+      <div class="phone-frame">
+        <div class="phone-notch">
+          <div class="phone-camera"></div>
+        </div>
+        
+        <div class="phone-screen-content">
+          <div class="phone-header-info">
+            <div class="phone-hud-title">MARK 85 AI CORE</div>
+            <div class="phone-hud-sub">FULL BODY TOUCH & GAZE ACTIVE</div>
+          </div>
+
+          <!-- Avatar Overlay Mounts Here -->
+
+          <div class="phone-touch-hint">
+            TAP HEAD = PAT • TAP BODY = PERVERT • DRAG = GAZE
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load Avatar Overlay Module -->
+  <script type="module" src="./avatar-overlay.js"></script>
+
+  <!-- Interactive Controls Controller -->
+  <script>
+    const telReaction = document.getElementById('telReaction');
+    const telState = document.getElementById('telActiveState');
+
+    // Mock native Android haptics
+    window.Jarvis3DModelBridge = {
+      onModelTouchReact: function() {
+        console.log('[Android Bridge] onModelTouchReact() haptic fired');
+      }
+    };
+
+    document.getElementById('btnTestHeadPat').addEventListener('click', () => {
+      if (window.JarvisAvatar) window.JarvisAvatar.triggerHeadPat();
+      telReaction.textContent = 'HEAD PAT (AFFECTION)';
+      telReaction.className = 'telemetry-val active';
+    });
+
+    document.getElementById('btnTestPervert').addEventListener('click', () => {
+      if (window.JarvisAvatar) window.JarvisAvatar.triggerPervert();
+      telReaction.textContent = 'PERVERT RECOIL (TSUNDERE)';
+      telReaction.className = 'telemetry-val alert';
+    });
+
+    document.getElementById('btnTestLegs').addEventListener('click', () => {
+      if (window.MoraCompanion) window.MoraCompanion.triggerReaction('legs');
+      telReaction.textContent = 'TICKLISH (LEGS TOUCH)';
+      telReaction.className = 'telemetry-val active';
+    });
+
+    document.getElementById('btnTestWave').addEventListener('click', () => {
+      if (window.JarvisAvatar) window.JarvisAvatar.triggerWave();
+      telReaction.textContent = 'WAVE SALUTE';
+      telReaction.className = 'telemetry-val active';
+    });
+
+    document.getElementById('rxHello').addEventListener('click', () => {
+      if (window.MoraCompanion) window.MoraCompanion.triggerReaction('wave');
+    });
+
+    document.getElementById('rxJoy').addEventListener('click', () => {
+      if (window.MoraCompanion) window.MoraCompanion.triggerReaction('headpat');
+    });
+
+    document.getElementById('rxDance').addEventListener('click', () => {
+      if (window.JarvisAvatar) window.JarvisAvatar.triggerDance();
+      telReaction.textContent = 'DANCE ROUTINE';
+      telReaction.className = 'telemetry-val active';
+    });
+
+    document.getElementById('rxInterrupt').addEventListener('click', () => {
+      if (window.MoraCompanion) window.MoraCompanion.interrupt();
+      telState.textContent = 'LISTENING (INTERRUPTED)';
+    });
+  </script>
+</body>
+</html>

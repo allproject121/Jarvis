@@ -1392,12 +1392,12 @@
     </LinearLayout>
 
 
-    <!-- Floating Exit Zen Mode / Restore HUD Pill Button -->
+    <!-- Floating Exit Zen Mode / Restore HUD Pill Button (Bottom) -->
     <LinearLayout
         android:id="@+id/btnExitZenMode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="95dp"
+        android:layout_marginBottom="28dp"
         android:background="@drawable/bg_jarvis_status_badge"
         android:orientation="horizontal"
         android:gravity="center_vertical"
@@ -1405,7 +1405,7 @@
         android:paddingVertical="9dp"
         android:clickable="true"
         android:focusable="true"
-        android:elevation="12dp"
+        android:elevation="14dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -1430,4 +1430,22 @@
             android:textStyle="bold"
             android:letterSpacing="0.08" />
     </LinearLayout>
+
+    <!-- Floating Top-Right Exit Zen Mode Button (Maintains consistent tap target) -->
+    <ImageButton
+        android:id="@+id/btnExitZenModeTop"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="18dp"
+        android:background="@drawable/bg_jarvis_icon_square"
+        android:src="@drawable/ic_zen_mode_active"
+        android:padding="8dp"
+        android:scaleType="fitCenter"
+        app:tint="?attr/themeAccent"
+        android:elevation="14dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="Restore HUD" />
 </androidx.constraintlayout.widget.ConstraintLayout>
