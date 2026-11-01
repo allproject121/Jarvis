@@ -119,6 +119,8 @@ class HomeFragment : Fragment() {
             HomeCardsCustomizationBottomSheet.newInstance().show(childFragmentManager, HomeCardsCustomizationBottomSheet.TAG)
         }
 
+        setupDualBrainCard()
+
         binding.btnToggleZenMode.setOnClickListener {
             HudSoundManager.playTapSound()
             toggleZenMode()
@@ -493,6 +495,7 @@ class HomeFragment : Fragment() {
         setOrbTheme(preferences.appTheme, preferences.customThemeColor)
         updateHomeHeaderAndVoiceStatus()
         applyCustomizationPreferences()
+        updateDualBrainStatusUi()
 
         // Refresh blur on ambient glow orbs according to preference
         FrostedGlassEffect.applyBlur(binding.glowOrbTopRight, 50f, 50f)
@@ -1509,6 +1512,51 @@ class HomeFragment : Fragment() {
         b.orbWebView.postDelayed({
             b.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.resize){ window.JarvisOrb.resize(); }", null)
         }, 280)
+    }
+
+
+    private fun setupDualBrainCard() {
+        binding.btnQuickAiHub.setOnClickListener {
+            HudSoundManager.playTapSound()
+            startActivity(Intent(requireContext(), com.jarvis.assistant.ui.settings.ApiConnectionActivity::class.java))
+        }
+
+        binding.btnQuickMemoryHub.setOnClickListener {
+            HudSoundManager.playTapSound()
+            startActivity(Intent(requireContext(), com.jarvis.assistant.ui.memory.MemoryActivity::class.java))
+        }
+
+        binding.btnQuickMatrixHub.setOnClickListener {
+            HudSoundManager.playTapSound()
+            startActivity(Intent(requireContext(), com.jarvis.assistant.ui.matrix.JarvisMatrixActivity::class.java))
+        }
+
+        updateDualBrainStatusUi()
+    }
+
+    private fun updateDualBrainStatusUi() {
+        if (_binding == null) return
+        val currentModel = preferences.aiModel.ifBlank { "Gemini 3.8 Live" }
+        binding.tvPrimaryBrainModel.text = currentModel
+
+        val execMode = preferences.aiExecutionMode
+        if (execMode == com.jarvis.assistant.ai.MultiModelAiRouter.MODE_ALL_TOGETHER) {
+            binding.tvBrainActiveBadge.text = "ALL MODELS ENSEMBLE"
+            binding.tvBrainActiveBadge.setTextColor(Color.parseColor("#A855F7"))
+            binding.tvPrimaryBrainStatus.text = "🌐 Parallel Consensus Mode"
+        } else {
+            binding.tvBrainActiveBadge.text = "GEMINI LIVE + ANDROLLM"
+            binding.tvBrainActiveBadge.setTextColor(Color.parseColor("#4ADE80"))
+            binding.tvPrimaryBrainStatus.text = "🟢 Bidirectional WebSocket"
+        }
+
+        val localMgr = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(requireContext(), viewLifecycleOwner.lifecycleScope)
+        val activeLocalId = localMgr.activeModelId.value
+        val localDesc = com.jarvis.assistant.ai.local.LocalAiConfig.AVAILABLE_MODELS.find { it.id == activeLocalId }
+        val localName = localDesc?.name ?: "Qwen 2.5 (1.5B)"
+        val isReady = localMgr.isModelReady(com.jarvis.assistant.ai.local.LocalAiConfig.MODEL_LLAMA_3_2_1B) || localDesc != null
+        binding.tvLocalBrainModel.text = localName
+        binding.tvLocalBrainStatus.text = if (isReady) "🟢 On-Device Fallback Ready" else "⚪ Download in AI Matrix"
     }
 
 }

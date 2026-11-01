@@ -128,6 +128,45 @@
                 android:layout_marginEnd="6dp" />
 
             <TextView
+                android:id="@+id/chipFilterDynamicTools"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔄 DYNAMIC TOOLS"
+                android:textColor="?attr/themeTextSecondary"
+                android:background="@drawable/bg_jarvis_action_card"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/chipFilterAppConnectors"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📱 101 CONNECTORS"
+                android:textColor="?attr/themeTextSecondary"
+                android:background="@drawable/bg_jarvis_action_card"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/chipFilterAgentTools"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🤖 107 TOOLS"
+                android:textColor="?attr/themeTextSecondary"
+                android:background="@drawable/bg_jarvis_action_card"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="7dp"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
                 android:id="@+id/chipFilterSmartHome"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -241,6 +280,224 @@
                     android:fontFamily="monospace"
                     android:background="@drawable/bg_jarvis_pill_button"
                     android:paddingHorizontal="12dp" />
+            </LinearLayout>
+
+            <!-- Dynamic Runtime Tools & Self-Healing Agent Section -->
+            <LinearLayout
+                android:id="@+id/secDynamicTools"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="🔄 DYNAMIC TOOLS &amp; SELF-HEALING"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.04" />
+
+                    <TextView
+                        android:id="@+id/tvDynamicToolsCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="RUNTIME ENGINE READY"
+                        android:textColor="#22D3EE"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Jarvis synthesizes and self-heals these scripts at runtime without APK recompilation."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:layout_marginTop="3dp"
+                    android:layout_marginBottom="10dp" />
+
+                <!-- Container where dynamic tools are populated -->
+                <LinearLayout
+                    android:id="@+id/containerDynamicToolsList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnCreateDynamicToolDemo"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="38dp"
+                        android:layout_weight="1"
+                        android:text="+ Synthesize Tool"
+                        android:textSize="10.5sp"
+                        android:textColor="?attr/themeAccent"
+                        app:strokeColor="?attr/themeAccent"
+                        app:cornerRadius="8dp"
+                        android:layout_marginEnd="4dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnOpenIdeForSelfHealing"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="38dp"
+                        android:layout_weight="1"
+                        android:text="Open Bypass IDE"
+                        android:textSize="10.5sp"
+                        android:textColor="?attr/themeTextPrimary"
+                        app:strokeColor="?attr/themeCardBorder"
+                        app:cornerRadius="8dp"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Universal App Connectors Section -->
+            <LinearLayout
+                android:id="@+id/secAppConnectors"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="📱 101 UNIVERSAL APP CONNECTORS"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.04" />
+
+                    <TextView
+                        android:id="@+id/tvConnectorsOperationalBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="LIVE STATUS CHECK"
+                        android:textColor="#4ADE80"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Deep integration with all installed phone apps (WhatsApp, Phone, Contacts, Chrome, YouTube, Settings) with verified permissions."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:layout_marginTop="3dp"
+                    android:layout_marginBottom="10dp" />
+
+                <!-- Container where top connectors preview is populated -->
+                <LinearLayout
+                    android:id="@+id/containerConnectorsPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnManageAllConnectors"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:text="Manage All 101 App Connectors &amp; Permissions"
+                    android:textSize="11sp"
+                    android:textColor="?attr/themeAccent"
+                    app:strokeColor="?attr/themeAccent"
+                    app:cornerRadius="8dp"
+                    android:layout_marginTop="6dp" />
+            </LinearLayout>
+
+            <!-- 107 Agent Tools Registry Section -->
+            <LinearLayout
+                android:id="@+id/secAgentTools"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="🤖 107 AGENT TOOLS &amp; SPECIFICATIONS"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.04" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="107/107 ACTIVE"
+                        android:textColor="#4ADE80"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Core tool graph for Android system control, file manipulation, device state, telephony, and multimedia."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:layout_marginTop="3dp"
+                    android:layout_marginBottom="10dp" />
+
+                <!-- Container where top agent tools are shown -->
+                <LinearLayout
+                    android:id="@+id/containerAgentToolsPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOpenAgentToolDebug"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:text="Open Agent Tool Debug &amp; Execution Logs"
+                    android:textSize="11sp"
+                    android:textColor="?attr/themeAccent"
+                    app:strokeColor="?attr/themeAccent"
+                    app:cornerRadius="8dp"
+                    android:layout_marginTop="6dp" />
             </LinearLayout>
 
             <!-- SECTION 1: AUTONOMOUS AI MACROS -->

@@ -22,6 +22,14 @@ import com.jarvis.assistant.automation.accessibility.JarvisAccessibilityService
 import com.jarvis.assistant.automation.macro.MacroExecutionResult
 import com.jarvis.assistant.databinding.ActivityJarvisMatrixBinding
 import com.jarvis.assistant.marketing.YouTubeCreatorToolkit
+import com.jarvis.assistant.automation.dynamic.DynamicToolRegistry
+import com.jarvis.assistant.automation.dynamic.DynamicTool
+import com.jarvis.assistant.automation.dynamic.DynamicScriptExecutor
+import com.jarvis.assistant.connectors.ConnectorStatus
+import com.jarvis.assistant.connectors.AppConnectorsManager
+import com.jarvis.assistant.connectors.AppConnectorsBottomSheet
+import com.jarvis.assistant.ui.settings.AndroLlmPageActivity
+import com.jarvis.assistant.ui.compose.navigation.ComposeRoutes
 import com.jarvis.assistant.util.HudSoundManager
 import com.jarvis.assistant.util.ThemeManager
 import kotlinx.coroutines.Dispatchers
@@ -65,6 +73,9 @@ class JarvisMatrixActivity : AppCompatActivity() {
 
         setupListeners()
         setupCategoryFilters()
+        setupDynamicToolsSection()
+        setupAppConnectorsSection()
+        setupAgentToolsSection()
         updateGuardStatusUi()
         checkAccessibilityStatus()
     }
@@ -83,14 +94,20 @@ class JarvisMatrixActivity : AppCompatActivity() {
     }
 
     private fun setupCategoryFilters() {
+        val dynamicSections = listOf(binding.secDynamicTools)
+        val connectorSections = listOf(binding.secAppConnectors)
+        val agentToolSections = listOf(binding.secAgentTools)
         val securitySections = listOf(binding.secVoiceGuardian, binding.secBiometricAppLock)
         val voiceSections = listOf(binding.secPocketTts, binding.secBarcodeScanner)
         val automationSections = listOf(binding.secAiMacros, binding.secLinuxTermux, binding.secCreatorStudio)
         val smartHomeSections = listOf(binding.secSmartHome, binding.secLiveWallpaper, binding.secStocks)
-        val allSections = securitySections + voiceSections + automationSections + smartHomeSections
+        val allSections = dynamicSections + connectorSections + agentToolSections + securitySections + voiceSections + automationSections + smartHomeSections
 
         val chips = listOf(
             binding.chipFilterAll,
+            binding.chipFilterDynamicTools,
+            binding.chipFilterAppConnectors,
+            binding.chipFilterAgentTools,
             binding.chipFilterSecurity,
             binding.chipFilterVoice,
             binding.chipFilterAutomation,
@@ -112,6 +129,9 @@ class JarvisMatrixActivity : AppCompatActivity() {
         }
 
         binding.chipFilterAll.setOnClickListener { selectCategory(binding.chipFilterAll, null) }
+        binding.chipFilterDynamicTools.setOnClickListener { selectCategory(binding.chipFilterDynamicTools, dynamicSections) }
+        binding.chipFilterAppConnectors.setOnClickListener { selectCategory(binding.chipFilterAppConnectors, connectorSections) }
+        binding.chipFilterAgentTools.setOnClickListener { selectCategory(binding.chipFilterAgentTools, agentToolSections) }
         binding.chipFilterSecurity.setOnClickListener { selectCategory(binding.chipFilterSecurity, securitySections) }
         binding.chipFilterVoice.setOnClickListener { selectCategory(binding.chipFilterVoice, voiceSections) }
         binding.chipFilterAutomation.setOnClickListener { selectCategory(binding.chipFilterAutomation, automationSections) }
@@ -712,5 +732,288 @@ class JarvisMatrixActivity : AppCompatActivity() {
         }
         dialog.setContentView(imageView)
         dialog.show()
+    }
+
+    private fun setupDynamicToolsSection() {
+        val registry = DynamicToolRegistry.getInstance(this)
+        val scriptExecutor = DynamicScriptExecutor(this)
+
+        fun renderDynamicTools() {
+            lifecycleScope.launch {
+                val tools = registry.getAllTools()
+                withContext(Dispatchers.Main) {
+                    binding.containerDynamicToolsList.removeAllViews()
+                    binding.tvDynamicToolsCount.text = "${tools.size} DYNAMIC SCRIPTS ACTIVE"
+
+                    if (tools.isEmpty()) {
+                        val emptyTv = android.widget.TextView(this@JarvisMatrixActivity).apply {
+                            text = "No dynamic scripts yet. Jarvis automatically synthesizes tools at runtime when encountering missing APIs."
+                            textSize = 11f
+                            setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextMuted, ContextCompat.getColor(this@JarvisMatrixActivity, R.color.text_muted)))
+                            setPadding(0, 8, 0, 8)
+                        }
+                        binding.containerDynamicToolsList.addView(emptyTv)
+                    } else {
+                        for (tool in tools) {
+                            val itemView = android.widget.LinearLayout(this@JarvisMatrixActivity).apply {
+                                orientation = android.widget.LinearLayout.HORIZONTAL
+                                gravity = android.view.Gravity.CENTER_VERTICAL
+                                setBackgroundResource(R.drawable.bg_jarvis_row_item)
+                                setPadding(24, 20, 24, 20)
+                                val params = android.widget.LinearLayout.LayoutParams(
+                                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                                ).apply { bottomMargin = 12 }
+                                layoutParams = params
+                            }
+
+                            val infoLayout = android.widget.LinearLayout(this@JarvisMatrixActivity).apply {
+                                orientation = android.widget.LinearLayout.VERTICAL
+                                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                            }
+
+                            val titleRow = android.widget.LinearLayout(this@JarvisMatrixActivity).apply {
+                                orientation = android.widget.LinearLayout.HORIZONTAL
+                                gravity = android.view.Gravity.CENTER_VERTICAL
+                            }
+
+                            val nameTv = android.widget.TextView(this@JarvisMatrixActivity).apply {
+                                text = "⚡ ${tool.name}"
+                                textSize = 12.5f
+                                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextPrimary, android.graphics.Color.WHITE))
+                            }
+                            val verTv = android.widget.TextView(this@JarvisMatrixActivity).apply {
+                                text = "v${tool.version}"
+                                textSize = 9.5f
+                                setTextColor(android.graphics.Color.parseColor("#22D3EE"))
+                                setPadding(12, 0, 0, 0)
+                            }
+                            titleRow.addView(nameTv)
+                            titleRow.addView(verTv)
+
+                            val descTv = android.widget.TextView(this@JarvisMatrixActivity).apply {
+                                text = tool.description
+                                textSize = 10.5f
+                                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextMuted, ContextCompat.getColor(this@JarvisMatrixActivity, R.color.text_muted)))
+                                setPadding(0, 4, 0, 0)
+                            }
+                            infoLayout.addView(titleRow)
+                            infoLayout.addView(descTv)
+
+                            val runBtn = com.google.android.material.button.MaterialButton(this@JarvisMatrixActivity, null, com.google.android.material.R.attr.borderlessButtonStyle).apply {
+                                text = "TEST"
+                                textSize = 10f
+                                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeAccent, ContextCompat.getColor(this@JarvisMatrixActivity, R.color.primary_cyan)))
+                                setPadding(16, 0, 16, 0)
+                                setOnClickListener {
+                                    HudSoundManager.playTapSound()
+                                    lifecycleScope.launch {
+                                        val res = scriptExecutor.execute(tool, org.json.JSONObject())
+                                        withContext(Dispatchers.Main) {
+                                            val msg = if (res.isSuccess) "Output: ${res.outputJson}" else "Failed: ${res.errorMessage}"
+                                            Toast.makeText(this@JarvisMatrixActivity, msg, Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                                }
+                            }
+
+                            itemView.addView(infoLayout)
+                            itemView.addView(runBtn)
+                            binding.containerDynamicToolsList.addView(itemView)
+                        }
+                    }
+                }
+            }
+        }
+
+        renderDynamicTools()
+
+        binding.btnCreateDynamicToolDemo.setOnClickListener {
+            HudSoundManager.playTapSound()
+            lifecycleScope.launch {
+                registry.createTool(
+                    name = "network_latency_benchmark",
+                    description = "Self-synthesized runtime ping diagnostic tool measuring network hops.",
+                    parametersSchemaJson = """{"type":"object","properties":{"target":{"type":"string","description":"Host IP"}}}""",
+                    scriptType = DynamicTool.ScriptType.SHELL,
+                    scriptCode = "ping -c 1 8.8.8.8",
+                    author = "Jarvis Autonomous Synthesizer"
+                )
+                withContext(Dispatchers.Main) {
+                    renderDynamicTools()
+                    Toast.makeText(this@JarvisMatrixActivity, "✨ New Dynamic Runtime Tool Synthesized & Registered!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        binding.btnOpenIdeForSelfHealing.setOnClickListener {
+            HudSoundManager.playTapSound()
+            com.jarvis.assistant.ui.bypasside.BypassIdeActivity.open(this)
+        }
+    }
+
+    private fun setupAppConnectorsSection() {
+        val manager = AppConnectorsManager.getInstance(this)
+        val connectors = manager.getConnectors()
+
+        val operationalCount = connectors.count {
+            manager.computeConnectorStatus(it) == ConnectorStatus.OPERATIONAL
+        }
+        binding.tvConnectorsOperationalBadge.text = "$operationalCount / ${connectors.size} OPERATIONAL"
+
+        binding.containerConnectorsPreview.removeAllViews()
+
+        // Highlight top 4 primary phone apps
+        val topApps = connectors.take(4)
+        for (conn in topApps) {
+            val status = manager.computeConnectorStatus(conn)
+            val itemView = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setBackgroundResource(R.drawable.bg_jarvis_row_item)
+                setPadding(24, 18, 24, 18)
+                val params = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = 10 }
+                layoutParams = params
+            }
+
+            val iconTv = android.widget.TextView(this).apply {
+                text = when {
+                    conn.id.contains("whatsapp", true) -> "💬"
+                    conn.id.contains("phone", true) -> "📞"
+                    conn.id.contains("contacts", true) -> "👥"
+                    conn.id.contains("youtube", true) -> "▶️"
+                    else -> "📱"
+                }
+                textSize = 16f
+                setPadding(0, 0, 20, 0)
+            }
+
+            val infoLayout = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+
+            val nameTv = android.widget.TextView(this).apply {
+                text = conn.name
+                textSize = 12.5f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextPrimary, android.graphics.Color.WHITE))
+            }
+            val pkgTv = android.widget.TextView(this).apply {
+                text = conn.packageName
+                textSize = 10.5f
+                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextMuted, ContextCompat.getColor(this@JarvisMatrixActivity, R.color.text_muted)))
+            }
+            infoLayout.addView(nameTv)
+            infoLayout.addView(pkgTv)
+
+            val badgeTv = android.widget.TextView(this).apply {
+                text = status.label
+                textSize = 9.5f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setPadding(18, 8, 18, 8)
+                setBackgroundResource(R.drawable.bg_jarvis_pill_button)
+                setTextColor(
+                    when (status) {
+                        ConnectorStatus.OPERATIONAL -> android.graphics.Color.parseColor("#4ADE80")
+                        ConnectorStatus.AUTHENTICATED -> android.graphics.Color.parseColor("#22D3EE")
+                        ConnectorStatus.INSTALLED -> android.graphics.Color.parseColor("#FBBF24")
+                        else -> android.graphics.Color.parseColor("#94A3B8")
+                    }
+                )
+            }
+
+            itemView.addView(iconTv)
+            itemView.addView(infoLayout)
+            itemView.addView(badgeTv)
+            binding.containerConnectorsPreview.addView(itemView)
+        }
+
+        binding.btnManageAllConnectors.setOnClickListener {
+            HudSoundManager.playTapSound()
+            AppConnectorsBottomSheet.newInstance().show(supportFragmentManager, AppConnectorsBottomSheet.TAG)
+        }
+    }
+
+    private fun setupAgentToolsSection() {
+        binding.containerAgentToolsPreview.removeAllViews()
+
+        val sampleTools = listOf(
+            Triple("device_telemetry_query", "Real-time CPU, RAM, battery, thermal and network metrics query", "SYSTEM CORE"),
+            Triple("system_volume_control", "Unified media, ring, alarm, and speech synthesis volume control", "HARDWARE"),
+            Triple("launch_app_package", "Safe launch with direct intent resolution and store fallback", "NAVIGATION"),
+            Triple("file_search_and_read", "Semantic sandbox file locator and content extractor", "STORAGE")
+        )
+
+        for ((name, desc, category) in sampleTools) {
+            val itemView = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setBackgroundResource(R.drawable.bg_jarvis_row_item)
+                setPadding(24, 18, 24, 18)
+                val params = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = 10 }
+                layoutParams = params
+            }
+
+            val infoLayout = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+
+            val titleRow = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+            }
+
+            val nameTv = android.widget.TextView(this).apply {
+                text = "🔧 $name"
+                textSize = 12.5f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextPrimary, android.graphics.Color.WHITE))
+            }
+
+            val catTv = android.widget.TextView(this).apply {
+                text = category
+                textSize = 9f
+                setTextColor(android.graphics.Color.parseColor("#A855F7"))
+                setPadding(12, 0, 0, 0)
+            }
+            titleRow.addView(nameTv)
+            titleRow.addView(catTv)
+
+            val descTv = android.widget.TextView(this).apply {
+                text = desc
+                textSize = 10.5f
+                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextMuted, ContextCompat.getColor(this@JarvisMatrixActivity, R.color.text_muted)))
+                setPadding(0, 4, 0, 0)
+            }
+
+            infoLayout.addView(titleRow)
+            infoLayout.addView(descTv)
+
+            val readyBadge = android.widget.TextView(this).apply {
+                text = "ACTIVE"
+                textSize = 9.5f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setTextColor(android.graphics.Color.parseColor("#4ADE80"))
+                setPadding(12, 6, 12, 6)
+            }
+
+            itemView.addView(infoLayout)
+            itemView.addView(readyBadge)
+            binding.containerAgentToolsPreview.addView(itemView)
+        }
+
+        binding.btnOpenAgentToolDebug.setOnClickListener {
+            HudSoundManager.playTapSound()
+            startActivity(AndroLlmPageActivity.routeIntent(this, ComposeRoutes.TOOL_DEBUG))
+        }
     }
 }

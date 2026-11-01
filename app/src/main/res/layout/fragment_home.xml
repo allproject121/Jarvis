@@ -380,6 +380,197 @@
                     android:layout_marginTop="5dp" />
             </LinearLayout>
 
+            <!-- JARVIS DUAL-BRAIN AI ARCHITECTURE HUD CARD -->
+            <LinearLayout
+                android:id="@+id/cardDualBrainStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="14dp">
+
+                <!-- Header: Title & Brain Mode Badge -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_verified_badge"
+                        app:tint="?attr/themeAccent"
+                        android:contentDescription="Brain Icon" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:text="JARVIS DUAL-BRAIN MATRIX"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.05" />
+
+                    <TextView
+                        android:id="@+id/tvBrainActiveBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_jarvis_status_badge_green"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="3dp"
+                        android:text="GEMINI LIVE + ANDROLLM"
+                        android:textColor="#4ADE80"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?attr/themeCardBorder"
+                    android:layout_marginVertical="10dp" />
+
+                <!-- Dual-Brain Grid -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- Primary Brain: Gemini Live 3.8 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingEnd="6dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="PRIMARY CLOUD BRAIN"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="10sp"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <TextView
+                            android:id="@+id/tvPrimaryBrainModel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Gemini 3.8 Live"
+                            android:textColor="?attr/themeAccent"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="2dp" />
+
+                        <TextView
+                            android:id="@+id/tvPrimaryBrainStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🟢 Bidirectional WebSocket"
+                            android:textColor="#4ADE80"
+                            android:textSize="10.5sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="match_parent"
+                        android:background="?attr/themeCardBorder" />
+
+                    <!-- Local Subsystem: AndroLLM -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingStart="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="LOCAL SUBSYSTEM (OFFLINE)"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="10sp"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <TextView
+                            android:id="@+id/tvLocalBrainModel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="AndroLLM LiteRT / GGUF"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="2dp" />
+
+                        <TextView
+                            android:id="@+id/tvLocalBrainStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🟢 On-Device Fallback Ready"
+                            android:textColor="#22D3EE"
+                            android:textSize="10.5sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Quick Action Buttons -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnQuickAiHub"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="38dp"
+                        android:layout_weight="1"
+                        android:text="⚡ AI Matrix"
+                        android:textSize="10.5sp"
+                        android:textColor="?attr/themeAccent"
+                        app:strokeColor="?attr/themeAccent"
+                        app:cornerRadius="8dp"
+                        android:paddingVertical="0dp"
+                        android:layout_marginEnd="4dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnQuickMemoryHub"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="38dp"
+                        android:layout_weight="1"
+                        android:text="🧠 Memory"
+                        android:textSize="10.5sp"
+                        android:textColor="?attr/themeTextPrimary"
+                        app:strokeColor="?attr/themeCardBorder"
+                        app:cornerRadius="8dp"
+                        android:paddingVertical="0dp"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="2dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnQuickMatrixHub"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="38dp"
+                        android:layout_weight="1"
+                        android:text="🛡️ Agent Matrix"
+                        android:textSize="10.5sp"
+                        android:textColor="?attr/themeTextPrimary"
+                        app:strokeColor="?attr/themeCardBorder"
+                        app:cornerRadius="8dp"
+                        android:paddingVertical="0dp"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+
             <!-- 4. Weather Information Card -->
             <LinearLayout
                 android:id="@+id/cardWeather"
