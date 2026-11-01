@@ -29,6 +29,20 @@ class ChatRepository(private val preferences: AppPreferences) {
             if (last.userTranscript == cleanUser && last.jarvisResponse == cleanJarvis) {
                 return
             }
+            // In-place update: if the last turn was a pending text send awaiting reply,
+            // update its placeholder response with the actual assistant reply instead of creating a duplicate turn.
+            val isLastPlaceholder = last.jarvisResponse == "(Audio response)" || last.jarvisResponse.isBlank()
+            if (cleanJarvis.isNotBlank() && cleanJarvis != "(Audio response)" && isLastPlaceholder) {
+                if (last.userTranscript == cleanUser || cleanUser.isBlank() || cleanUser == "Spoken user query") {
+                    currentList[currentList.size - 1] = last.copy(
+                        jarvisResponse = cleanJarvis,
+                        timestamp = System.currentTimeMillis()
+                    )
+                    _turns.value = currentList
+                    preferences.saveChatHistory(currentList)
+                    return
+                }
+            }
         }
 
         val newTurn = ChatTurn(

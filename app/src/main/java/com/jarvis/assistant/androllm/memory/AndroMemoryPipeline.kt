@@ -787,11 +787,17 @@ class AndroMemoryPipeline private constructor(context: Context) {
     }
 
     suspend fun stats(): MemoryStats = withContext(Dispatchers.IO) {
-        val ids = runCatching { repository.getAllMemoryIds().toSet() }.getOrDefault(emptySet())
+        val allMemories = runCatching { repository.getAllMemories() }.getOrDefault(emptyList())
+        val ids = allMemories.map { it.id }.toSet()
+        var indexed = runCatching { vectorEngine.indexedMemoryCount() }.getOrDefault(0)
+        if (indexed < ids.size && allMemories.isNotEmpty()) {
+            runCatching { vectorEngine.syncWithRoomMemories(allMemories) }
+            indexed = runCatching { vectorEngine.indexedMemoryCount() }.getOrDefault(ids.size)
+        }
         val metas = MemoryMetaRegistry.snapshot().filterKeys { it in ids }.values
         MemoryStats(
             memoryCount = ids.size,
-            indexedCount = runCatching { vectorEngine.indexedMemoryCount() }.getOrDefault(0),
+            indexedCount = indexed,
             pinnedCount = metas.count { it.isPinned },
             archivedCount = metas.count { it.isArchived },
             extractedCount = metas.count { it.source == Memory.SOURCE_EXTRACTED },

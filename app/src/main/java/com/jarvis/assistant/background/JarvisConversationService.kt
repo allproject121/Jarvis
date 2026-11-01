@@ -280,6 +280,11 @@ class JarvisConversationService : Service() {
 
         fun sendTextMessage(text: String) {
             val instance = activeInstance ?: return
+            synchronized(instance.currentTurnUserText) {
+                instance.currentTurnUserText.setLength(0)
+                instance.currentTurnUserText.append(text)
+            }
+            _liveUserTranscript.value = text
             instance.liveWebSocket?.sendClientContent(text)
             JarvisApp.instance.chatRepository.addTurn(text, "")
         }
@@ -341,6 +346,13 @@ class JarvisConversationService : Service() {
     private var lastOpenedWebUrl: String? = null
     @Volatile
     private var lastOpenedWebTime: Long = 0L
+
+    // Tool Call Id deduplication to prevent duplicate tool executions
+    private val handledToolCallIds = java.util.Collections.newSetFromMap(
+        object : java.util.LinkedHashMap<String, Boolean>(200, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?): Boolean = size > 200
+        }
+    )
 
     // Autonomous Multi-Step Chaining Engine
     @Volatile
@@ -1524,6 +1536,10 @@ class JarvisConversationService : Service() {
                         }
 
                         override fun onToolCall(callId: String, name: String, args: JSONObject) {
+                            if (callId.isNotEmpty() && !handledToolCallIds.add(callId)) {
+                                Log.w("JarvisService", "Duplicate tool call '$name' (id=$callId) dropped: already handled or in-flight.")
+                                return
+                            }
                             val isDirect = preferences.isDirectAutonomousMode
                             val isLeaseActive = isDirect || (System.currentTimeMillis() - lastOwnerVerifiedTimestamp) < 120_000L
                             val hasNoIncomingSpeech = !hasSpeechInCurrentUtterance && currentTurnUserText.isEmpty()

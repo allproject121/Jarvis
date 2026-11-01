@@ -1312,47 +1312,81 @@ class SettingsFragment : Fragment() {
     }
 
     private fun showDrivingModeDialog() {
-        MaterialAlertDialogBuilder(requireContext())
+        val manager = com.jarvis.assistant.core.JarvisDrivingModeManager.getInstance(requireContext())
+        val isDriving = manager.isDrivingMode.value
+        val autoCar = preferences.isDrivingModeAutoCarEnabled
+        val announceCaller = preferences.isCallerIdAnnouncementEnabled
+
+        val items = arrayOf(
+            if (isDriving) "Exit Driving Mode" else "Activate Driving Mode Now",
+            "Auto-Engage on Car Bluetooth: " + if (autoCar) "ON" else "OFF",
+            "Caller ID Voice Announcement: " + if (announceCaller) "ON" else "OFF",
+            "Open Google Maps Navigation"
+        )
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
             .setTitle("Driving Mode Sentinel")
-            .setMessage(
-                "When Driving Mode is active (or when car Bluetooth connects):\n\n" +
-                "• Incoming phone calls are politely rejected\n" +
-                "• Caller automatically receives an SMS: 'I am currently driving and will get back to you soon.'\n" +
-                "• Jarvis verbally announces caller name through your car audio\n\n" +
-                "Hands-free driving protection is active."
-            )
-            .setPositiveButton("OK", null)
+            .setItems(items) { _, which ->
+                when (which) {
+                    0 -> {
+                        manager.setDrivingMode(!isDriving)
+                        val newState = if (!isDriving) "ENGAGED" else "DISENGAGED"
+                        android.widget.Toast.makeText(requireContext(), "Driving Mode $newState", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                    1 -> {
+                        preferences.isDrivingModeAutoCarEnabled = !autoCar
+                        android.widget.Toast.makeText(requireContext(), "Auto-Car Bluetooth: " + if (!autoCar) "Enabled" else "Disabled", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                    2 -> {
+                        preferences.isCallerIdAnnouncementEnabled = !announceCaller
+                        android.widget.Toast.makeText(requireContext(), "Caller ID Voice: " + if (!announceCaller) "Enabled" else "Disabled", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                    3 -> {
+                        try {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("geo:0,0?q=gas+station+nearby")).apply {
+                                setPackage("com.google.android.apps.maps")
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            startActivity(intent)
+                        } catch (_: Exception) {
+                            val webIntent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://maps.google.com")).apply {
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            startActivity(webIntent)
+                        }
+                    }
+                }
+            }
+            .setPositiveButton("Close", null)
             .show()
     }
 
     private fun showPcHubDialog() {
         lifecycleScope.launch {
+            val configuredEndpoint = preferences.customEndpoint.ifBlank { com.jarvis.assistant.data.preferences.AppPreferences.DEFAULT_CUSTOM_ENDPOINT }
+            val client = com.jarvis.assistant.network.LocalHostLlmClient()
             val pingResult = withContext(Dispatchers.IO) {
-                try {
-                    val url = URL("http://127.0.0.1:11434/api/tags")
-                    val conn = (url.openConnection() as HttpURLConnection).apply {
-                        connectTimeout = 2000
-                        readTimeout = 2000
-                    }
-                    val code = conn.responseCode
-                    conn.disconnect()
-                    if (code == 200) "Connected (HTTP 200 OK)" else "HTTP Error $code"
-                } catch (e: Exception) {
-                    "Offline (${e.message})"
-                }
+                client.pingServer(configuredEndpoint)
             }
 
             withContext(Dispatchers.Main) {
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("PC ⇄ Phone Hub")
+                val statusText = if (pingResult.isOnline) {
+                    "ONLINE (" + pingResult.pingMs + "ms)\nActive Model: " + (if (pingResult.activeModel.isNotBlank()) pingResult.activeModel else "Ready") + "\nAvailable Models: " + (if (pingResult.availableModels.isNotEmpty()) pingResult.availableModels.joinToString(", ") else "None detected")
+                } else {
+                    "OFFLINE (" + (pingResult.error ?: "Cannot connect") + ")\n\nTroubleshooting:\n- USB: Run 'adb reverse tcp:11434 tcp:11434' on PC\n- Wi-Fi LAN: Set PC IP (e.g. http://192.168.1.50:11434) in API Connections\n- PC Firewall: Ensure Ollama is listening on 0.0.0.0 (OLLAMA_HOST=0.0.0.0:11434)"
+                }
+
+                com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("PC Phone Hub")
                     .setMessage(
-                        "• Local Host Bridge: http://127.0.0.1:11434\n" +
-                        "• Live Ping Status: $pingResult\n" +
-                        "• ADB Reverse Port: tcp:11434 tcp:11434\n" +
-                        "• Wireless ADB: Supported\n\n" +
+                        "Local Host Bridge: " + configuredEndpoint + "\n" +
+                        "Live Status: " + statusText + "\n\n" +
                         "Your Windows Ollama instance runs locally on port 11434 with zero internet dependency."
                     )
-                    .setPositiveButton("Refresh") { _, _ -> showPcHubDialog() }
+                    .setPositiveButton("Configure Endpoint") { _, _ ->
+                        startActivity(android.content.Intent(requireContext(), ApiConnectionActivity::class.java))
+                    }
+                    .setNeutralButton("Retry Ping") { _, _ -> showPcHubDialog() }
                     .setNegativeButton("Close", null)
                     .show()
             }

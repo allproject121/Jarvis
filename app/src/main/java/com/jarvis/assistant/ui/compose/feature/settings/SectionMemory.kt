@@ -273,14 +273,18 @@ fun MemorySettingsSection() {
                 SettingRow(
                     icon = Icons.Filled.Folder,
                     title = "LiteRT embedding model (.tflite)",
-                    value = settings.embeddingModelPath.substringAfterLast('/').ifBlank { "Not set" }
+                    value = settings.embeddingModelPath.substringAfterLast('/').ifBlank {
+                        if (settings.embeddingSource == EmbeddingSource.AUTO) "Built-in Hashing (Active)" else "Not set"
+                    }
                 ) { showEmbeddingPathDialog = true }
             }
             if (settings.embeddingSource == EmbeddingSource.CLOUD || settings.embeddingSource == EmbeddingSource.AUTO) {
                 SettingRow(
                     icon = Icons.Filled.CloudSync,
                     title = "Cloud embedding model",
-                    value = settings.cloudEmbeddingModel.ifBlank { "Not set" }
+                    value = settings.cloudEmbeddingModel.ifBlank {
+                        if (settings.embeddingSource == EmbeddingSource.AUTO) "Built-in Hashing (Active)" else "Not set"
+                    }
                 ) { showCloudEmbeddingDialog = true }
             }
 

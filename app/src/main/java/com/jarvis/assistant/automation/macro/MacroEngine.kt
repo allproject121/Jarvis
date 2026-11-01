@@ -108,40 +108,51 @@ class MacroEngine(
 
     private fun openAppByName(appName: String): Boolean {
         try {
+            // 1. Primary: Use Jarvis's system-wide AppLauncher (handles LauncherApps across user profiles, dual-apps & aliases)
+            if (com.jarvis.assistant.util.AppLauncher.launchApp(context, appName)) {
+                Log.i(TAG, "Successfully launched app '$appName' via AppLauncher")
+                return true
+            }
+
+            // 2. Direct package lookup & known alias fallback
             val pm = context.packageManager
-            val packages = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-            val matched = packages.firstOrNull {
-                val label = pm.getApplicationLabel(it).toString()
-                label.equals(appName, ignoreCase = true) || label.contains(appName, ignoreCase = true)
-            }
-
-            if (matched != null) {
-                val launchIntent = pm.getLaunchIntentForPackage(matched.packageName)
-                if (launchIntent != null) {
-                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    context.startActivity(launchIntent)
-                    return true
-                }
-            }
-
-            // Fallback for well known packages
-            val fallbackPackage = when (appName.lowercase()) {
-                "chatgpt" -> "com.openai.chatgpt"
-                "gemini" -> "com.google.android.apps.bard"
-                "whatsapp" -> "com.whatsapp"
-                "youtube" -> "com.google.android.youtube"
+            val cleanName = appName.lowercase().trim()
+            val fallbackPackage = when (cleanName) {
+                "chatgpt", "chat gpt", "openai chatgpt" -> "com.openai.chatgpt"
+                "gemini", "google gemini", "bard" -> "com.google.android.apps.bard"
+                "whatsapp", "whats app" -> "com.whatsapp"
+                "youtube", "yt" -> "com.google.android.youtube"
+                "instagram", "insta" -> "com.instagram.android"
+                "chrome", "google chrome" -> "com.android.chrome"
                 else -> null
             }
+
             if (fallbackPackage != null) {
                 val launchIntent = pm.getLaunchIntentForPackage(fallbackPackage)
                 if (launchIntent != null) {
-                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    context.startActivity(launchIntent)
-                    return true
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    return com.jarvis.assistant.util.ActivityLauncherHelper.startActivitySafely(context, launchIntent)
+                }
+            }
+
+            // 3. Fallback: inspect launcher intent activities (not restricted by package visibility)
+            val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
+                addCategory(Intent.CATEGORY_LAUNCHER)
+            }
+            val resolveList = pm.queryIntentActivities(mainIntent, 0)
+            for (ri in resolveList) {
+                val label = ri.loadLabel(pm).toString()
+                if (label.equals(appName, ignoreCase = true) || label.lowercase().contains(cleanName)) {
+                    val pkg = ri.activityInfo.packageName
+                    val launchIntent = pm.getLaunchIntentForPackage(pkg)
+                    if (launchIntent != null) {
+                        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                        return com.jarvis.assistant.util.ActivityLauncherHelper.startActivitySafely(context, launchIntent)
+                    }
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to open app '$appName': ${e.message}")
+            Log.e(TAG, "Failed to open app '$appName': ${e.message}", e)
         }
         return false
     }

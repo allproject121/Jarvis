@@ -59,6 +59,18 @@ class GeminiLiveWebSocket(
     private var reconnectJob: Job? = null
     var promptProvider: (() -> String)? = null
 
+    // Deduplication sets to prevent duplicate execution & duplicate responses across stream chunks
+    private val dispatchedToolCallIds = java.util.Collections.newSetFromMap(
+        object : java.util.LinkedHashMap<String, Boolean>(200, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?): Boolean = size > 200
+        }
+    )
+    private val sentToolResponseIds = java.util.Collections.newSetFromMap(
+        object : java.util.LinkedHashMap<String, Boolean>(200, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?): Boolean = size > 200
+        }
+    )
+
     fun isSessionReady(): Boolean = isConnected.get() && isSetupComplete.get()
 
     fun connect(scope: CoroutineScope) {
@@ -1854,6 +1866,10 @@ class GeminiLiveWebSocket(
                         val id = call.optString("id", "")
                         val args = call.optJSONObject("args") ?: JSONObject()
                         if (name.isNotEmpty()) {
+                            if (id.isNotEmpty() && !dispatchedToolCallIds.add(id)) {
+                                Log.w(TAG, "Dropping duplicate topToolCall: $name (id=$id)")
+                                continue
+                            }
                             Log.i(TAG, "Gemini invoked toolCall: $name (id=$id)")
                             listener.onToolCall(id, name, args)
                         }
@@ -1875,6 +1891,10 @@ class GeminiLiveWebSocket(
                             val id = call.optString("id", "")
                             val args = call.optJSONObject("args") ?: JSONObject()
                             if (name.isNotEmpty()) {
+                                if (id.isNotEmpty() && !dispatchedToolCallIds.add(id)) {
+                                    Log.w(TAG, "Dropping duplicate serverContent toolCall: $name (id=$id)")
+                                    continue
+                                }
                                 Log.i(TAG, "Gemini invoked toolCall (serverContent): $name (id=$id)")
                                 listener.onToolCall(id, name, args)
                             }
@@ -1982,6 +2002,10 @@ class GeminiLiveWebSocket(
     }
 
     fun sendToolResponse(callId: String, functionName: String, result: JSONObject) {
+        if (callId.isNotEmpty() && !sentToolResponseIds.add(callId)) {
+            Log.w(TAG, "Tool response for $functionName (callId=$callId) already sent; suppressing duplicate transmission.")
+            return
+        }
         try {
             val responseEntry = JSONObject().apply {
                 put("id", callId)
@@ -2103,6 +2127,8 @@ class GeminiLiveWebSocket(
 
     fun disconnect() {
         isManuallyStopped.set(true)
+        dispatchedToolCallIds.clear()
+        sentToolResponseIds.clear()
         stopTimers()
         reconnectJob?.cancel()
         reconnectJob = null
