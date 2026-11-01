@@ -8,12 +8,14 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.jarvis.assistant.JarvisApp
 import com.jarvis.assistant.R
+import com.jarvis.assistant.ai.MultiModelAiRouter
 import com.jarvis.assistant.data.model.GeminiConstants
 import com.jarvis.assistant.data.preferences.AppPreferences
 import com.jarvis.assistant.databinding.ActivityApiConnectionBinding
@@ -81,6 +83,32 @@ class ApiConnectionActivity : AppCompatActivity() {
             binding.tvEndpointSummary.text = "Active Endpoint: ${preferences.customEndpoint}"
         }
 
+        // Load Multi-Model AI Execution Mode & Selected Provider
+        if (preferences.aiExecutionMode == MultiModelAiRouter.MODE_ALL_TOGETHER) {
+            binding.rbModeAllTogether.isChecked = true
+            binding.layoutSingleProviderSelect.visibility = View.GONE
+        } else {
+            binding.rbModeSingle.isChecked = true
+            binding.layoutSingleProviderSelect.visibility = View.VISIBLE
+        }
+
+        when (preferences.selectedAiProvider) {
+            MultiModelAiRouter.PROVIDER_OPENAI -> binding.rbProviderOpenAi.isChecked = true
+            MultiModelAiRouter.PROVIDER_CLAUDE -> binding.rbProviderClaude.isChecked = true
+            MultiModelAiRouter.PROVIDER_DEEPSEEK -> binding.rbProviderDeepSeek.isChecked = true
+            MultiModelAiRouter.PROVIDER_GROK -> binding.rbProviderGrok.isChecked = true
+            MultiModelAiRouter.PROVIDER_OPENROUTER -> binding.rbProviderOpenRouter.isChecked = true
+            MultiModelAiRouter.PROVIDER_LOCAL -> binding.rbProviderOllama.isChecked = true
+            else -> binding.rbProviderGemini.isChecked = true
+        }
+
+        // Load Multi-Model API Keys
+        binding.etOpenAiApiKey.setText(preferences.openAiApiKey)
+        binding.etClaudeApiKey.setText(preferences.claudeApiKey)
+        binding.etDeepSeekApiKey.setText(preferences.deepSeekApiKey)
+        binding.etGrokApiKey.setText(preferences.grokApiKey)
+        binding.etOpenRouterApiKey.setText(preferences.openRouterApiKey)
+
         // Load God's Eye 3D Sensors & Feeds Preferences
         binding.etGodsEyeGoogleKey.setText(preferences.godsEyeGoogleApiKey)
         binding.etGodsEyeCesiumToken.setText(preferences.godsEyeCesiumIonToken)
@@ -120,6 +148,15 @@ class ApiConnectionActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             testConnection(enteredKey)
+        }
+
+        // Execution Mode toggle listener: hide single provider selector when in all-together mode
+        binding.rgExecutionMode.setOnCheckedChangeListener { _, checkedId ->
+            if (checkedId == binding.rbModeAllTogether.id) {
+                binding.layoutSingleProviderSelect.visibility = View.GONE
+            } else {
+                binding.layoutSingleProviderSelect.visibility = View.VISIBLE
+            }
         }
 
         // God's Eye Registration Portal Links
@@ -278,6 +315,33 @@ class ApiConnectionActivity : AppCompatActivity() {
         preferences.customEndpoint = customEp
         preferences.localHostModel = localModel
 
+        // Save Multi-Model Execution Mode
+        val executionMode = if (binding.rbModeAllTogether.isChecked) {
+            MultiModelAiRouter.MODE_ALL_TOGETHER
+        } else {
+            MultiModelAiRouter.MODE_SINGLE
+        }
+        preferences.aiExecutionMode = executionMode
+
+        // Save Selected Primary Provider for Single Mode
+        val selectedProvider = when (binding.rgProviderGroup.checkedRadioButtonId) {
+            binding.rbProviderOpenAi.id -> MultiModelAiRouter.PROVIDER_OPENAI
+            binding.rbProviderClaude.id -> MultiModelAiRouter.PROVIDER_CLAUDE
+            binding.rbProviderDeepSeek.id -> MultiModelAiRouter.PROVIDER_DEEPSEEK
+            binding.rbProviderGrok.id -> MultiModelAiRouter.PROVIDER_GROK
+            binding.rbProviderOpenRouter.id -> MultiModelAiRouter.PROVIDER_OPENROUTER
+            binding.rbProviderOllama.id -> MultiModelAiRouter.PROVIDER_LOCAL
+            else -> MultiModelAiRouter.PROVIDER_GEMINI
+        }
+        preferences.selectedAiProvider = selectedProvider
+
+        // Save Multi-Model API Keys securely
+        preferences.openAiApiKey = binding.etOpenAiApiKey.text?.toString()?.trim() ?: ""
+        preferences.claudeApiKey = binding.etClaudeApiKey.text?.toString()?.trim() ?: ""
+        preferences.deepSeekApiKey = binding.etDeepSeekApiKey.text?.toString()?.trim() ?: ""
+        preferences.grokApiKey = binding.etGrokApiKey.text?.toString()?.trim() ?: ""
+        preferences.openRouterApiKey = binding.etOpenRouterApiKey.text?.toString()?.trim() ?: ""
+
         // Save God's Eye 3D Sensors & Feeds Preferences
         preferences.godsEyeGoogleApiKey = binding.etGodsEyeGoogleKey.text?.toString()?.trim() ?: ""
         preferences.godsEyeCesiumIonToken = binding.etGodsEyeCesiumToken.text?.toString()?.trim() ?: ""
@@ -295,7 +359,7 @@ class ApiConnectionActivity : AppCompatActivity() {
         com.jarvis.assistant.background.JarvisConversationService.clearLiveError()
         com.jarvis.assistant.background.JarvisConversationService.restartSession()
 
-        Toast.makeText(this, "API & Connection settings saved!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "API & Multi-Model settings saved!", Toast.LENGTH_SHORT).show()
         finish()
     }
 

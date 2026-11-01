@@ -31,6 +31,17 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         app:layout_constraintTop_toTopOf="parent">
+        <ImageButton
+            android:id="@+id/btnSettingsBack"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_jarvis_icon_square"
+            android:src="@drawable/ic_back"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            app:tint="?attr/themeTextPrimary"
+            android:contentDescription="Back"
+            android:layout_marginEnd="12dp" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -79,6 +90,59 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingBottom="50dp">
+            <!-- Home Screen Customization Card -->
+            <LinearLayout
+                android:id="@+id/cardSettingsCustomizeHome"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_jarvis_row_item"
+                android:paddingVertical="14dp"
+                android:paddingHorizontal="14dp"
+                android:layout_marginBottom="14dp"
+                android:clickable="true"
+                android:focusable="true">
+                <FrameLayout
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_jarvis_icon_square">
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_settings_protocols"
+                        app:tint="?attr/themeAccent"
+                        android:contentDescription="Customize Home" />
+                </FrameLayout>
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Customize Home Screen (Hide / Show Options)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hide or show any card, widget, or option on Home HUD"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="11sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_arrow_right"
+                    app:tint="?attr/themeTextMuted"
+                    android:contentDescription="Open" />
+            </LinearLayout>
 
             <!-- ==================== ANDROLLM LIVE TELEMETRY DASHBOARD ==================== -->
             <LinearLayout
@@ -288,7 +352,7 @@
                         android:id="@+id/tvProfileSubtitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="JARVIS OPERATOR • PRIMARY USER"
+                        android:text="JARVIS OPERATOR â€¢ PRIMARY USER"
                         android:textColor="?attr/themeTextMuted"
                         android:textSize="11sp"
                         android:letterSpacing="0.04"
@@ -524,7 +588,7 @@
                             android:id="@+id/tvModelHubActiveModel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Active: Qwen 2.5 (1.5B Instruct) • 5 Models Available"
+                            android:text="Active: Qwen 2.5 (1.5B Instruct) â€¢ 5 Models Available"
                             android:textColor="#94A3B8"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -586,7 +650,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Meta AI • GGUF Q4_K_M • 809 MB"
+                            android:text="Meta AI â€¢ GGUF Q4_K_M â€¢ 809 MB"
                             android:textColor="#94A3B8"
                             android:textSize="11sp"
                             android:layout_marginTop="2dp" />
@@ -679,7 +743,7 @@
                             android:id="@+id/tvMcpStatusSummary"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="JSON-RPC 2.0 Client • Tool Discovery Engine"
+                            android:text="JSON-RPC 2.0 Client â€¢ Tool Discovery Engine"
                             android:textColor="#94A3B8"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -806,7 +870,7 @@
                             android:id="@+id/tvAccessibilityStatusSummary"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Accessibility Agent • UI Tree Inspector"
+                            android:text="Accessibility Agent â€¢ UI Tree Inspector"
                             android:textColor="#94A3B8"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -947,7 +1011,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="10-Stage Pipeline • Verbalized Emojis &amp; Math"
+                            android:text="10-Stage Pipeline â€¢ Verbalized Emojis &amp; Math"
                             android:textColor="#94A3B8"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -1003,7 +1067,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Convert Currencies ($ / ₹ / € / £)"
+                            android:text="Convert Currencies ($ / â‚¹ / â‚¬ / Â£)"
                             android:textColor="#FFFFFF"
                             android:textSize="13sp" />
 
@@ -1113,7 +1177,7 @@
                             android:id="@+id/tvCurrentAssistantName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="JARVIS • Tap to customize"
+                            android:text="JARVIS â€¢ Tap to customize"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -1189,7 +1253,7 @@
                             android:id="@+id/tvCurrentPersona"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Roshan Mode • Voice: Puck"
+                            android:text="Roshan Mode â€¢ Voice: Puck"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -1339,7 +1403,7 @@
                             android:id="@+id/tvJarvisModeSubtitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Affectionate companion &amp; secretary • Live 3D avatar &amp; sweet voice"
+                            android:text="Affectionate companion &amp; secretary â€¢ Live 3D avatar &amp; sweet voice"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -1741,7 +1805,7 @@
                             android:id="@+id/tvOwnerVoiceSubtitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Voice Profile Active • Only you can speak"
+                            android:text="Voice Profile Active â€¢ Only you can speak"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -2882,7 +2946,7 @@
                             android:id="@+id/tvStudioSummary"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Core: QUANTUM • Theme: STARK NAVY HUD"
+                            android:text="Core: QUANTUM â€¢ Theme: STARK NAVY HUD"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -3248,7 +3312,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="PC ⇄ Phone Ollama Hub"
+                            android:text="PC â‡„ Phone Ollama Hub"
                             android:textColor="?attr/themeTextPrimary"
                             android:textSize="15sp"
                             android:fontFamily="sans-serif-medium"
@@ -3534,7 +3598,7 @@
                             android:id="@+id/tvCurrentModel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Gemini Live WebSocket • Ollama Local"
+                            android:text="Gemini Live WebSocket â€¢ Ollama Local"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -3742,7 +3806,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Created by Roshan Sir • Open repositories"
+                            android:text="Created by Roshan Sir â€¢ Open repositories"
                             android:textColor="?attr/themeTextMuted"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />
@@ -3797,7 +3861,7 @@
                 android:id="@+id/tvFooterCredit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="JARVIS v5.2.34 • ARCHITECTURE BY ROSHAN SIR • ALL SYSTEMS NOMINAL"
+                android:text="JARVIS v5.2.34 â€¢ ARCHITECTURE BY ROSHAN SIR â€¢ ALL SYSTEMS NOMINAL"
                 android:textColor="?attr/themeTextMuted"
                 android:textSize="10sp"
                 android:letterSpacing="0.06"

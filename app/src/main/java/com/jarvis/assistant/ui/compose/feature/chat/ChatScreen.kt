@@ -1,4 +1,4 @@
-package com.jarvis.assistant.ui.compose.feature.chat
+﻿package com.jarvis.assistant.ui.compose.feature.chat
 
 import android.content.Context
 import android.widget.Toast
@@ -196,6 +196,11 @@ private fun ChatScreen(
             listState.animateScrollToItem(lastContentIndex)
         }
     }
+    LaunchedEffect(inputMessageText) {
+        if (inputMessageText.isNotEmpty() && messages.isNotEmpty()) {
+            listState.animateScrollToItem(lastContentIndex)
+        }
+    }
     // Jump to a message picked from search once its conversation has loaded.
     LaunchedEffect(uiState.scrollToMessageId, messages) {
         val target = uiState.scrollToMessageId ?: return@LaunchedEffect
@@ -280,8 +285,8 @@ private fun ChatScreen(
                     ChatTopBar(
                         conversationTitle = uiState.conversationTitle,
                         statusLabel = when {
-                            isGenerating -> "Generating · ${uiState.providerName}"
-                            uiState.offlineFallbackActive -> "Offline fallback · ${uiState.providerName}"
+                            isGenerating -> "Generating Â· ${uiState.providerName}"
+                            uiState.offlineFallbackActive -> "Offline fallback Â· ${uiState.providerName}"
                             else -> uiState.mode.displayName
                         },
                         conversation = currentConversation,
@@ -404,7 +409,7 @@ private fun ChatScreen(
                                     if (isGenerating && streamingText.isEmpty()) {
                                         item(key = "thinking_indicator") {
                                             TypingAndThinkingIndicator(
-                                                statusText = "Routing to ${uiState.mode.displayName}…"
+                                                statusText = "Routing to ${uiState.mode.displayName}â€¦"
                                             )
                                         }
                                     }

@@ -43,6 +43,13 @@ class StarkMenuBottomSheet : BottomSheetDialogFragment() {
             (activity as? MainActivity)?.selectTab(MainActivity.TAB_SETTINGS)
         }
 
+        // 1b. Customize Home Screen (Hide / Show Options)
+        binding.menuItemCustomizeHome.setOnClickListener {
+            HudSoundManager.playTapSound()
+            dismiss()
+            HomeCardsCustomizationBottomSheet.newInstance().show(parentFragmentManager, HomeCardsCustomizationBottomSheet.TAG)
+        }
+
         // 2. Stark HUD Customization Studio
         binding.menuItemStudio.setOnClickListener {
             HudSoundManager.playTapSound()

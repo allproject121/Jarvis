@@ -70,6 +70,18 @@
         android:background="?attr/themeCardBorder"
         android:layout_marginBottom="10dp" />
 
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="520dp"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
     <!-- Item 1: Settings & Preferences (Primary User Request!) -->
     <LinearLayout
         android:id="@+id/menuItemSettings"
@@ -117,6 +129,64 @@
                 android:layout_height="wrap_content"
                 android:text="Voice intelligence, models, permissions &amp; account"
                 android:textColor="?attr/themeTextMuted"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/ic_arrow_right"
+            app:tint="?attr/themeTextMuted"
+            android:contentDescription="Open" />
+    </LinearLayout>
+
+    <!-- Item: Customize Home Screen (Hide / Show Options) -->
+    <LinearLayout
+        android:id="@+id/menuItemCustomizeHome"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_jarvis_row_item"
+        android:paddingVertical="12dp"
+        android:paddingHorizontal="10dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <FrameLayout
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_jarvis_icon_square">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_settings_protocols"
+                app:tint="?attr/themeAccent"
+                android:contentDescription="Customize Home" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="14dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Customize Home (Hide / Show Options)"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hide or show weather, telemetry, protocols &amp; update cards"
+                android:textColor="?attr/themeAccent"
                 android:textSize="11sp" />
         </LinearLayout>
 
@@ -591,5 +661,8 @@
             app:tint="?attr/themeTextMuted"
             android:contentDescription="Open" />
     </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>

@@ -284,7 +284,7 @@
 
         <!-- Tab 5: Studio (Customization Studio in dock) -->
         <FrameLayout
-            android:id="@+id/tabStudio"
+            android:id="@+id/tabMenu"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -292,7 +292,7 @@
             android:focusable="true">
 
             <LinearLayout
-                android:id="@+id/pillTabStudio"
+                android:id="@+id/pillTabMenu"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
@@ -303,18 +303,18 @@
                 android:paddingVertical="3dp">
 
                 <ImageView
-                    android:id="@+id/ivTabStudio"
+                    android:id="@+id/ivTabMenu"
                     android:layout_width="22dp"
                     android:layout_height="22dp"
-                    android:src="@drawable/ic_settings_orb"
+                    android:src="@drawable/ic_menu"
                     app:tint="?attr/themeTextMuted"
-                    android:contentDescription="Studio" />
+                    android:contentDescription="Menu" />
 
                 <TextView
-                    android:id="@+id/tvTabStudio"
+                    android:id="@+id/tvTabMenu"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Studio"
+                    android:text="Menu"
                     android:textSize="10sp"
                     android:textStyle="bold"
                     android:fontFamily="sans-serif-medium"

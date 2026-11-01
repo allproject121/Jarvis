@@ -1,4 +1,4 @@
-package com.jarvis.assistant.ui.chat
+﻿package com.jarvis.assistant.ui.chat
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -169,12 +169,33 @@ class ChatFragment : Fragment() {
         com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
         com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.panelDrawer)
 
-        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val statusBarInsets = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            val imeInsets = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime())
+            val isImeVisible = insets.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime())
             val density = resources.displayMetrics.density
             val topInset = statusBarInsets.top
             val safeTopPadding = if (topInset > 0) topInset + (6 * density).toInt() else (14 * density).toInt()
-            v.setPadding(v.paddingLeft, safeTopPadding, v.paddingRight, v.paddingBottom)
+            val bottomPadding = if (isImeVisible) {
+                imeInsets.bottom
+            } else {
+                (100 * density).toInt()
+            }
+            binding.chatContent.setPadding(
+                (16 * density).toInt(),
+                safeTopPadding,
+                (16 * density).toInt(),
+                bottomPadding
+            )
+            (activity as? MainActivity)?.setBottomDockVisibility(!isImeVisible, animated = true)
+            if (isImeVisible) {
+                val count = messageAdapter.itemCount
+                if (count > 0) {
+                    binding.rvChatMessages.post {
+                        binding.rvChatMessages.scrollToPosition(count - 1)
+                    }
+                }
+            }
             insets
         }
 
@@ -232,9 +253,51 @@ class ChatFragment : Fragment() {
         setupDrawer()
         observeChat()
         consumePendingPrompt()
+
+        // Automatically scroll chat up when user types or focuses input
+        binding.etMessageInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val count = messageAdapter.itemCount
+                if (count > 0) {
+                    binding.rvChatMessages.post {
+                        binding.rvChatMessages.scrollToPosition(count - 1)
+                    }
+                }
+            }
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        })
+        binding.etMessageInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                val count = messageAdapter.itemCount
+                if (count > 0) {
+                    binding.rvChatMessages.postDelayed({
+                        binding.rvChatMessages.scrollToPosition(count - 1)
+                    }, 120)
+                }
+            }
+        }
+        binding.etMessageInput.setOnClickListener {
+            val count = messageAdapter.itemCount
+            if (count > 0) {
+                binding.rvChatMessages.postDelayed({
+                    binding.rvChatMessages.scrollToPosition(count - 1)
+                }, 120)
+            }
+        }
+        binding.rvChatMessages.addOnLayoutChangeListener { _, _, _, _, bottom, _, _, _, oldBottom ->
+            if (bottom < oldBottom) {
+                val count = messageAdapter.itemCount
+                if (count > 0) {
+                    binding.rvChatMessages.post {
+                        binding.rvChatMessages.scrollToPosition(count - 1)
+                    }
+                }
+            }
+        }
     }
 
-    // ── Sending ─────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Sending Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     private fun sendMessage() {
         val text = binding.etMessageInput.text?.toString()?.trim() ?: ""
@@ -248,6 +311,10 @@ class ChatFragment : Fragment() {
         }
         if (chatVm.send(text, startSession)) {
             binding.etMessageInput.text?.clear()
+            binding.rvChatMessages.post {
+                val count = messageAdapter.itemCount
+                if (count > 0) binding.rvChatMessages.scrollToPosition(count - 1)
+            }
         }
     }
 
@@ -273,13 +340,55 @@ class ChatFragment : Fragment() {
 
     /** Prompt-library hand-off ("Send to model" in the Prompts screen). */
     private fun consumePendingPrompt() {
+
+        // Automatically scroll chat up when user types or focuses input
+        binding.etMessageInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val count = messageAdapter.itemCount
+                if (count > 0) {
+                    binding.rvChatMessages.post {
+                        binding.rvChatMessages.scrollToPosition(count - 1)
+                    }
+                }
+            }
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        })
+        binding.etMessageInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                val count = messageAdapter.itemCount
+                if (count > 0) {
+                    binding.rvChatMessages.postDelayed({
+                        binding.rvChatMessages.scrollToPosition(count - 1)
+                    }, 120)
+                }
+            }
+        }
+        binding.etMessageInput.setOnClickListener {
+            val count = messageAdapter.itemCount
+            if (count > 0) {
+                binding.rvChatMessages.postDelayed({
+                    binding.rvChatMessages.scrollToPosition(count - 1)
+                }, 120)
+            }
+        }
+        binding.rvChatMessages.addOnLayoutChangeListener { _, _, _, _, bottom, _, _, _, oldBottom ->
+            if (bottom < oldBottom) {
+                val count = messageAdapter.itemCount
+                if (count > 0) {
+                    binding.rvChatMessages.post {
+                        binding.rvChatMessages.scrollToPosition(count - 1)
+                    }
+                }
+            }
+        }
         if (_binding == null) return
         val prompt = PendingPrompt.text ?: return
         PendingPrompt.text = null
         if (prompt.isNotBlank()) putInComposer(prompt)
     }
 
-    // ── Observation ─────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Observation Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     private fun observeChat() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -382,7 +491,7 @@ class ChatFragment : Fragment() {
         }
     }
 
-    // ── Attachments (+ button) ──────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Attachments (+ button) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     private fun showAttachMenu(anchor: View) {
         if (!chatVm.attachmentsEnabled()) {
@@ -416,10 +525,10 @@ class ChatFragment : Fragment() {
                 text = buildString {
                     append(att.label)
                     when {
-                        att.isFailed -> append(" · failed")
-                        att.fromOcr -> append(" · OCR")
+                        att.isFailed -> append(" Ã‚Â· failed")
+                        att.fromOcr -> append(" Ã‚Â· OCR")
                     }
-                    append("   ✕")
+                    append("   Ã¢Å“â€¢")
                 }
                 textSize = 12f
                 setTextColor(if (att.isFailed) muted else primary)
@@ -437,7 +546,7 @@ class ChatFragment : Fragment() {
         b.etMessageInput.hint = if (attachments.isNotEmpty()) "Ask Jarvis about the attached files" else "Message Jarvis"
     }
 
-    // ── Message actions ─────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Message actions Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     private fun onCopy(message: Message) {
         val label = if (message.role == MessageRole.USER) "User message" else "Jarvis response"
@@ -506,7 +615,7 @@ class ChatFragment : Fragment() {
         chatVm.send(text, startSession)
     }
 
-    // ── Multi-select ────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Multi-select Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     private fun toggleSelected(id: String) {
         val current = selection.value
@@ -563,7 +672,7 @@ class ChatFragment : Fragment() {
         b.btnChatNew.visibility = headerVisibility
     }
 
-    // ── Conversation drawer ─────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Conversation drawer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     private data class DrawerInputs(
         val active: List<Conversation>,
@@ -710,7 +819,7 @@ class ChatFragment : Fragment() {
         backCallback.isEnabled = drawerOpen || selection.value.isNotEmpty() || editingMessageId != null
     }
 
-    // ── Conversation actions ────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Conversation actions Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     private fun showCurrentConversationMenu(anchor: View) {
         val current = chatVm.conversation.value
@@ -828,7 +937,7 @@ class ChatFragment : Fragment() {
         }
     }
 
-    // ── Helpers ─────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Helpers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     private fun speak(text: String) {
         val clean = text
@@ -883,6 +992,48 @@ class ChatFragment : Fragment() {
         if (_binding != null) {
             com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
             consumePendingPrompt()
+
+        // Automatically scroll chat up when user types or focuses input
+        binding.etMessageInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val count = messageAdapter.itemCount
+                if (count > 0) {
+                    binding.rvChatMessages.post {
+                        binding.rvChatMessages.scrollToPosition(count - 1)
+                    }
+                }
+            }
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        })
+        binding.etMessageInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                val count = messageAdapter.itemCount
+                if (count > 0) {
+                    binding.rvChatMessages.postDelayed({
+                        binding.rvChatMessages.scrollToPosition(count - 1)
+                    }, 120)
+                }
+            }
+        }
+        binding.etMessageInput.setOnClickListener {
+            val count = messageAdapter.itemCount
+            if (count > 0) {
+                binding.rvChatMessages.postDelayed({
+                    binding.rvChatMessages.scrollToPosition(count - 1)
+                }, 120)
+            }
+        }
+        binding.rvChatMessages.addOnLayoutChangeListener { _, _, _, _, bottom, _, _, _, oldBottom ->
+            if (bottom < oldBottom) {
+                val count = messageAdapter.itemCount
+                if (count > 0) {
+                    binding.rvChatMessages.post {
+                        binding.rvChatMessages.scrollToPosition(count - 1)
+                    }
+                }
+            }
+        }
         }
     }
 
@@ -892,6 +1043,48 @@ class ChatFragment : Fragment() {
             binding.root.visibility = View.VISIBLE
             com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
             consumePendingPrompt()
+
+        // Automatically scroll chat up when user types or focuses input
+        binding.etMessageInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val count = messageAdapter.itemCount
+                if (count > 0) {
+                    binding.rvChatMessages.post {
+                        binding.rvChatMessages.scrollToPosition(count - 1)
+                    }
+                }
+            }
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        })
+        binding.etMessageInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                val count = messageAdapter.itemCount
+                if (count > 0) {
+                    binding.rvChatMessages.postDelayed({
+                        binding.rvChatMessages.scrollToPosition(count - 1)
+                    }, 120)
+                }
+            }
+        }
+        binding.etMessageInput.setOnClickListener {
+            val count = messageAdapter.itemCount
+            if (count > 0) {
+                binding.rvChatMessages.postDelayed({
+                    binding.rvChatMessages.scrollToPosition(count - 1)
+                }, 120)
+            }
+        }
+        binding.rvChatMessages.addOnLayoutChangeListener { _, _, _, _, bottom, _, _, _, oldBottom ->
+            if (bottom < oldBottom) {
+                val count = messageAdapter.itemCount
+                if (count > 0) {
+                    binding.rvChatMessages.post {
+                        binding.rvChatMessages.scrollToPosition(count - 1)
+                    }
+                }
+            }
+        }
         } else if (hidden && _binding != null) {
             closeDrawer(animated = false)
             clearSelection()

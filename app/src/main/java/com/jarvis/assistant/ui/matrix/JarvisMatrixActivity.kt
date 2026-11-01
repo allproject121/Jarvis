@@ -149,6 +149,11 @@ class JarvisMatrixActivity : AppCompatActivity() {
             finish()
         }
 
+        binding.bannerOpenBypassIde.setOnClickListener {
+            HudSoundManager.playTapSound()
+            com.jarvis.assistant.ui.bypasside.BypassIdeActivity.open(this)
+        }
+
         // --- 1. AI Direct Generation & Macros ---
         binding.btnDirectGenerateImg.setOnClickListener {
             HudSoundManager.playTapSound()

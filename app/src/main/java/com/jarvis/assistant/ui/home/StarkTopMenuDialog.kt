@@ -59,11 +59,13 @@ class StarkTopMenuDialog : DialogFragment() {
         listOf(
             binding.btnCloseTopMenu,
             binding.menuItemSettings,
+            binding.menuItemCustomizeHome,
             binding.menuItemStudio,
             binding.menuItemChat,
             binding.menuItemGodsEye,
             binding.menuItemMemories,
             binding.menuItemVoice,
+            binding.menuItemBypassIde,
             binding.menuItemMatrixHub,
             binding.menuItemSuperCore
         ).forEach { com.jarvis.assistant.util.HudAnimationHelper.attachSpringTouch(it) }
@@ -78,6 +80,13 @@ class StarkTopMenuDialog : DialogFragment() {
             HudSoundManager.playTapSound()
             dismiss()
             (activity as? MainActivity)?.selectTab(MainActivity.TAB_SETTINGS)
+        }
+
+        // 1b. Customize Home Screen (Hide / Show Options)
+        binding.menuItemCustomizeHome.setOnClickListener {
+            HudSoundManager.playTapSound()
+            dismiss()
+            HomeCardsCustomizationBottomSheet.newInstance().show(parentFragmentManager, HomeCardsCustomizationBottomSheet.TAG)
         }
 
         // 2. Stark HUD Customization Studio
@@ -113,6 +122,13 @@ class StarkTopMenuDialog : DialogFragment() {
             HudSoundManager.playTapSound()
             dismiss()
             startActivity(Intent(requireContext(), VoiceEnrollmentActivity::class.java))
+        }
+
+        // 6b. JARVIS Bypass IDE
+        binding.menuItemBypassIde.setOnClickListener {
+            HudSoundManager.playTapSound()
+            dismiss()
+            com.jarvis.assistant.ui.bypasside.BypassIdeActivity.open(requireContext())
         }
 
         // 7. JARVIS Agent Matrix & Protocols

@@ -118,6 +118,13 @@ class AppPreferences(context: Context) {
         private const val KEY_AI_MODEL_MODE = "key_ai_model_mode"
         private const val KEY_PREFERRED_BRAIN = "key_preferred_brain"
         private const val KEY_OPENAI_API_KEY = "key_openai_api_key"
+        private const val KEY_CLAUDE_API_KEY = "key_claude_api_key"
+        private const val KEY_DEEPSEEK_API_KEY = "key_deepseek_api_key"
+        private const val KEY_GROK_API_KEY = "key_grok_api_key"
+        private const val KEY_OPENROUTER_API_KEY = "key_openrouter_api_key"
+        private const val KEY_AI_EXECUTION_MODE = "key_ai_execution_mode"
+        private const val KEY_SELECTED_AI_PROVIDER = "key_selected_ai_provider"
+        private const val KEY_SELECTED_MODEL_NAME = "key_selected_model_name"
         private const val KEY_ORB_ENTITY_TYPE = "key_orb_entity_type"
         private const val KEY_ORB_SHOW_CORE = "key_orb_show_core"
         private const val KEY_ORB_SHOW_GLOW = "key_orb_show_glow"
@@ -200,6 +207,62 @@ class AppPreferences(context: Context) {
                 prefs.edit().putString(KEY_OPENAI_API_KEY, value).apply()
             }
         }
+
+    var claudeApiKey: String
+        get() = secureApiPrefs?.getString(KEY_CLAUDE_API_KEY, null) ?: prefs.getString(KEY_CLAUDE_API_KEY, "") ?: ""
+        set(value) {
+            if (secureApiPrefs != null) {
+                secureApiPrefs.edit().putString(KEY_CLAUDE_API_KEY, value).apply()
+                prefs.edit().remove(KEY_CLAUDE_API_KEY).apply()
+            } else {
+                prefs.edit().putString(KEY_CLAUDE_API_KEY, value).apply()
+            }
+        }
+
+    var deepSeekApiKey: String
+        get() = secureApiPrefs?.getString(KEY_DEEPSEEK_API_KEY, null) ?: prefs.getString(KEY_DEEPSEEK_API_KEY, "") ?: ""
+        set(value) {
+            if (secureApiPrefs != null) {
+                secureApiPrefs.edit().putString(KEY_DEEPSEEK_API_KEY, value).apply()
+                prefs.edit().remove(KEY_DEEPSEEK_API_KEY).apply()
+            } else {
+                prefs.edit().putString(KEY_DEEPSEEK_API_KEY, value).apply()
+            }
+        }
+
+    var grokApiKey: String
+        get() = secureApiPrefs?.getString(KEY_GROK_API_KEY, null) ?: prefs.getString(KEY_GROK_API_KEY, "") ?: ""
+        set(value) {
+            if (secureApiPrefs != null) {
+                secureApiPrefs.edit().putString(KEY_GROK_API_KEY, value).apply()
+                prefs.edit().remove(KEY_GROK_API_KEY).apply()
+            } else {
+                prefs.edit().putString(KEY_GROK_API_KEY, value).apply()
+            }
+        }
+
+    var openRouterApiKey: String
+        get() = secureApiPrefs?.getString(KEY_OPENROUTER_API_KEY, null) ?: prefs.getString(KEY_OPENROUTER_API_KEY, "") ?: ""
+        set(value) {
+            if (secureApiPrefs != null) {
+                secureApiPrefs.edit().putString(KEY_OPENROUTER_API_KEY, value).apply()
+                prefs.edit().remove(KEY_OPENROUTER_API_KEY).apply()
+            } else {
+                prefs.edit().putString(KEY_OPENROUTER_API_KEY, value).apply()
+            }
+        }
+
+    var aiExecutionMode: String
+        get() = prefs.getString(KEY_AI_EXECUTION_MODE, "single") ?: "single"
+        set(value) = prefs.edit().putString(KEY_AI_EXECUTION_MODE, value).apply()
+
+    var selectedAiProvider: String
+        get() = prefs.getString(KEY_SELECTED_AI_PROVIDER, "gemini") ?: "gemini"
+        set(value) = prefs.edit().putString(KEY_SELECTED_AI_PROVIDER, value).apply()
+
+    var selectedModelName: String
+        get() = prefs.getString(KEY_SELECTED_MODEL_NAME, "models/gemini-3.8-live") ?: "models/gemini-3.8-live"
+        set(value) = prefs.edit().putString(KEY_SELECTED_MODEL_NAME, value).apply()
 
     var isHoloScanlinesEnabled: Boolean
         get() = prefs.getBoolean(KEY_HOLO_SCANLINES_ENABLED, true)
@@ -533,6 +596,46 @@ class AppPreferences(context: Context) {
     var showStatusIndicatorWidget: Boolean
         get() = prefs.getBoolean(KEY_SHOW_STATUS_INDICATOR_WIDGET, true)
         set(value) = prefs.edit().putBoolean(KEY_SHOW_STATUS_INDICATOR_WIDGET, value).apply()
+
+    var showWallpaperCard: Boolean
+        get() = prefs.getBoolean("key_show_home_wallpaper", true)
+        set(value) = prefs.edit().putBoolean("key_show_home_wallpaper", value).apply()
+
+    var showAppLockCard: Boolean
+        get() = prefs.getBoolean("key_show_home_applock", true)
+        set(value) = prefs.edit().putBoolean("key_show_home_applock", value).apply()
+
+    var showPocketTtsCard: Boolean
+        get() = prefs.getBoolean("key_show_home_pockettts", true)
+        set(value) = prefs.edit().putBoolean("key_show_home_pockettts", value).apply()
+
+    var showMatrixCard: Boolean
+        get() = prefs.getBoolean("key_show_home_matrix", true)
+        set(value) = prefs.edit().putBoolean("key_show_home_matrix", value).apply()
+
+    var showScreenShareButton: Boolean
+        get() = prefs.getBoolean("key_show_home_screen_share", true)
+        set(value) = prefs.edit().putBoolean("key_show_home_screen_share", value).apply()
+
+    var showMemoriesButton: Boolean
+        get() = prefs.getBoolean("key_show_home_memories", true)
+        set(value) = prefs.edit().putBoolean("key_show_home_memories", value).apply()
+
+    var showLanguageButton: Boolean
+        get() = prefs.getBoolean("key_show_home_language", true)
+        set(value) = prefs.edit().putBoolean("key_show_home_language", value).apply()
+
+    var showUpdateAgentCard: Boolean
+        get() = prefs.getBoolean("key_show_update_agent", true)
+        set(value) = prefs.edit().putBoolean("key_show_update_agent", value).apply()
+
+    var showUpdateVoiceCard: Boolean
+        get() = prefs.getBoolean("key_show_update_voice", true)
+        set(value) = prefs.edit().putBoolean("key_show_update_voice", value).apply()
+
+    var showUpdateGodsEyeCard: Boolean
+        get() = prefs.getBoolean("key_show_update_godseye", true)
+        set(value) = prefs.edit().putBoolean("key_show_update_godseye", value).apply()
 
     var hideAllHomeCards: Boolean
         get() = prefs.getBoolean(KEY_HIDE_ALL_HOME_CARDS, false)

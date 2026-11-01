@@ -42,42 +42,52 @@ object AiTextSynthesizer {
         maxTokens: Int = 1200,
         fallback: () -> String
     ): String = withContext(Dispatchers.IO) {
+        // Multi-Model Router executes user's chosen Mode (Single Model vs All Models Together)
+        try {
+            val result = MultiModelAiRouter.execute(
+                context = context,
+                systemPrompt = systemInstruction,
+                userPrompt = prompt,
+                temperature = temperature,
+                maxTokens = maxTokens
+            )
+            if (result.finalText.isNotBlank() && !result.finalText.startsWith("Sir, no AI provider responded")) {
+                Log.i(TAG, "Synthesized via MultiModelAiRouter (${result.providerUsed}, mode=${result.mode})")
+                return@withContext result.finalText.trim()
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "MultiModelAiRouter error: ${e.message}")
+        }
+
+        // Fallback to legacy cascade if needed
         val app = (context.applicationContext as? JarvisApp) ?: JarvisApp.instance
         val prefs = app.preferences
 
-        // 1. Try Gemini REST API (Direct and lightning fast)
         val geminiKey = prefs.apiKey.trim()
         if (geminiKey.isNotBlank()) {
             val geminiResult = callGeminiRestApi(geminiKey, systemInstruction, prompt, temperature, maxTokens)
             if (geminiResult != null && geminiResult.isNotBlank()) {
-                Log.i(TAG, "Successfully synthesized text using Gemini REST API")
                 return@withContext geminiResult.trim()
             }
         }
 
-        // 2. Try OpenAI API if key is present
         val openAiKey = prefs.openAiApiKey.trim()
         if (openAiKey.isNotBlank()) {
             val openAiResult = callOpenAiRestApi(openAiKey, systemInstruction, prompt, temperature, maxTokens)
             if (openAiResult != null && openAiResult.isNotBlank()) {
-                Log.i(TAG, "Successfully synthesized text using OpenAI API")
                 return@withContext openAiResult.trim()
             }
         }
 
-        // 3. Try Local Host LLM (Ollama / vLLM / LM Studio)
         val customEp = prefs.customEndpoint.trim()
         val localModel = prefs.localHostModel.trim()
         if (customEp.isNotBlank()) {
             val localResult = callLocalHostApi(customEp, localModel, systemInstruction, prompt)
             if (localResult != null && localResult.isNotBlank()) {
-                Log.i(TAG, "Successfully synthesized text using LocalHost LLM")
                 return@withContext localResult.trim()
             }
         }
 
-        // 4. Return reliable deterministic fallback
-        Log.i(TAG, "Using fallback deterministic generation")
         fallback()
     }
 

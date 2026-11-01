@@ -176,6 +176,12 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
+            android:name=".ui.bypasside.BypassIdeActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
             android:name=".ui.facelock.JarvisAppLockActivity"
             android:exported="true"
             android:launchMode="singleTask"

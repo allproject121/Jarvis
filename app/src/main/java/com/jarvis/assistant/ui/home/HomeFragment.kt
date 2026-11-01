@@ -123,6 +123,11 @@ class HomeFragment : Fragment() {
             (activity as? MainActivity)?.selectTab(MainActivity.TAB_UPDATES)
         }
 
+        binding.btnCustomizeHomeCards.setOnClickListener {
+            HudSoundManager.playTapSound()
+            HomeCardsCustomizationBottomSheet.newInstance().show(childFragmentManager, HomeCardsCustomizationBottomSheet.TAG)
+        }
+
         binding.btnToggleZenMode.setOnClickListener {
             HudSoundManager.playTapSound()
             toggleZenMode()
@@ -289,12 +294,33 @@ class HomeFragment : Fragment() {
 
         binding.cardHomeMatrix.setOnClickListener {
             HudSoundManager.playTapSound()
-            startActivity(Intent(requireContext(), com.jarvis.assistant.ui.matrix.JarvisMatrixActivity::class.java))
+            com.jarvis.assistant.ui.bypasside.BypassIdeActivity.open(requireContext())
         }
+        binding.cardHomeMatrix.setOnLongClickListener {
+            HudSoundManager.playTapSound()
+            startActivity(Intent(requireContext(), com.jarvis.assistant.ui.matrix.JarvisMatrixActivity::class.java))
+            true
+        }
+
+        // Long-press to hide any card / widget directly from the home screen
+        setupCardHideOnLongClick(binding.cardWeather, "Weather Information") { preferences.showWeatherWidget = false }
+        setupCardHideOnLongClick(binding.cardTelemetry, "Stark Telemetry HUD") { preferences.showTelemetryWidget = false }
+        setupCardHideOnLongClick(binding.cardHomeWallpaper, "Live Wallpaper Card") { preferences.showWallpaperCard = false }
+        setupCardHideOnLongClick(binding.cardHomeAppLock, "Biometric AppLock Card") { preferences.showAppLockCard = false }
+        setupCardHideOnLongClick(binding.cardHomePocketTts, "PocketTTS Voice Card") { preferences.showPocketTtsCard = false }
+        setupCardHideOnLongClick(binding.cardHomeMatrix, "Matrix & Protocols Card") { preferences.showMatrixCard = false }
+        setupCardHideOnLongClick(binding.btnScreenShareQuick, "Screen Share Button") { preferences.showScreenShareButton = false }
+        setupCardHideOnLongClick(binding.btnSavedMemories, "Saved Memories Button") { preferences.showMemoriesButton = false }
+        setupCardHideOnLongClick(binding.btnConversationLanguageQuick, "Language Selector") { preferences.showLanguageButton = false }
+        setupCardHideOnLongClick(binding.cardUpdateAgent, "Agent Tasks Announcement") { preferences.showUpdateAgentCard = false }
+        setupCardHideOnLongClick(binding.cardUpdateVoice, "Voice Architecture Announcement") { preferences.showUpdateVoiceCard = false }
+        setupCardHideOnLongClick(binding.cardUpdateGodsEye, "God's Eye 3D Announcement") { preferences.showUpdateGodsEyeCard = false }
+        setupCardHideOnLongClick(binding.layoutStatusIndicator, "Voice Status Indicator") { preferences.showStatusIndicatorWidget = false }
 
         // Attach Spring Touch Micro-Animations to interactive cards and buttons
         val touchableViews = listOf(
             binding.btnTopChat,
+            binding.btnCustomizeHomeCards,
             binding.btnTopCustomization,
             binding.btnTopSettings,
             binding.btnTopUpdates,
@@ -512,6 +538,38 @@ class HomeFragment : Fragment() {
         }
     }
 
+    fun applyCustomizationPreferencesExternal() {
+        if (_binding != null) {
+            applyCustomizationPreferences()
+        }
+    }
+
+    private fun setupCardHideOnLongClick(view: View, cardTitle: String, onHide: () -> Unit) {
+        view.setOnLongClickListener {
+            HudSoundManager.playTapSound()
+            com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Hide $cardTitle?")
+                .setMessage("Do you want to hide this option from the Home Screen? You can unhide it anytime from Menu > Customize Home.")
+                .setPositiveButton("Hide") { _, _ ->
+                    onHide()
+                    applyCustomizationPreferences()
+                    com.google.android.material.snackbar.Snackbar.make(
+                        binding.root,
+                        "$cardTitle hidden from Home",
+                        com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                    ).setAction("Customize") {
+                        HomeCardsCustomizationBottomSheet.newInstance().show(childFragmentManager, HomeCardsCustomizationBottomSheet.TAG)
+                    }.show()
+                }
+                .setNeutralButton("Customize All") { _, _ ->
+                    HomeCardsCustomizationBottomSheet.newInstance().show(childFragmentManager, HomeCardsCustomizationBottomSheet.TAG)
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+            true
+        }
+    }
+
     private fun applyCustomizationPreferences() {
         val b = _binding ?: return
 
@@ -547,10 +605,41 @@ class HomeFragment : Fragment() {
             b.layoutStatusIndicator.visibility = if (preferences.showStatusIndicatorWidget) View.VISIBLE else View.GONE
             b.cardWeather.visibility = if (preferences.showWeatherWidget) View.VISIBLE else View.GONE
             b.cardTelemetry.visibility = if (preferences.showTelemetryWidget) View.VISIBLE else View.GONE
-            b.layoutActionGrid.visibility = if (preferences.showQuickActionsWidget) View.VISIBLE else View.GONE
-            b.layoutTacticalProtocols.visibility = if (preferences.showProtocolsWidget) View.VISIBLE else View.GONE
-            b.layoutUpdatesSectionHeader.visibility = if (preferences.showUpdatesWidget) View.VISIBLE else View.GONE
-            b.layoutUpdatesContainer.visibility = if (preferences.showUpdatesWidget) View.VISIBLE else View.GONE
+
+            // Quick Action Buttons
+            val showScreen = preferences.showScreenShareButton
+            val showMemories = preferences.showMemoriesButton
+            val showLanguage = preferences.showLanguageButton
+            b.btnScreenShareQuick.visibility = if (showScreen) View.VISIBLE else View.GONE
+            b.btnSavedMemories.visibility = if (showMemories) View.VISIBLE else View.GONE
+            b.btnConversationLanguageQuick.visibility = if (showLanguage) View.VISIBLE else View.GONE
+            val hasQuickAction = showScreen || showMemories || showLanguage
+            b.layoutActionGrid.visibility = if (preferences.showQuickActionsWidget && hasQuickAction) View.VISIBLE else View.GONE
+
+            // Tactical Protocols
+            val showWallpaper = preferences.showWallpaperCard
+            val showAppLock = preferences.showAppLockCard
+            val showPocketTts = preferences.showPocketTtsCard
+            val showMatrix = preferences.showMatrixCard
+            b.cardHomeWallpaper.visibility = if (showWallpaper) View.VISIBLE else View.GONE
+            b.cardHomeAppLock.visibility = if (showAppLock) View.VISIBLE else View.GONE
+            b.cardHomePocketTts.visibility = if (showPocketTts) View.VISIBLE else View.GONE
+            b.cardHomeMatrix.visibility = if (showMatrix) View.VISIBLE else View.GONE
+            b.rowTacticalProtocols1.visibility = if (showWallpaper || showAppLock) View.VISIBLE else View.GONE
+            b.rowTacticalProtocols2.visibility = if (showPocketTts || showMatrix) View.VISIBLE else View.GONE
+            val hasProtocol = showWallpaper || showAppLock || showPocketTts || showMatrix
+            b.layoutTacticalProtocols.visibility = if (preferences.showProtocolsWidget && hasProtocol) View.VISIBLE else View.GONE
+
+            // Updates & Announcements
+            val showUpAgent = preferences.showUpdateAgentCard
+            val showUpVoice = preferences.showUpdateVoiceCard
+            val showUpGodsEye = preferences.showUpdateGodsEyeCard
+            b.cardUpdateAgent.visibility = if (showUpAgent) View.VISIBLE else View.GONE
+            b.cardUpdateVoice.visibility = if (showUpVoice) View.VISIBLE else View.GONE
+            b.cardUpdateGodsEye.visibility = if (showUpGodsEye) View.VISIBLE else View.GONE
+            val hasUpdateCard = showUpAgent || showUpVoice || showUpGodsEye
+            b.layoutUpdatesSectionHeader.visibility = if (preferences.showUpdatesWidget && hasUpdateCard) View.VISIBLE else View.GONE
+            b.layoutUpdatesContainer.visibility = if (preferences.showUpdatesWidget && hasUpdateCard) View.VISIBLE else View.GONE
         }
 
         // Telemetry update
@@ -1344,10 +1433,41 @@ class HomeFragment : Fragment() {
             b.layoutStatusIndicator.visibility = if (preferences.showStatusIndicatorWidget) View.VISIBLE else View.GONE
             b.cardWeather.visibility = if (preferences.showWeatherWidget) View.VISIBLE else View.GONE
             b.cardTelemetry.visibility = if (preferences.showTelemetryWidget) View.VISIBLE else View.GONE
-            b.layoutActionGrid.visibility = if (preferences.showQuickActionsWidget) View.VISIBLE else View.GONE
-            b.layoutTacticalProtocols.visibility = if (preferences.showProtocolsWidget) View.VISIBLE else View.GONE
-            b.layoutUpdatesSectionHeader.visibility = if (preferences.showUpdatesWidget) View.VISIBLE else View.GONE
-            b.layoutUpdatesContainer.visibility = if (preferences.showUpdatesWidget) View.VISIBLE else View.GONE
+
+            // Quick Action Buttons
+            val showScreen = preferences.showScreenShareButton
+            val showMemories = preferences.showMemoriesButton
+            val showLanguage = preferences.showLanguageButton
+            b.btnScreenShareQuick.visibility = if (showScreen) View.VISIBLE else View.GONE
+            b.btnSavedMemories.visibility = if (showMemories) View.VISIBLE else View.GONE
+            b.btnConversationLanguageQuick.visibility = if (showLanguage) View.VISIBLE else View.GONE
+            val hasQuickAction = showScreen || showMemories || showLanguage
+            b.layoutActionGrid.visibility = if (preferences.showQuickActionsWidget && hasQuickAction) View.VISIBLE else View.GONE
+
+            // Tactical Protocols
+            val showWallpaper = preferences.showWallpaperCard
+            val showAppLock = preferences.showAppLockCard
+            val showPocketTts = preferences.showPocketTtsCard
+            val showMatrix = preferences.showMatrixCard
+            b.cardHomeWallpaper.visibility = if (showWallpaper) View.VISIBLE else View.GONE
+            b.cardHomeAppLock.visibility = if (showAppLock) View.VISIBLE else View.GONE
+            b.cardHomePocketTts.visibility = if (showPocketTts) View.VISIBLE else View.GONE
+            b.cardHomeMatrix.visibility = if (showMatrix) View.VISIBLE else View.GONE
+            b.rowTacticalProtocols1.visibility = if (showWallpaper || showAppLock) View.VISIBLE else View.GONE
+            b.rowTacticalProtocols2.visibility = if (showPocketTts || showMatrix) View.VISIBLE else View.GONE
+            val hasProtocol = showWallpaper || showAppLock || showPocketTts || showMatrix
+            b.layoutTacticalProtocols.visibility = if (preferences.showProtocolsWidget && hasProtocol) View.VISIBLE else View.GONE
+
+            // Updates & Announcements
+            val showUpAgent = preferences.showUpdateAgentCard
+            val showUpVoice = preferences.showUpdateVoiceCard
+            val showUpGodsEye = preferences.showUpdateGodsEyeCard
+            b.cardUpdateAgent.visibility = if (showUpAgent) View.VISIBLE else View.GONE
+            b.cardUpdateVoice.visibility = if (showUpVoice) View.VISIBLE else View.GONE
+            b.cardUpdateGodsEye.visibility = if (showUpGodsEye) View.VISIBLE else View.GONE
+            val hasUpdateCard = showUpAgent || showUpVoice || showUpGodsEye
+            b.layoutUpdatesSectionHeader.visibility = if (preferences.showUpdatesWidget && hasUpdateCard) View.VISIBLE else View.GONE
+            b.layoutUpdatesContainer.visibility = if (preferences.showUpdatesWidget && hasUpdateCard) View.VISIBLE else View.GONE
         }
 
         if (hideCards) {

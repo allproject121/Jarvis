@@ -152,7 +152,7 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "Android did not start screen capture. Please try again.", Toast.LENGTH_LONG).show()
                     return@registerForActivityResult
                 }
-                Toast.makeText(this, "Checking screen capture…", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Checking screen captureâ€¦", Toast.LENGTH_SHORT).show()
                 lifecycleScope.launch {
                     delay(2500L)
                     val captureManager = com.jarvis.assistant.vision.ScreenCaptureManager.getInstance()
@@ -354,11 +354,12 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, com.jarvis.assistant.ui.godseye.GodsEyeActivity::class.java))
         }
 
-        // Tab 5: Customization Studio (Direct access in dock)
-        binding.tabStudio.setOnClickListener {
+
+        // Tab 5: Menu (Stark System & Settings Menu in dock)
+        binding.tabMenu.setOnClickListener {
             com.jarvis.assistant.util.HudSoundManager.playTapSound()
             moveLumaSpotlight(999, animate = true)
-            startActivity(Intent(this, com.jarvis.assistant.ui.settings.CustomizationStudioActivity::class.java))
+            StarkMenuBottomSheet.newInstance().show(supportFragmentManager, StarkMenuBottomSheet.TAG)
         }
 
         binding.tabMic.setOnClickListener {
@@ -387,7 +388,7 @@ class MainActivity : AppCompatActivity() {
             binding.tabChat,
             binding.tabMic,
             binding.tabGodsEye,
-            binding.tabStudio,
+            binding.tabMenu,
             binding.tabAiHub,
             binding.btnToggleDockMode,
             binding.layoutCompactIsland
@@ -551,7 +552,8 @@ class MainActivity : AppCompatActivity() {
             Triple(TAB_HOME, binding.pillTabHome, Pair(binding.ivTabHome, binding.tvTabHome)),
             Triple(TAB_CHAT, binding.pillTabChat, Pair(binding.ivTabChat, binding.tvTabChat)),
             Triple(998, binding.pillTabGodsEye, Pair(binding.ivTabGodsEye, binding.tvTabGodsEye)),
-            Triple(999, binding.pillTabStudio, Pair(binding.ivTabStudio, binding.tvTabStudio)),
+            Triple(TAB_SETTINGS, binding.pillTabMenu, Pair(binding.ivTabMenu, binding.tvTabMenu)),
+            Triple(999, binding.pillTabMenu, Pair(binding.ivTabMenu, binding.tvTabMenu)),
             Triple(TAB_ANDROLLM, binding.pillTabAiHub, Pair(binding.ivTabAiHub, binding.tvTabAiHub))
         )
 
@@ -613,7 +615,7 @@ class MainActivity : AppCompatActivity() {
             TAB_HOME -> binding.pillTabHome
             TAB_CHAT -> binding.pillTabChat
             998 -> binding.pillTabGodsEye
-            999 -> binding.pillTabStudio
+            TAB_SETTINGS, 999 -> binding.pillTabMenu
             TAB_ANDROLLM -> binding.pillTabAiHub
             else -> binding.pillTabHome
         }

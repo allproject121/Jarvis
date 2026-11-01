@@ -149,18 +149,37 @@
                 </LinearLayout>
 
                 <!-- Right: Quick Access Buttons (Hidden per user request) -->
-                <ImageButton
-                    android:id="@+id/btnToggleZenMode"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:background="@drawable/bg_jarvis_icon_square"
-                    android:src="@drawable/ic_zen_mode"
-                    android:padding="8dp"
-                    android:scaleType="fitCenter"
-                    app:tint="?attr/themeTextPrimary"
-                    android:contentDescription="Toggle Immersion Mode" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageButton
+                        android:id="@+id/btnCustomizeHomeCards"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:src="@drawable/ic_settings_protocols"
+                        android:padding="8dp"
+                        android:scaleType="fitCenter"
+                        app:tint="?attr/themeTextPrimary"
+                        android:contentDescription="Customize &amp; Hide Cards" />
+
+                    <ImageButton
+                        android:id="@+id/btnToggleZenMode"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:src="@drawable/ic_zen_mode"
+                        android:padding="8dp"
+                        android:scaleType="fitCenter"
+                        app:tint="?attr/themeTextPrimary"
+                        android:contentDescription="Toggle Immersion Mode" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/layoutTopRightActions"
@@ -834,6 +853,7 @@
 
             <!-- Protocol Cards Row 1 -->
             <LinearLayout
+                android:id="@+id/rowTacticalProtocols1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -932,6 +952,7 @@
 
             <!-- Protocol Cards Row 2 -->
             <LinearLayout
+                android:id="@+id/rowTacticalProtocols2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -1011,7 +1032,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Agent Matrix"
+                            android:text="Bypass IDE"
                             android:textColor="?attr/themeTextPrimary"
                             android:textSize="12sp"
                             android:textStyle="bold"
@@ -1020,7 +1041,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Termux &amp; Protocols"
+                            android:text="Shell &amp; Agent Studio"
                             android:textColor="?attr/themeAccent"
                             android:textSize="10sp"
                             android:layout_marginTop="2dp" />
