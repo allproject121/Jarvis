@@ -809,6 +809,13 @@ class AndroMemoryPipeline private constructor(context: Context) {
         )
     }
 
+    /** Explicitly synchronizes and re-indexes all Room memories into the Vector Engine. */
+    suspend fun syncAllMemories(memories: List<com.jarvis.assistant.data.memory.MemoryEntity>): Int = withContext(Dispatchers.IO) {
+        val all = if (memories.isNotEmpty()) memories else runCatching { repository.getAllMemories() }.getOrDefault(emptyList())
+        runCatching { vectorEngine.syncWithRoomMemories(all) }
+        runCatching { vectorEngine.indexedMemoryCount() }.getOrDefault(all.size)
+    }
+
     // ── helpers ──
 
     private suspend fun loadCandidates(): List<Memory> {

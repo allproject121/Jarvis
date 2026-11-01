@@ -125,6 +125,11 @@ class AppPreferences(context: Context) {
         private const val KEY_AI_EXECUTION_MODE = "key_ai_execution_mode"
         private const val KEY_SELECTED_AI_PROVIDER = "key_selected_ai_provider"
         private const val KEY_SELECTED_MODEL_NAME = "key_selected_model_name"
+        private const val KEY_OPENAI_MODEL = "key_openai_model"
+        private const val KEY_CLAUDE_MODEL = "key_claude_model"
+        private const val KEY_DEEPSEEK_MODEL = "key_deepseek_model"
+        private const val KEY_GROK_MODEL = "key_grok_model"
+        private const val KEY_OPENROUTER_MODEL = "key_openrouter_model"
         private const val KEY_ORB_ENTITY_TYPE = "key_orb_entity_type"
         private const val KEY_ORB_SHOW_CORE = "key_orb_show_core"
         private const val KEY_ORB_SHOW_GLOW = "key_orb_show_glow"
@@ -263,6 +268,26 @@ class AppPreferences(context: Context) {
     var selectedModelName: String
         get() = prefs.getString(KEY_SELECTED_MODEL_NAME, "models/gemini-3.8-live") ?: "models/gemini-3.8-live"
         set(value) = prefs.edit().putString(KEY_SELECTED_MODEL_NAME, value).apply()
+
+    var openAiModel: String
+        get() = prefs.getString(KEY_OPENAI_MODEL, "gpt-4o") ?: "gpt-4o"
+        set(value) = prefs.edit().putString(KEY_OPENAI_MODEL, value).apply()
+
+    var claudeModel: String
+        get() = prefs.getString(KEY_CLAUDE_MODEL, "claude-3-5-sonnet-20241022") ?: "claude-3-5-sonnet-20241022"
+        set(value) = prefs.edit().putString(KEY_CLAUDE_MODEL, value).apply()
+
+    var deepSeekModel: String
+        get() = prefs.getString(KEY_DEEPSEEK_MODEL, "deepseek-chat") ?: "deepseek-chat"
+        set(value) = prefs.edit().putString(KEY_DEEPSEEK_MODEL, value).apply()
+
+    var grokModel: String
+        get() = prefs.getString(KEY_GROK_MODEL, "grok-2") ?: "grok-2"
+        set(value) = prefs.edit().putString(KEY_GROK_MODEL, value).apply()
+
+    var openRouterModel: String
+        get() = prefs.getString(KEY_OPENROUTER_MODEL, "auto") ?: "auto"
+        set(value) = prefs.edit().putString(KEY_OPENROUTER_MODEL, value).apply()
 
     var isHoloScanlinesEnabled: Boolean
         get() = prefs.getBoolean(KEY_HOLO_SCANLINES_ENABLED, true)

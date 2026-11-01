@@ -484,11 +484,11 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Card 3.6: Additional AI Provider API Keys -->
+            <!-- Card 3.6: Additional AI Provider API Keys & Model Discovery -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Multi-Model API Keys"
+                android:text="Multi-Model API Keys &amp; Model Discovery"
                 android:textColor="?attr/themeTextMuted"
                 android:textSize="13sp"
                 android:fontFamily="sans-serif-medium"
@@ -503,15 +503,35 @@
                 android:padding="16dp"
                 android:layout_marginBottom="18dp">
 
-                <!-- OpenAI Key -->
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- 1. OpenAI ChatGPT -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="OpenAI API Key (ChatGPT)"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:textStyle="bold" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="🤖 OpenAI API Key (ChatGPT)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvOpenAiActiveBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="gpt-4o"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="11sp"
+                        android:fontFamily="monospace"
+                        android:background="@drawable/bg_jarvis_status_badge"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp" />
+                </LinearLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
@@ -535,16 +555,153 @@
                         android:textSize="13sp" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Claude Key -->
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- OpenAI Actions -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Anthropic Claude API Key"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPasteOpenAi"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="?attr/themeAccent"
+                        app:strokeWidth="1dp"
+                        android:text="Paste"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false"
+                        android:layout_marginEnd="6dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnClearOpenAi"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="?attr/themeTextMuted"
+                        app:strokeWidth="1dp"
+                        android:text="Clear"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false"
+                        android:layout_marginEnd="6dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTestOpenAi"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="#10B981"
+                        app:strokeWidth="1dp"
+                        android:text="🔍 Check Models"
+                        android:textColor="#10B981"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false" />
+                </LinearLayout>
+
+                <!-- OpenAI Available Models Status & Picker -->
+                <TextView
+                    android:id="@+id/tvOpenAiModelStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Models Available with this Key (Select Primary):"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
                     android:fontFamily="sans-serif-medium"
-                    android:textStyle="bold"
-                    android:layout_marginTop="14dp" />
+                    android:layout_marginTop="8dp" />
+
+                <RadioGroup
+                    android:id="@+id/rgOpenAiModels"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_jarvis_icon_square"
+                    android:padding="8dp"
+                    android:layout_marginTop="4dp">
+
+                    <RadioButton
+                        android:id="@+id/rbOpenAiGpt4o"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="gpt-4o (Omni Flagship - Recommended)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+
+                    <RadioButton
+                        android:id="@+id/rbOpenAiGpt4oMini"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="gpt-4o-mini (Fast &amp; Ultra Low Latency)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+
+                    <RadioButton
+                        android:id="@+id/rbOpenAiO1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="o1 (Deep Chain-of-Thought Reasoning)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+
+                    <RadioButton
+                        android:id="@+id/rbOpenAiO3Mini"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="o3-mini (High Speed Math &amp; Coding)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+
+                    <RadioButton
+                        android:id="@+id/rbOpenAiGpt4Turbo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="gpt-4-turbo (128k High Context)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+                </RadioGroup>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?attr/themeCardBorder"
+                    android:layout_marginVertical="16dp" />
+
+                <!-- 2. Anthropic Claude -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="🧠 Anthropic Claude API Key"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvClaudeActiveBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="claude-3-5-sonnet"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="11sp"
+                        android:fontFamily="monospace"
+                        android:background="@drawable/bg_jarvis_status_badge"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp" />
+                </LinearLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
@@ -568,16 +725,135 @@
                         android:textSize="13sp" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- DeepSeek Key -->
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- Claude Actions -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="DeepSeek API Key"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPasteClaude"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="?attr/themeAccent"
+                        app:strokeWidth="1dp"
+                        android:text="Paste"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false"
+                        android:layout_marginEnd="6dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnClearClaude"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="?attr/themeTextMuted"
+                        app:strokeWidth="1dp"
+                        android:text="Clear"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false"
+                        android:layout_marginEnd="6dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTestClaude"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="#10B981"
+                        app:strokeWidth="1dp"
+                        android:text="🔍 Check Models"
+                        android:textColor="#10B981"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false" />
+                </LinearLayout>
+
+                <!-- Claude Available Models -->
+                <TextView
+                    android:id="@+id/tvClaudeModelStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Models Available with this Key (Select Primary):"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
                     android:fontFamily="sans-serif-medium"
-                    android:textStyle="bold"
-                    android:layout_marginTop="14dp" />
+                    android:layout_marginTop="8dp" />
+
+                <RadioGroup
+                    android:id="@+id/rgClaudeModels"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_jarvis_icon_square"
+                    android:padding="8dp"
+                    android:layout_marginTop="4dp">
+
+                    <RadioButton
+                        android:id="@+id/rbClaudeSonnet"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="claude-3-5-sonnet-20241022 (State of the Art)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+
+                    <RadioButton
+                        android:id="@+id/rbClaudeHaiku"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="claude-3-5-haiku-20241022 (Ultra Fast Latency)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+
+                    <RadioButton
+                        android:id="@+id/rbClaudeOpus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="claude-3-opus-20240229 (Complex Reasoning)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+                </RadioGroup>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?attr/themeCardBorder"
+                    android:layout_marginVertical="16dp" />
+
+                <!-- 3. DeepSeek -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="⚡ DeepSeek API Key"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvDeepSeekActiveBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="deepseek-chat"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="11sp"
+                        android:fontFamily="monospace"
+                        android:background="@drawable/bg_jarvis_status_badge"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp" />
+                </LinearLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
@@ -601,16 +877,126 @@
                         android:textSize="13sp" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- xAI Grok Key -->
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- DeepSeek Actions -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="xAI Grok API Key"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPasteDeepSeek"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="?attr/themeAccent"
+                        app:strokeWidth="1dp"
+                        android:text="Paste"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false"
+                        android:layout_marginEnd="6dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnClearDeepSeek"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="?attr/themeTextMuted"
+                        app:strokeWidth="1dp"
+                        android:text="Clear"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false"
+                        android:layout_marginEnd="6dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTestDeepSeek"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="#10B981"
+                        app:strokeWidth="1dp"
+                        android:text="🔍 Check Models"
+                        android:textColor="#10B981"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false" />
+                </LinearLayout>
+
+                <!-- DeepSeek Available Models -->
+                <TextView
+                    android:id="@+id/tvDeepSeekModelStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Models Available with this Key (Select Primary):"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
                     android:fontFamily="sans-serif-medium"
-                    android:textStyle="bold"
-                    android:layout_marginTop="14dp" />
+                    android:layout_marginTop="8dp" />
+
+                <RadioGroup
+                    android:id="@+id/rgDeepSeekModels"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_jarvis_icon_square"
+                    android:padding="8dp"
+                    android:layout_marginTop="4dp">
+
+                    <RadioButton
+                        android:id="@+id/rbDeepSeekChat"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="deepseek-chat (DeepSeek-V3 671B MoE)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+
+                    <RadioButton
+                        android:id="@+id/rbDeepSeekReasoner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="deepseek-reasoner (DeepSeek-R1 CoT Thinking)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+                </RadioGroup>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?attr/themeCardBorder"
+                    android:layout_marginVertical="16dp" />
+
+                <!-- 4. xAI Grok -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="🚀 xAI Grok API Key"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvGrokActiveBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="grok-2"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="11sp"
+                        android:fontFamily="monospace"
+                        android:background="@drawable/bg_jarvis_status_badge"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp" />
+                </LinearLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
@@ -634,16 +1020,135 @@
                         android:textSize="13sp" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- OpenRouter Key -->
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- Grok Actions -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="OpenRouter API Key (Unified 200+ Models)"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPasteGrok"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="?attr/themeAccent"
+                        app:strokeWidth="1dp"
+                        android:text="Paste"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false"
+                        android:layout_marginEnd="6dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnClearGrok"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="?attr/themeTextMuted"
+                        app:strokeWidth="1dp"
+                        android:text="Clear"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false"
+                        android:layout_marginEnd="6dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTestGrok"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="#10B981"
+                        app:strokeWidth="1dp"
+                        android:text="🔍 Check Models"
+                        android:textColor="#10B981"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false" />
+                </LinearLayout>
+
+                <!-- Grok Available Models -->
+                <TextView
+                    android:id="@+id/tvGrokModelStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Models Available with this Key (Select Primary):"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
                     android:fontFamily="sans-serif-medium"
-                    android:textStyle="bold"
-                    android:layout_marginTop="14dp" />
+                    android:layout_marginTop="8dp" />
+
+                <RadioGroup
+                    android:id="@+id/rgGrokModels"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_jarvis_icon_square"
+                    android:padding="8dp"
+                    android:layout_marginTop="4dp">
+
+                    <RadioButton
+                        android:id="@+id/rbGrok2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="grok-2 (Flagship Conversational &amp; Vision)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+
+                    <RadioButton
+                        android:id="@+id/rbGrok2Mini"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="grok-2-mini (High Speed Grok)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+
+                    <RadioButton
+                        android:id="@+id/rbGrokBeta"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="grok-beta (xAI Experimental Preview)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+                </RadioGroup>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?attr/themeCardBorder"
+                    android:layout_marginVertical="16dp" />
+
+                <!-- 5. OpenRouter -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="🌐 OpenRouter API Key (Unified 200+ Models)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvOpenRouterActiveBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="auto"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="11sp"
+                        android:fontFamily="monospace"
+                        android:background="@drawable/bg_jarvis_status_badge"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp" />
+                </LinearLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
@@ -666,6 +1171,118 @@
                         android:textColor="?attr/themeTextPrimary"
                         android:textSize="13sp" />
                 </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- OpenRouter Actions -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPasteOpenRouter"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="?attr/themeAccent"
+                        app:strokeWidth="1dp"
+                        android:text="Paste"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false"
+                        android:layout_marginEnd="6dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnClearOpenRouter"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="?attr/themeTextMuted"
+                        app:strokeWidth="1dp"
+                        android:text="Clear"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false"
+                        android:layout_marginEnd="6dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTestOpenRouter"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        app:strokeColor="#10B981"
+                        app:strokeWidth="1dp"
+                        android:text="🔍 Check Models"
+                        android:textColor="#10B981"
+                        android:textSize="11.5sp"
+                        android:textAllCaps="false" />
+                </LinearLayout>
+
+                <!-- OpenRouter Available Models -->
+                <TextView
+                    android:id="@+id/tvOpenRouterModelStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Models Available with this Key (Select Primary):"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginTop="8dp" />
+
+                <RadioGroup
+                    android:id="@+id/rgOpenRouterModels"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_jarvis_icon_square"
+                    android:padding="8dp"
+                    android:layout_marginTop="4dp">
+
+                    <RadioButton
+                        android:id="@+id/rbOpenRouterAuto"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="auto (OpenRouter Intelligent Route)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+
+                    <RadioButton
+                        android:id="@+id/rbOpenRouterLlama"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="meta-llama/llama-3.3-70b-instruct"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+
+                    <RadioButton
+                        android:id="@+id/rbOpenRouterClaude"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="anthropic/claude-3.5-sonnet"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+
+                    <RadioButton
+                        android:id="@+id/rbOpenRouterDeepSeek"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="deepseek/deepseek-r1"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+
+                    <RadioButton
+                        android:id="@+id/rbOpenRouterGpt4o"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="openai/gpt-4o"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+                </RadioGroup>
             </LinearLayout>
 
             <!-- Card 4: Custom WebSocket Endpoint -->

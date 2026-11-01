@@ -50,6 +50,7 @@ class MemoryActivity : AppCompatActivity() {
         }
 
         setupToolbar()
+        setupVectorSyncCard()
         setupRecyclerView()
         setupCategoryChips()
         setupSearch()
@@ -120,11 +121,39 @@ class MemoryActivity : AppCompatActivity() {
         })
     }
 
+    private fun setupVectorSyncCard() {
+        binding.btnReindexMemories.setOnClickListener {
+            com.jarvis.assistant.util.HudSoundManager.playTapSound()
+            binding.tvMemorySyncRatio.text = "SYNCING..."
+            binding.tvMemorySyncRatio.setTextColor(android.graphics.Color.parseColor("#F59E0B"))
+            lifecycleScope.launch {
+                val pipeline = com.jarvis.assistant.androllm.memory.AndroMemoryPipeline.getInstance(this@MemoryActivity)
+                val totalIndexed = pipeline.syncAllMemories(allMemories)
+                updateVectorHealthUi(totalIndexed, allMemories.size)
+                android.widget.Toast.makeText(this@MemoryActivity, "Re-Indexed " + totalIndexed + "/" + allMemories.size + " memories into Vector Engine!", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.btnOpenMemoryInspector.setOnClickListener {
+            com.jarvis.assistant.util.HudSoundManager.playTapSound()
+            startActivity(com.jarvis.assistant.ui.settings.AndroLlmPageActivity.sectionIntent(this, com.jarvis.assistant.ui.settings.AndroLlmPageActivity.Section.MEMORY))
+        }
+    }
+
+    private fun updateVectorHealthUi(indexed: Int, total: Int) {
+        binding.tvMemorySyncRatio.text = "" + indexed + "/" + total + " INDEXED"
+        binding.tvMemorySyncRatio.setTextColor(if (indexed >= total && total > 0) android.graphics.Color.parseColor("#4ADE80") else android.graphics.Color.parseColor("#22D3EE"))
+        binding.tvMemoryHealthSub.text = "Room Database (" + total + " facts) synced with Vector Cache (" + indexed + ") - Built-in Semantic Hashing Active"
+    }
+
     private fun observeMemories() {
         lifecycleScope.launch {
             memoryRepo.getAllMemoriesFlow().collectLatest { memories ->
                 allMemories = memories
                 filterAndDisplay()
+                val pipeline = com.jarvis.assistant.androllm.memory.AndroMemoryPipeline.getInstance(this@MemoryActivity)
+                val stats = pipeline.stats()
+                updateVectorHealthUi(stats.indexedCount, memories.size)
             }
         }
     }

@@ -355,11 +355,10 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        // Tab 5: Menu (Stark System & Settings Menu in dock)
+        // Tab 5: Settings in dock (directly opens Settings screen per user request)
         binding.tabMenu.setOnClickListener {
             com.jarvis.assistant.util.HudSoundManager.playTapSound()
-            moveLumaSpotlight(999, animate = true)
-            StarkMenuBottomSheet.newInstance().show(supportFragmentManager, StarkMenuBottomSheet.TAG)
+            selectTab(TAB_SETTINGS)
         }
 
         binding.tabMic.setOnClickListener {

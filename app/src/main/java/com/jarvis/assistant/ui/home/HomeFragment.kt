@@ -86,16 +86,7 @@ class HomeFragment : Fragment() {
         com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
         createTaskFallbackPanel()
 
-        // Top Navigation (Menu & Quick Access)
-        binding.btnTopChat.setOnClickListener {
-            HudSoundManager.playTapSound()
-            StarkTopMenuDialog.newInstance().show(childFragmentManager, StarkTopMenuDialog.TAG)
-        }
-        binding.btnTopChat.setOnLongClickListener {
-            HudSoundManager.playTapSound()
-            (activity as? MainActivity)?.selectTab(MainActivity.TAB_CHAT)
-            true
-        }
+        // Upper menu removed per user request
 
         // Center JARVIS Interactive Brand Logo & Glow Effect
         binding.layoutJarvisLogoTouch.setOnClickListener {

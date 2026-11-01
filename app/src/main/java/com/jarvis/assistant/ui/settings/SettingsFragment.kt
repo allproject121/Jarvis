@@ -281,6 +281,7 @@ class SettingsFragment : Fragment() {
             HudSoundManager.playTapSound()
             showAddMcpServerDialog()
         }
+        renderMcpServersList()
 
         // Merged AndroLLM pages, opened inside Jarvis (AndroLlmPageActivity)
         binding.btnOpenModelManager.setOnClickListener {
@@ -1621,7 +1622,123 @@ class SettingsFragment : Fragment() {
             .show()
     }
 
+    private fun renderMcpServersList() {
+        val container = binding.containerMcpServersList ?: return
+        container.removeAllViews()
+        val mcpManager = com.jarvis.assistant.mcp.McpManager.getInstance(requireContext())
+        val servers = mcpManager.registeredServers()
+        val states = mcpManager.states.value
+        val density = resources.displayMetrics.density
+
+        if (servers.isEmpty()) {
+            val tvEmpty = TextView(requireContext()).apply {
+                text = "No custom MCP servers configured. Tap below to connect desktop or remote MCP tools."
+                setTextColor(Color.parseColor("#94A3B8"))
+                textSize = 11f
+                setPadding(0, (6 * density).toInt(), 0, (6 * density).toInt())
+            }
+            container.addView(tvEmpty)
+            return
+        }
+
+        for (server in servers) {
+            val card = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.VERTICAL
+                setBackgroundResource(R.drawable.bg_jarvis_row_item)
+                setPadding((12 * density).toInt(), (10 * density).toInt(), (12 * density).toInt(), (10 * density).toInt())
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = (8 * density).toInt() }
+            }
+
+            val rowHeader = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+            }
+
+            val tvName = TextView(requireContext()).apply {
+                text = server.name
+                setTextColor(Color.WHITE)
+                textSize = 13f
+                paint.isFakeBoldText = true
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            rowHeader.addView(tvName)
+
+            val state = states[server.id]
+            val (statusText, statusColor) = when (state) {
+                is com.jarvis.assistant.mcp.McpManager.State.Connected -> ("● CONNECTED (" + state.toolCount + " TOOLS)") to "#4ADE80"
+                is com.jarvis.assistant.mcp.McpManager.State.Connecting -> "● CONNECTING..." to "#F59E0B"
+                is com.jarvis.assistant.mcp.McpManager.State.Failed -> "● OFFLINE" to "#EF4444"
+                else -> "● DISCONNECTED" to "#94A3B8"
+            }
+
+            val tvState = TextView(requireContext()).apply {
+                text = statusText
+                setTextColor(Color.parseColor(statusColor))
+                textSize = 10f
+                paint.isFakeBoldText = true
+            }
+            rowHeader.addView(tvState)
+            card.addView(rowHeader)
+
+            val tvUrl = TextView(requireContext()).apply {
+                text = server.url
+                setTextColor(Color.parseColor("#64748B"))
+                textSize = 11f
+                typeface = android.graphics.Typeface.MONOSPACE
+                setPadding(0, (2 * density).toInt(), 0, (4 * density).toInt())
+            }
+            card.addView(tvUrl)
+
+            val btnRow = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.HORIZONTAL
+            }
+
+            val btnReconnect = com.google.android.material.button.MaterialButton(requireContext(), null, com.google.android.material.R.attr.borderlessButtonStyle).apply {
+                text = "⚡ PING / RECONNECT"
+                textSize = 10f
+                setTextColor(Color.parseColor("#22D3EE"))
+                setOnClickListener {
+                    com.jarvis.assistant.util.HudSoundManager.playTapSound()
+                    tvState.text = "● CONNECTING..."
+                    tvState.setTextColor(Color.parseColor("#F59E0B"))
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        mcpManager.reconnect(server.id)
+                        renderMcpServersList()
+                    }
+                }
+            }
+            btnRow.addView(btnReconnect)
+
+            val btnDelete = com.google.android.material.button.MaterialButton(requireContext(), null, com.google.android.material.R.attr.borderlessButtonStyle).apply {
+                text = "✕ DELETE"
+                textSize = 10f
+                setTextColor(Color.parseColor("#EF4444"))
+                setOnClickListener {
+                    com.jarvis.assistant.util.HudSoundManager.playTapSound()
+                    mcpManager.unregisterServer(server.id)
+                    renderMcpServersList()
+                    Toast.makeText(requireContext(), "Removed MCP server '" + server.name + "'", Toast.LENGTH_SHORT).show()
+                }
+            }
+            btnRow.addView(btnDelete)
+            card.addView(btnRow)
+
+            container.addView(card)
+        }
+    }
+
     private fun setupObservers() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val mcpManager = com.jarvis.assistant.mcp.McpManager.getInstance(requireContext())
+            mcpManager.states.collect {
+                if (_binding != null) {
+                    renderMcpServersList()
+                }
+            }
+        }
         // 1Hz Telemetry Flow
         viewLifecycleOwner.lifecycleScope.launch {
             val telemetryRepo = com.jarvis.assistant.telemetry.TelemetryRepository.getInstance(requireContext())

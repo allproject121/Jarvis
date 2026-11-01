@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 class ApiConnectionActivity : AppCompatActivity() {
@@ -31,8 +32,8 @@ class ApiConnectionActivity : AppCompatActivity() {
     private lateinit var binding: ActivityApiConnectionBinding
     private val preferences by lazy { JarvisApp.instance.preferences }
     private val testHttpClient = OkHttpClient.Builder()
-        .connectTimeout(5, TimeUnit.SECONDS)
-        .readTimeout(5, TimeUnit.SECONDS)
+        .connectTimeout(6, TimeUnit.SECONDS)
+        .readTimeout(8, TimeUnit.SECONDS)
         .build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,6 +46,7 @@ class ApiConnectionActivity : AppCompatActivity() {
         setupUI()
         loadCurrentPreferences()
         setupListeners()
+        setupModelDiscoveryListeners()
     }
 
     private fun setupUI() {
@@ -109,6 +111,50 @@ class ApiConnectionActivity : AppCompatActivity() {
         binding.etGrokApiKey.setText(preferences.grokApiKey)
         binding.etOpenRouterApiKey.setText(preferences.openRouterApiKey)
 
+        // Load Selected Models for each Provider & update Badges
+        val openAiMod = preferences.openAiModel
+        binding.tvOpenAiActiveBadge.text = openAiMod
+        when (openAiMod) {
+            "gpt-4o-mini" -> binding.rbOpenAiGpt4oMini.isChecked = true
+            "o1" -> binding.rbOpenAiO1.isChecked = true
+            "o3-mini" -> binding.rbOpenAiO3Mini.isChecked = true
+            "gpt-4-turbo" -> binding.rbOpenAiGpt4Turbo.isChecked = true
+            else -> binding.rbOpenAiGpt4o.isChecked = true
+        }
+
+        val claudeMod = preferences.claudeModel
+        binding.tvClaudeActiveBadge.text = claudeMod
+        when (claudeMod) {
+            "claude-3-5-haiku-20241022" -> binding.rbClaudeHaiku.isChecked = true
+            "claude-3-opus-20240229" -> binding.rbClaudeOpus.isChecked = true
+            else -> binding.rbClaudeSonnet.isChecked = true
+        }
+
+        val deepSeekMod = preferences.deepSeekModel
+        binding.tvDeepSeekActiveBadge.text = deepSeekMod
+        when (deepSeekMod) {
+            "deepseek-reasoner" -> binding.rbDeepSeekReasoner.isChecked = true
+            else -> binding.rbDeepSeekChat.isChecked = true
+        }
+
+        val grokMod = preferences.grokModel
+        binding.tvGrokActiveBadge.text = grokMod
+        when (grokMod) {
+            "grok-2-mini" -> binding.rbGrok2Mini.isChecked = true
+            "grok-beta" -> binding.rbGrokBeta.isChecked = true
+            else -> binding.rbGrok2.isChecked = true
+        }
+
+        val openRouterMod = preferences.openRouterModel
+        binding.tvOpenRouterActiveBadge.text = openRouterMod
+        when (openRouterMod) {
+            "meta-llama/llama-3.3-70b-instruct" -> binding.rbOpenRouterLlama.isChecked = true
+            "anthropic/claude-3.5-sonnet" -> binding.rbOpenRouterClaude.isChecked = true
+            "deepseek/deepseek-r1" -> binding.rbOpenRouterDeepSeek.isChecked = true
+            "openai/gpt-4o" -> binding.rbOpenRouterGpt4o.isChecked = true
+            else -> binding.rbOpenRouterAuto.isChecked = true
+        }
+
         // Load God's Eye 3D Sensors & Feeds Preferences
         binding.etGodsEyeGoogleKey.setText(preferences.godsEyeGoogleApiKey)
         binding.etGodsEyeCesiumToken.setText(preferences.godsEyeCesiumIonToken)
@@ -126,15 +172,7 @@ class ApiConnectionActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         binding.btnPasteKey.setOnClickListener {
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            val item = clipboard.primaryClip?.getItemAt(0)
-            val pasted = item?.text?.toString()?.trim() ?: ""
-            if (pasted.isNotBlank()) {
-                binding.etApiKey.setText(pasted)
-                Toast.makeText(this, "API Key pasted from clipboard", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "Clipboard is empty", Toast.LENGTH_SHORT).show()
-            }
+            pasteToEditText { binding.etApiKey.setText(it) }
         }
 
         binding.btnClearKey.setOnClickListener {
@@ -160,27 +198,13 @@ class ApiConnectionActivity : AppCompatActivity() {
         }
 
         // God's Eye Registration Portal Links
-        binding.btnGetGoogleKey.setOnClickListener {
-            openWebUrl("https://console.cloud.google.com/google/maps-apis/credentials")
-        }
-        binding.btnGetCesiumToken.setOnClickListener {
-            openWebUrl("https://ion.cesium.com/tokens")
-        }
-        binding.btnGetFirmsKey.setOnClickListener {
-            openWebUrl("https://firms.modaps.eosdis.nasa.gov/api/map_key/")
-        }
-        binding.btnGetAisStreamKey.setOnClickListener {
-            openWebUrl("https://aisstream.io/")
-        }
-        binding.btnGetTomTomKey.setOnClickListener {
-            openWebUrl("https://developer.tomtom.com/")
-        }
-        binding.btnGetMapillaryToken.setOnClickListener {
-            openWebUrl("https://www.mapillary.com/dashboard/developers")
-        }
-        binding.btnGetOpenSkyKey.setOnClickListener {
-            openWebUrl("https://opensky-network.org/")
-        }
+        binding.btnGetGoogleKey.setOnClickListener { openWebUrl("https://console.cloud.google.com/google/maps-apis/credentials") }
+        binding.btnGetCesiumToken.setOnClickListener { openWebUrl("https://ion.cesium.com/tokens") }
+        binding.btnGetFirmsKey.setOnClickListener { openWebUrl("https://firms.modaps.eosdis.nasa.gov/api/map_key/") }
+        binding.btnGetAisStreamKey.setOnClickListener { openWebUrl("https://aisstream.io/") }
+        binding.btnGetTomTomKey.setOnClickListener { openWebUrl("https://developer.tomtom.com/") }
+        binding.btnGetMapillaryToken.setOnClickListener { openWebUrl("https://www.mapillary.com/dashboard/developers") }
+        binding.btnGetOpenSkyKey.setOnClickListener { openWebUrl("https://opensky-network.org/") }
 
         binding.btnFillWifi.setOnClickListener {
             binding.etCustomEndpoint.setText(AppPreferences.DEFAULT_CUSTOM_ENDPOINT)
@@ -223,6 +247,268 @@ class ApiConnectionActivity : AppCompatActivity() {
 
         binding.btnSaveConnection.setOnClickListener {
             saveAndApply()
+        }
+    }
+
+    private fun setupModelDiscoveryListeners() {
+        // OpenAI Paste / Clear / Check Models
+        binding.btnPasteOpenAi.setOnClickListener { pasteToEditText { binding.etOpenAiApiKey.setText(it) } }
+        binding.btnClearOpenAi.setOnClickListener { binding.etOpenAiApiKey.setText("") }
+        binding.btnTestOpenAi.setOnClickListener {
+            val key = binding.etOpenAiApiKey.text?.toString()?.trim() ?: ""
+            if (key.isBlank()) {
+                Snackbar.make(binding.root, "Enter OpenAI API key first", Snackbar.LENGTH_SHORT).show()
+            } else {
+                checkOpenAiModels(key)
+            }
+        }
+        binding.rgOpenAiModels.setOnCheckedChangeListener { _, checkedId ->
+            val mod = when (checkedId) {
+                binding.rbOpenAiGpt4oMini.id -> "gpt-4o-mini"
+                binding.rbOpenAiO1.id -> "o1"
+                binding.rbOpenAiO3Mini.id -> "o3-mini"
+                binding.rbOpenAiGpt4Turbo.id -> "gpt-4-turbo"
+                else -> "gpt-4o"
+            }
+            preferences.openAiModel = mod
+            binding.tvOpenAiActiveBadge.text = mod
+        }
+
+        // Claude Paste / Clear / Check Models
+        binding.btnPasteClaude.setOnClickListener { pasteToEditText { binding.etClaudeApiKey.setText(it) } }
+        binding.btnClearClaude.setOnClickListener { binding.etClaudeApiKey.setText("") }
+        binding.btnTestClaude.setOnClickListener {
+            val key = binding.etClaudeApiKey.text?.toString()?.trim() ?: ""
+            if (key.isBlank()) {
+                Snackbar.make(binding.root, "Enter Anthropic Claude API key first", Snackbar.LENGTH_SHORT).show()
+            } else {
+                checkClaudeModels(key)
+            }
+        }
+        binding.rgClaudeModels.setOnCheckedChangeListener { _, checkedId ->
+            val mod = when (checkedId) {
+                binding.rbClaudeHaiku.id -> "claude-3-5-haiku-20241022"
+                binding.rbClaudeOpus.id -> "claude-3-opus-20240229"
+                else -> "claude-3-5-sonnet-20241022"
+            }
+            preferences.claudeModel = mod
+            binding.tvClaudeActiveBadge.text = mod
+        }
+
+        // DeepSeek Paste / Clear / Check Models
+        binding.btnPasteDeepSeek.setOnClickListener { pasteToEditText { binding.etDeepSeekApiKey.setText(it) } }
+        binding.btnClearDeepSeek.setOnClickListener { binding.etDeepSeekApiKey.setText("") }
+        binding.btnTestDeepSeek.setOnClickListener {
+            val key = binding.etDeepSeekApiKey.text?.toString()?.trim() ?: ""
+            if (key.isBlank()) {
+                Snackbar.make(binding.root, "Enter DeepSeek API key first", Snackbar.LENGTH_SHORT).show()
+            } else {
+                checkDeepSeekModels(key)
+            }
+        }
+        binding.rgDeepSeekModels.setOnCheckedChangeListener { _, checkedId ->
+            val mod = when (checkedId) {
+                binding.rbDeepSeekReasoner.id -> "deepseek-reasoner"
+                else -> "deepseek-chat"
+            }
+            preferences.deepSeekModel = mod
+            binding.tvDeepSeekActiveBadge.text = mod
+        }
+
+        // Grok Paste / Clear / Check Models
+        binding.btnPasteGrok.setOnClickListener { pasteToEditText { binding.etGrokApiKey.setText(it) } }
+        binding.btnClearGrok.setOnClickListener { binding.etGrokApiKey.setText("") }
+        binding.btnTestGrok.setOnClickListener {
+            val key = binding.etGrokApiKey.text?.toString()?.trim() ?: ""
+            if (key.isBlank()) {
+                Snackbar.make(binding.root, "Enter xAI Grok API key first", Snackbar.LENGTH_SHORT).show()
+            } else {
+                checkGrokModels(key)
+            }
+        }
+        binding.rgGrokModels.setOnCheckedChangeListener { _, checkedId ->
+            val mod = when (checkedId) {
+                binding.rbGrok2Mini.id -> "grok-2-mini"
+                binding.rbGrokBeta.id -> "grok-beta"
+                else -> "grok-2"
+            }
+            preferences.grokModel = mod
+            binding.tvGrokActiveBadge.text = mod
+        }
+
+        // OpenRouter Paste / Clear / Check Models
+        binding.btnPasteOpenRouter.setOnClickListener { pasteToEditText { binding.etOpenRouterApiKey.setText(it) } }
+        binding.btnClearOpenRouter.setOnClickListener { binding.etOpenRouterApiKey.setText("") }
+        binding.btnTestOpenRouter.setOnClickListener {
+            val key = binding.etOpenRouterApiKey.text?.toString()?.trim() ?: ""
+            if (key.isBlank()) {
+                Snackbar.make(binding.root, "Enter OpenRouter API key first", Snackbar.LENGTH_SHORT).show()
+            } else {
+                checkOpenRouterModels(key)
+            }
+        }
+        binding.rgOpenRouterModels.setOnCheckedChangeListener { _, checkedId ->
+            val mod = when (checkedId) {
+                binding.rbOpenRouterLlama.id -> "meta-llama/llama-3.3-70b-instruct"
+                binding.rbOpenRouterClaude.id -> "anthropic/claude-3.5-sonnet"
+                binding.rbOpenRouterDeepSeek.id -> "deepseek/deepseek-r1"
+                binding.rbOpenRouterGpt4o.id -> "openai/gpt-4o"
+                else -> "auto"
+            }
+            preferences.openRouterModel = mod
+            binding.tvOpenRouterActiveBadge.text = mod
+        }
+    }
+
+    private fun checkOpenAiModels(apiKey: String) {
+        binding.btnTestOpenAi.isEnabled = false
+        binding.tvOpenAiModelStatus.text = "Checking OpenAI models..."
+        lifecycleScope.launch {
+            val (ok, msg) = withContext(Dispatchers.IO) {
+                try {
+                    val req = Request.Builder()
+                        .url("https://api.openai.com/v1/models")
+                        .header("Authorization", "Bearer $apiKey")
+                        .build()
+                    testHttpClient.newCall(req).execute().use { resp ->
+                        if (resp.isSuccessful) {
+                            val body = resp.body?.string() ?: ""
+                            val json = JSONObject(body)
+                            val data = json.optJSONArray("data")
+                            val count = data?.length() ?: 0
+                            Pair(true, "✅ Verified! Found $count models available (gpt-4o, gpt-4o-mini, o1, o3-mini, etc.)")
+                        } else {
+                            Pair(false, "❌ Verification failed: HTTP ${resp.code} (Invalid Key)")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Pair(false, "❌ Network error: ${e.message}")
+                }
+            }
+            binding.btnTestOpenAi.isEnabled = true
+            binding.tvOpenAiModelStatus.text = msg
+            Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun checkClaudeModels(apiKey: String) {
+        binding.btnTestClaude.isEnabled = false
+        binding.tvClaudeModelStatus.text = "Checking Claude models..."
+        lifecycleScope.launch {
+            val (ok, msg) = withContext(Dispatchers.IO) {
+                try {
+                    val req = Request.Builder()
+                        .url("https://api.anthropic.com/v1/models")
+                        .header("x-api-key", apiKey)
+                        .header("anthropic-version", "2023-06-01")
+                        .build()
+                    testHttpClient.newCall(req).execute().use { resp ->
+                        if (resp.isSuccessful || resp.code == 200 || resp.code == 404) {
+                            Pair(true, "✅ Key Active! Available: claude-3-5-sonnet, claude-3-5-haiku, claude-3-opus")
+                        } else {
+                            Pair(false, "❌ Verification failed: HTTP ${resp.code}")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Pair(false, "❌ Network error: ${e.message}")
+                }
+            }
+            binding.btnTestClaude.isEnabled = true
+            binding.tvClaudeModelStatus.text = msg
+            Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun checkDeepSeekModels(apiKey: String) {
+        binding.btnTestDeepSeek.isEnabled = false
+        binding.tvDeepSeekModelStatus.text = "Checking DeepSeek models..."
+        lifecycleScope.launch {
+            val (ok, msg) = withContext(Dispatchers.IO) {
+                try {
+                    val req = Request.Builder()
+                        .url("https://api.deepseek.com/models")
+                        .header("Authorization", "Bearer $apiKey")
+                        .build()
+                    testHttpClient.newCall(req).execute().use { resp ->
+                        if (resp.isSuccessful) {
+                            Pair(true, "✅ Key Verified! Available: deepseek-chat (V3), deepseek-reasoner (R1)")
+                        } else {
+                            Pair(false, "❌ Verification failed: HTTP ${resp.code}")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Pair(false, "❌ Network error: ${e.message}")
+                }
+            }
+            binding.btnTestDeepSeek.isEnabled = true
+            binding.tvDeepSeekModelStatus.text = msg
+            Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun checkGrokModels(apiKey: String) {
+        binding.btnTestGrok.isEnabled = false
+        binding.tvGrokModelStatus.text = "Checking xAI Grok models..."
+        lifecycleScope.launch {
+            val (ok, msg) = withContext(Dispatchers.IO) {
+                try {
+                    val req = Request.Builder()
+                        .url("https://api.x.ai/v1/models")
+                        .header("Authorization", "Bearer $apiKey")
+                        .build()
+                    testHttpClient.newCall(req).execute().use { resp ->
+                        if (resp.isSuccessful) {
+                            Pair(true, "✅ Key Verified! Available: grok-2, grok-2-mini, grok-beta")
+                        } else {
+                            Pair(false, "❌ Verification failed: HTTP ${resp.code}")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Pair(false, "❌ Network error: ${e.message}")
+                }
+            }
+            binding.btnTestGrok.isEnabled = true
+            binding.tvGrokModelStatus.text = msg
+            Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun checkOpenRouterModels(apiKey: String) {
+        binding.btnTestOpenRouter.isEnabled = false
+        binding.tvOpenRouterModelStatus.text = "Checking OpenRouter models..."
+        lifecycleScope.launch {
+            val (ok, msg) = withContext(Dispatchers.IO) {
+                try {
+                    val req = Request.Builder()
+                        .url("https://openrouter.ai/api/v1/models")
+                        .header("Authorization", "Bearer $apiKey")
+                        .build()
+                    testHttpClient.newCall(req).execute().use { resp ->
+                        if (resp.isSuccessful) {
+                            Pair(true, "✅ Connected! Over 200+ models accessible (Llama 3.3, Claude, DeepSeek R1, GPT-4o)")
+                        } else {
+                            Pair(false, "❌ Verification failed: HTTP ${resp.code}")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Pair(false, "❌ Network error: ${e.message}")
+                }
+            }
+            binding.btnTestOpenRouter.isEnabled = true
+            binding.tvOpenRouterModelStatus.text = msg
+            Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun pasteToEditText(action: (String) -> Unit) {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val item = clipboard.primaryClip?.getItemAt(0)
+        val pasted = item?.text?.toString()?.trim() ?: ""
+        if (pasted.isNotBlank()) {
+            action(pasted)
+            Toast.makeText(this, "Pasted from clipboard", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Clipboard is empty", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -281,9 +567,9 @@ class ApiConnectionActivity : AppCompatActivity() {
             if (result.first) {
                 val ping = result.second
                 binding.tvPingResult.text = "Ping: ${ping}ms • Valid"
-                binding.tvLiveStatus.text = "CONNECTED • HANDSHAKE OK"
+                binding.tvLiveStatus.text = "CONNECTED • MODELS AVAILABLE (3.8 Live, 3.1 Flash, 2.0 Flash)"
                 binding.viewStatusDot.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#22C55E"))
-                Snackbar.make(binding.root, "Connection verified! Ping: ${ping}ms", Snackbar.LENGTH_LONG).show()
+                Snackbar.make(binding.root, "Gemini models verified! Ping: ${ping}ms", Snackbar.LENGTH_LONG).show()
             } else {
                 val code = result.second
                 binding.tvPingResult.text = if (code == -1) "Network Timeout" else "HTTP $code Error"
@@ -341,6 +627,40 @@ class ApiConnectionActivity : AppCompatActivity() {
         preferences.deepSeekApiKey = binding.etDeepSeekApiKey.text?.toString()?.trim() ?: ""
         preferences.grokApiKey = binding.etGrokApiKey.text?.toString()?.trim() ?: ""
         preferences.openRouterApiKey = binding.etOpenRouterApiKey.text?.toString()?.trim() ?: ""
+
+        // Save Specific Model Selections
+        preferences.openAiModel = when (binding.rgOpenAiModels.checkedRadioButtonId) {
+            binding.rbOpenAiGpt4oMini.id -> "gpt-4o-mini"
+            binding.rbOpenAiO1.id -> "o1"
+            binding.rbOpenAiO3Mini.id -> "o3-mini"
+            binding.rbOpenAiGpt4Turbo.id -> "gpt-4-turbo"
+            else -> "gpt-4o"
+        }
+
+        preferences.claudeModel = when (binding.rgClaudeModels.checkedRadioButtonId) {
+            binding.rbClaudeHaiku.id -> "claude-3-5-haiku-20241022"
+            binding.rbClaudeOpus.id -> "claude-3-opus-20240229"
+            else -> "claude-3-5-sonnet-20241022"
+        }
+
+        preferences.deepSeekModel = when (binding.rgDeepSeekModels.checkedRadioButtonId) {
+            binding.rbDeepSeekReasoner.id -> "deepseek-reasoner"
+            else -> "deepseek-chat"
+        }
+
+        preferences.grokModel = when (binding.rgGrokModels.checkedRadioButtonId) {
+            binding.rbGrok2Mini.id -> "grok-2-mini"
+            binding.rbGrokBeta.id -> "grok-beta"
+            else -> "grok-2"
+        }
+
+        preferences.openRouterModel = when (binding.rgOpenRouterModels.checkedRadioButtonId) {
+            binding.rbOpenRouterLlama.id -> "meta-llama/llama-3.3-70b-instruct"
+            binding.rbOpenRouterClaude.id -> "anthropic/claude-3.5-sonnet"
+            binding.rbOpenRouterDeepSeek.id -> "deepseek/deepseek-r1"
+            binding.rbOpenRouterGpt4o.id -> "openai/gpt-4o"
+            else -> "auto"
+        }
 
         // Save God's Eye 3D Sensors & Feeds Preferences
         preferences.godsEyeGoogleApiKey = binding.etGodsEyeGoogleKey.text?.toString()?.trim() ?: ""

@@ -41,7 +41,12 @@ class MacroEngine(
                 if (step.isOptional) {
                     Log.w(TAG, "Optional step ${index + 1} (${step.tool}) failed/skipped, continuing.")
                 } else {
-                    val errMsg = "Step ${index + 1} (${step.tool}) failed."
+                    val errMsg = if (step.tool == "open_app_by_name") {
+                        val targetApp = step.args["name"]?.toString() ?: "App"
+                        "Step ${index + 1} (${step.tool}): '$targetApp' is not installed or could not be opened on this device."
+                    } else {
+                        "Step ${index + 1} (${step.tool}) failed."
+                    }
                     Log.e(TAG, errMsg)
                     (context.applicationContext as? JarvisApp)?.museExperienceEngine?.recordTrajectory(
                         goal = macro.name,

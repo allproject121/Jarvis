@@ -222,6 +222,24 @@ class JarvisMatrixActivity : AppCompatActivity() {
             }
             if (!ensureAccessibilityOrPrompt()) return@setOnClickListener
 
+            val isChatGptInstalled = try {
+                packageManager.getPackageInfo("com.openai.chatgpt", 0) != null
+            } catch (_: Exception) {
+                false
+            }
+
+            if (!isChatGptInstalled) {
+                AlertDialog.Builder(this)
+                    .setTitle("ChatGPT App Not Installed")
+                    .setMessage("The official ChatGPT app is not installed on this device to run the accessibility macro.\n\nWould you like JARVIS to generate this image directly using the built-in AI Neural Generator (Flux Model)?")
+                    .setPositiveButton("Generate Directly") { _, _ ->
+                        binding.btnDirectGenerateImg.performClick()
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+                return@setOnClickListener
+            }
+
             Toast.makeText(this, "JARVIS Macro: Initiating ChatGPT Image Workflow...", Toast.LENGTH_SHORT).show()
             lifecycleScope.launch {
                 val res = app.macroEngine.executeMacroByName("chatgpt image", mapOf("image prompt" to prompt))
@@ -240,6 +258,25 @@ class JarvisMatrixActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             if (!ensureAccessibilityOrPrompt()) return@setOnClickListener
+
+            val isGeminiInstalled = try {
+                packageManager.getPackageInfo("com.google.android.apps.bard", 0) != null
+            } catch (_: Exception) {
+                false
+            }
+
+            if (!isGeminiInstalled) {
+                AlertDialog.Builder(this)
+                    .setTitle("Google Gemini App Not Installed")
+                    .setMessage("The official Google Gemini app is not installed on this device.\n\nWould you like JARVIS to generate this image directly using the built-in AI Neural Generator (Flux Model)?")
+                    .setPositiveButton("Generate Directly") { _, _ ->
+                        binding.etChatGptPrompt.setText(prompt)
+                        binding.btnDirectGenerateImg.performClick()
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+                return@setOnClickListener
+            }
 
             Toast.makeText(this, "JARVIS Macro: Initiating Gemini Image Workflow...", Toast.LENGTH_SHORT).show()
             lifecycleScope.launch {

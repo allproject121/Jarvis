@@ -282,7 +282,7 @@
             </LinearLayout>
         </FrameLayout>
 
-        <!-- Tab 5: Studio (Customization Studio in dock) -->
+        <!-- Tab 5: Settings in dock -->
         <FrameLayout
             android:id="@+id/tabMenu"
             android:layout_width="0dp"
@@ -306,15 +306,15 @@
                     android:id="@+id/ivTabMenu"
                     android:layout_width="22dp"
                     android:layout_height="22dp"
-                    android:src="@drawable/ic_menu"
+                    android:src="@drawable/ic_nav_settings"
                     app:tint="?attr/themeTextMuted"
-                    android:contentDescription="Menu" />
+                    android:contentDescription="Settings" />
 
                 <TextView
                     android:id="@+id/tvTabMenu"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Menu"
+                    android:text="Settings"
                     android:textSize="10sp"
                     android:textStyle="bold"
                     android:fontFamily="sans-serif-medium"

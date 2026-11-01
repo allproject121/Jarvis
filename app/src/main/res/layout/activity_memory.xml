@@ -61,6 +61,97 @@
         android:orientation="vertical"
         android:paddingHorizontal="16dp">
 
+        <!-- Neural Memory & Vector Engine Health Banner -->
+        <LinearLayout
+            android:id="@+id/cardMemoryHealth"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_jarvis_card"
+            android:padding="12dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_verified_badge"
+                    app:tint="?attr/themeAccent"
+                    android:contentDescription="Vector Health" />
+
+                <TextView
+                    android:id="@+id/tvMemorySyncTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:text="NEURAL VECTOR ENGINE SYNCHRONIZED"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:id="@+id/tvMemorySyncRatio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="49/49 INDEXED"
+                    android:textColor="#4ADE80"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvMemoryHealthSub"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Room Database synced with Vector Cache • Built-in Semantic Hashing Active"
+                android:textColor="?attr/themeTextSecondary"
+                android:textSize="11sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnReindexMemories"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:text="⚡ SYNC &amp; RE-INDEX"
+                    android:textSize="11sp"
+                    android:textColor="?attr/themeAccent"
+                    app:strokeColor="?attr/themeAccent"
+                    app:cornerRadius="8dp"
+                    android:paddingVertical="0dp"
+                    android:layout_marginEnd="6dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOpenMemoryInspector"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:text="🔍 INSPECTOR"
+                    android:textSize="11sp"
+                    android:textColor="?attr/themeTextSecondary"
+                    app:strokeColor="?attr/themeCardBorder"
+                    app:cornerRadius="8dp"
+                    android:paddingVertical="0dp"
+                    android:layout_marginStart="6dp" />
+            </LinearLayout>
+        </LinearLayout>
+
         <!-- Search Input -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilSearch"

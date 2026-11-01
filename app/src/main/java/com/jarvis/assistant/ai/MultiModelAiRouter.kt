@@ -105,13 +105,13 @@ object MultiModelAiRouter {
         val chosenProvider = prefs.selectedAiProvider
 
         val answer = when (chosenProvider) {
-            PROVIDER_OPENAI -> callOpenAi(prefs.openAiApiKey, prefs.selectedModelName.ifBlank { "gpt-4o" }, systemPrompt, userPrompt, temperature, maxTokens)
-            PROVIDER_CLAUDE -> callClaude(prefs.claudeApiKey, prefs.selectedModelName.ifBlank { "claude-3-5-sonnet-20241022" }, systemPrompt, userPrompt, temperature, maxTokens)
-            PROVIDER_DEEPSEEK -> callDeepSeek(prefs.deepSeekApiKey, prefs.selectedModelName.ifBlank { "deepseek-chat" }, systemPrompt, userPrompt, temperature, maxTokens)
-            PROVIDER_GROK -> callGrok(prefs.grokApiKey, prefs.selectedModelName.ifBlank { "grok-2" }, systemPrompt, userPrompt, temperature, maxTokens)
-            PROVIDER_OPENROUTER -> callOpenRouter(prefs.openRouterApiKey, prefs.selectedModelName.ifBlank { "auto" }, systemPrompt, userPrompt, temperature, maxTokens)
+            PROVIDER_OPENAI -> callOpenAi(prefs.openAiApiKey, prefs.openAiModel.ifBlank { "gpt-4o" }, systemPrompt, userPrompt, temperature, maxTokens)
+            PROVIDER_CLAUDE -> callClaude(prefs.claudeApiKey, prefs.claudeModel.ifBlank { "claude-3-5-sonnet-20241022" }, systemPrompt, userPrompt, temperature, maxTokens)
+            PROVIDER_DEEPSEEK -> callDeepSeek(prefs.deepSeekApiKey, prefs.deepSeekModel.ifBlank { "deepseek-chat" }, systemPrompt, userPrompt, temperature, maxTokens)
+            PROVIDER_GROK -> callGrok(prefs.grokApiKey, prefs.grokModel.ifBlank { "grok-2" }, systemPrompt, userPrompt, temperature, maxTokens)
+            PROVIDER_OPENROUTER -> callOpenRouter(prefs.openRouterApiKey, prefs.openRouterModel.ifBlank { "auto" }, systemPrompt, userPrompt, temperature, maxTokens)
             PROVIDER_LOCAL -> callLocalOllama(prefs.customEndpoint, prefs.localHostModel, systemPrompt, userPrompt)
-            else -> callGemini(prefs.apiKey, prefs.selectedModelName.ifBlank { "gemini-2.0-flash" }, systemPrompt, userPrompt, temperature, maxTokens)
+            else -> callGemini(prefs.apiKey, prefs.aiModel.ifBlank { "gemini-2.0-flash" }, systemPrompt, userPrompt, temperature, maxTokens)
         }
 
         if (!answer.isNullOrBlank()) {
@@ -176,25 +176,25 @@ object MultiModelAiRouter {
         val parallelTasks = mutableListOf<Pair<String, kotlinx.coroutines.Deferred<String?>>>()
 
         if (prefs.apiKey.isNotBlank()) {
-            parallelTasks.add("Google Gemini" to async { callGemini(prefs.apiKey, "gemini-2.0-flash", systemPrompt, userPrompt, temperature, maxTokens) })
+            parallelTasks.add("Google Gemini" to async { callGemini(prefs.apiKey, prefs.aiModel.ifBlank { "gemini-2.0-flash" }, systemPrompt, userPrompt, temperature, maxTokens) })
         }
         if (prefs.openAiApiKey.isNotBlank()) {
-            parallelTasks.add("OpenAI ChatGPT" to async { callOpenAi(prefs.openAiApiKey, "gpt-4o", systemPrompt, userPrompt, temperature, maxTokens) })
+            parallelTasks.add("OpenAI (${prefs.openAiModel})" to async { callOpenAi(prefs.openAiApiKey, prefs.openAiModel.ifBlank { "gpt-4o" }, systemPrompt, userPrompt, temperature, maxTokens) })
         }
         if (prefs.deepSeekApiKey.isNotBlank()) {
-            parallelTasks.add("DeepSeek R1/V3" to async { callDeepSeek(prefs.deepSeekApiKey, "deepseek-chat", systemPrompt, userPrompt, temperature, maxTokens) })
+            parallelTasks.add("DeepSeek (${prefs.deepSeekModel})" to async { callDeepSeek(prefs.deepSeekApiKey, prefs.deepSeekModel.ifBlank { "deepseek-chat" }, systemPrompt, userPrompt, temperature, maxTokens) })
         }
         if (prefs.claudeApiKey.isNotBlank()) {
-            parallelTasks.add("Anthropic Claude" to async { callClaude(prefs.claudeApiKey, "claude-3-5-sonnet-20241022", systemPrompt, userPrompt, temperature, maxTokens) })
+            parallelTasks.add("Claude (${prefs.claudeModel})" to async { callClaude(prefs.claudeApiKey, prefs.claudeModel.ifBlank { "claude-3-5-sonnet-20241022" }, systemPrompt, userPrompt, temperature, maxTokens) })
         }
         if (prefs.grokApiKey.isNotBlank()) {
-            parallelTasks.add("xAI Grok" to async { callGrok(prefs.grokApiKey, "grok-2", systemPrompt, userPrompt, temperature, maxTokens) })
+            parallelTasks.add("xAI Grok (${prefs.grokModel})" to async { callGrok(prefs.grokApiKey, prefs.grokModel.ifBlank { "grok-2" }, systemPrompt, userPrompt, temperature, maxTokens) })
         }
         if (prefs.openRouterApiKey.isNotBlank()) {
-            parallelTasks.add("OpenRouter" to async { callOpenRouter(prefs.openRouterApiKey, "auto", systemPrompt, userPrompt, temperature, maxTokens) })
+            parallelTasks.add("OpenRouter (${prefs.openRouterModel})" to async { callOpenRouter(prefs.openRouterApiKey, prefs.openRouterModel.ifBlank { "auto" }, systemPrompt, userPrompt, temperature, maxTokens) })
         }
         if (prefs.customEndpoint.isNotBlank()) {
-            parallelTasks.add("Localhost Ollama" to async { callLocalOllama(prefs.customEndpoint, prefs.localHostModel, systemPrompt, userPrompt) })
+            parallelTasks.add("Localhost Ollama (${prefs.localHostModel})" to async { callLocalOllama(prefs.customEndpoint, prefs.localHostModel, systemPrompt, userPrompt) })
         }
 
         // If no keys configured, return friendly prompt

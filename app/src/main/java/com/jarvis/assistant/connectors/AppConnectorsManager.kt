@@ -20,6 +20,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
+enum class ConnectorStatus(val label: String, val colorHex: String) {
+    OPERATIONAL("OPERATIONAL", "#4ADE80"),
+    AUTHENTICATED("AUTHENTICATED", "#22D3EE"),
+    CONNECTED("CONNECTED", "#38BDF8"),
+    INSTALLED("INSTALLED", "#94A3B8"),
+    AVAILABLE("AVAILABLE", "#A78BFA"),
+    DISCONNECTED("DISCONNECTED", "#64748B")
+}
+
 data class AppConnector(
     val id: String,
     val name: String,
@@ -31,7 +40,8 @@ data class AppConnector(
     val bridgeEndpoint: String = "",
     var isConnected: Boolean = false,
     var lastSyncTimestamp: Long = 0L,
-    var itemsIndexedCount: Int = 0
+    var itemsIndexedCount: Int = 0,
+    var status: ConnectorStatus = ConnectorStatus.DISCONNECTED
 )
 
 /**
@@ -55,6 +65,19 @@ class AppConnectorsManager private constructor(private val context: Context) {
                 instance ?: AppConnectorsManager(context.applicationContext).also { instance = it }
             }
         }
+    }
+
+    fun computeConnectorStatus(conn: AppConnector): ConnectorStatus {
+        if (!conn.isInstalled && conn.isExternal) return ConnectorStatus.AVAILABLE
+        if (!conn.isConnected) return if (conn.isInstalled) ConnectorStatus.INSTALLED else ConnectorStatus.DISCONNECTED
+        val hasPermission = when (conn.packageName) {
+            "phone" -> androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            "contacts" -> androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_CONTACTS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            "com.whatsapp", "com.google.android.youtube", "com.android.chrome" -> com.jarvis.assistant.automation.accessibility.JarvisAccessibilityService.isRunning()
+            "com.android.camera2" -> androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            else -> true
+        }
+        return if (hasPermission) ConnectorStatus.OPERATIONAL else ConnectorStatus.AUTHENTICATED
     }
 
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -100,18 +123,18 @@ class AppConnectorsManager private constructor(private val context: Context) {
         for ((pkg, name, desc) in coreSystemServices) {
             val isConn = connectedPackages.contains(pkg)
             val (category, _) = getAppCategoryAndCapability(pkg, name)
-            list.add(
-                AppConnector(
-                    id = pkg,
-                    name = name,
-                    packageName = pkg,
-                    description = desc,
-                    category = category,
-                    isInstalled = true,
-                    isExternal = false,
-                    isConnected = isConn
-                )
+            val c1 = AppConnector(
+                id = pkg,
+                name = name,
+                packageName = pkg,
+                description = desc,
+                category = category,
+                isInstalled = true,
+                isExternal = false,
+                isConnected = isConn
             )
+            c1.status = computeConnectorStatus(c1)
+            list.add(c1)
             seenPackages.add(pkg)
         }
 
@@ -136,18 +159,18 @@ class AppConnectorsManager private constructor(private val context: Context) {
                 val (category, capabilityDesc) = getAppCategoryAndCapability(pkg, appName)
                 val isConn = connectedPackages.contains(pkg)
 
-                list.add(
-                    AppConnector(
-                        id = pkg,
-                        name = appName,
-                        packageName = pkg,
-                        description = capabilityDesc,
-                        category = category,
-                        isInstalled = true,
-                        isExternal = false,
-                        isConnected = isConn
-                    )
+                val c2 = AppConnector(
+                    id = pkg,
+                    name = appName,
+                    packageName = pkg,
+                    description = capabilityDesc,
+                    category = category,
+                    isInstalled = true,
+                    isExternal = false,
+                    isConnected = isConn
                 )
+                c2.status = computeConnectorStatus(c2)
+                list.add(c2)
                 seenPackages.add(pkg)
             }
         } catch (e: Exception) {

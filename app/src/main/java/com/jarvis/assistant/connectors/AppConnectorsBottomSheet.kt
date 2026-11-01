@@ -278,9 +278,10 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
             titleCol.addView(nameRow)
 
             // Status Badge
+            val currentStatus = manager.computeConnectorStatus(conn)
             val tvStatus = TextView(requireContext()).apply {
-                text = if (conn.isConnected) "🟢 FULL AUTONOMOUS ACCESS (CONNECTED)" else "⚪ BASIC AUTOMATION ONLY (NOT CONNECTED)"
-                setTextColor(if (conn.isConnected) Color.parseColor("#4ADE80") else themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
+                text = "● " + currentStatus.label
+                setTextColor(Color.parseColor(currentStatus.colorHex))
                 textSize = 10f
                 paint.isFakeBoldText = true
                 setPadding(0, (2 * density).toInt(), 0, 0)
@@ -305,15 +306,19 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
                 if (isChecked) {
                     showPrivacyRiskWarningDialog(conn) {
                         manager.setConnectorEnabled(conn.id, true, lifecycleScope)
-                        tvStatus.text = "🟢 FULL AUTONOMOUS ACCESS (CONNECTED)"
-                        tvStatus.setTextColor(Color.parseColor("#4ADE80"))
-                        Toast.makeText(requireContext(), "Connected '${conn.name}' with Full Access!", Toast.LENGTH_SHORT).show()
+                        conn.isConnected = true
+                        val newStatus = manager.computeConnectorStatus(conn)
+                        tvStatus.text = "● " + newStatus.label
+                        tvStatus.setTextColor(Color.parseColor(newStatus.colorHex))
+                        Toast.makeText(requireContext(), "Connected '" + conn.name + "' (" + newStatus.label + ")", Toast.LENGTH_SHORT).show()
                     }
                 } else {
                     manager.setConnectorEnabled(conn.id, false, lifecycleScope)
-                    tvStatus.text = "⚪ BASIC AUTOMATION ONLY (NOT CONNECTED)"
-                    tvStatus.setTextColor(themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
-                    Toast.makeText(requireContext(), "Disconnected '${conn.name}'", Toast.LENGTH_SHORT).show()
+                    conn.isConnected = false
+                    val newStatus = manager.computeConnectorStatus(conn)
+                    tvStatus.text = "● " + newStatus.label
+                    tvStatus.setTextColor(Color.parseColor(newStatus.colorHex))
+                    Toast.makeText(requireContext(), "Disconnected '" + conn.name + "'", Toast.LENGTH_SHORT).show()
                 }
             }
 

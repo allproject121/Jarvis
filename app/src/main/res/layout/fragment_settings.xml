@@ -802,6 +802,14 @@
                             android:checked="true" />
                     </LinearLayout>
 
+                    <!-- Dynamic MCP Servers List Container -->
+                    <LinearLayout
+                        android:id="@+id/containerMcpServersList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="4dp" />
+
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnAddMcpServer"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
