@@ -17,6 +17,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import com.jarvis.assistant.automation.dynamic.DynamicTool
+import com.jarvis.assistant.automation.dynamic.DynamicToolRegistry
+import com.jarvis.assistant.automation.dynamic.DynamicScriptExecutor
+import com.jarvis.assistant.automation.dynamic.SelfHealingAgent
 
 /**
  * Unified Tool Dispatcher for Jarvis.
@@ -121,6 +125,34 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
             Log.i(TAG, "Executing tool '$name' (callId=$callId) with args: $args")
             val app = context.applicationContext as? JarvisApp
 
+            // ── 0. DYNAMIC SELF-HEALING TOOL RUNTIME DISPATCH ────────────────────
+            try {
+                val dynamicRegistry = DynamicToolRegistry.getInstance(context)
+                val dynamicTool = dynamicRegistry.getTool(name)
+                if (dynamicTool != null) {
+                    Log.i(TAG, "Dispatching dynamic tool '$name' (v${dynamicTool.version}) to DynamicScriptExecutor")
+                    val executor = DynamicScriptExecutor(context)
+                    val execResult = executor.execute(dynamicTool, args)
+                    dynamicRegistry.recordExecution(name, execResult.isSuccess, execResult.errorMessage)
+
+                    if (!execResult.isSuccess && execResult.errorMessage != null) {
+                        SelfHealingAgent.getInstance(context)
+                            .interceptFailure(name, args, execResult.errorMessage)
+                    }
+
+                    val finalResult = AiToolResult(
+                        callId = callId,
+                        functionName = name,
+                        isSuccess = execResult.isSuccess,
+                        resultJson = execResult.outputJson,
+                        errorMessage = execResult.errorMessage
+                    )
+                    return@withContext finalResult
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Dynamic tool execution error for '$name': ${e.message}")
+            }
+
             // ── 0. MODULAR SKILL / PLUGIN ENGINE DISPATCH ─────────────────────────
             try {
                 val skillRegistry = com.jarvis.assistant.automation.skills.SkillRegistry.getInstance(context)
@@ -159,6 +191,71 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
 
             try {
                 when (name) {
+                    // ── DYNAMIC SELF-HEALING & TOOL CREATION META-TOOLS ─────────
+                    "create_dynamic_tool" -> {
+                        val dynamicRegistry = DynamicToolRegistry.getInstance(context)
+                        val toolName = args.getString("name")
+                        val desc = args.optString("description", "Dynamic tool authored by Jarvis")
+                        val paramsSchema = args.optString("parameters_schema_json", "{\"type\":\"object\",\"properties\":{}}")
+                        val scriptTypeStr = args.optString("script_type", "JAVASCRIPT")
+                        val scriptCode = args.getString("script_code")
+                        val scriptType = runCatching {
+                            DynamicTool.ScriptType.valueOf(scriptTypeStr.uppercase())
+                        }.getOrDefault(DynamicTool.ScriptType.JAVASCRIPT)
+
+                        val res = dynamicRegistry.createTool(toolName, desc, paramsSchema, scriptType, scriptCode)
+                        res.onSuccess { created ->
+                            resultJson.put("success", true)
+                            resultJson.put("message", "Dynamic tool '${created.name}' created successfully (version 1). It is now live in Jarvis.")
+                            resultJson.put("tool", created.toJson())
+                        }.onFailure { err ->
+                            isSuccess = false
+                            errorMessage = err.message
+                            resultJson.put("success", false)
+                            resultJson.put("error", err.message)
+                        }
+                    }
+
+                    "edit_dynamic_tool" -> {
+                        val dynamicRegistry = DynamicToolRegistry.getInstance(context)
+                        val toolName = args.getString("name")
+                        val updatedCode = if (args.has("updated_script_code")) args.getString("updated_script_code") else null
+                        val updatedDesc = if (args.has("updated_description")) args.getString("updated_description") else null
+                        val updatedSchema = if (args.has("updated_parameters_schema_json")) args.getString("updated_parameters_schema_json") else null
+
+                        val res = dynamicRegistry.editTool(toolName, updatedCode, updatedDesc, updatedSchema)
+                        res.onSuccess { updated ->
+                            resultJson.put("success", true)
+                            resultJson.put("message", "Dynamic tool '${updated.name}' patched to version ${updated.version}.")
+                            resultJson.put("tool", updated.toJson())
+                            SelfHealingAgent.getInstance(context)
+                                .recordPatchSuccess(toolName, "Code/schema patched to version ${updated.version}")
+                        }.onFailure { err ->
+                            isSuccess = false
+                            errorMessage = err.message
+                            resultJson.put("success", false)
+                            resultJson.put("error", err.message)
+                        }
+                    }
+
+                    "list_dynamic_tools" -> {
+                        val dynamicRegistry = DynamicToolRegistry.getInstance(context)
+                        val tools = dynamicRegistry.getAllTools()
+                        val array = JSONArray()
+                        tools.forEach { array.put(it.toJson()) }
+                        resultJson.put("success", true)
+                        resultJson.put("total_tools", tools.size)
+                        resultJson.put("tools", array)
+                    }
+
+                    "delete_dynamic_tool" -> {
+                        val dynamicRegistry = DynamicToolRegistry.getInstance(context)
+                        val toolName = args.getString("name")
+                        val deleted = dynamicRegistry.deleteTool(toolName)
+                        resultJson.put("success", deleted)
+                        resultJson.put("message", if (deleted) "Dynamic tool '$toolName' deleted." else "Dynamic tool '$toolName' not found.")
+                    }
+
                     // ── 1. DEVICE HARDWARE CONTROLS ────────────────────────────
                     "set_flashlight" -> {
                         val enabled = args.optBoolean("enabled", true)
@@ -1280,6 +1377,13 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                 errorMessage = e.message ?: "Execution error"
                 resultJson.put("success", false)
                 resultJson.put("message", "Failed to execute tool $name: ${e.message}")
+            }
+
+            val err = errorMessage
+            if (!isSuccess && err != null) {
+                try {
+                    SelfHealingAgent.getInstance(context).interceptFailure(name, args, err)
+                } catch (_: Exception) {}
             }
 
             val finalResult = AiToolResult(

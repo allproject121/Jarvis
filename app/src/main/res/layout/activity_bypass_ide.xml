@@ -1,0 +1,950 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootBypassIde"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?attr/themeBg">
+
+    <!-- 1. TOP APP BAR / DYNAMIC ISLAND HEADER -->
+    <LinearLayout
+        android:id="@+id/topBarBypassIde"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="10dp"
+        android:background="?attr/themeCardGlassStart">
+
+        <!-- Back Button (Comfortable 44dp touch target) -->
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_jarvis_icon_square"
+            android:src="@drawable/ic_back"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            app:tint="?attr/themeAccent"
+            android:contentDescription="Back" />
+
+        <!-- Title & Subtitle -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="12dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="JARVIS BYPASS IDE"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.06"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PRO"
+                    android:textColor="#00FF88"
+                    android:textSize="9sp"
+                    android:textStyle="bold"
+                    android:fontFamily="monospace"
+                    android:background="#2000FF88"
+                    android:paddingHorizontal="5dp"
+                    android:paddingVertical="1dp"
+                    android:layout_marginStart="6dp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvHeaderSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AUTONOMOUS AGENTIC STUDIO · V5.2"
+                android:textColor="?attr/themeAccent"
+                android:textSize="10.5sp"
+                android:letterSpacing="0.04"
+                android:fontFamily="monospace"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <!-- Dynamic Island Interactive Status Pill (Clickable 40dp) -->
+        <LinearLayout
+            android:id="@+id/pillDynamicIsland"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_jarvis_status_badge"
+            android:paddingHorizontal="12dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <View
+                android:id="@+id/dotIslandGlow"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:background="@drawable/bg_jarvis_mic_center"
+                android:backgroundTint="#00FF88" />
+
+            <TextView
+                android:id="@+id/tvIslandStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SU: ACTIVE"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"
+                android:layout_marginStart="6dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1.2dp"
+        android:background="?attr/themeCardBorder" />
+
+    <!-- 2. TELEMETRY & SECURITY ATTESTATION HUD CARD -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_jarvis_action_card"
+        android:layout_marginHorizontal="14dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="8dp"
+        android:padding="12dp">
+
+        <!-- AI Engine Mode & Provider Selector Bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="AI BRAIN ENGINE"
+                android:textColor="?attr/themeTextSecondary"
+                android:textSize="10.5sp"
+                android:fontFamily="monospace"
+                android:textStyle="bold"
+                android:letterSpacing="0.04" />
+
+            <TextView
+                android:id="@+id/btnAiEngineSelector"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:gravity="center"
+                android:text="🧠 MODE: SINGLE (GEMINI) ▾"
+                android:textColor="#000000"
+                android:textSize="10sp"
+                android:fontFamily="monospace"
+                android:textStyle="bold"
+                android:background="@drawable/bg_jarvis_pill_button"
+                android:paddingHorizontal="10dp"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?attr/themeCardBorder"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="HARDWARE ATTESTATION &amp; TELEMETRY"
+                android:textColor="?attr/themeTextSecondary"
+                android:textSize="10.5sp"
+                android:fontFamily="monospace"
+                android:textStyle="bold"
+                android:letterSpacing="0.04" />
+
+            <TextView
+                android:id="@+id/tvBypassSecurityTag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ROOT / IPC: UNRESTRICTED"
+                android:textColor="#00FF88"
+                android:textSize="9.5sp"
+                android:fontFamily="monospace"
+                android:textStyle="bold"
+                android:background="#2000FF88"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp" />
+        </LinearLayout>
+
+        <!-- 3 Telemetry Metrics Grid -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+
+            <!-- Metric 1: Battery Arc Core -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_jarvis_icon_square"
+                android:paddingVertical="6dp"
+                android:layout_marginEnd="4dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ARC CORE"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="9sp"
+                    android:fontFamily="monospace" />
+
+                <TextView
+                    android:id="@+id/tvTeleArcCore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="85%"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginTop="1dp" />
+            </LinearLayout>
+
+            <!-- Metric 2: Edge LLaMA RAM -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_jarvis_icon_square"
+                android:paddingVertical="6dp"
+                android:layout_marginHorizontal="4dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="EDGE RAM"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="9sp"
+                    android:fontFamily="monospace" />
+
+                <TextView
+                    android:id="@+id/tvTeleEdgeRam"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="342 MB"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginTop="1dp" />
+            </LinearLayout>
+
+            <!-- Metric 3: IPC Latency -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_jarvis_icon_square"
+                android:paddingVertical="6dp"
+                android:layout_marginStart="4dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="IPC LATENCY"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="9sp"
+                    android:fontFamily="monospace" />
+
+                <TextView
+                    android:id="@+id/tvTeleLatency"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="12 ms"
+                    android:textColor="#00FF88"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginTop="1dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 3. TACTICAL SEGMENTED SUB-TABS (Minimum 48dp height for comfortable finger tap) -->
+    <LinearLayout
+        android:id="@+id/rowSegmentedTabs"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:orientation="horizontal"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="3dp"
+        android:gravity="center_vertical">
+
+        <!-- Tab 1: Shell & Terminal -->
+        <TextView
+            android:id="@+id/tabShell"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="⚡ BYPASS SHELL"
+            android:textColor="#FFFFFF"
+            android:textSize="11.5sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:background="@drawable/bg_jarvis_pill_button"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="4dp" />
+
+        <!-- Tab 2: Code & AI Diff -->
+        <TextView
+            android:id="@+id/tabCodeDiff"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="📜 CODE &amp; DIFF"
+            android:textColor="?attr/themeTextSecondary"
+            android:textSize="11.5sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:background="@drawable/bg_jarvis_icon_square"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginHorizontal="2dp" />
+
+        <!-- Tab 3: Neural Agents -->
+        <TextView
+            android:id="@+id/tabAgents"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="🧠 AGENT MATRIX"
+            android:textColor="?attr/themeTextSecondary"
+            android:textSize="11.5sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:background="@drawable/bg_jarvis_icon_square"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+    <!-- 4. MAIN CONTENT VIEWPORT CONTAINER -->
+    <FrameLayout
+        android:id="@+id/viewportContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="14dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="12dp">
+
+        <!-- ==================== VIEW 1: BYPASS SHELL & LOGCAT ==================== -->
+        <LinearLayout
+            android:id="@+id/panelShellView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <!-- Terminal Output Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingBottom="8dp"
+                    android:layout_marginBottom="4dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="LOGCAT &amp; SHIZUKU BYPASS TERMINAL"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="11sp"
+                        android:fontFamily="monospace"
+                        android:textStyle="bold" />
+
+                    <!-- Clear Logs Button (40dp) -->
+                    <TextView
+                        android:id="@+id/btnClearLogs"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:text="CLEAR"
+                        android:textColor="?attr/themeTextSecondary"
+                        android:textSize="10sp"
+                        android:fontFamily="monospace"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:paddingHorizontal="10dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginEnd="6dp" />
+
+                    <!-- Test Trigger Button (40dp) -->
+                    <TextView
+                        android:id="@+id/btnRunBypassSequence"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:text="TEST SEQUENCE"
+                        android:textColor="#000000"
+                        android:textSize="10.5sp"
+                        android:fontFamily="monospace"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        android:paddingHorizontal="12dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?attr/themeCardBorder"
+                    android:layout_marginBottom="6dp" />
+
+                <!-- Scrollable Terminal Window -->
+                <ScrollView
+                    android:id="@+id/scrollTerminal"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:fillViewport="true"
+                    android:scrollbars="none">
+
+                    <TextView
+                        android:id="@+id/tvTerminalOutput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#D1D5DB"
+                        android:textSize="11sp"
+                        android:fontFamily="monospace"
+                        android:lineSpacingExtra="3dp"
+                        android:textIsSelectable="true"
+                        tools:text="[18:49:01] JARVIS Mobile Core initialized.\n[18:49:01] IntentFilter hooked: com.jarvis.assistant\n[18:49:02] AccessibilityService connected (node count: 48)" />
+                </ScrollView>
+            </LinearLayout>
+
+            <!-- Quick Action Chips Row (Generous 44dp height for easy tapping) -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/chipMacroWhatsapp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:gravity="center_vertical"
+                        android:text="📱 WhatsApp Macro"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:background="@drawable/bg_jarvis_action_card"
+                        android:paddingHorizontal="14dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginEnd="6dp" />
+
+                    <TextView
+                        android:id="@+id/chipMacroSentry"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:gravity="center_vertical"
+                        android:text="🛡️ Test Sentry Alarm"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:background="@drawable/bg_jarvis_action_card"
+                        android:paddingHorizontal="14dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginEnd="6dp" />
+
+                    <TextView
+                        android:id="@+id/chipMacroRoot"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:gravity="center_vertical"
+                        android:text="⚡ Root IPC Attest"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:background="@drawable/bg_jarvis_action_card"
+                        android:paddingHorizontal="14dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginEnd="6dp" />
+
+                    <TextView
+                        android:id="@+id/chipMacroDualBrain"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:gravity="center_vertical"
+                        android:text="🧠 Ping Gemini Live"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:background="@drawable/bg_jarvis_action_card"
+                        android:paddingHorizontal="14dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- Terminal Command Prompt Input Box (Comfortable 48dp input target) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_jarvis_action_card"
+                android:paddingHorizontal="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="jarvis@mobile:~$ "
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="12sp"
+                    android:fontFamily="monospace"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etTerminalInput"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:hint="Type 'help', 'bypass', 'status', 'scan'..."
+                    android:textColorHint="?attr/themeTextMuted"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="12sp"
+                    android:fontFamily="monospace"
+                    android:imeOptions="actionSend"
+                    android:inputType="textNoSuggestions"
+                    android:maxLines="1" />
+
+                <!-- Big Easy-to-Tap RUN Button (48dp x 64dp) -->
+                <TextView
+                    android:id="@+id/btnRunCommand"
+                    android:layout_width="64dp"
+                    android:layout_height="38dp"
+                    android:gravity="center"
+                    android:text="RUN"
+                    android:textColor="#000000"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:fontFamily="monospace"
+                    android:background="@drawable/bg_jarvis_pill_button"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ==================== VIEW 2: CODE & AI DIFF INSPECTOR ==================== -->
+        <LinearLayout
+            android:id="@+id/panelCodeDiffView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="BypassEngine.kt (Active Buffer)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp"
+                        android:fontFamily="monospace"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvDiffBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="DIFF READY"
+                        android:textColor="#FFAA00"
+                        android:textSize="9.5sp"
+                        android:fontFamily="monospace"
+                        android:textStyle="bold"
+                        android:background="#20FFAA00"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?attr/themeCardBorder"
+                    android:layout_marginBottom="6dp" />
+
+                <!-- Code Editor View with AI Diff -->
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:fillViewport="true"
+                    android:scrollbars="none">
+
+                    <TextView
+                        android:id="@+id/tvCodeCanvas"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#D1D5DB"
+                        android:textSize="11sp"
+                        android:fontFamily="monospace"
+                        android:lineSpacingExtra="3.5dp"
+                        android:textIsSelectable="true"
+                        tools:text="// Autonomous System Hook Dispatcher\nclass BypassEngine(val context: Context) {\n  suspend fun executeBypass() = withContext(Dispatchers.IO) {\n+   val fastChannel = EdgeBypassChannel.connect()\n+   fastChannel.dispatchDirectZeroDelay()\n  }\n}" />
+                </ScrollView>
+            </LinearLayout>
+
+            <!-- Bottom Actions: Toggle Diff & Merge Buttons (50dp height) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="10dp">
+
+                <TextView
+                    android:id="@+id/btnToggleDiff"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="🔍 TOGGLE AI DIFF"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:background="@drawable/bg_jarvis_action_card"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/btnApplyDiff"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="⚡ MERGE &amp; HOT-RELOAD"
+                    android:textColor="#000000"
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold"
+                    android:background="@drawable/bg_jarvis_pill_button"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginStart="6dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ==================== VIEW 3: NEURAL AGENT MATRIX ==================== -->
+        <ScrollView
+            android:id="@+id/panelAgentsView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:scrollbars="none"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="16dp">
+
+                <!-- Agent 1: Dual-Brain AI Router -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_action_card"
+                    android:padding="14dp"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:gravity="center"
+                        android:text="🧠"
+                        android:textSize="20sp"
+                        android:background="@drawable/bg_jarvis_icon_square" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Dual-Brain AI Router"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Gemini Live WebSocket + LLaMA 3.2 on-device SLM"
+                            android:textColor="?attr/themeTextSecondary"
+                            android:textSize="10.5sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ACTIVE"
+                        android:textColor="#00FF88"
+                        android:textSize="10sp"
+                        android:fontFamily="monospace"
+                        android:textStyle="bold"
+                        android:background="#2000FF88"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp" />
+                </LinearLayout>
+
+                <!-- Agent 2: Accessibility SuperCore -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_action_card"
+                    android:padding="14dp"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:gravity="center"
+                        android:text="♿"
+                        android:textSize="20sp"
+                        android:background="@drawable/bg_jarvis_icon_square" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Accessibility SuperCore"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Autonomous touch injection &amp; humanized typing"
+                            android:textColor="?attr/themeTextSecondary"
+                            android:textSize="10.5sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvAccessAgentStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="60 FPS"
+                        android:textColor="#00FF88"
+                        android:textSize="10sp"
+                        android:fontFamily="monospace"
+                        android:textStyle="bold"
+                        android:background="#2000FF88"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp" />
+                </LinearLayout>
+
+                <!-- Agent 3: Guardian Sentry Intruder -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_action_card"
+                    android:padding="14dp"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:gravity="center"
+                        android:text="🛡️"
+                        android:textSize="20sp"
+                        android:background="@drawable/bg_jarvis_icon_square" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Guardian Sentry Sentry"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Motion alarm, anti-theft &amp; camera snapshot capture"
+                            android:textColor="?attr/themeTextSecondary"
+                            android:textSize="10.5sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ARMED"
+                        android:textColor="#FFAA00"
+                        android:textSize="10sp"
+                        android:fontFamily="monospace"
+                        android:textStyle="bold"
+                        android:background="#20FFAA00"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp" />
+                </LinearLayout>
+
+                <!-- Agent 4: God's Eye Recon -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_action_card"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:gravity="center"
+                        android:text="🛰️"
+                        android:textSize="20sp"
+                        android:background="@drawable/bg_jarvis_icon_square" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="God's Eye Geospatial Recon"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Cesium 3D Globe, OpenSky flights &amp; live CCTV streams"
+                            android:textColor="?attr/themeTextSecondary"
+                            android:textSize="10.5sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="READY"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="10sp"
+                        android:fontFamily="monospace"
+                        android:textStyle="bold"
+                        android:background="#2038BDF8"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+    </FrameLayout>
+</LinearLayout>
