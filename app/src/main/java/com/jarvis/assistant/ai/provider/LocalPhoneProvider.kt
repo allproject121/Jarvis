@@ -2,6 +2,7 @@ package com.jarvis.assistant.ai.provider
 
 import android.content.Context
 import android.util.Log
+import com.jarvis.assistant.ai.local.JarvisThreadManager
 import com.jarvis.assistant.ai.local.LocalAiConfig
 import com.jarvis.assistant.ai.local.LocalModelManager
 import com.jarvis.assistant.ai.local.ToolCallParser
@@ -50,6 +51,15 @@ class LocalPhoneProvider private constructor(
     private val toolDispatcher = JarvisToolDispatcher.getInstance(context)
     private val mutex = Mutex()
 
+    // B4 fix: active inference configuration (threads, sampling, token & context limits)
+    @Volatile
+    private var currentConfig: LocalAiConfig = LocalAiConfig()
+
+    /** Applies LocalAiConfig settings to subsequent inference runs. */
+    fun configure(config: LocalAiConfig) {
+        currentConfig = config
+    }
+
     @Volatile
     private var nativeModel: LlamaModel? = null
     @Volatile
@@ -76,7 +86,8 @@ class LocalPhoneProvider private constructor(
 
                 val modelParams = ModelParameters()
                     .setModel(modelFile.absolutePath)
-                    .setThreads(4)
+                    .setThreads(currentConfig.threads)
+                    .setCtxSize(currentConfig.contextWindowLimit)
 
                 val loaded = LlamaModel(modelParams)
                 nativeModel = loaded
@@ -136,62 +147,165 @@ class LocalPhoneProvider private constructor(
         }
 
         val activeInstance = nativeModel ?: return@flow
+        toolDispatcher.startNewTurn(java.util.UUID.randomUUID().toString())
+        // Optional AndroLLM agent pipeline (default OFF): routed tool list over
+        // Jarvis + AndroLLM tools, calls executed through the gated coordinator.
+        val agentPipelineOn = com.jarvis.assistant.androllm.agent.integration.AgentPipeline.isEnabled(context)
+        if (agentPipelineOn) {
+            com.jarvis.assistant.androllm.agent.integration.AgentPipeline.beginTurn(context, cleanPrompt)
+        }
 
-        // 1. Build ChatML formatted instruction prompt
-        val fullPrompt = buildChatMlPrompt(
-            cleanPrompt = cleanPrompt,
-            systemPrompt = systemPrompt,
-            memoryContext = memoryContext,
-            chatHistory = chatHistory,
-            tools = if (availableTools.isNotEmpty()) availableTools else toolDispatcher.getAvailableToolSchemas()
-        )
+        val activeId = loadedModelId.ifBlank { modelManager.activeModelId.value }
+        val modelFamily = com.jarvis.assistant.ai.compat.ModelFamily.resolveFromModelId(activeId)
 
-        Log.i(TAG, "Starting local on-device inference with prompt length: ${fullPrompt.length}")
+        // 1. Build prompt formatted to the active model family's official chat template
+        val fullTools = when {
+            availableTools.isNotEmpty() -> availableTools
+            agentPipelineOn -> com.jarvis.assistant.androllm.agent.integration.AgentPipeline
+                .routedSchemas(context, cleanPrompt)
+                .ifEmpty { toolDispatcher.getAvailableToolSchemas() }
+            else -> toolDispatcher.getAvailableToolSchemas()
+        }
+        val fullPrompt = buildPromptWithinContext(modelFamily, cleanPrompt, systemPrompt, memoryContext, chatHistory, fullTools)
+
+        Log.i(TAG, "Starting local on-device inference (family=${modelFamily.displayName}) with prompt length: ${fullPrompt.length}")
         val params = InferenceParameters.of(fullPrompt)
-            .withTemperature(0.7f)
-            .withTopK(40)
-            .withTopP(0.9f)
-            .withNPredict(384)
-            .withStopStrings("<|im_end|>", "<|endoftext|>", "</tool_call>")
+            .withTemperature(currentConfig.temperature)
+            .withTopK(currentConfig.topK)
+            .withTopP(currentConfig.topP)
+            .withNPredict(currentConfig.maxTokens)
+            .withStopStrings(*(modelFamily.stopTokens.toTypedArray()))
 
         val tokenAccumulator = StringBuilder()
         var hasDispatchedTool = false
+        var toolCallPending = false
+        var emittedLength = 0
 
+        val telemetry = com.jarvis.assistant.telemetry.TelemetryRepository.getInstance(context)
+        telemetry.beginGeneration()
         try {
-            val iterable = activeInstance.generate(params)
-            for (output in iterable) {
-                val token = output.text ?: continue
-                tokenAccumulator.append(token)
-                emit(AiStreamChunk(token = token, isComplete = false))
-                if (output.stop) break
+            JarvisThreadManager.withBackgroundInferencePriority {
+                val iterable = activeInstance.generate(params)
+                for (output in iterable) {
+                    val token = output.text ?: continue
+                    telemetry.onToken()
+                    tokenAccumulator.append(token)
 
-                // Real-time tool call detection during token stream
-                if (!hasDispatchedTool && tokenAccumulator.contains("<tool_call>")) {
-                    val candidateTool = ToolCallParser.parseToolCall(tokenAccumulator.toString())
-                    if (candidateTool != null) {
-                        hasDispatchedTool = true
-                        Log.i(TAG, "Offline LLM triggered tool call: ${candidateTool.functionName}")
-                        emit(AiStreamChunk(token = "", isComplete = false, toolCallDetected = candidateTool))
-                        val toolResult = toolDispatcher.dispatchTool(candidateTool)
-                        Log.i(TAG, "Offline tool execution finished: isSuccess=${toolResult.isSuccess}")
+                    // Real-time tool call detection during token stream
+                    if (!hasDispatchedTool && tokenAccumulator.contains("<tool_call>")) {
+                        toolCallPending = true
+                        val candidateTool = ToolCallParser.parseToolCall(tokenAccumulator.toString())
+                        if (candidateTool != null) {
+                            hasDispatchedTool = true
+                            Log.i(TAG, "Offline LLM triggered tool call: ${candidateTool.functionName}")
 
-                        // Continue conversational answer after tool execution
-                        val cleanMessage = toolResult.resultJson.optString("message", "Action completed.")
-                        emit(AiStreamChunk(token = "\n$cleanMessage", isComplete = false))
-                        break
+                            // B2 fix: emit only the conversational text streamed before the
+                            // structured payload; never speak or persist the raw function JSON.
+                            val visiblePrefix = ToolCallParser.cleanConversationalText(tokenAccumulator.toString()).trim()
+                            if (visiblePrefix.isNotEmpty()) {
+                                emit(AiStreamChunk(token = visiblePrefix, isComplete = false))
+                            }
+
+                            emit(AiStreamChunk(token = "", isComplete = false, toolCallDetected = candidateTool))
+                            val toolResult = if (agentPipelineOn) {
+                                com.jarvis.assistant.androllm.agent.integration.AgentPipeline.dispatch(context, candidateTool)
+                            } else {
+                                toolDispatcher.dispatchTool(candidateTool)
+                            }
+                            Log.i(TAG, "Offline tool execution finished: isSuccess=${toolResult.isSuccess}")
+
+                            // Continue conversational answer after tool execution
+                            val cleanMessage = toolResult.resultJson.optString("message", "Action completed.")
+                            emit(AiStreamChunk(token = "\n$cleanMessage", isComplete = false))
+                            break
+                        }
+                        // Incomplete structured request: keep accumulating without emitting raw JSON
+                        continue
                     }
+
+                    if (!toolCallPending && emittedLength < tokenAccumulator.length) {
+                        // Stream only the newly appended delta of conversational text
+                        emit(AiStreamChunk(token = tokenAccumulator.substring(emittedLength), isComplete = false))
+                        emittedLength = tokenAccumulator.length
+                    }
+
+                    if (output.stop) break
+                }
+            }
+
+            // Stream ended while holding an unparsed partial request: emit only its clean text
+            if (!hasDispatchedTool && emittedLength < tokenAccumulator.length) {
+                val heldText = ToolCallParser.cleanConversationalText(tokenAccumulator.substring(emittedLength)).trim()
+                if (heldText.isNotEmpty()) {
+                    emit(AiStreamChunk(token = heldText, isComplete = false))
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error during native llama token generation: ${e.message}", e)
             emit(AiStreamChunk(token = " Sir, offline core error: ${e.message}", isComplete = false))
         } finally {
+            telemetry.endGeneration(activeId)
             emit(AiStreamChunk(token = "", isComplete = true))
         }
     }.flowOn(Dispatchers.IO)
 
+    /**
+     * Quiet, TOOL-FREE single-shot generation for background pipelines
+     * (AndroLLM memory extraction / summarization).
+     *
+     * Unlike [streamResponse] this never advertises tool schemas, never
+     * dispatches tool calls, never auto-loads weights and never touches the
+     * chat UI. Returns null when no model is loaded or nothing was generated.
+     */
+    suspend fun generateQuiet(
+        prompt: String,
+        systemPrompt: String,
+        maxTokens: Int = 256,
+        temperature: Float = 0.2f
+    ): String? = withContext(Dispatchers.IO) {
+        val cleanPrompt = prompt.trim()
+        if (cleanPrompt.isBlank()) return@withContext null
+        val activeInstance = nativeModel ?: return@withContext null
+
+        val activeId = loadedModelId.ifBlank { modelManager.activeModelId.value }
+        val modelFamily = com.jarvis.assistant.ai.compat.ModelFamily.resolveFromModelId(activeId)
+        val fullPrompt = com.jarvis.assistant.ai.compat.ChatTemplateRenderer.render(
+            family = modelFamily,
+            cleanPrompt = cleanPrompt,
+            systemPrompt = systemPrompt,
+            memoryContext = "",
+            chatHistory = emptyList(),
+            tools = emptyList()
+        )
+        val params = InferenceParameters.of(fullPrompt)
+            .withTemperature(temperature)
+            .withTopK(currentConfig.topK)
+            .withTopP(currentConfig.topP)
+            .withNPredict(maxTokens)
+            .withStopStrings(*(modelFamily.stopTokens.toTypedArray()))
+
+        val sb = StringBuilder()
+        try {
+            JarvisThreadManager.withBackgroundInferencePriority {
+                for (output in activeInstance.generate(params)) {
+                    val token = output.text ?: continue
+                    sb.append(token)
+                    if (output.stop) break
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Quiet generation failed: ${e.message}")
+            return@withContext null
+        }
+        sb.toString().trim().ifBlank { null }
+    }
+
     override suspend fun executeToolCall(toolCall: AiToolCall): AiToolResult {
-        return toolDispatcher.dispatchTool(toolCall)
+        return if (com.jarvis.assistant.androllm.agent.integration.AgentPipeline.isEnabled(context)) {
+            com.jarvis.assistant.androllm.agent.integration.AgentPipeline.dispatch(context, toolCall)
+        } else {
+            toolDispatcher.dispatchTool(toolCall)
+        }
     }
 
     override suspend fun unload() = withContext(Dispatchers.IO) {
@@ -261,5 +375,51 @@ class LocalPhoneProvider private constructor(
         sb.append("<|im_start|>assistant\n")
 
         return sb.toString()
+    }
+
+    /**
+     * Keeps the rendered prompt inside the model's context window. The full prompt (system + memory +
+     * every tool schema + history) can be several thousand tokens, which llama.cpp rejects outright on
+     * a 2K context ("request exceeds the available context size"). Each fallback step trims the least
+     * important part first: tools down to the ones routed for this request, then memory, then history.
+     */
+    private suspend fun buildPromptWithinContext(
+        family: com.jarvis.assistant.ai.compat.ModelFamily,
+        cleanPrompt: String,
+        systemPrompt: String,
+        memoryContext: String,
+        chatHistory: List<ChatTurn>,
+        tools: List<JSONObject>
+    ): String {
+        // ~3 characters per token is a conservative estimate for English/Hinglish with these tokenizers.
+        val budgetTokens = (currentConfig.contextWindowLimit - currentConfig.maxTokens - 64).coerceAtLeast(256)
+        val budgetChars = budgetTokens * 3
+        val routed = runCatching {
+            com.jarvis.assistant.androllm.agent.integration.AgentPipeline.routedSchemas(context, cleanPrompt)
+        }.getOrDefault(emptyList())
+        val smallTools = (routed.ifEmpty { tools }).take(8)
+
+        data class Attempt(val tools: List<JSONObject>, val memoryChars: Int, val historyTurns: Int)
+        val attempts = listOf(
+            Attempt(tools, Int.MAX_VALUE, chatHistory.size),
+            Attempt(smallTools, 1500, 4),
+            Attempt(smallTools.take(4), 600, 2),
+            Attempt(emptyList(), 300, 1),
+            Attempt(emptyList(), 0, 0)
+        )
+        var prompt = ""
+        for (attempt in attempts) {
+            prompt = com.jarvis.assistant.ai.compat.ChatTemplateRenderer.render(
+                family = family,
+                cleanPrompt = cleanPrompt,
+                systemPrompt = systemPrompt,
+                memoryContext = memoryContext.take(attempt.memoryChars),
+                chatHistory = chatHistory.takeLast(attempt.historyTurns),
+                tools = attempt.tools
+            )
+            if (prompt.length <= budgetChars) break
+            Log.w(TAG, "Prompt ${prompt.length} chars exceeds ~$budgetChars for ${currentConfig.contextWindowLimit}-token context; trimming")
+        }
+        return prompt
     }
 }

@@ -39,7 +39,19 @@ enum class AiModelMode(val displayName: String, val description: String) {
      * Routes queries to Gemini/ChatGPT when connected, and auto-fails over
      * to Local Host AI or Local Offline AI without interruption if internet drops or quota exhausts.
      */
-    AUTO_HYBRID("Auto Hybrid (Smart Failover)", "Online intelligence with instant zero-downtime local failover.");
+    AUTO_HYBRID("Auto Hybrid (Smart Failover)", "Online intelligence with instant zero-downtime local failover."),
+
+    /**
+     * Optional AndroLLM LiteRT-LM on-device engine (.litertlm models, NPU / GPU / CPU).
+     * Manual selection only; never chosen automatically. Requires AndroLlmFlags.LITERT_ENGINE.
+     */
+    LOCAL_LITERT("LiteRT-LM On-Device", "Optional AndroLLM LiteRT-LM engine with NPU / GPU / CPU acceleration."),
+
+    /**
+     * Optional AndroLLM OpenAI-compatible multi-provider gateway (LiteLLM, OpenRouter, Groq, Ollama...).
+     * Manual selection only; requires AndroLlmFlags.CLOUD_GATEWAY.
+     */
+    CLOUD_GATEWAY("Cloud Gateway (OpenAI-compatible)", "Optional multi-provider gateway with fallback, usage metering and prompt caching.");
 
     companion object {
         fun fromString(name: String?): AiModelMode {

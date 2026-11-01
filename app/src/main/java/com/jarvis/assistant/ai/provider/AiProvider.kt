@@ -8,7 +8,9 @@ enum class AiProviderType(val displayName: String) {
     GEMINI_LIVE_ONLINE("Gemini Live (Online)"),
     LOCAL_PHONE_OFFLINE("Local Core (Offline SLM)"),
     HERMES_AGENT_NATIVE("Hermes Agent (Autonomous)"),
-    LAPTOP_HERMES_BRIDGE("Laptop Core (Workstation)")
+    LAPTOP_HERMES_BRIDGE("Laptop Core (Workstation)"),
+    LITERT_LM_LOCAL("LiteRT-LM (On-device, optional)"),
+    CLOUD_GATEWAY("Cloud Gateway (OpenAI-compatible, optional)")
 }
 
 sealed class ProviderHealthState {

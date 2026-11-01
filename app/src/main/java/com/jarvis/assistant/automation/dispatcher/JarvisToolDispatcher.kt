@@ -45,6 +45,11 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
     private val executionMutex = Mutex()
     private val idempotencyCache = mutableMapOf<String, AiToolResult>()
     private var lastTurnId: String = ""
+    private var loopGuard = com.jarvis.assistant.automation.guard.ToolLoopGuard()
+
+    /** Shared accessibility controller / executor for the ui_* tools (AndroLLM automation upgrade). */
+    private val uiController by lazy { com.jarvis.assistant.automation.accessibility.AccessibilityController(context) }
+    private val uiExecutor by lazy { com.jarvis.assistant.automation.accessibility.AutomationExecutor(context, uiController) }
 
     /**
      * Resets idempotency cache when a new user turn starts.
@@ -53,6 +58,8 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
         synchronized(idempotencyCache) {
             lastTurnId = turnId
             idempotencyCache.clear()
+            loopGuard = com.jarvis.assistant.automation.guard.ToolLoopGuard()
+            com.jarvis.assistant.automation.agent.AgentVariableStore.beginTurn()
         }
     }
 
@@ -65,8 +72,41 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
             val name = toolCall.functionName
             val args = toolCall.arguments
 
+            // Loop Guard & Agent safety check
+            if (!loopGuard.canExecute(name, args)) {
+                val stopMsg = loopGuard.stopReason() ?: "Tool execution blocked by safety loop guard."
+                Log.w(TAG, "ToolLoopGuard blocked execution of '$name': $stopMsg")
+                val blockedJson = JSONObject().apply {
+                    put("success", false)
+                    put("message", stopMsg)
+                }
+                return@withContext AiToolResult(
+                    callId = callId,
+                    functionName = name,
+                    isSuccess = false,
+                    resultJson = blockedJson,
+                    errorMessage = stopMsg
+                )
+            }
+
+            // Per-tool toggle (Settings → Agent tools). Default: nothing disabled → no-op.
+            if (com.jarvis.assistant.androllm.agent.bridge.JarvisDispatcherHooks.isToolDisabled(context, name)) {
+                val disabledMsg = "The '$name' tool is disabled in Settings → Agent tools."
+                Log.i(TAG, "Tool '$name' blocked by per-tool toggle")
+                return@withContext AiToolResult(
+                    callId = callId,
+                    functionName = name,
+                    isSuccess = false,
+                    resultJson = JSONObject().apply {
+                        put("success", false)
+                        put("message", disabledMsg)
+                    },
+                    errorMessage = disabledMsg
+                )
+            }
+
             // Idempotency check: Prevent duplicate side-effects (e.g. sending SMS/WhatsApp or Calling twice)
-            val nonIdempotentTools = setOf("send_whatsapp_message", "call_contact", "whatsapp_call")
+            val nonIdempotentTools = setOf("send_whatsapp_message", "call_contact", "whatsapp_call", "send_sms")
             val actionKey = "$lastTurnId:$name:${args.toString().hashCode()}"
             if (name in nonIdempotentTools) {
                 synchronized(idempotencyCache) {
@@ -727,11 +767,511 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                         resultJson.put("message", response)
                     }
 
+                    // ── 7. DEEP SYSTEM TOOLS & UTILITIES ──────────────────────────────────
+                    "get_wifi_status" -> {
+                        val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? android.net.wifi.WifiManager
+                        val isEnabled = wifiManager?.isWifiEnabled ?: false
+                        val info = wifiManager?.connectionInfo
+                        val ssid = info?.ssid ?: "Unknown"
+                        resultJson.put("success", true)
+                        resultJson.put("wifi_enabled", isEnabled)
+                        resultJson.put("ssid", ssid)
+                        resultJson.put("message", if (isEnabled) "Wi-Fi is ON, connected to $ssid." else "Wi-Fi is currently OFF.")
+                    }
+
+                    "set_wifi" -> {
+                        val enabled = args.optBoolean("enabled", true)
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                            val intent = android.content.Intent(android.provider.Settings.Panel.ACTION_WIFI).apply {
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                            resultJson.put("success", true)
+                            resultJson.put("message", "Opening Wi-Fi control panel.")
+                        } else {
+                            val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? android.net.wifi.WifiManager
+                            @Suppress("DEPRECATION")
+                            wifiManager?.isWifiEnabled = enabled
+                            resultJson.put("success", true)
+                            resultJson.put("message", if (enabled) "Wi-Fi enabled." else "Wi-Fi disabled.")
+                        }
+                    }
+
+                    "get_bluetooth_status" -> {
+                        val adapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+                        if (adapter != null) {
+                            val isEnabled = adapter.isEnabled
+                            val paired = try { adapter.bondedDevices?.size ?: 0 } catch (_: Exception) { 0 }
+                            resultJson.put("success", true)
+                            resultJson.put("bluetooth_enabled", isEnabled)
+                            resultJson.put("paired_count", paired)
+                            resultJson.put("message", if (isEnabled) "Bluetooth is ON with $paired paired devices." else "Bluetooth is currently OFF.")
+                        } else {
+                            resultJson.put("success", false)
+                            resultJson.put("message", "Bluetooth hardware not detected.")
+                        }
+                    }
+
+                    "read_clipboard" -> {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+                        val text = withContext(Dispatchers.Main) {
+                            if (clipboard?.hasPrimaryClip() == true) {
+                                clipboard.primaryClip?.getItemAt(0)?.text?.toString().orEmpty()
+                            } else ""
+                        }
+                        resultJson.put("success", true)
+                        resultJson.put("clipboard_text", text)
+                        resultJson.put("message", if (text.isNotBlank()) "Clipboard: $text" else "Clipboard is currently empty.")
+                    }
+
+                    "copy_to_clipboard" -> {
+                        val text = args.optString("text", "")
+                        withContext(Dispatchers.Main) {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+                            val clip = android.content.ClipData.newPlainText("Jarvis", text)
+                            clipboard?.setPrimaryClip(clip)
+                        }
+                        resultJson.put("success", true)
+                        resultJson.put("message", "Copied to clipboard.")
+                    }
+
+                    "take_screenshot" -> {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                            val accService = JarvisAccessibilityService.instance
+                            if (accService != null) {
+                                val ok = accService.performGlobalAction(AccessibilityService.GLOBAL_ACTION_TAKE_SCREENSHOT)
+                                resultJson.put("success", ok)
+                                resultJson.put("message", if (ok) "Screenshot captured successfully." else "Screenshot capture failed.")
+                            } else {
+                                resultJson.put("success", false)
+                                resultJson.put("message", "Accessibility permission required to take screenshot.")
+                            }
+                        } else {
+                            resultJson.put("success", false)
+                            resultJson.put("message", "Screenshot requires Android 9.0+.")
+                        }
+                    }
+
+                    "share_text" -> {
+                        val text = args.optString("text", "").ifBlank { args.optString("content", "") }
+                        if (text.isNotBlank()) {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(android.content.Intent.EXTRA_TEXT, text)
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            val chooser = android.content.Intent.createChooser(intent, "Share").apply {
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(chooser)
+                            resultJson.put("success", true)
+                            resultJson.put("message", "Sharing dialog opened.")
+                        } else {
+                            resultJson.put("success", false)
+                            resultJson.put("message", "No text provided to share.")
+                        }
+                    }
+
+                    "get_weather" -> {
+                        val loc = args.optString("location", "").ifBlank { "auto" }
+                        // AndroLLM upgrade: named locations get Open-Meteo current
+                        // conditions + 3-day forecast; "auto" (IP-based) and any
+                        // Open-Meteo failure keep the original wttr.in one-liner.
+                        val openMeteo = if (!loc.equals("auto", ignoreCase = true)) {
+                            com.jarvis.assistant.androllm.tools.impl.WeatherTool().lookup(loc)
+                                as? com.jarvis.assistant.androllm.agent.core.ToolResult.Success
+                        } else null
+                        if (openMeteo != null) {
+                            resultJson.put("success", true)
+                            resultJson.put("weather", openMeteo.summary)
+                            resultJson.put("message", openMeteo.summary)
+                            runCatching { resultJson.put("details", JSONObject(openMeteo.data.toString())) }
+                        } else {
+                        val client = okhttp3.OkHttpClient()
+                        val req = okhttp3.Request.Builder()
+                            .url("https://wttr.in/${java.net.URLEncoder.encode(loc, "UTF-8")}?format=3")
+                            .header("User-Agent", "curl/7.68.0")
+                            .build()
+                        val weatherData = try {
+                            client.newCall(req).execute().use { it.body?.string()?.trim() ?: "Weather unavailable" }
+                        } catch (e: Exception) {
+                            "Unable to reach weather service: ${e.message}"
+                        }
+                        resultJson.put("success", true)
+                        resultJson.put("weather", weatherData)
+                        resultJson.put("message", weatherData)
+                        }
+                    }
+
+                    "search_web" -> {
+                        val q = args.optString("query", "").trim()
+                        // AndroLLM upgrade: DDG Instant Answer → DDG HTML → Bing
+                        // provider chain returns real results to the model; only
+                        // when every provider is empty does the original path run.
+                        val webResults = if (q.isNotBlank()) {
+                            runCatching { com.jarvis.assistant.androllm.tools.impl.WebSearchTool().search(q) }.getOrNull()
+                        } else null
+                        if (webResults != null && webResults.results.isNotEmpty()) {
+                            val top = webResults.results.take(6)
+                            val summary = com.jarvis.assistant.androllm.tools.impl.WebSearchTool.summarize(q, top)
+                            resultJson.put("success", true)
+                            resultJson.put("answer", summary)
+                            resultJson.put("message", summary)
+                            resultJson.put("provider", webResults.provider)
+                            resultJson.put("results", org.json.JSONArray().apply {
+                                top.forEach { r ->
+                                    put(JSONObject().put("title", r.title).put("snippet", r.snippet).put("url", r.url))
+                                }
+                            })
+                        } else if (q.isNotBlank()) {
+                            val client = okhttp3.OkHttpClient()
+                            val encoded = java.net.URLEncoder.encode(q, "UTF-8")
+                            val req = okhttp3.Request.Builder()
+                                .url("https://api.duckduckgo.com/?q=$encoded&format=json&no_html=1&skip_disambig=1")
+                                .build()
+                            val answer = try {
+                                client.newCall(req).execute().use { resp ->
+                                    val body = resp.body?.string().orEmpty()
+                                    val json = JSONObject(body)
+                                    val abs = json.optString("AbstractText", "")
+                                    val ans = json.optString("Answer", "")
+                                    if (abs.isNotBlank()) abs else if (ans.isNotBlank()) ans else {
+                                        json.optJSONArray("RelatedTopics")?.optJSONObject(0)?.optString("Text", "") ?: ""
+                                    }
+                                }
+                            } catch (e: Exception) { "" }
+
+                            if (answer.isNotBlank()) {
+                                resultJson.put("success", true)
+                                resultJson.put("answer", answer)
+                                resultJson.put("message", answer)
+                            } else {
+                                withContext(Dispatchers.Main) {
+                                    app?.phoneControlManager?.searchWeb(q)
+                                }
+                                resultJson.put("success", true)
+                                resultJson.put("message", "Opened Chrome search for '$q'.")
+                            }
+                        } else {
+                            resultJson.put("success", false)
+                            resultJson.put("message", "Search query is empty.")
+                        }
+                    }
+
+                    "calculate" -> {
+                        val expr = args.optString("expression", "")
+                        try {
+                            if (expr.isBlank()) throw IllegalArgumentException("expression is empty")
+                            val num = com.jarvis.assistant.automation.tools.MathEvaluator.evaluate(expr)
+                            if (num.isNaN() || num.isInfinite()) throw ArithmeticException("result is not a finite number")
+                            val formatted = if (num % 1.0 == 0.0) num.toLong().toString() else String.format(java.util.Locale.US, "%.4f", num).trimEnd('0').trimEnd('.')
+                            resultJson.put("success", true)
+                            resultJson.put("result", num)
+                            resultJson.put("message", "$expr = $formatted")
+                        } catch (e: Exception) {
+                            isSuccess = false
+                            errorMessage = "Calculation error: ${e.message}"
+                            resultJson.put("success", false)
+                            resultJson.put("message", "Calculation error: ${e.message}")
+                        }
+                    }
+
+                    "add_calendar_event" -> {
+                        val title = args.optString("title", "Event")
+                        val description = args.optString("description", "")
+                        val intent = android.content.Intent(android.content.Intent.ACTION_INSERT).apply {
+                            data = android.provider.CalendarContract.Events.CONTENT_URI
+                            putExtra(android.provider.CalendarContract.Events.TITLE, title)
+                            if (description.isNotBlank()) putExtra(android.provider.CalendarContract.Events.DESCRIPTION, description)
+                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(intent)
+                        resultJson.put("success", true)
+                        resultJson.put("message", "Opening calendar to add '$title'.")
+                    }
+
+                    "create_note" -> {
+                        val noteText = args.optString("text", "").ifBlank { args.optString("content", "") }
+                        val noteTitle = args.optString("title", "Note")
+                        if (noteText.isNotBlank()) {
+                            app?.memoryRepository?.saveMemory(
+                                rawText = if (noteTitle.isNotBlank()) "$noteTitle: $noteText" else noteText,
+                                category = com.jarvis.assistant.data.memory.MemoryEntity.CATEGORY_NOTES,
+                                key = noteTitle,
+                                value = noteText
+                            )
+                            resultJson.put("success", true)
+                            resultJson.put("message", "Note saved: $noteTitle")
+                        } else {
+                            resultJson.put("success", false)
+                            resultJson.put("message", "Note content cannot be empty.")
+                        }
+                    }
+
+                    "list_notes" -> {
+                        val notes = app?.memoryRepository?.getAllMemories()?.filter {
+                            it.category == com.jarvis.assistant.data.memory.MemoryEntity.CATEGORY_NOTES
+                        } ?: emptyList()
+                        val summary = if (notes.isEmpty()) "You have no saved notes." else notes.take(5).joinToString("; ") { it.rawText }
+                        resultJson.put("success", true)
+                        resultJson.put("notes_count", notes.size)
+                        resultJson.put("message", summary)
+                    }
+
+                    "set_reminder" -> {
+                        val message = args.optString("message", "Reminder")
+                        val minutes = args.optInt("minutes", 0)
+                        val intent = android.content.Intent(android.provider.AlarmClock.ACTION_SET_TIMER).apply {
+                            putExtra(android.provider.AlarmClock.EXTRA_MESSAGE, message)
+                            if (minutes > 0) putExtra(android.provider.AlarmClock.EXTRA_LENGTH, minutes * 60)
+                            putExtra(android.provider.AlarmClock.EXTRA_SKIP_UI, true)
+                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        try {
+                            context.startActivity(intent)
+                            resultJson.put("success", true)
+                            resultJson.put("message", "Reminder set for $minutes minutes: $message")
+                        } catch (e: Exception) {
+                            resultJson.put("success", false)
+                            resultJson.put("message", "Could not set timer: ${e.message}")
+                        }
+                    }
+
+                    // 13. UI ACCESSIBILITY & PHONE SCREEN TOOLS
+                    "ui_read_screen" -> {
+                        val controller = uiController
+                        if (!controller.isConnected) {
+                            isSuccess = false
+                            resultJson.put("success", false)
+                            resultJson.put("message", "Accessibility Service not enabled. Please enable Jarvis in Accessibility Settings.")
+                        } else {
+                            val limit = args.optInt("limit", 40).coerceIn(5, 150)
+                            val snapshot = controller.readScreen()
+                            val summary = snapshot.describe(limit)
+                            resultJson.put("success", true)
+                            resultJson.put("app", snapshot.packageName)
+                            resultJson.put("fields", snapshot.textFields.size)
+                            resultJson.put("buttons", snapshot.buttons.size)
+                            resultJson.put("loading", snapshot.loading)
+                            resultJson.put("screen_summary", summary)
+                            resultJson.put(
+                                "message",
+                                if (snapshot.isEmpty) "The screen has no readable elements (app: ${snapshot.packageName.ifBlank { "unknown" }}). Try ocr_screen for image-based content.\n$summary"
+                                else summary
+                            )
+                        }
+                    }
+
+                    "ui_click" -> {
+                        val label = args.optString("label", "").ifBlank { args.optString("target", "") }.ifBlank { args.optString("text", "") }
+                        val index = args.optInt("index", 0).coerceAtLeast(0)
+                        if (label.isBlank()) {
+                            isSuccess = false
+                            resultJson.put("success", false)
+                            resultJson.put("message", "Label is required for ui_click")
+                        } else {
+                            val res = uiController.click(com.jarvis.assistant.automation.accessibility.UiSelector(textContains = label, index = index))
+                            isSuccess = res.success
+                            resultJson.put("success", res.success)
+                            resultJson.put("message", res.message)
+                        }
+                    }
+
+                    "ui_type" -> {
+                        val text = args.optString("text", "")
+                        val into = args.optString("into", "").ifBlank { args.optString("field", "") }.ifBlank { null }
+                        if (text.isEmpty()) {
+                            isSuccess = false
+                            resultJson.put("success", false)
+                            resultJson.put("message", "Text is required for ui_type")
+                        } else {
+                            val res = uiController.type(text, into)
+                            isSuccess = res.success
+                            resultJson.put("success", res.success)
+                            resultJson.put("message", res.message)
+                        }
+                    }
+
+                    "ui_scroll" -> {
+                        val direction = args.optString("direction", "down")
+                        val res = uiController.scroll(direction)
+                        isSuccess = res.success
+                        resultJson.put("success", res.success)
+                        resultJson.put("message", res.message)
+                    }
+
+                    "ui_swipe" -> {
+                        val direction = args.optString("direction", "")
+                        val res = uiController.swipe(direction)
+                        isSuccess = res.success
+                        resultJson.put("success", res.success)
+                        resultJson.put("message", res.message)
+                    }
+
+                    "ui_navigate" -> {
+                        val action = args.optString("action", "")
+                        val res = uiController.navigate(action)
+                        isSuccess = res.success
+                        resultJson.put("success", res.success)
+                        resultJson.put("message", res.message)
+                    }
+
+                    "ui_gesture" -> {
+                        val action = args.optString("action", "")
+                        val label = args.optString("label", "").ifBlank { null }
+                        val dx = args.optDouble("dx", 0.0).toFloat()
+                        val dy = args.optDouble("dy", 0.0).toFloat()
+                        val res = uiController.gesture(action, label, dx, dy)
+                        isSuccess = res.success
+                        resultJson.put("success", res.success)
+                        resultJson.put("message", res.message)
+                    }
+
+                    "ui_launch_app" -> {
+                        val appName = args.optString("app", "").ifBlank { args.optString("label", "") }.ifBlank { args.optString("name", "") }
+                        val res = uiController.launchApp(appName)
+                        isSuccess = res.success
+                        resultJson.put("success", res.success)
+                        resultJson.put("message", res.message)
+                    }
+
+                    "ui_run" -> {
+                        val goal = args.optString("goal", "").trim()
+                        if (goal.isBlank()) {
+                            isSuccess = false
+                            resultJson.put("success", false)
+                            resultJson.put("message", "Goal is required for ui_run")
+                        } else {
+                            val targetApp = args.optString("app", "").trim()
+                            // An explicit target app is launched first by the planner (LaunchApp -> Wait -> act).
+                            val fullGoal = if (targetApp.isNotEmpty() &&
+                                com.jarvis.assistant.androllm.accessibility.planner.HeuristicActionPlanner.appLabelFromGoal(goal) == null
+                            ) "open $targetApp and $goal" else goal
+                            val maxSteps = if (args.has("max_steps")) args.optInt("max_steps", 0).takeIf { it > 0 } else null
+                            val res = uiExecutor.run(
+                                goal = fullGoal,
+                                maxSteps = maxSteps,
+                                preApproved = args.optBoolean("confirmed", false)
+                            )
+                            isSuccess = res.success
+                            resultJson.put("success", res.success)
+                            resultJson.put("steps_taken", res.steps)
+                            resultJson.put("message", res.summary)
+                        }
+                    }
+
+                    "resolve_contact" -> {
+                        val contactName = args.optString("name", "").trim()
+                        if (contactName.isBlank()) {
+                            isSuccess = false
+                            resultJson.put("success", false)
+                            resultJson.put("message", "A contact name is required for resolve_contact.")
+                        } else {
+                            val number = com.jarvis.assistant.automation.tools.ContactResolver.resolveByName(context, contactName)
+                            if (number != null) {
+                                resultJson.put("success", true)
+                                resultJson.put("contact_name", contactName)
+                                resultJson.put("phone_number", number)
+                                resultJson.put("message", "Found contact $contactName: $number")
+                            } else {
+                                isSuccess = false
+                                resultJson.put("success", false)
+                                resultJson.put("message", "No phone number found for contact '$contactName' or permission denied.")
+                            }
+                        }
+                    }
+
+                    "search_apps" -> {
+                        val query = args.optString("query", "").trim()
+                        if (query.isBlank()) {
+                            isSuccess = false
+                            resultJson.put("success", false)
+                            resultJson.put("message", "A query is required for search_apps.")
+                        } else {
+                            val searchRes = com.jarvis.assistant.automation.tools.AppIndex.search(context, query)
+                            val appList = org.json.JSONArray()
+                            searchRes.matches.forEach { entry ->
+                                appList.put(JSONObject().apply {
+                                    put("label", entry.label)
+                                    put("package_name", entry.packageName)
+                                    put("can_launch", entry.hasLauncher)
+                                })
+                            }
+                            isSuccess = searchRes.matches.isNotEmpty()
+                            resultJson.put("success", isSuccess)
+                            resultJson.put("query", query)
+                            resultJson.put("matches", appList)
+                            resultJson.put("ambiguous", searchRes.ambiguous)
+                            resultJson.put(
+                                "message",
+                                if (searchRes.matches.isEmpty()) "No installed app matches '$query'."
+                                else "Found ${searchRes.matches.size} matching applications: " +
+                                    searchRes.matches.joinToString { it.label } +
+                                    (if (searchRes.ambiguous) " (ambiguous - ask the user which one)." else ".")
+                            )
+                        }
+                    }
+
+                    // ── Code Studio (AI coding IDE) — confined to the Code Studio projects root ──
+                    in com.jarvis.assistant.codestudio.CodeStudioTools.NAMES -> {
+                        isSuccess = com.jarvis.assistant.codestudio.CodeStudioTools.execute(context, name, args, resultJson)
+                        if (!isSuccess) errorMessage = resultJson.optString("message")
+                    }
+
+                    // ── Code Studio runtime: shell (risky → ToolConfirmationManager), AI generator, live preview ──
+                    in com.jarvis.assistant.codestudio.tools.CodeStudioRuntimeTools.NAMES -> {
+                        isSuccess = com.jarvis.assistant.codestudio.tools.CodeStudioRuntimeTools.execute(context, name, args, resultJson)
+                        if (!isSuccess) errorMessage = resultJson.optString("message")
+                    }
+
+                    // ── Web info tools: get_news (RSS), get_public_ip, wikipedia_search ──
+                    in com.jarvis.assistant.automation.tools.JarvisWebInfoTools.NAMES -> {
+                        val webOut = com.jarvis.assistant.automation.tools.JarvisWebInfoTools.execute(context, name, args)
+                        val webKeys = webOut.keys()
+                        while (webKeys.hasNext()) {
+                            val k = webKeys.next()
+                            resultJson.put(k, webOut.get(k))
+                        }
+                        isSuccess = webOut.optBoolean("success", false)
+                        if (!isSuccess) errorMessage = webOut.optString("message")
+                    }
+
+                    in com.jarvis.assistant.androllm.tools.AndroLlmTools.NAMES -> {
+                        val outcome = com.jarvis.assistant.androllm.tools.AndroLlmTools.execute(context, name, args)
+                        if (outcome == null) {
+                            isSuccess = false
+                            errorMessage = "Unsupported tool action: '$name'"
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        } else {
+                            outcome.writeTo(resultJson)
+                            isSuccess = outcome.success
+                            if (!outcome.success) errorMessage = outcome.message
+                        }
+                    }
+
                     else -> {
-                        isSuccess = false
-                        errorMessage = "Unsupported tool action: '$name'"
-                        resultJson.put("success", false)
-                        resultJson.put("message", errorMessage)
+                        val mcpManager = com.jarvis.assistant.mcp.McpManager.getInstance(context)
+                        if (mcpManager.isMcpTool(name)) {
+                            val (ok, output) = mcpManager.executeMcpTool(name, args)
+                            isSuccess = ok
+                            resultJson.put("success", ok)
+                            resultJson.put("message", output)
+                        } else {
+                            // AndroLLM-native registry tool (agent framework), run through its gated executor.
+                            val agentOutcome = com.jarvis.assistant.androllm.agent.bridge.JarvisDispatcherHooks
+                                .executeRegistryTool(context, name, args)
+                            if (agentOutcome != null) {
+                                agentOutcome.writeTo(resultJson)
+                                isSuccess = agentOutcome.success
+                                if (!agentOutcome.success) errorMessage = agentOutcome.message
+                            } else {
+                                isSuccess = false
+                                errorMessage = "Unsupported tool action: '$name'"
+                                resultJson.put("success", false)
+                                resultJson.put("message", errorMessage)
+                            }
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -750,6 +1290,8 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                 errorMessage = errorMessage
             )
 
+            loopGuard.record(name, args, finalResult)
+
             if (name in nonIdempotentTools) {
                 synchronized(idempotencyCache) {
                     idempotencyCache[actionKey] = finalResult
@@ -762,8 +1304,12 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
 
     /**
      * Returns standard tool definitions in OpenAI / Hermes JSON Schema format.
+     *
+     * [includeDisabled] = true returns the raw list (used by the agent
+     * framework's registry adapters); the default hides tools the user
+     * disabled in Settings → Agent tools (none by default).
      */
-    fun getAvailableToolSchemas(): List<JSONObject> {
+    fun getAvailableToolSchemas(includeDisabled: Boolean = false): List<JSONObject> {
         val tools = mutableListOf<JSONObject>()
 
         fun tool(name: String, description: String, properties: JSONObject, required: List<String>) {
@@ -1078,6 +1624,368 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
             required = emptyList()
         )
 
+        tool(
+            name = "get_wifi_status",
+            description = "Checks whether Wi-Fi is enabled, current SSID, and connectivity status.",
+            properties = JSONObject(),
+            required = emptyList()
+        )
+
+        tool(
+            name = "set_wifi",
+            description = "Enables or disables Wi-Fi, or opens the Wi-Fi quick settings panel.",
+            properties = JSONObject().apply {
+                put("enabled", JSONObject().apply {
+                    put("type", "boolean")
+                    put("description", "true to enable Wi-Fi, false to disable")
+                })
+            },
+            required = listOf("enabled")
+        )
+
+        tool(
+            name = "get_bluetooth_status",
+            description = "Checks Bluetooth state and count of paired/connected devices.",
+            properties = JSONObject(),
+            required = emptyList()
+        )
+
+        tool(
+            name = "read_clipboard",
+            description = "Reads current plain text copied on the Android system clipboard.",
+            properties = JSONObject(),
+            required = emptyList()
+        )
+
+        tool(
+            name = "copy_to_clipboard",
+            description = "Copies specified text to the Android system clipboard.",
+            properties = JSONObject().apply {
+                put("text", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "The text content to copy to clipboard")
+                })
+            },
+            required = listOf("text")
+        )
+
+        tool(
+            name = "take_screenshot",
+            description = "Captures an instant screenshot of the current Android screen.",
+            properties = JSONObject(),
+            required = emptyList()
+        )
+
+        tool(
+            name = "share_text",
+            description = "Shares text, notes, or links via the Android system share sheet.",
+            properties = JSONObject().apply {
+                put("text", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Text or link to share")
+                })
+                put("title", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Optional dialog title")
+                })
+            },
+            required = listOf("text")
+        )
+
+        tool(
+            name = "get_weather",
+            description = "Retrieves live weather, temperature, and sky conditions for a specified location or current city.",
+            properties = JSONObject().apply {
+                put("location", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "City name, or 'auto' for current location")
+                })
+            },
+            required = emptyList()
+        )
+
+        tool(
+            name = "search_web",
+            description = "Performs an instant web search and returns direct answers, facts, and knowledge summaries.",
+            properties = JSONObject().apply {
+                put("query", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "The question or search query")
+                })
+            },
+            required = listOf("query")
+        )
+
+        tool(
+            name = "calculate",
+            description = "Evaluates math expressions (arithmetic, percentages, powers, square roots).",
+            properties = JSONObject().apply {
+                put("expression", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Math expression e.g. '(150 * 18) / 100' or 'sqrt(144)'")
+                })
+            },
+            required = listOf("expression")
+        )
+
+        tool(
+            name = "add_calendar_event",
+            description = "Opens the calendar event creator to schedule meetings, events, or reminders.",
+            properties = JSONObject().apply {
+                put("title", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Title of the calendar event")
+                })
+                put("description", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Optional description or details")
+                })
+            },
+            required = listOf("title")
+        )
+
+        tool(
+            name = "create_note",
+            description = "Saves a quick note or memo into Jarvis persistent memory.",
+            properties = JSONObject().apply {
+                put("title", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Title or topic of the note")
+                })
+                put("text", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Content of the note")
+                })
+            },
+            required = listOf("text")
+        )
+
+        tool(
+            name = "list_notes",
+            description = "Lists recent notes and memos saved in Jarvis memory.",
+            properties = JSONObject(),
+            required = emptyList()
+        )
+
+        tool(
+            name = "set_reminder",
+            description = "Sets a timer or reminder on the phone.",
+            properties = JSONObject().apply {
+                put("message", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Reminder label or task name")
+                })
+                put("minutes", JSONObject().apply {
+                    put("type", "integer")
+                    put("description", "Duration in minutes from now")
+                })
+            },
+            required = listOf("message")
+        )
+
+        // 13. UI ACCESSIBILITY & APP CONTROLS
+        tool(
+            name = "ui_read_screen",
+            description = "Reads active screen text, visible buttons, and text fields in foreground app using Accessibility.",
+            properties = JSONObject().apply {
+                put("limit", JSONObject().apply {
+                    put("type", "integer")
+                    put("description", "Maximum elements to return (default 40)")
+                })
+            },
+            required = emptyList()
+        )
+
+        tool(
+            name = "ui_click",
+            description = "Taps an element on the screen matching the given text or description.",
+            properties = JSONObject().apply {
+                put("label", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Visible text or description of the button/element to tap")
+                })
+                put("index", JSONObject().apply {
+                    put("type", "integer")
+                    put("description", "Match index if multiple elements share the same text (default 0)")
+                })
+            },
+            required = listOf("label")
+        )
+
+        tool(
+            name = "ui_type",
+            description = "Types text into the focused text field or the field specified by 'into'.",
+            properties = JSONObject().apply {
+                put("text", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Text to type into the field")
+                })
+                put("into", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Optional label or hint of the target text field")
+                })
+            },
+            required = listOf("text")
+        )
+
+        tool(
+            name = "ui_scroll",
+            description = "Scrolls the active scrollable view (falls back to a swipe when the screen has no scrollable list).",
+            properties = JSONObject().apply {
+                put("direction", JSONObject().apply {
+                    put("type", "string")
+                    put("enum", org.json.JSONArray(listOf("up", "down", "left", "right", "forward", "backward")))
+                })
+            },
+            required = listOf("direction")
+        )
+
+        tool(
+            name = "ui_swipe",
+            description = "Swipes the screen in the specified direction.",
+            properties = JSONObject().apply {
+                put("direction", JSONObject().apply {
+                    put("type", "string")
+                    put("enum", org.json.JSONArray(listOf("up", "down", "left", "right")))
+                })
+            },
+            required = listOf("direction")
+        )
+
+        tool(
+            name = "ui_navigate",
+            description = "Performs global navigation action (back, home, recents, notifications, quick_settings, split_screen).",
+            properties = JSONObject().apply {
+                put("action", JSONObject().apply {
+                    put("type", "string")
+                    put("enum", org.json.JSONArray(listOf("back", "home", "recents", "notifications", "quick_settings", "split_screen")))
+                })
+            },
+            required = listOf("action")
+        )
+
+        tool(
+            name = "ui_gesture",
+            description = "Dispatches advanced gestures (double_tap, long_press, drag, pinch_in, pinch_out).",
+            properties = JSONObject().apply {
+                put("action", JSONObject().apply {
+                    put("type", "string")
+                    put("enum", org.json.JSONArray(listOf("double_tap", "long_press", "drag", "pinch_in", "pinch_out")))
+                })
+                put("label", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Element label for double_tap or long_press")
+                })
+                put("dx", JSONObject().apply { put("type", "number"); put("description", "Horizontal drag distance") })
+                put("dy", JSONObject().apply { put("type", "number"); put("description", "Vertical drag distance") })
+            },
+            required = listOf("action")
+        )
+
+        tool(
+            name = "ui_run",
+            description = "Executes an autonomous multi-step mobile task inside another app: launches the app, then reads the screen and acts step by step (e.g., 'open YouTube and search for tutorials', 'open WhatsApp and tell Mom I am late'). Sensitive taps (send, pay, delete...) need confirmation.",
+            properties = JSONObject().apply {
+                put("goal", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Plain language description of the goal to accomplish")
+                })
+                put("app", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Optional app to open first (e.g. 'YouTube') when the goal doesn't name it")
+                })
+                put("confirmed", JSONObject().apply {
+                    put("type", "boolean")
+                    put("description", "True only after the user explicitly confirmed sensitive steps of this goal")
+                })
+                put("max_steps", JSONObject().apply {
+                    put("type", "integer")
+                    put("description", "Optional step budget override (default from automation settings)")
+                })
+            },
+            required = listOf("goal")
+        )
+
+        tool(
+            name = "ui_launch_app",
+            description = "Launches an installed app by its visible name through the accessibility automation engine (best match, cached app index).",
+            properties = JSONObject().apply {
+                put("app", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "App name, e.g. 'WhatsApp' or 'yt'")
+                })
+            },
+            required = listOf("app")
+        )
+
+        tool(
+            name = "resolve_contact",
+            description = "Resolves a contact name ('Mom', 'Alice') to a phone number from the device contacts.",
+            properties = JSONObject().apply {
+                put("name", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Name of the contact to resolve")
+                })
+            },
+            required = listOf("name")
+        )
+
+        tool(
+            name = "search_apps",
+            description = "Searches installed Android applications by name or common alias ('yt', 'wa', 'ig').",
+            properties = JSONObject().apply {
+                put("query", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "App name or alias to search")
+                })
+            },
+            required = listOf("query")
+        )
+
+        // Code Studio tools (projects / files / open IDE)
+        try {
+            val existing = tools.mapNotNull { it.optJSONObject("function")?.optString("name") }.toSet()
+            com.jarvis.assistant.codestudio.CodeStudioTools.schemas().forEach { schema ->
+                val sName = schema.optJSONObject("function")?.optString("name")
+                if (sName != null && sName !in existing) tools.add(schema)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error adding Code Studio tool schemas: ${e.message}")
+        }
+
+        // Code Studio runtime tools (run_shell_command, generate_project, start_preview)
+        try {
+            val existing = tools.mapNotNull { it.optJSONObject("function")?.optString("name") }.toSet()
+            com.jarvis.assistant.codestudio.tools.CodeStudioRuntimeTools.schemas().forEach { schema ->
+                val sName = schema.optJSONObject("function")?.optString("name")
+                if (sName != null && sName !in existing) tools.add(schema)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error adding Code Studio runtime tool schemas: ${e.message}")
+        }
+
+        // Web info tools (get_news, get_public_ip, wikipedia_search) - deduplicated by name
+        try {
+            val existingWeb = tools.mapNotNull { it.optJSONObject("function")?.optString("name") }.toSet()
+            com.jarvis.assistant.automation.tools.JarvisWebInfoTools.schemas().forEach { schema ->
+                val sName = schema.optJSONObject("function")?.optString("name")
+                if (sName != null && sName !in existingWeb) tools.add(schema)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error adding web info tool schemas: ${e.message}")
+        }
+
+        // AndroLLM-ported tools (scan_qr, ocr_screen, converters, maps, music, email, sms...)
+        try {
+            val existing = tools.mapNotNull { it.optJSONObject("function")?.optString("name") }.toSet()
+            com.jarvis.assistant.androllm.tools.AndroLlmTools.schemas().forEach { schema ->
+                val sName = schema.optJSONObject("function")?.optString("name")
+                if (sName != null && sName !in existing) tools.add(schema)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error adding AndroLLM tool schemas: ${e.message}")
+        }
+
         // Merge schemas from modular SkillRegistry (deduplicated by tool name)
         try {
             val registeredSkillSchemas = com.jarvis.assistant.automation.skills.SkillRegistry.getInstance(context).getRegisteredToolSchemas()
@@ -1092,6 +2000,14 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
             Log.w(TAG, "Error merging skill schemas: ${e.message}")
         }
 
-        return tools
+        // Merge imported tools from connected Model Context Protocol (MCP) servers
+        try {
+            val mcpManager = com.jarvis.assistant.mcp.McpManager.getInstance(context)
+            tools.addAll(mcpManager.getMcpToolSchemas())
+        } catch (_: Exception) {}
+
+        if (includeDisabled) return tools
+        // Per-tool toggles + (only with the AGENT_PIPELINE flag on) AndroLLM registry tools.
+        return com.jarvis.assistant.androllm.agent.bridge.JarvisDispatcherHooks.filterSchemas(context, tools)
     }
 }

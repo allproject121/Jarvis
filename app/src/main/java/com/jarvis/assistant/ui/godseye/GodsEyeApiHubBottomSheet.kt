@@ -93,6 +93,10 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
+    /** Resolve a Jarvis theme colour attr so the hub follows the active theme. */
+    private fun themeColor(attr: Int, fallback: Int): Int =
+        com.jarvis.assistant.util.ThemeManager.attrColor(requireContext(), attr, fallback)
+
     private fun updateAutoTourButtonState(isRunning: Boolean) {
         if (isRunning) {
             binding.btnToggleAutoTourHub.text = "STOP ⏹"
@@ -100,8 +104,8 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
             binding.btnToggleAutoTourHub.setTextColor(Color.WHITE)
         } else {
             binding.btnToggleAutoTourHub.text = "START ⟳"
-            binding.btnToggleAutoTourHub.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#00E5FF"))
-            binding.btnToggleAutoTourHub.setTextColor(Color.parseColor("#050811"))
+            binding.btnToggleAutoTourHub.backgroundTintList = android.content.res.ColorStateList.valueOf(themeColor(R.attr.themeAccent, Color.parseColor("#00E5FF")))
+            binding.btnToggleAutoTourHub.setTextColor(themeColor(R.attr.themeBg, Color.parseColor("#050811")))
         }
     }
 
@@ -243,7 +247,7 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
 
         val tvName = TextView(requireContext()).apply {
             text = station.name
-            setTextColor(Color.WHITE)
+            setTextColor(themeColor(R.attr.themeTextPrimary, Color.WHITE))
             textSize = 12f
             paint.isFakeBoldText = true
         }
@@ -252,7 +256,7 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
             val countryTag = if (station.country.isNotBlank()) "${station.country} • " else ""
             val codecTag = if (station.codec.isNotBlank()) "${station.codec} ${station.bitrate}kbps" else ""
             text = "$countryTag$codecTag".trim().removeSuffix("•").trim()
-            setTextColor(Color.parseColor("#94A3B8"))
+            setTextColor(themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
             textSize = 10f
         }
 
@@ -470,14 +474,14 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
 
             val tvTitle = TextView(requireContext()).apply {
                 text = title
-                setTextColor(Color.WHITE)
+                setTextColor(themeColor(R.attr.themeTextPrimary, Color.WHITE))
                 textSize = 12f
                 paint.isFakeBoldText = true
             }
 
             val tvSub = TextView(requireContext()).apply {
                 text = subtitle
-                setTextColor(Color.parseColor(accentColor))
+                setTextColor(if (accentColor.equals("#00D4FF", true)) themeColor(R.attr.themeAccent, Color.parseColor(accentColor)) else Color.parseColor(accentColor))
                 textSize = 10f
                 paint.isFakeBoldText = true
                 setPadding(0, 4, 0, 4)
@@ -485,7 +489,7 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
 
             val tvDet = TextView(requireContext()).apply {
                 text = details
-                setTextColor(Color.parseColor("#94A3B8"))
+                setTextColor(themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
                 textSize = 10.5f
             }
 
@@ -502,7 +506,7 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
     private fun addSimpleTextView(container: LinearLayout, text: String, colorHex: String = "#94A3B8") {
         val tv = TextView(requireContext()).apply {
             this.text = text
-            setTextColor(Color.parseColor(colorHex))
+            setTextColor(if (colorHex.equals("#94A3B8", true)) themeColor(R.attr.themeTextSecondary, Color.parseColor(colorHex)) else Color.parseColor(colorHex))
             textSize = 11f
             setPadding(8, 8, 8, 8)
         }

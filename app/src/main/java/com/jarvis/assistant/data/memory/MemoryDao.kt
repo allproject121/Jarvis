@@ -21,6 +21,15 @@ interface MemoryDao {
     @Query("SELECT * FROM memories WHERE rawText LIKE '%' || :query || '%' OR `key` LIKE '%' || :query || '%' OR `value` LIKE '%' || :query || '%' ORDER BY timestamp DESC")
     suspend fun searchMemories(query: String): List<MemoryEntity>
 
+    @Query("SELECT * FROM memories WHERE id = :id")
+    suspend fun getMemoryById(id: Long): MemoryEntity?
+
+    @Query("SELECT id FROM memories")
+    suspend fun getAllMemoryIds(): List<Long>
+
+    @Query("SELECT COUNT(*) FROM memories")
+    suspend fun countMemories(): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMemory(memory: MemoryEntity): Long
 

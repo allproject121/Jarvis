@@ -58,6 +58,10 @@ class MemoryManager(
 
         // Trigger automatic semantic extraction on user input
         learnPreferencesFromConversation(cleanUser)
+
+        // Optional AndroLLM LLM memory extraction + rolling summary (background,
+        // OFF unless AndroLlmFlags.MEMORY_EXTRACTION is enabled).
+        com.jarvis.assistant.androllm.memory.AndroMemoryPipeline.onJarvisTurnIfEnabled(cleanUser, cleanJarvis, current)
     }
 
     fun clearShortTermMemory() {
@@ -78,6 +82,38 @@ class MemoryManager(
 
         if (clean.isBlank()) {
             return "I didn't catch what you'd like me to remember, Sir."
+        }
+
+        val decision = com.jarvis.assistant.ai.memory.MemoryWritePolicy.decide(clean)
+        if (decision is com.jarvis.assistant.ai.memory.MemoryWritePolicy.Decision.Ignore) {
+            if (decision.reason.contains("secret")) {
+                return "Sir, for your security, credentials and API keys are not stored in memory."
+            }
+            if (decision.reason == "injection") {
+                return "Sir, that looks like an instruction override, so I have not stored it in memory."
+            }
+        }
+
+        // If this is a correction of a previous fact, update rather than creating duplicates.
+        // Bug fix: the old code searched for the text AFTER the correction signal
+        // (the NEW value), which never matched the old memory. The resolver finds
+        // the superseded memory via contradiction detection, the named old value,
+        // or the corrected subject.
+        if (decision is com.jarvis.assistant.ai.memory.MemoryWritePolicy.Decision.Update) {
+            val target = com.jarvis.assistant.androllm.memory.correction.MemoryCorrectionResolver.findTarget(
+                newStatement = clean,
+                decision = decision,
+                candidates = repository.getAllMemories().map {
+                    com.jarvis.assistant.androllm.memory.correction.MemoryCorrectionResolver.Candidate(it.id, it.rawText, it.timestamp)
+                }
+            )
+            val oldMem = target?.let { repository.getMemoryById(it.id) }
+            if (oldMem != null) {
+                repository.updateMemory(oldMem.copy(rawText = clean, value = clean, timestamp = System.currentTimeMillis()))
+                val updateResponse = "Sir, I have updated your record from '${oldMem.rawText}' to: $clean."
+                chatRepository.addTurn(clean, updateResponse)
+                return updateResponse
+            }
         }
 
         learnPreferencesFromConversation(clean)

@@ -39,7 +39,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="API &amp; Connection"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/themeTextPrimary"
                 android:textSize="20sp"
                 android:fontFamily="sans-serif-medium"
                 android:textStyle="bold" />
@@ -48,7 +48,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Gemini Live WebSocket &amp; Engine"
-                android:textColor="@color/text_muted"
+                android:textColor="?attr/themeTextMuted"
                 android:textSize="12sp"
                 android:fontFamily="sans-serif" />
         </LinearLayout>
@@ -435,8 +435,8 @@
                     android:layout_height="42dp"
                     android:layout_marginTop="10dp"
                     android:text="⚡ TEST PC OLLAMA CONNECTION"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="#0284C7"
+                    android:textColor="?attr/themeBg"
+                    android:backgroundTint="?attr/themeAccent"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     app:cornerRadius="10dp" />
@@ -474,7 +474,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="GOD'S EYE 3D SENSORS &amp; SATELLITE FEEDS"
-                        android:textColor="#00D4FF"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="11sp"
                         android:letterSpacing="0.08"
                         android:fontFamily="sans-serif-medium"
@@ -484,7 +484,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="OPTIONAL"
-                        android:textColor="@color/text_muted"
+                        android:textColor="?attr/themeTextMuted"
                         android:textSize="10sp"
                         android:fontFamily="sans-serif-medium"
                         android:textStyle="bold" />
@@ -494,7 +494,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Unlock full photorealistic 3D tiles, real-time satellite wildfires, cargo vessel tracking, and live traffic flow. Tap 'GET KEY' to obtain your free access keys."
-                    android:textColor="@color/text_secondary"
+                    android:textColor="?attr/themeTextSecondary"
                     android:textSize="12sp"
                     android:lineSpacingExtra="2dp"
                     android:layout_marginBottom="14dp" />
@@ -519,7 +519,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="36dp"
                         android:text="GET KEY ↗"
-                        android:textColor="#00D4FF"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -563,7 +563,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="36dp"
                         android:text="GET TOKEN ↗"
-                        android:textColor="#00D4FF"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -607,7 +607,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="36dp"
                         android:text="GET FREE KEY ↗"
-                        android:textColor="#00D4FF"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -651,7 +651,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="36dp"
                         android:text="GET FREE KEY ↗"
-                        android:textColor="#00D4FF"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -695,7 +695,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="36dp"
                         android:text="GET FREE KEY ↗"
-                        android:textColor="#00D4FF"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -739,7 +739,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="36dp"
                         android:text="GET TOKEN ↗"
-                        android:textColor="#00D4FF"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -783,7 +783,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="36dp"
                         android:text="REGISTER ↗"
-                        android:textColor="#00D4FF"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -961,7 +961,7 @@
             android:background="@drawable/bg_jarvis_pill_button"
             app:backgroundTint="@null"
             android:text="Save &amp; Apply Configuration"
-            android:textColor="#FFFFFF"
+            android:textColor="?attr/themeBg"
             android:textSize="15sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"

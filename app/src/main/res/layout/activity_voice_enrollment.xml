@@ -70,9 +70,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                app:cardBackgroundColor="@color/bg_card"
+                app:cardBackgroundColor="?attr/themeCardBg"
                 app:cardCornerRadius="16dp"
-                app:strokeColor="@color/border_subtle"
+                app:strokeColor="?attr/themeCardBorder"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
@@ -91,7 +91,8 @@
                             android:id="@+id/viewStatusDot"
                             android:layout_width="10dp"
                             android:layout_height="10dp"
-                            android:background="@drawable/circle_cyan" />
+                            android:background="@drawable/circle_cyan"
+                            android:backgroundTint="?attr/themeAccent" />
 
                         <TextView
                             android:id="@+id/tvEnrollmentStatus"
@@ -174,7 +175,7 @@
                         android:layout_marginTop="20dp"
                         android:paddingHorizontal="28dp"
                         android:text="TAP &amp; SPEAK PHRASE"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeBg"
                         android:textStyle="bold"
                         android:textSize="14sp"
                         app:backgroundTint="?attr/themeAccent"
@@ -277,7 +278,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:background="@drawable/bg_test_result"
+                        android:background="@drawable/bg_themed_test_result"
                         android:orientation="vertical"
                         android:padding="12dp"
                         android:visibility="gone">

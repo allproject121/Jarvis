@@ -308,7 +308,7 @@ class OfflineVoiceConversationEngine private constructor(
      */
     fun finalizeCurrentUtterance() {
         val recognizer = ensureRecognizer() ?: run {
-            if (_sessionState.value !is OfflineSessionState.Speaking && nativeTts?.isSpeaking != true) {
+            if (_sessionState.value !is OfflineSessionState.Speaking && !isAnySpeechPlaying()) {
                 _sessionState.value = OfflineSessionState.Idle
                 JarvisConversationService.updateConversationStateFromOffline(ConversationState.IDLE)
             }
@@ -319,14 +319,14 @@ class OfflineVoiceConversationEngine private constructor(
             Log.i(TAG, "finalizeCurrentUtterance: Vosk finalResult = $finalJson")
             val handled = handleRecognitionResultJson(finalJson)
             if (!handled) {
-                if (_sessionState.value !is OfflineSessionState.Speaking && nativeTts?.isSpeaking != true) {
+                if (_sessionState.value !is OfflineSessionState.Speaking && !isAnySpeechPlaying()) {
                     _sessionState.value = OfflineSessionState.Idle
                     JarvisConversationService.updateConversationStateFromOffline(ConversationState.IDLE)
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error in finalizeCurrentUtterance: ${e.message}")
-            if (_sessionState.value !is OfflineSessionState.Speaking && nativeTts?.isSpeaking != true) {
+            if (_sessionState.value !is OfflineSessionState.Speaking && !isAnySpeechPlaying()) {
                 _sessionState.value = OfflineSessionState.Idle
                 JarvisConversationService.updateConversationStateFromOffline(ConversationState.IDLE)
             }
@@ -367,7 +367,7 @@ class OfflineVoiceConversationEngine private constructor(
         val normalized = com.jarvis.assistant.util.DevanagariNormalizer.normalize(userText)
         val clean = normalized.trim()
         if (clean.isBlank()) {
-            if (_sessionState.value !is OfflineSessionState.Speaking && nativeTts?.isSpeaking != true) {
+            if (_sessionState.value !is OfflineSessionState.Speaking && !isAnySpeechPlaying()) {
                 _sessionState.value = OfflineSessionState.Idle
                 JarvisConversationService.updateConversationStateFromOffline(ConversationState.IDLE)
             }
@@ -375,7 +375,7 @@ class OfflineVoiceConversationEngine private constructor(
         }
         if (clean.equals("[unk]", ignoreCase = true) || clean.contains("[unk]")) {
             Log.d(TAG, "Ignoring [unk] token safely without disruptive announcement.")
-            if (_sessionState.value !is OfflineSessionState.Speaking && nativeTts?.isSpeaking != true) {
+            if (_sessionState.value !is OfflineSessionState.Speaking && !isAnySpeechPlaying()) {
                 _sessionState.value = OfflineSessionState.Idle
                 JarvisConversationService.updateConversationStateFromOffline(ConversationState.IDLE)
             }
@@ -384,7 +384,7 @@ class OfflineVoiceConversationEngine private constructor(
         val words = clean.lowercase(Locale.ROOT).split(Regex("\\s+")).filter { it.isNotBlank() }
         val noiseWords = setOf("a", "the", "i", "um", "uh", "oh", "to", "so", "is")
         if (words.all { noiseWords.contains(it) } || clean.length <= 2) {
-            if (_sessionState.value !is OfflineSessionState.Speaking && nativeTts?.isSpeaking != true) {
+            if (_sessionState.value !is OfflineSessionState.Speaking && !isAnySpeechPlaying()) {
                 _sessionState.value = OfflineSessionState.Idle
                 JarvisConversationService.updateConversationStateFromOffline(ConversationState.IDLE)
             }
@@ -392,8 +392,8 @@ class OfflineVoiceConversationEngine private constructor(
         }
 
         scope.launch(Dispatchers.IO) {
-
             stopSpeaking()
+            com.jarvis.assistant.voice.VoiceSounds.playStart()
 
             // ── 0. OFFLINE COMMAND EXECUTION ENGINE ────────────────────────────
             val app = context.applicationContext as? JarvisApp
@@ -675,31 +675,33 @@ class OfflineVoiceConversationEngine private constructor(
 
             // 4. Generate streaming response from Local AI
             val responseAccumulator = StringBuilder()
-            val sentenceAccumulator = StringBuilder()
+            val assembler = com.jarvis.assistant.voice.SentenceAssembler()
 
             modelRouter.routeConversationalQuery(
                 userPrompt = clean,
                 systemPrompt = combinedSystemPrompt,
-                openAiApiKey = (context.applicationContext as? JarvisApp)?.preferences?.apiKey.orEmpty(),
+                openAiApiKey = (context.applicationContext as? JarvisApp)?.preferences?.openAiApiKey.orEmpty(),
                 chatHistory = recentTurns
             ).collect { token ->
                 responseAccumulator.append(token)
-                sentenceAccumulator.append(token)
-
-                // Low-latency sentence boundary voice synthesis (speaks immediately upon punctuation)
-                val currentText = sentenceAccumulator.toString()
-                if (currentText.contains(".") || currentText.contains("!") || currentText.contains("?") || currentText.contains("\n")) {
-                    speakOfflineChunk(currentText.trim())
-                    sentenceAccumulator.clear()
+                val chunks = assembler.feed(token)
+                for (chunk in chunks) {
+                    val spoken = ToolCallParser.cleanConversationalText(chunk.text).trim()
+                    if (spoken.isNotBlank()) speakOfflineChunk(spoken)
                 }
             }
 
-            // Flush remaining text
-            if (sentenceAccumulator.isNotBlank()) {
-                speakOfflineChunk(sentenceAccumulator.toString().trim())
+            // Flush remaining text with force=true so no trailing clause is dropped
+            assembler.flush(force = true)?.let { tail ->
+                val spokenRemainder = ToolCallParser.cleanConversationalText(tail.text).trim()
+                if (spokenRemainder.isNotBlank()) speakOfflineChunk(spokenRemainder)
             }
 
-            val finalReply = responseAccumulator.toString().trim()
+            // Turn completion chime
+            com.jarvis.assistant.voice.VoiceSounds.playEnd()
+
+            // B2 fix: strip structured function payloads so raw JSON is never persisted or shown
+            val finalReply = ToolCallParser.cleanConversationalText(responseAccumulator.toString()).trim()
             if (finalReply.isNotBlank()) {
                 _sessionState.value = OfflineSessionState.Speaking(finalReply)
                 JarvisConversationService.updateConversationStateFromOffline(
@@ -727,14 +729,44 @@ class OfflineVoiceConversationEngine private constructor(
         }
     }
 
+    private val textNormalizer = com.jarvis.assistant.voice.normalize.TextNormalizationPipeline.getInstance()
+
     private fun speakOfflineChunk(text: String) {
         if (text.isBlank()) return
-        Log.d(TAG, "TTS Offline Speaking: '$text'")
+        val normalizedText = textNormalizer.process(text)
+        if (normalizedText.isBlank()) return
+        Log.d(TAG, "TTS Offline Speaking: '$normalizedText' (raw: '$text')")
+        // Optional Edge neural voice (Settings → Speech voice, default OFF). Falls back to the
+        // Android TTS below on any failure; the callbacks mirror attachTtsListener().
+        if (com.jarvis.assistant.voice.edge.EdgeTtsSpeaker.isUsable(context)) {
+            com.jarvis.assistant.voice.edge.EdgeTtsSpeaker.speak(
+                context = context,
+                text = normalizedText,
+                flush = false,
+                onStart = {
+                    nativeAndroidRecognizer?.pauseListening()
+                    JarvisConversationService.updateConversationStateFromOffline(ConversationState.SPEAKING)
+                },
+                onDone = {
+                    _sessionState.value = OfflineSessionState.Idle
+                    JarvisConversationService.updateConversationStateFromOffline(ConversationState.IDLE)
+                    nativeAndroidRecognizer?.resumeListening()
+                },
+                onFailed = {
+                    ensureTts()?.speak(normalizedText, TextToSpeech.QUEUE_ADD, null, "offline_${System.currentTimeMillis()}")
+                }
+            )
+            return
+        }
         val tts = ensureTts()
-        tts?.speak(text, TextToSpeech.QUEUE_ADD, null, "offline_${System.currentTimeMillis()}")
+        tts?.speak(normalizedText, TextToSpeech.QUEUE_ADD, null, "offline_${System.currentTimeMillis()}")
     }
 
+    private fun isAnySpeechPlaying(): Boolean =
+        nativeTts?.isSpeaking == true || com.jarvis.assistant.voice.edge.EdgeTtsSpeaker.speaking.value
+
     fun stopSpeaking() {
+        com.jarvis.assistant.voice.edge.EdgeTtsSpeaker.stop()
         nativeTts?.stop()
         _sessionState.value = OfflineSessionState.Idle
         JarvisConversationService.updateConversationStateFromOffline(ConversationState.IDLE)

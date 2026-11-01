@@ -192,6 +192,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             binding = ActivityCustomizationStudioBinding.inflate(layoutInflater)
             setContentView(binding.root)
             ThemeManager.applyDynamicBackground(binding.customizationStudioRoot)
+            setupScreenStyleOptions()
 
             androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.customizationStudioRoot) { _, insets ->
                 val statusBarInsets = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
@@ -324,7 +325,11 @@ class CustomizationStudioActivity : AppCompatActivity() {
         binding.sliderHudVolume.progress = volProg
         binding.tvHudVolumeVal.text = "$volProg%"
 
-        val voskProg = ((preferences.voskWakeWordSensitivity - 0.30f) / 0.05f).roundToInt().coerceIn(0, 13)
+        // Show what the wake-word engines actually use, so this slider and the
+        // Voice section can never disagree.
+        val liveSensitivity = com.jarvis.assistant.androllm.voice.VoiceSettingsStore
+            .get(applicationContext).state.value.sensitivity
+        val voskProg = ((liveSensitivity - 0.30f) / 0.05f).roundToInt().coerceIn(0, 13)
         binding.sliderVoskSensitivity.progress = voskProg
         binding.tvVoskVal.text = String.format("%.2f", getCurrentVosk())
 
@@ -348,6 +353,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
         updateThemeUI(selectedTheme)
         updateResonanceUI(selectedResonance)
         updatePersonaUI(selectedPersona)
+        updatePromptTemplateUI("sarcastic_jarvis")
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -936,7 +942,9 @@ class CustomizationStudioActivity : AppCompatActivity() {
             binding.cardThemeStealth to "stealth",
             binding.cardThemeRed to "red",
             binding.cardThemeAmethyst to "amethyst",
-            binding.cardThemeLight to "light"
+            binding.cardThemeLight to "light",
+            binding.cardThemeAndroNight to ThemeManager.THEME_ANDROLLM_NIGHT,
+            binding.cardThemeAndroParchment to ThemeManager.THEME_ANDROLLM_PARCHMENT
         )
 
         themeCards.forEach { (card, themeKey) ->
@@ -964,7 +972,9 @@ class CustomizationStudioActivity : AppCompatActivity() {
             binding.cardThemeStealth to listOf("stealth"),
             binding.cardThemeRed to listOf("red", "crimson", "ruby"),
             binding.cardThemeAmethyst to listOf("amethyst", "violet", "purple"),
-            binding.cardThemeLight to listOf("light", "pearl_white", "white")
+            binding.cardThemeLight to listOf("light", "pearl_white", "white"),
+            binding.cardThemeAndroNight to listOf(ThemeManager.THEME_ANDROLLM_NIGHT),
+            binding.cardThemeAndroParchment to listOf(ThemeManager.THEME_ANDROLLM_PARCHMENT)
         )
 
         cards.forEach { (card, keys) ->
@@ -1095,6 +1105,41 @@ class CustomizationStudioActivity : AppCompatActivity() {
             updatePersonaUI("friday")
         }
 
+        // AndroLLM Prompt Studio Templates
+        binding.cardTemplateSarcasticJarvis.setOnClickListener {
+            HudSoundManager.playTapSound()
+            updatePromptTemplateUI("sarcastic_jarvis")
+            selectedPersona = "jarvis"
+            binding.etStudioAssistantName.setText("JARVIS")
+            updateNameChipUI("JARVIS")
+            updatePersonaUI("jarvis")
+            Toast.makeText(this, "Template Applied: Sarcastic Tony Stark Jarvis", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.cardTemplateMobileArchitect.setOnClickListener {
+            HudSoundManager.playTapSound()
+            updatePromptTemplateUI("senior_software_engineer")
+            selectedPersona = "architect"
+            binding.etStudioAssistantName.setText("ARCHITECT")
+            Toast.makeText(this, "Template Applied: Senior Mobile Architect", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.cardTemplateCodeRefactor.setOnClickListener {
+            HudSoundManager.playTapSound()
+            updatePromptTemplateUI("refactor_code")
+            selectedPersona = "refactor"
+            binding.etStudioAssistantName.setText("REFACTOR")
+            Toast.makeText(this, "Template Applied: Code Refactoring Studio", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.cardTemplateExecutiveSummary.setOnClickListener {
+            HudSoundManager.playTapSound()
+            updatePromptTemplateUI("summarize_text")
+            selectedPersona = "summary"
+            binding.etStudioAssistantName.setText("ANALYST")
+            Toast.makeText(this, "Template Applied: Executive Summary & TL;DR", Toast.LENGTH_SHORT).show()
+        }
+
         // Live Wallpaper Mode Selection
         binding.cardWallpaperCharacter.setOnClickListener {
             HudSoundManager.playTapSound()
@@ -1125,6 +1170,26 @@ class CustomizationStudioActivity : AppCompatActivity() {
                 card.setBackgroundResource(R.drawable.bg_jarvis_chip)
             } else {
                 card.setBackgroundResource(R.drawable.bg_jarvis_row_item)
+            }
+        }
+    }
+
+    private fun updatePromptTemplateUI(activeId: String) {
+        val templates = listOf(
+            Triple(binding.cardTemplateSarcasticJarvis, binding.badgeTemplateSarcasticJarvis, "sarcastic_jarvis"),
+            Triple(binding.cardTemplateMobileArchitect, binding.badgeTemplateMobileArchitect, "senior_software_engineer"),
+            Triple(binding.cardTemplateCodeRefactor, binding.badgeTemplateCodeRefactor, "refactor_code"),
+            Triple(binding.cardTemplateExecutiveSummary, binding.badgeTemplateExecutiveSummary, "summarize_text")
+        )
+        templates.forEach { (card, badge, id) ->
+            if (id == activeId) {
+                card.setBackgroundResource(R.drawable.bg_jarvis_chip)
+                badge.text = "ACTIVE"
+                badge.setTextColor(Color.parseColor("#10B981"))
+            } else {
+                card.setBackgroundResource(R.drawable.bg_jarvis_row_item)
+                badge.text = "APPLY"
+                badge.setTextColor(ThemeManager.getThemeAccentColor(this))
             }
         }
     }
@@ -1291,7 +1356,14 @@ class CustomizationStudioActivity : AppCompatActivity() {
                 preferences.isHudSoundEnabled = binding.switchHudSounds.isChecked
                 preferences.isHapticFeedbackEnabled = binding.switchHapticFeedback.isChecked
                 preferences.hudSoundVolume = getCurrentVolume()
-                preferences.voskWakeWordSensitivity = getCurrentVosk()
+                // The wake-word engines read VoiceSettings.sensitivity (VoiceEngines.kt),
+                // so the slider has to land there or it changes nothing.
+                val voskSensitivity = getCurrentVosk()
+                preferences.voskWakeWordSensitivity = voskSensitivity
+                lifecycleScope.launch {
+                    com.jarvis.assistant.androllm.voice.VoiceSettingsStore.get(applicationContext)
+                        .update { it.copy(sensitivity = voskSensitivity) }
+                }
 
                 // Save Assistant Name & Live Wallpaper Mode
                 val customName = binding.etStudioAssistantName.text?.toString()?.trim() ?: ""
@@ -1508,5 +1580,30 @@ class CustomizationStudioActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "CustomizationStudio"
+    }
+
+    /** Home/Chat tab style: Jarvis classic (default) or the AndroLLM screen inside the same tab. */
+    private fun setupScreenStyleOptions() {
+        val style = com.jarvis.assistant.androllm.AndroLlmUiStyle
+        binding.rgHomeStyle.check(
+            if (style.homeStyle(this) == style.ANDROLLM) R.id.rbHomeStyleAndroLlm else R.id.rbHomeStyleJarvis
+        )
+        binding.rgChatStyle.check(
+            if (style.chatStyle(this) == style.ANDROLLM) R.id.rbChatStyleAndroLlm else R.id.rbChatStyleJarvis
+        )
+        binding.rgHomeStyle.setOnCheckedChangeListener { _, id ->
+            style.setHomeStyle(this, if (id == R.id.rbHomeStyleAndroLlm) style.ANDROLLM else style.JARVIS)
+        }
+        binding.rgChatStyle.setOnCheckedChangeListener { _, id ->
+            style.setChatStyle(this, if (id == R.id.rbChatStyleAndroLlm) style.ANDROLLM else style.JARVIS)
+        }
+        binding.swHomeAiDashboard.isChecked = com.jarvis.assistant.androllm.HomeDashboardPrefs.isEnabled(this)
+        binding.swHomeAiDashboard.setOnCheckedChangeListener { _, checked ->
+            com.jarvis.assistant.androllm.HomeDashboardPrefs.setEnabled(this, checked)
+        }
+        binding.swShowAiHubTab.isChecked = style.showAiHubTab(this)
+        binding.swShowAiHubTab.setOnCheckedChangeListener { _, checked -> style.setShowAiHubTab(this, checked) }
+        binding.swShowAndroSplash.isChecked = style.showSplash(this)
+        binding.swShowAndroSplash.setOnCheckedChangeListener { _, checked -> style.setShowSplash(this, checked) }
     }
 }

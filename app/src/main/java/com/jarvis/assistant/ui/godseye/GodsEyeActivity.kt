@@ -12,6 +12,7 @@ import android.view.View
 import android.webkit.ConsoleMessage
 import android.webkit.GeolocationPermissions
 import android.webkit.JavascriptInterface
+import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -63,6 +64,7 @@ class GodsEyeActivity : AppCompatActivity() {
         const val EXTRA_VIEW_URL = "extra_view_url"
         const val EXTRA_ACTION_JSON = "extra_action_json"
         private const val LOCAL_HOST_IPV4 = "127.0.0.1"
+        private const val REQ_WEBVIEW_MEDIA = 4717
         private const val LOCAL_HOST_NAME = "localhost"
 
         @Volatile
@@ -140,6 +142,38 @@ class GodsEyeActivity : AppCompatActivity() {
         }
     }
 
+    /** Last FIRMS fetch, so /api/firms/status reports what really happened. */
+    @Volatile
+    private var firmsLastFetchAt = 0L
+
+    @Volatile
+    private var firmsLastCount = 0
+
+    /**
+     * Loopback-probe memo. A Termux God's Eye server on :4173 is the exception,
+     * not the rule, so a refused probe is remembered for a while instead of
+     * being repeated on every tile and poll.
+     */
+    @Volatile
+    private var termuxProbeFailedUntil = 0L
+
+    private fun isTermuxProbeWorthTrying(): Boolean =
+        System.currentTimeMillis() >= termuxProbeFailedUntil
+
+    private fun recordTermuxProbe(reachable: Boolean) {
+        termuxProbeFailedUntil = if (reachable) 0L else System.currentTimeMillis() + 30_000L
+    }
+
+    private fun hasOsPermission(permission: String): Boolean =
+        androidx.core.content.ContextCompat.checkSelfPermission(this, permission) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+
+    private fun requestWebViewOsPermissions(permissions: Array<String>) {
+        runOnUiThread {
+            androidx.core.app.ActivityCompat.requestPermissions(this, permissions, REQ_WEBVIEW_MEDIA)
+        }
+    }
+
     private val loopbackOkHttpClient = OkHttpClient.Builder()
         .connectTimeout(400, TimeUnit.MILLISECONDS)
         .readTimeout(1500, TimeUnit.MILLISECONDS)
@@ -151,25 +185,12 @@ class GodsEyeActivity : AppCompatActivity() {
         .build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Follow the active Jarvis theme (window, status/nav bars, HUD chrome attrs).
+        com.jarvis.assistant.util.ThemeManager.applyTheme(this)
         super.onCreate(savedInstanceState)
         activeInstance = this
         binding = ActivityGodsEyeBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // Enforce pure fullscreen Dark Cyber HUD theme
-        window.apply {
-            setBackgroundDrawable(ColorDrawable(Color.BLACK))
-            decorView.setBackgroundColor(Color.BLACK)
-            statusBarColor = Color.BLACK
-            navigationBarColor = Color.BLACK
-        }
-
-        WindowInsetsControllerCompat(window, window.decorView).apply {
-            isAppearanceLightStatusBars = false
-            isAppearanceLightNavigationBars = false
-        }
-
-        binding.rootGodsEyeLayout.setBackgroundColor(Color.BLACK)
 
         setupButtons()
         setupBackNavigation()
@@ -244,7 +265,7 @@ class GodsEyeActivity : AppCompatActivity() {
         binding.webViewGodsEye.apply {
             // LayerType none allows direct unbuffered GPU compositing of WebGL 2
             setLayerType(View.LAYER_TYPE_NONE, null)
-            setBackgroundColor(Color.BLACK)
+            setBackgroundColor(themeAttr(com.jarvis.assistant.R.attr.themeBg, Color.BLACK))
 
             settings.apply {
                 javaScriptEnabled = true
@@ -266,6 +287,53 @@ class GodsEyeActivity : AppCompatActivity() {
             }
 
             webChromeClient = object : WebChromeClient() {
+                /**
+                 * Without this the WebView denies every getUserMedia() call, which
+                 * silently kills the console's voice control, the SDR audio
+                 * worklet and the camera-backed vision panels. Only the bundled
+                 * origin may ask, and only for permissions Android has already
+                 * granted the app - a missing OS grant is requested, not faked.
+                 */
+                override fun onPermissionRequest(request: PermissionRequest?) {
+                    if (request == null) return
+                    val origin = request.origin?.host.orEmpty()
+                    if (origin != ASSET_HOST_NAME && origin != LOCAL_HOST_IPV4 && origin != LOCAL_HOST_NAME) {
+                        request.deny()
+                        return
+                    }
+                    val granted = mutableListOf<String>()
+                    val missingOsPermissions = mutableListOf<String>()
+                    request.resources.forEach { resource ->
+                        when (resource) {
+                            PermissionRequest.RESOURCE_AUDIO_CAPTURE -> {
+                                if (hasOsPermission(android.Manifest.permission.RECORD_AUDIO)) {
+                                    granted.add(resource)
+                                } else {
+                                    missingOsPermissions.add(android.Manifest.permission.RECORD_AUDIO)
+                                }
+                            }
+                            PermissionRequest.RESOURCE_VIDEO_CAPTURE -> {
+                                if (hasOsPermission(android.Manifest.permission.CAMERA)) {
+                                    granted.add(resource)
+                                } else {
+                                    missingOsPermissions.add(android.Manifest.permission.CAMERA)
+                                }
+                            }
+                        }
+                    }
+                    if (granted.isEmpty()) {
+                        request.deny()
+                        if (missingOsPermissions.isNotEmpty()) {
+                            requestWebViewOsPermissions(missingOsPermissions.toTypedArray())
+                        }
+                        return
+                    }
+                    request.grant(granted.toTypedArray())
+                    if (missingOsPermissions.isNotEmpty()) {
+                        requestWebViewOsPermissions(missingOsPermissions.toTypedArray())
+                    }
+                }
+
                 override fun onGeolocationPermissionsShowPrompt(
                     origin: String?,
                     callback: GeolocationPermissions.Callback?
@@ -324,9 +392,6 @@ class GodsEyeActivity : AppCompatActivity() {
                                         parsed.l = parsed.l.filter(function(id) {
                                             return id !== 'bhote-koshi-2026' && id !== 'bhote-koshi-locator' && id.indexOf('bhote') === -1;
                                         });
-                                        if (parsed.l.length > 5) {
-                                            parsed.l = ['cctv', 'flights', 'satellites'];
-                                        }
                                         localStorage.setItem('gev:layer-state:v2', JSON.stringify(parsed));
                                     }
                                 }
@@ -361,9 +426,6 @@ class GodsEyeActivity : AppCompatActivity() {
                                         parsed.l = parsed.l.filter(function(id) {
                                             return id !== 'bhote-koshi-2026' && id !== 'bhote-koshi-locator' && id.indexOf('bhote') === -1;
                                         });
-                                        if (parsed.l.length > 5) {
-                                            parsed.l = ['cctv', 'flights', 'satellites'];
-                                        }
                                         localStorage.setItem('gev:layer-state:v2', JSON.stringify(parsed));
                                     }
                                 }
@@ -574,13 +636,17 @@ class GodsEyeActivity : AppCompatActivity() {
                         }
 
                         return try {
-                            val inputStream = assets.open(assetPath)
                             val mimeType = getMimeType(assetPath)
                             val encoding = if (isTextMime(mimeType)) "UTF-8" else null
                             val responseHeaders = mapOf(
                                 "Access-Control-Allow-Origin" to "*",
                                 "Cache-Control" to "no-cache"
                             )
+                            val inputStream = if (assetPath == "godseye/index.html") {
+                                ByteArrayInputStream(bootstrappedIndexHtml())
+                            } else {
+                                assets.open(assetPath)
+                            }
                             WebResourceResponse(mimeType, encoding, 200, "OK", responseHeaders, inputStream)
                         } catch (e: Exception) {
                             Log.d(TAG, "Asset not found in bundle: $assetPath (falling back)")
@@ -599,6 +665,40 @@ class GodsEyeActivity : AppCompatActivity() {
 
             addJavascriptInterface(JarvisVoiceBridge(), "JarvisVoiceBridge")
         }
+    }
+
+    /**
+     * The bundled console page with a key bootstrap spliced into <head>, ahead
+     * of every script it loads. The bundle reads __CESIUM_ION_TOKEN__ and
+     * __GOOGLE_MAPS_API_KEY__ off `window`, so they have to exist before its
+     * first module runs - a post-load injection is already too late for the
+     * globe's imagery provider.
+     */
+    private fun bootstrappedIndexHtml(): ByteArray {
+        val html = assets.open("godseye/index.html").bufferedReader().use { it.readText() }
+        val prefs = com.jarvis.assistant.JarvisApp.instance.preferences
+        val bootstrap = buildString {
+            append("<script>")
+            append("window.CESIUM_BASE_URL='/cesium/';")
+            append("window.__JARVIS_GODS_EYE__=true;")
+            prefs.godsEyeGoogleApiKey.trim().takeIf { it.isNotBlank() }?.let {
+                append("window.__GOOGLE_MAPS_API_KEY__=").append(JSONObject.quote(it)).append(";")
+            }
+            prefs.godsEyeCesiumIonToken.trim().takeIf { it.isNotBlank() }?.let {
+                append("window.__CESIUM_ION_TOKEN__=").append(JSONObject.quote(it)).append(";")
+            }
+            prefs.godsEyeMapillaryToken.trim().takeIf { it.isNotBlank() }?.let {
+                append("window.__MAPILLARY_CLIENT_TOKEN__=").append(JSONObject.quote(it)).append(";")
+            }
+            append("</script>")
+        }
+        val marker = "<head>"
+        val patched = if (html.contains(marker)) {
+            html.replaceFirst(marker, marker + bootstrap)
+        } else {
+            bootstrap + html
+        }
+        return patched.toByteArray(Charsets.UTF_8)
     }
 
     private fun proxyDirect(request: WebResourceRequest, upstreamUrl: String): WebResourceResponse? {
@@ -635,14 +735,17 @@ class GodsEyeActivity : AppCompatActivity() {
         )
         val prefs = com.jarvis.assistant.JarvisApp.instance.preferences
 
-        // 1. Try forwarding to local Termux server on loopback if active (fast failover)
+        // 1. Try forwarding to local Termux server on loopback if active (fast
+        // failover). The probe result is cached: without it every tile, frame and
+        // poll paid a connect attempt to a port that is almost never listening.
         val termuxBase = "http://127.0.0.1:4173"
-        try {
+        if (isTermuxProbeWorthTrying()) try {
             val termuxRequest = Request.Builder()
                 .url("$termuxBase$targetPathWithQuery")
                 .method(request.method, null)
                 .build()
             val termuxResponse = loopbackOkHttpClient.newCall(termuxRequest).execute()
+            recordTermuxProbe(true)
             if (termuxResponse.isSuccessful || termuxResponse.code < 500) {
                 val bodyStream = termuxResponse.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
                 val mime = termuxResponse.header("Content-Type", "application/json")?.split(";")?.firstOrNull()?.trim() ?: "application/json"
@@ -653,6 +756,7 @@ class GodsEyeActivity : AppCompatActivity() {
             }
         } catch (_: Exception) {
             // Termux server not reachable on port 4173; proceed to standalone direct proxy
+            recordTermuxProbe(false)
         }
 
         // 2. Standalone direct proxy and built-in offline providers
@@ -805,11 +909,10 @@ class GodsEyeActivity : AppCompatActivity() {
                             .url(upstreamUrl)
                             .header("User-Agent", "Jarvis-GodsEye/1.8.7")
                             .header("Accept", "application/json")
-                        val userPrefs = com.jarvis.assistant.JarvisApp.instance.preferences
-                        val openskyUser = userPrefs.godsEyeOpenSkyClientId
-                        val openskySecret = userPrefs.godsEyeOpenSkyClientSecret
-                        if (openskyUser.isNotBlank() && openskySecret.isNotBlank()) {
-                            reqBuilder.header("Authorization", okhttp3.Credentials.basic(openskyUser, openskySecret))
+                        // OpenSky retired Basic auth in March 2026; the client
+                        // id/secret pair only authenticates through OAuth2.
+                        GodsEyeStandaloneApi.openSkyBearer(prefs, okHttpClient)?.let {
+                            reqBuilder.header("Authorization", "Bearer $it")
                         }
                         val upstreamResp = okHttpClient.newCall(reqBuilder.build()).execute()
                         if (upstreamResp.isSuccessful) {
@@ -822,17 +925,16 @@ class GodsEyeActivity : AppCompatActivity() {
             }
 
             if (path.startsWith("/api/flights")) {
-                val userPrefs = com.jarvis.assistant.JarvisApp.instance.preferences
-                val openskyUser = userPrefs.godsEyeOpenSkyClientId
-                val openskySecret = userPrefs.godsEyeOpenSkyClientSecret
                 val upstreamUrl = "https://opensky-network.org/api/states/all?extended=1"
                 try {
                     val reqBuilder = Request.Builder()
                         .url(upstreamUrl)
                         .header("User-Agent", "Jarvis-GodsEye/1.8.7")
                         .header("Accept", "application/json")
-                    if (openskyUser.isNotBlank() && openskySecret.isNotBlank()) {
-                        reqBuilder.header("Authorization", okhttp3.Credentials.basic(openskyUser, openskySecret))
+                    // Anonymous OpenSky still answers, just with a far lower rate
+                    // limit, so an absent token is not an error.
+                    GodsEyeStandaloneApi.openSkyBearer(prefs, okHttpClient)?.let {
+                        reqBuilder.header("Authorization", "Bearer $it")
                     }
                     val upstreamResp = okHttpClient.newCall(reqBuilder.build()).execute()
                     if (upstreamResp.isSuccessful) {
@@ -840,16 +942,32 @@ class GodsEyeActivity : AppCompatActivity() {
                         if (body.contains("\"states\"") && !body.contains("\"states\":[]")) {
                             return jsonResponse(body, corsHeaders, 200)
                         }
+                    } else {
+                        Log.w(TAG, "OpenSky states/all returned HTTP ${upstreamResp.code}")
                     }
-                } catch (_: Exception) {}
+                } catch (e: Exception) {
+                    Log.w(TAG, "OpenSky states/all failed: ${e.message}")
+                }
 
-                // OpenSky quota exhausted or unconfigured -> Query live community ADS-B transponders (100% free, no quota)
+                // OpenSky quota exhausted or unconfigured -> community ADS-B
+                // transponders (free, no quota). Military-only coverage, but real.
                 val liveAdsbJson = fetchLiveAdsbFlights()
                 if (liveAdsbJson != null) {
                     return jsonResponse(liveAdsbJson, corsHeaders, 200)
                 }
 
-                return jsonResponse(buildFallbackFlightsJson(), corsHeaders, 200)
+                // Nothing live reached us. An empty sky is the truthful answer;
+                // placeholder airliners made a dead feed look healthy.
+                return jsonResponse(
+                    JSONObject().apply {
+                        put("time", System.currentTimeMillis() / 1000)
+                        put("states", JSONArray())
+                        put("status", "unavailable")
+                        put("error", "No live flight source reachable (OpenSky and community ADS-B both failed)")
+                    }.toString(),
+                    corsHeaders,
+                    502
+                )
             }
 
             if (path.startsWith("/api/adsbdb/")) {
@@ -904,7 +1022,7 @@ class GodsEyeActivity : AppCompatActivity() {
                 return jsonResponse("{\"fetchedAt\":${System.currentTimeMillis()},\"rows\":[]}", corsHeaders, 200)
             }
 
-            val userPrefs = com.jarvis.assistant.JarvisApp.instance.preferences
+            val userPrefs = prefs
 
             // --- F. TRAFFIC (TOMTOM & OPENFREEMAP) ---
             if (path.startsWith("/api/tomtom/status")) {
@@ -933,7 +1051,15 @@ class GodsEyeActivity : AppCompatActivity() {
 
             // --- G. NASA FIRMS (ACTIVE WILDFIRES) ---
             if (path.startsWith("/api/firms/status")) {
-                val firmsStatus = "{\"hasKey\":true,\"lastFetch\":${System.currentTimeMillis()},\"count\":50,\"stale\":false,\"ttlMs\":1800000,\"transactions\":null}"
+                val hasFirmsKey = userPrefs.godsEyeNasaFirmsKey.isNotBlank()
+                val firmsStatus = JSONObject().apply {
+                    put("hasKey", hasFirmsKey)
+                    put("lastFetch", firmsLastFetchAt)
+                    put("count", firmsLastCount)
+                    put("stale", !hasFirmsKey || System.currentTimeMillis() - firmsLastFetchAt > 1800000L)
+                    put("ttlMs", 1800000)
+                    put("transactions", JSONObject.NULL)
+                }.toString()
                 return jsonResponse(firmsStatus, corsHeaders, 200)
             }
 
@@ -948,23 +1074,56 @@ class GodsEyeActivity : AppCompatActivity() {
                             val csvString = upstreamResp.body?.string().orEmpty()
                             val jsonPayload = parseFirmsCsvToJson(csvString)
                             if (jsonPayload != null) {
+                                firmsLastFetchAt = System.currentTimeMillis()
+                                firmsLastCount = JSONObject(jsonPayload).optJSONArray("fires")?.length() ?: 0
                                 return jsonResponse(jsonPayload, corsHeaders, 200)
                             }
                         }
-                    } catch (_: Exception) {}
+                    } catch (e: Exception) {
+                        Log.w(TAG, "FIRMS fetch failed: ${e.message}")
+                    }
                 }
-                return jsonResponse(buildFallbackFiresJson(), corsHeaders, 200)
+                // An empty, clearly-labelled feed. Invented hotspots on a live
+                // wildfire map are worse than no map at all.
+                val firmsError = if (firmsKey.isBlank()) {
+                    "FIRMS_MAP_KEY is not set - add it in Jarvis > Settings > API Connections"
+                } else {
+                    "NASA FIRMS is unreachable or rejected the key"
+                }
+                return jsonResponse(
+                    JSONObject().apply {
+                        // Same envelope the parsed feed uses, so the layer reads
+                        // an empty result rather than a malformed one.
+                        put("fetchedAt", System.currentTimeMillis())
+                        put("stale", true)
+                        put("ttlMs", 1800000L)
+                        put("sources", JSONArray().put("VIIRS_SNPP_NRT"))
+                        put("count", 0)
+                        put("fires", JSONArray())
+                        put("status", if (firmsKey.isBlank()) "missing-key" else "unavailable")
+                        put("error", firmsError)
+                    }.toString(),
+                    corsHeaders,
+                    if (firmsKey.isBlank()) 503 else 502
+                )
             }
 
             // --- H. AIS LIVE VESSELS ---
             if (path.startsWith("/api/vessels/track")) {
-                val mmsi = url.getQueryParameter("mmsi") ?: "0"
-                val trackJson = "{\"mmsi\":\"$mmsi\",\"samples\":[],\"source\":\"AISStream (accumulated)\"}"
-                return jsonResponse(trackJson, corsHeaders, 200)
+                val mmsi = url.getQueryParameter("mmsi").orEmpty()
+                if (!mmsi.matches(Regex("^\\d{5,10}$"))) {
+                    return jsonResponse("{\"error\":\"mmsi query param required\"}", corsHeaders, 400)
+                }
+                return jsonResponse(GodsEyeAisStream.track(mmsi).toString(), corsHeaders, 200)
             }
 
             if (path.startsWith("/api/vessels")) {
-                return jsonResponse(buildFallbackVesselsJson(), corsHeaders, 200)
+                // Real AISStream traffic, accumulated by the app's own socket.
+                // When no key is set the feed says so instead of inventing ships.
+                val aisKey = userPrefs.godsEyeAisStreamKey.trim()
+                val maxRows = url.getQueryParameter("maxRows")?.toIntOrNull()?.coerceIn(1, 6000) ?: 3000
+                val snapshot = GodsEyeAisStream.snapshot(aisKey, maxRows)
+                return jsonResponse(snapshot.toString(), corsHeaders, GodsEyeAisStream.httpStatusFor(aisKey))
             }
 
             // --- I. RADIO STATIONS ---
@@ -1070,8 +1229,12 @@ class GodsEyeActivity : AppCompatActivity() {
             }
 
             if (path.startsWith("/api/wind/grid/")) {
-                val emptyWindBytes = ByteArray(521280)
-                return WebResourceResponse("application/octet-stream", null, 200, "OK", corsHeaders, ByteArrayInputStream(emptyWindBytes))
+                // A zero-filled grid is not "no wind", it is a fabricated calm.
+                return jsonResponse(
+                    "{\"error\":\"No GFS wind grid available in the standalone build\"}",
+                    corsHeaders,
+                    503
+                )
             }
 
             // --- M. MILITARY INSTALLATIONS ---
@@ -1103,7 +1266,8 @@ class GodsEyeActivity : AppCompatActivity() {
 
             // --- O. MAPILLARY (STREET LEVEL) ---
             if (path.startsWith("/api/mapillary/status")) {
-                return jsonResponse("{\"configured\":true}", corsHeaders, 200)
+                val hasMapillary = userPrefs.godsEyeMapillaryToken.isNotBlank()
+                return jsonResponse("{\"configured\":$hasMapillary}", corsHeaders, 200)
             }
 
             if (path.startsWith("/api/mapillary/tiles/")) {
@@ -1153,8 +1317,20 @@ class GodsEyeActivity : AppCompatActivity() {
             }
 
             // --- R. SYSTEM & SETUP STATUS ---
-            if (path.startsWith("/api/setup/status") || path.startsWith("/api/setup/keys")) {
-                return jsonResponse("{\"configured\":{\"cesium\":true,\"adsb\":true,\"space\":true,\"cctv\":true,\"firms\":true,\"tomtom\":true,\"aisstream\":true,\"mapillary\":true,\"opensky\":true,\"google\":true}}", corsHeaders, 200)
+            if (path.startsWith("/api/setup/status")) {
+                // The panel renders its chips straight off this payload, so it has
+                // to report the keys the user actually set. Claiming everything is
+                // configured is what made empty layers read as healthy.
+                return jsonResponse(GodsEyeStandaloneApi.setupStatusJson(prefs), corsHeaders, 200)
+            }
+
+            if (path.startsWith("/api/setup/keys")) {
+                // Keys live in Jarvis settings; the WebView never writes them.
+                return jsonResponse(
+                    "{\"error\":\"Keys are managed in Jarvis > Settings > API Connections\",\"readOnly\":true}",
+                    corsHeaders,
+                    405
+                )
             }
 
             if (path.startsWith("/api/regional-brief") || path.startsWith("/api/regional/")) {
@@ -1519,6 +1695,43 @@ class GodsEyeActivity : AppCompatActivity() {
                 return proxyDirect(request, "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json")
             }
 
+            // --- Y2. OPENAI REALTIME VOICE (ephemeral client secret) ---
+            if (path.startsWith("/api/realtime/token")) {
+                val result = GodsEyeStandaloneApi.realtimeToken(
+                    this@GodsEyeActivity,
+                    prefs,
+                    okHttpClient,
+                    url.getQueryParameter("tier")
+                )
+                return jsonResponse(result.body, corsHeaders + result.headers, result.status)
+            }
+
+            if (path.startsWith("/api/realtime/oauth-status") || path.startsWith("/api/realtime/oauth-login")) {
+                return jsonResponse(GodsEyeStandaloneApi.realtimeOAuthStatusJson(), corsHeaders, 503)
+            }
+
+            if (path.startsWith("/api/realtime/debug-log")) {
+                return WebResourceResponse("text/plain", "UTF-8", 204, "No Content", corsHeaders, ByteArrayInputStream(ByteArray(0)))
+            }
+
+            // --- Y3. LOCAL ADS-B RECEIVER (dump1090 on the same network) ---
+            if (path.startsWith("/api/local-receivers/aircraft")) {
+                // No receiver is bridged into the APK, so the layer must read as
+                // configured-off rather than as an empty live receiver.
+                return jsonResponse(
+                    "{\"aircraft\":[],\"configured\":false,\"error\":\"No local ADS-B receiver is bridged to this device\"}",
+                    corsHeaders,
+                    503
+                )
+            }
+
+            // --- Y4. TRANSIT VEHICLE TRAILS ---
+            if (path.startsWith("/api/transit/trail/")) {
+                // Trails need a server that has been sampling the feed over time;
+                // standalone has no history, so the trail is empty by design.
+                return jsonResponse("{\"samples\":[],\"history\":false}", corsHeaders, 200)
+            }
+
             // --- Z. REALTIME PUBLIC TRANSIT (MBTA / MASSDOT) ---
             if (path.startsWith("/api/transit/mbta") || path.startsWith("/api/transit/boston")) {
                 return proxyDirect(request, "https://cdn.mbta.com/realtime/VehiclePositions.json")
@@ -1528,9 +1741,16 @@ class GodsEyeActivity : AppCompatActivity() {
             Log.w(TAG, "Direct proxy failed for $path: ${e.message}")
         }
 
-        // Default safe fallback so unknown routes do not throw and layers stay nominal
-        val fallback = "{\"status\":\"nominal\",\"available\":true,\"timestamp\":${System.currentTimeMillis()}}"
-        return jsonResponse(fallback, corsHeaders, 200)
+        // An unknown route used to answer {"status":"nominal"} with HTTP 200.
+        // Every caller then treated a route this build cannot serve as a healthy
+        // one, which is why dead layers showed green. A 501 lets the console's
+        // own unavailable handling take over, and names the gap in logcat.
+        Log.w(TAG, "Unhandled God's Eye API route: $path")
+        return jsonResponse(
+            "{\"error\":\"Endpoint not available in the standalone Jarvis build\",\"path\":${JSONObject.quote(path)}}",
+            corsHeaders,
+            501
+        )
     }
 
     private fun jsonResponse(json: String, headers: Map<String, String>, statusCode: Int = 200): WebResourceResponse {
@@ -1616,73 +1836,6 @@ class GodsEyeActivity : AppCompatActivity() {
         return null
     }
 
-    private fun buildFallbackFlightsJson(): String {
-        val time = System.currentTimeMillis() / 1000
-        return """
-            {
-              "time": $time,
-              "states": [
-                ["a00001", "UAL820", "United States", $time, $time, -74.172, 40.689, 10600.0, false, 240.0, 85.0, 0.0, null, 10800.0, "1200", false, 0],
-                ["a00002", "BAW178", "United Kingdom", $time, $time, -0.454, 51.470, 9800.0, false, 230.0, 270.0, 0.0, null, 10000.0, "2345", false, 0],
-                ["a00003", "AFR006", "France", $time, $time, 2.550, 49.009, 11200.0, false, 250.0, 290.0, 0.0, null, 11500.0, "3456", false, 0],
-                ["a00004", "UAE201", "United Arab Emirates", $time, $time, 55.364, 25.253, 11800.0, false, 260.0, 310.0, 0.0, null, 12000.0, "4567", false, 0],
-                ["a00005", "SIA322", "Singapore", $time, $time, 103.991, 1.364, 10500.0, false, 245.0, 320.0, 0.0, null, 11000.0, "5678", false, 0],
-                ["a00006", "ANA008", "Japan", $time, $time, 140.392, 35.764, 11000.0, false, 255.0, 60.0, 0.0, null, 11200.0, "6789", false, 0],
-                ["a00007", "QFA1", "Australia", $time, $time, 151.177, -33.946, 10800.0, false, 250.0, 300.0, 0.0, null, 11100.0, "7890", false, 0],
-                ["a00008", "AIC101", "India", $time, $time, 77.100, 28.556, 11500.0, false, 240.0, 280.0, 0.0, null, 11800.0, "0123", false, 0],
-                ["a00009", "DLH400", "Germany", $time, $time, 8.570, 50.037, 10200.0, false, 235.0, 260.0, 0.0, null, 10400.0, "4321", false, 0],
-                ["a00010", "KLM641", "Netherlands", $time, $time, 4.768, 52.310, 10900.0, false, 248.0, 275.0, 0.0, null, 11100.0, "5432", false, 0],
-                ["a00011", "CPA251", "Hong Kong", $time, $time, 113.914, 22.308, 11300.0, false, 252.0, 315.0, 0.0, null, 11500.0, "6543", false, 0],
-                ["a00012", "TAM8070", "Brazil", $time, $time, -46.473, -23.435, 10700.0, false, 242.0, 45.0, 0.0, null, 10900.0, "7654", false, 0],
-                ["a00013", "IGO342", "India", $time, $time, 72.867, 19.088, 10200.0, false, 235.0, 120.0, 0.0, null, 10400.0, "1122", false, 0],
-                ["a00014", "ETD131", "United Arab Emirates", $time, $time, 54.651, 24.433, 11400.0, false, 250.0, 305.0, 0.0, null, 11600.0, "2233", false, 0],
-                ["a00015", "QTR818", "Qatar", $time, $time, 51.608, 25.273, 11600.0, false, 255.0, 315.0, 0.0, null, 11800.0, "3344", false, 0],
-                ["a00016", "THY001", "Turkey", $time, $time, 28.814, 41.275, 10800.0, false, 245.0, 290.0, 0.0, null, 11000.0, "4455", false, 0],
-                ["a00017", "SAS909", "Sweden", $time, $time, 17.918, 59.651, 10500.0, false, 240.0, 260.0, 0.0, null, 10700.0, "5566", false, 0],
-                ["a00018", "DAL124", "United States", $time, $time, -84.428, 33.640, 10900.0, false, 248.0, 75.0, 0.0, null, 11100.0, "6677", false, 0],
-                ["a00019", "AAL100", "United States", $time, $time, -73.778, 40.641, 11100.0, false, 250.0, 65.0, 0.0, null, 11300.0, "7788", false, 0],
-                ["a00020", "SWR014", "Switzerland", $time, $time, 8.549, 47.458, 10400.0, false, 238.0, 275.0, 0.0, null, 10600.0, "8899", false, 0],
-                ["a00021", "CES587", "China", $time, $time, 121.805, 31.144, 11200.0, false, 252.0, 50.0, 0.0, null, 11400.0, "9900", false, 0],
-                ["a00022", "KAL017", "South Korea", $time, $time, 126.440, 37.460, 11000.0, false, 248.0, 70.0, 0.0, null, 11200.0, "0011", false, 0],
-                ["a00023", "AIC187", "India", $time, $time, 77.594, 12.971, 10600.0, false, 242.0, 160.0, 0.0, null, 10800.0, "1234", false, 0],
-                ["a00024", "SEJ212", "India", $time, $time, 80.170, 12.994, 10300.0, false, 236.0, 140.0, 0.0, null, 10500.0, "2345", false, 0]
-              ]
-            }
-        """.trimIndent()
-    }
-
-    private fun buildFallbackFiresJson(): String {
-        val now = System.currentTimeMillis()
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
-        val today = sdf.format(Date(now))
-        val fires = JSONArray().apply {
-            put(JSONObject().apply { put("lat", 37.8651); put("lon", -119.5383); put("frp", 42.5); put("confidence", "h"); put("brightness", 348.6); put("brightnessTi5", 302.1); put("daynight", "D"); put("acqDate", today); put("acqTime", "1420"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", 39.5296); put("lon", -121.5565); put("frp", 36.2); put("confidence", "h"); put("brightness", 342.1); put("brightnessTi5", 299.4); put("daynight", "D"); put("acqDate", today); put("acqTime", "1422"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", 34.2012); put("lon", -118.1714); put("frp", 28.9); put("confidence", "n"); put("brightness", 336.5); put("brightnessTi5", 295.0); put("daynight", "D"); put("acqDate", today); put("acqTime", "1425"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", 40.5865); put("lon", -122.3917); put("frp", 51.4); put("confidence", "h"); put("brightness", 355.0); put("brightnessTi5", 308.2); put("daynight", "N"); put("acqDate", today); put("acqTime", "0215"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", 44.0582); put("lon", -121.3153); put("frp", 31.8); put("confidence", "n"); put("brightness", 338.2); put("brightnessTi5", 296.8); put("daynight", "D"); put("acqDate", today); put("acqTime", "1430"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", -3.4653); put("lon", -62.2159); put("frp", 65.2); put("confidence", "h"); put("brightness", 362.4); put("brightnessTi5", 312.0); put("daynight", "D"); put("acqDate", today); put("acqTime", "1340"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", -9.1899); put("lon", -56.0969); put("frp", 58.7); put("confidence", "h"); put("brightness", 359.1); put("brightnessTi5", 310.5); put("daynight", "D"); put("acqDate", today); put("acqTime", "1342"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", -12.9714); put("lon", -50.5367); put("frp", 44.1); put("confidence", "n"); put("brightness", 345.8); put("brightnessTi5", 301.2); put("daynight", "N"); put("acqDate", today); put("acqTime", "0130"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", -4.0383); put("lon", 21.7587); put("frp", 72.0); put("confidence", "h"); put("brightness", 368.5); put("brightnessTi5", 318.4); put("daynight", "D"); put("acqDate", today); put("acqTime", "1210"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", -8.8383); put("lon", 24.3214); put("frp", 61.3); put("confidence", "h"); put("brightness", 360.2); put("brightnessTi5", 311.9); put("daynight", "D"); put("acqDate", today); put("acqTime", "1215"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", -33.8688); put("lon", 150.2093); put("frp", 39.4); put("confidence", "n"); put("brightness", 341.0); put("brightnessTi5", 298.5); put("daynight", "D"); put("acqDate", today); put("acqTime", "0430"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", -12.4634); put("lon", 130.8456); put("frp", 55.0); put("confidence", "h"); put("brightness", 356.3); put("brightnessTi5", 307.7); put("daynight", "D"); put("acqDate", today); put("acqTime", "0510"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", 38.2466); put("lon", 23.7275); put("frp", 48.3); put("confidence", "h"); put("brightness", 352.7); put("brightnessTi5", 305.1); put("daynight", "D"); put("acqDate", today); put("acqTime", "1140"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", 40.4637); put("lon", -3.7492); put("frp", 33.5); put("confidence", "n"); put("brightness", 339.4); put("brightnessTi5", 297.0); put("daynight", "D"); put("acqDate", today); put("acqTime", "1150"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", 53.9171); put("lon", -122.7497); put("frp", 45.9); put("confidence", "h"); put("brightness", 350.1); put("brightnessTi5", 303.8); put("daynight", "D"); put("acqDate", today); put("acqTime", "1500"); put("satellite", "N"); put("instrument", "VIIRS") })
-            put(JSONObject().apply { put("lat", 56.7264); put("lon", -111.3803); put("frp", 52.8); put("confidence", "h"); put("brightness", 354.9); put("brightnessTi5", 306.9); put("daynight", "D"); put("acqDate", today); put("acqTime", "1515"); put("satellite", "N"); put("instrument", "VIIRS") })
-        }
-        return JSONObject().apply {
-            put("fetchedAt", now)
-            put("stale", false)
-            put("ttlMs", 1800000L)
-            put("sources", JSONArray().put("VIIRS_SNPP_NRT"))
-            put("count", fires.length())
-            put("fires", fires)
-        }.toString()
-    }
-
     private fun parseFirmsCsvToJson(csvText: String): String? {
         try {
             val lines = csvText.lines()
@@ -1740,59 +1893,29 @@ class GodsEyeActivity : AppCompatActivity() {
         }
     }
 
-    private fun buildFallbackVesselsJson(): String {
-        val now = System.currentTimeMillis()
-        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
-        val nowStr = sdf.format(Date(now))
-        val rows = JSONArray().apply {
-            put(JSONObject().apply { put("mmsi", "211281610"); put("name", "ATLANTIC STAR"); put("type", "Cargo"); put("imo", "9670573"); put("destination", "HAMBURG"); put("lat", 50.12); put("lon", -1.85); put("speed", 18.4); put("course", 75.0); put("heading", 76); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "244710000"); put("name", "MAERSK MC-KINNEY"); put("type", "Container Ship"); put("imo", "9619907"); put("destination", "ALGECIRAS"); put("lat", 35.98); put("lon", -5.45); put("speed", 16.2); put("course", 90.0); put("heading", 89); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "353131000"); put("name", "EVER GIVEN"); put("type", "Container Ship"); put("imo", "9811000"); put("destination", "ROTTERDAM"); put("lat", 30.01); put("lon", 32.56); put("speed", 12.1); put("course", 340.0); put("heading", 340); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "563068000"); put("name", "BW LIONESS"); put("type", "Tanker"); put("imo", "9724037"); put("destination", "SINGAPORE"); put("lat", 1.24); put("lon", 103.85); put("speed", 11.8); put("course", 110.0); put("heading", 108); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "477307800"); put("name", "COSCO PLANET"); put("type", "Cargo"); put("imo", "9795646"); put("destination", "PORT KLANG"); put("lat", 2.55); put("lon", 101.45); put("speed", 15.0); put("course", 315.0); put("heading", 314); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "636015520"); put("name", "FRONT ALTAIR"); put("type", "Crude Oil Tanker"); put("imo", "9745902"); put("destination", "FUJAIRAH"); put("lat", 26.15); put("lon", 56.25); put("speed", 13.5); put("course", 165.0); put("heading", 165); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "367012340"); put("name", "SAN FRANCISCO VOYAGER"); put("type", "Passenger"); put("imo", "8976543"); put("destination", "OAKLAND"); put("lat", 37.81); put("lon", -122.42); put("speed", 19.5); put("course", 95.0); put("heading", 95); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "355914000"); put("name", "MSC OSCAR"); put("type", "Container Ship"); put("imo", "9703291"); put("destination", "COLON"); put("lat", 9.12); put("lon", -79.72); put("speed", 8.2); put("course", 330.0); put("heading", 330); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "431001234"); put("name", "ASUKA II"); put("type", "Passenger"); put("imo", "8912345"); put("destination", "YOKOHAMA"); put("lat", 35.42); put("lon", 139.68); put("speed", 14.0); put("course", 20.0); put("heading", 20); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "419000123"); put("name", "INS VIKRAM ESCORT"); put("type", "Support Vessel"); put("imo", "0"); put("destination", "MUMBAI"); put("lat", 18.92); put("lon", 72.85); put("speed", 10.5); put("course", 85.0); put("heading", 85); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "419001456"); put("name", "TAPI PRESTIGE"); put("type", "Bulk Carrier"); put("imo", "9451234"); put("destination", "JNPT MUMBAI"); put("lat", 18.88); put("lon", 72.78); put("speed", 12.0); put("course", 65.0); put("heading", 64); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "419002789"); put("name", "CHENNAI PRIDE"); put("type", "Container Ship"); put("imo", "9562345"); put("destination", "CHENNAI PORT"); put("lat", 13.10); put("lon", 80.35); put("speed", 14.5); put("course", 270.0); put("heading", 269); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "419003890"); put("name", "COCHIN EXPRESS"); put("type", "Cargo"); put("imo", "9673456"); put("destination", "KOCHI"); put("lat", 9.95); put("lon", 76.22); put("speed", 11.2); put("course", 135.0); put("heading", 135); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "413009988"); put("name", "COSCO SHIPPING GEMINI"); put("type", "Container Ship"); put("imo", "9783456"); put("destination", "SHANGHAI"); put("lat", 31.35); put("lon", 122.10); put("speed", 16.8); put("course", 310.0); put("heading", 310); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "538005432"); put("name", "MARAN GAS APOLLONIA"); put("type", "LNG Tanker"); put("imo", "9634567"); put("destination", "RAS LAFFAN"); put("lat", 25.92); put("lon", 52.05); put("speed", 15.2); put("course", 330.0); put("heading", 328); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "311000987"); put("name", "CMA CGM ANTOINE"); put("type", "Container Ship"); put("imo", "9722345"); put("destination", "LE HAVRE"); put("lat", 49.48); put("lon", 0.10); put("speed", 17.5); put("course", 80.0); put("heading", 82); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "305001234"); put("name", "HAPAG LLOYD BERLIN"); put("type", "Cargo"); put("imo", "9812345"); put("destination", "NEW YORK"); put("lat", 40.55); put("lon", -73.95); put("speed", 16.0); put("course", 290.0); put("heading", 290); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "368001122"); put("name", "MATSON DANIEL K"); put("type", "Container Ship"); put("imo", "9712345"); put("destination", "HONOLULU"); put("lat", 21.31); put("lon", -157.88); put("speed", 19.0); put("course", 255.0); put("heading", 254); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-            put(JSONObject().apply { put("mmsi", "636018999"); put("name", "PACIFIC JEWEL"); put("type", "Crude Oil Tanker"); put("imo", "9823456"); put("destination", "CAPE TOWN"); put("lat", -34.35); put("lon", 18.45); put("speed", 13.8); put("course", 125.0); put("heading", 125); put("last_position_epoch", now / 1000); put("last_position_UTC", nowStr) })
-        }
-        return JSONObject().apply {
-            put("rows", rows)
-            put("source", "AISStream")
-            put("status", "live")
-            put("error", JSONObject.NULL)
-            put("refreshing", false)
-            put("newestPositionAt", SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }.format(Date(now)))
-            put("lastMessageAt", now)
-            put("watchdog", "armed")
-        }.toString()
-    }
-
     private fun buildWeatherManifestJson(product: String): String {
         val now = System.currentTimeMillis()
         val isoFmt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
         val time = isoFmt.format(Date(now))
         val timesArr = JSONArray().put(time)
+        // nowCOAST radar and lightning mosaics cover the continental US only;
+        // the longwave satellite mosaic is the one global product. Advertising
+        // global bounds for all three made empty tiles look like clear skies.
+        val isGlobal = product == "clouds"
         val boundsObj = JSONObject().apply {
-            put("west", -180.0)
-            put("south", -85.0)
-            put("east", 180.0)
-            put("north", 85.0)
+            put("west", if (isGlobal) -180.0 else -125.0)
+            put("south", if (isGlobal) -85.0 else 24.0)
+            put("east", if (isGlobal) 180.0 else -66.0)
+            put("north", if (isGlobal) 85.0 else 49.0)
         }
         return JSONObject().apply {
             put("schemaVersion", 1)
             put("product", product)
             put("title", "NOAA Live Observed Weather")
-            put("coverage", "Global Satellite and Radar Coverage")
+            put(
+                "coverage",
+                if (isGlobal) "Global longwave satellite mosaic" else "Continental US (nowCOAST mosaic)"
+            )
             put("description", "Near-real-time precipitation and atmospheric sensing")
             put("source", "NOAA nowCOAST")
             put("attribution", "NOAA/NWS/NESDIS nowCOAST")
@@ -1825,9 +1948,12 @@ class GodsEyeActivity : AppCompatActivity() {
             put("model", "gfs")
             put("overlay", "none")
             put("fetchedAt", now)
-            put("unavailable", false)
-            put("stale", false)
-            put("reason", JSONObject.NULL)
+            // The standalone build has no GRIB decoder, so there is no real GFS
+            // grid to serve. Reporting it unavailable keeps the layer off rather
+            // than painting a worldwide dead calm that looks like a forecast.
+            put("unavailable", true)
+            put("stale", true)
+            put("reason", "GFS wind grids need the God's Eye server (Termux on :4173); the standalone build has no GRIB decoder")
             put("cycle", JSONObject().apply {
                 put("date", nowDate)
                 put("hour", nowHour)
@@ -2725,11 +2851,11 @@ class GodsEyeActivity : AppCompatActivity() {
         val currentOrientation = resources.configuration.orientation
         if (currentOrientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
             requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            binding.btnOrientationToggle.setColorFilter(Color.parseColor("#64FFDA"))
+            binding.btnOrientationToggle.setColorFilter(themeAttr(com.jarvis.assistant.R.attr.themeAccent2, Color.parseColor("#64FFDA")))
             Toast.makeText(this, "HUD: PORTRAIT MODE (SENSOR LOCKED)", Toast.LENGTH_SHORT).show()
         } else {
             requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-            binding.btnOrientationToggle.setColorFilter(Color.parseColor("#00E5FF"))
+            binding.btnOrientationToggle.setColorFilter(themeAttr(com.jarvis.assistant.R.attr.themeAccent, Color.parseColor("#00E5FF")))
             Toast.makeText(this, "HUD: WIDESCREEN TACTICAL HUD ENGAGED", Toast.LENGTH_SHORT).show()
         }
     }
@@ -2792,6 +2918,10 @@ class GodsEyeActivity : AppCompatActivity() {
 
     fun isAutoTourRunning(): Boolean = isAutoTourActive
 
+    /** Resolve a Jarvis theme colour attr so HUD chrome follows the active theme. */
+    private fun themeAttr(attr: Int, fallback: Int): Int =
+        com.jarvis.assistant.util.ThemeManager.attrColor(this, attr, fallback)
+
     fun toggleAutoTour() {
         if (isAutoTourActive) {
             stopAutoTour()
@@ -2802,8 +2932,8 @@ class GodsEyeActivity : AppCompatActivity() {
 
     fun startAutoTour() {
         isAutoTourActive = true
-        binding.btnAutoTour.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#00E5FF"))
-        binding.btnAutoTour.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#050811"))
+        binding.btnAutoTour.backgroundTintList = android.content.res.ColorStateList.valueOf(themeAttr(com.jarvis.assistant.R.attr.themeAccent, Color.parseColor("#00E5FF")))
+        binding.btnAutoTour.imageTintList = android.content.res.ColorStateList.valueOf(themeAttr(com.jarvis.assistant.R.attr.themeBg, Color.parseColor("#050811")))
         binding.layoutAutoTourHud.visibility = View.VISIBLE
         launchTourCycle()
     }
@@ -2813,7 +2943,7 @@ class GodsEyeActivity : AppCompatActivity() {
         autoTourJob?.cancel()
         autoTourJob = null
         binding.btnAutoTour.backgroundTintList = null
-        binding.btnAutoTour.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#64FFDA"))
+        binding.btnAutoTour.imageTintList = android.content.res.ColorStateList.valueOf(themeAttr(com.jarvis.assistant.R.attr.themeAccent3, Color.parseColor("#64FFDA")))
         binding.layoutAutoTourHud.visibility = View.GONE
     }
 

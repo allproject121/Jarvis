@@ -140,7 +140,7 @@
                         android:layout_height="match_parent"
                         android:background="@drawable/bg_jarvis_avatar"
                         android:src="@drawable/ic_nav_home"
-                        app:tint="@color/accent_sapphire"
+                        app:tint="?attr/themeAccent"
                         android:padding="12dp"
                         android:contentDescription="Jarvis" />
                 </FrameLayout>
@@ -173,7 +173,7 @@
                             android:text="DEFAULT AI"
                             android:singleLine="true"
                             android:maxLines="1"
-                            android:textColor="@color/accent_sapphire"
+                            android:textColor="?attr/themeAccent"
                             android:textSize="10sp"
                             android:textStyle="bold"
                             android:fontFamily="sans-serif-medium"
@@ -492,7 +492,7 @@
                     app:boxCornerRadiusTopEnd="12dp"
                     app:boxCornerRadiusBottomStart="12dp"
                     app:boxCornerRadiusBottomEnd="12dp"
-                    app:boxStrokeColor="@color/accent_sapphire">
+                    app:boxStrokeColor="?attr/themeAccent">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etUserName"
@@ -540,7 +540,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="@color/border_subtle" />
+                    android:background="?attr/themeCardBorder" />
 
                 <RadioButton
                     android:id="@+id/rbVoiceKore"
@@ -556,7 +556,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="@color/border_subtle" />
+                    android:background="?attr/themeCardBorder" />
 
                 <RadioButton
                     android:id="@+id/rbVoiceFenrir"
@@ -572,7 +572,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="@color/border_subtle" />
+                    android:background="?attr/themeCardBorder" />
 
                 <RadioButton
                     android:id="@+id/rbVoicePuck"
@@ -588,7 +588,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="@color/border_subtle" />
+                    android:background="?attr/themeCardBorder" />
 
                 <RadioButton
                     android:id="@+id/rbVoiceCharon"
@@ -624,7 +624,7 @@
             android:background="@drawable/bg_jarvis_pill_button"
             app:backgroundTint="@null"
             android:text="Activate Persona"
-            android:textColor="#FFFFFF"
+            android:textColor="?attr/themeBg"
             android:textSize="15sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"

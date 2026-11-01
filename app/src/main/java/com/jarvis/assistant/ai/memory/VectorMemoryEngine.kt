@@ -46,6 +46,20 @@ class VectorMemoryEngine private constructor(
     private val _indexedCount = MutableStateFlow(0)
     val indexedCount: StateFlow<Int> = _indexedCount.asStateFlow()
 
+    init {
+        // Optional AndroLLM neural embedder (Settings -> Memory -> Embedding source).
+        // No-op for the default hashing embedder; reads prefs only, never loads a model here.
+        com.jarvis.assistant.androllm.memory.embedding.MemoryEmbeddingIndex.installIfConfigured(context)
+
+        // Load AndroLLM memory metadata (pinned / archived / access counts) so
+        // ranking and retrieval honour it. Local DB read only — no LLM calls.
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                com.jarvis.assistant.androllm.memory.store.AndroMemoryStore.getInstance(context).loadRegistry()
+            }.onFailure { Log.w(TAG, "AndroLLM memory metadata unavailable: ${it.message}") }
+        }
+    }
+
     /**
      * Synchronizes and indexes an array of Room Database memory entities.
      */
@@ -77,6 +91,10 @@ class VectorMemoryEngine private constructor(
      * Indexes a single new memory into the vector store.
      */
     suspend fun indexMemory(id: Long, text: String, category: String) = withContext(Dispatchers.Default) {
+        if (MemorySecurityFilter.containsSecret(text)) {
+            Log.w(TAG, "Blocked secret credential from being indexed into Vector Memory.")
+            return@withContext
+        }
         val embedding = embeddingEngine.generateEmbedding(text)
         val entry = VectorMemoryEntry(
             memoryId = id,
@@ -104,7 +122,9 @@ class VectorMemoryEngine private constructor(
         query: String,
         topK: Int = 4,
         minScore: Float = 0.45f,
-        categoryFilter: String? = null
+        categoryFilter: String? = null,
+        /** False for internal lookups (e.g. dedupe) that must not count as "use". */
+        recordAccess: Boolean = true
     ): List<ScoredMemory> = withContext(Dispatchers.Default) {
         val cleanQuery = query.trim()
         if (cleanQuery.isBlank() || memoryIndex.isEmpty()) return@withContext emptyList()
@@ -112,7 +132,12 @@ class VectorMemoryEngine private constructor(
         val queryEmbedding = embeddingEngine.generateEmbedding(cleanQuery)
         val scoredList = mutableListOf<ScoredMemory>()
 
+        val now = System.currentTimeMillis()
         for ((_, entry) in memoryIndex) {
+            // Archived / expired memories (AndroLLM metadata) are never retrieved.
+            if (com.jarvis.assistant.androllm.memory.store.MemoryMetaRegistry.isHidden(entry.memoryId, now)) {
+                continue
+            }
             if (categoryFilter != null && !entry.category.equals(categoryFilter, ignoreCase = true)) {
                 continue
             }
@@ -123,15 +148,19 @@ class VectorMemoryEngine private constructor(
             }
         }
 
-        // Rank by highest similarity score
-        scoredList.sortByDescending { it.similarityScore }
-        val topResults = scoredList.take(topK)
+        // Hybrid rank using semantic similarity, keyword match, and recency decay
+        val rankedList = MemoryRanker.rank(scoredList, cleanQuery)
+        val topResults = rankedList.take(topK)
+        if (recordAccess) {
+            com.jarvis.assistant.androllm.memory.store.MemoryMetaRegistry.recordAccess(topResults.map { it.memory.memoryId }, now)
+        }
         Log.d(TAG, "Query '$cleanQuery' matched ${topResults.size} semantic memories (top score=${topResults.firstOrNull()?.similarityScore ?: 0f})")
         return@withContext topResults
     }
 
     /**
      * Constructs a compact contextual injection block for system prompts (used by Gemini Live, ChatGPT, or Local AI).
+     * Sanitizes memories against prompt injection before injecting into the prompt.
      */
     suspend fun buildMemoryRAGContext(userQuery: String): String {
         val matches = searchSimilarMemories(userQuery, topK = 3, minScore = 0.50f)
@@ -140,7 +169,8 @@ class VectorMemoryEngine private constructor(
         val sb = StringBuilder()
         sb.append("[RELEVANT USER MEMORIES FROM PERSISTENT CORE]:\n")
         for (match in matches) {
-            sb.append("- ").append(match.memory.rawText)
+            val safeText = com.jarvis.assistant.automation.guard.PromptInjectionDetector.sanitizeRetrievedDocument(match.memory.rawText)
+            sb.append("- ").append(safeText)
                 .append(" (relevance: ").append(match.percentageConfidence).append("%)\n")
         }
         return sb.toString().trim()
@@ -156,8 +186,14 @@ class VectorMemoryEngine private constructor(
      * knowing what it learned last time.
      */
     fun buildCoreMemoryContext(limit: Int = 12): String {
+        val now = System.currentTimeMillis()
         val entries = memoryIndex.values
-            .sortedByDescending { it.timestamp }
+            .filterNot { com.jarvis.assistant.androllm.memory.store.MemoryMetaRegistry.isHidden(it.memoryId, now) }
+            .sortedWith(
+                compareByDescending<VectorMemoryEntry> {
+                    com.jarvis.assistant.androllm.memory.store.MemoryMetaRegistry.isPinned(it.memoryId)
+                }.thenByDescending { it.timestamp }
+            )
             .take(limit)
         if (entries.isEmpty()) return ""
 
@@ -167,6 +203,27 @@ class VectorMemoryEngine private constructor(
             sb.append("- ").append(entry.rawText).append("\n")
         }
         return sb.toString().trim()
+    }
+
+    /**
+     * Removes index entries whose Room rows no longer exist (e.g. deleted by
+     * keyword). Returns the number of stale entries removed.
+     */
+    fun pruneMissing(validIds: Set<Long>): Int {
+        val stale = memoryIndex.keys.filter { it !in validIds }
+        stale.forEach { memoryIndex.remove(it) }
+        _indexedCount.value = memoryIndex.size
+        if (stale.isNotEmpty()) Log.i(TAG, "Pruned ${stale.size} stale vector entries")
+        return stale.size
+    }
+
+    /**
+     * Re-embeds every memory with the current embedding source, so all vectors
+     * share one embedding space after the embedding backend changes.
+     */
+    suspend fun reindexAll(entities: List<MemoryEntity>) {
+        mutex.withLock { memoryIndex.clear() }
+        syncWithRoomMemories(entities)
     }
 
     fun clearIndex() {

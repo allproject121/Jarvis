@@ -5,7 +5,7 @@
     android:id="@+id/rootGodsEyeLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000">
+    android:background="?attr/themeBg">
 
     <!-- Primary Fullscreen Hardware-Accelerated Cesium WebGL WebView -->
     <WebView
@@ -38,7 +38,7 @@
             android:background="@drawable/bg_godseye_hud_back"
             android:src="@drawable/ic_back"
             android:padding="8dp"
-            app:tint="#00D4FF"
+            app:tint="?attr/themeAccent"
             android:contentDescription="Return to JARVIS" />
 
         <ImageButton
@@ -49,7 +49,7 @@
             android:background="@drawable/bg_godseye_hud_back"
             android:src="@drawable/ic_code_chip"
             android:padding="8dp"
-            app:tint="#00D4FF"
+            app:tint="?attr/themeAccent"
             android:contentDescription="Open Gods Eye Direct API Hub" />
 
         <ImageButton
@@ -60,7 +60,7 @@
             android:background="@drawable/bg_godseye_hud_back"
             android:src="@drawable/ic_screen_rotate"
             android:padding="8dp"
-            app:tint="#64FFDA"
+            app:tint="?attr/themeAccent2"
             android:contentDescription="Toggle Screen Orientation (Widescreen Tactical HUD)" />
 
         <ImageButton
@@ -82,7 +82,7 @@
             android:background="@drawable/bg_godseye_hud_back"
             android:src="@drawable/ic_auto_cycle"
             android:padding="8dp"
-            app:tint="#00E5FF"
+            app:tint="?attr/themeAccent3"
             android:contentDescription="Toggle Auto Sentinel Tour" />
 
         <!-- Cyber HUD Auto-Tour Active Status Pill -->
@@ -103,7 +103,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:text="⟳ AUTO: FLIGHTS (14s)"
-                android:textColor="#00E5FF"
+                android:textColor="?attr/themeAccent"
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
@@ -112,12 +112,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:background="#1B2B3F"
+                android:background="?attr/themeChipBg"
                 android:fontFamily="monospace"
                 android:paddingHorizontal="6dp"
                 android:paddingVertical="2dp"
                 android:text="NEXT ⏭"
-                android:textColor="#64FFDA"
+                android:textColor="?attr/themeAccent2"
                 android:textSize="10sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -151,13 +151,13 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:indeterminate="true"
-            android:indeterminateTint="#00D4FF" />
+            android:indeterminateTint="?attr/themeAccent" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="CONNECTING TO GOD'S EYE..."
-            android:textColor="#00D4FF"
+            android:textColor="?attr/themeAccent"
             android:textSize="13sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
@@ -168,7 +168,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Loading Cesium 3D Globe &amp; HUD layers"
-            android:textColor="#88AACC"
+            android:textColor="?attr/themeTextSecondary"
             android:textSize="11sp"
             android:fontFamily="sans-serif"
             android:layout_marginTop="4dp" />
@@ -201,7 +201,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="God's Eye Console Offline"
-            android:textColor="#FFFFFF"
+            android:textColor="?attr/themeTextPrimary"
             android:textSize="16sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
@@ -213,7 +213,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Could not connect to http://localhost:4173/.\n\nPlease ensure the background server is running in Termux:\ncd ~/gods-eye-view\nnpm run preview -- --host localhost --port 4173"
-            android:textColor="#88AACC"
+            android:textColor="?attr/themeTextSecondary"
             android:textSize="12sp"
             android:fontFamily="sans-serif"
             android:gravity="center"
@@ -231,7 +231,7 @@
                 android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="BACK"
-                android:textColor="#00D4FF"
+                android:textColor="?attr/themeAccent"
                 android:background="@drawable/bg_godseye_hud_card"
                 android:layout_marginEnd="6dp" />
 
@@ -241,9 +241,9 @@
                 android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="RETRY"
-                android:textColor="#000000"
+                android:textColor="?attr/themeBg"
                 android:background="@drawable/bg_godseye_hud_card"
-                android:backgroundTint="#00D4FF"
+                android:backgroundTint="?attr/themeAccent"
                 android:layout_marginStart="6dp" />
         </LinearLayout>
     </LinearLayout>

@@ -192,7 +192,7 @@ class ApiConnectionActivity : AppCompatActivity() {
     private fun testLocalHost(endpoint: String) {
         binding.btnTestLocalHost.isEnabled = false
         binding.tvLocalHostStatus.text = "Testing connection to $endpoint..."
-        binding.tvLocalHostStatus.setTextColor(Color.parseColor("#38BDF8"))
+        binding.tvLocalHostStatus.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this, R.attr.themeAccent, Color.parseColor("#38BDF8")))
 
         lifecycleScope.launch {
             val client = com.jarvis.assistant.network.LocalHostLlmClient()

@@ -16,6 +16,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // sherpa-onnx Android AAR (AndroLLM voice: wake word, streaming ASR, offline TTS)
+        maven { url = uri("https://jitpack.io") }
     }
 }
 

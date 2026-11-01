@@ -30,6 +30,8 @@ import com.jarvis.assistant.util.PermissionHelper
 import com.jarvis.assistant.util.DeviceTelemetryHelper
 import com.jarvis.assistant.util.HudSoundManager
 import com.jarvis.assistant.ui.settings.CustomizationStudioActivity
+import com.jarvis.assistant.ui.settings.AndroLlmPageActivity
+import com.jarvis.assistant.ui.compose.navigation.ComposeRoutes
 import android.content.res.ColorStateList
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -502,6 +504,7 @@ class HomeFragment : Fragment() {
             updateHomeHeaderAndVoiceStatus()
             applyCustomizationPreferences()
         } else if (hidden && _binding != null) {
+            refreshLocalAiDashboard(homeCardsVisible = false)
             binding.orbWebView.onPause()
             binding.orbWebView.visibility = View.GONE
             binding.root.visibility = View.GONE
@@ -554,6 +557,9 @@ class HomeFragment : Fragment() {
         if (!hideAll && preferences.showTelemetryWidget) {
             updateTelemetryData()
         }
+
+        // On-device AI dashboard (merged AndroLLM home) below weather/telemetry
+        refreshLocalAiDashboard(homeCardsVisible = !hideAll)
 
         val isMora = preferences.orbEntityType == "mora_cyber"
         val desiredUrl = if (isMora) {
@@ -959,7 +965,9 @@ class HomeFragment : Fragment() {
                                 Color.parseColor("#64748B")
                             )
                         } else if (status.isMuted) {
-                            setOrbState("idle")
+                            // Mic muted only stops listening - Jarvis can still be talking (typed query /
+                            // reply in flight), so keep Mora's lip-sync & talking clip alive.
+                            setOrbState(if (status.state == ConversationState.SPEAKING) "speaking" else "idle")
                             binding.tvListeningStatus.text = "MIC MUTED (OFF) • TAP TO TALK"
                             binding.tvListeningStatus.setTextColor(Color.parseColor("#EF4444"))
                             binding.tvHoldHint.text = "Microphone is muted • Tap mic to unmute"
@@ -968,7 +976,7 @@ class HomeFragment : Fragment() {
                                 Color.parseColor("#EF4444")
                             )
                         } else if (status.isStandby) {
-                            setOrbState("idle")
+                            setOrbState(if (status.state == ConversationState.SPEAKING) "speaking" else "idle")
                             binding.tvListeningStatus.text = "STANDBY • SAY 'HEY JARVIS'"
                             binding.tvListeningStatus.setTextColor(Color.parseColor("#3B82F6"))
                             binding.tvHoldHint.text = "Listening for wake word • Hold mic to power off"
@@ -1202,7 +1210,74 @@ class HomeFragment : Fragment() {
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
+    // ==================== ON-DEVICE AI DASHBOARD (merged AndroLLM home) ====================
+
+    private var localAiDashboardKey: String? = null
+
+    /**
+     * Shows/hides the Compose on-device AI section. It only composes (and samples telemetry)
+     * while Home is visible with cards shown and [com.jarvis.assistant.androllm.HomeDashboardPrefs]
+     * is enabled; re-composed when privacy mode or the Jarvis theme changes.
+     */
+    private fun refreshLocalAiDashboard(homeCardsVisible: Boolean) {
+        val b = _binding ?: return
+        val ctx = context ?: return
+        val view = b.composeLocalAiDashboard
+        val show = homeCardsVisible && !isHidden &&
+            com.jarvis.assistant.androllm.HomeDashboardPrefs.isEnabled(ctx)
+        if (!show) {
+            view.visibility = View.GONE
+            if (localAiDashboardKey != null) {
+                view.disposeComposition()
+                localAiDashboardKey = null
+            }
+            return
+        }
+        view.visibility = View.VISIBLE
+        val privacy = preferences.isPrivacyModeEnabled
+        val key = "$privacy|${preferences.appTheme}|${preferences.customThemeColor}"
+        if (key == localAiDashboardKey) return
+        localAiDashboardKey = key
+        view.setViewCompositionStrategy(
+            androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+        )
+        fun open(route: String) {
+            HudSoundManager.playTapSound()
+            startActivity(AndroLlmPageActivity.routeIntent(requireContext(), route))
+        }
+        view.setContent {
+            val themeMode = com.jarvis.assistant.ui.compose.feature.settings.ComposeUiPrefs.themeMode(ctx)
+            com.jarvis.assistant.ui.compose.theme.AndroLLMTheme(themeMode = themeMode) {
+                androidx.compose.runtime.CompositionLocalProvider(
+                    com.jarvis.assistant.ui.compose.components.LocalEmbeddedInJarvis provides true
+                ) {
+                    LocalAiDashboardSection(
+                        privacyMode = privacy,
+                        onOpenModels = { open(ComposeRoutes.MODELS) },
+                        onOpenPrompts = { open(ComposeRoutes.PROMPTS) },
+                        onOpenMemory = {
+                            HudSoundManager.playTapSound()
+                            startActivity(
+                                AndroLlmPageActivity.sectionIntent(
+                                    requireContext(),
+                                    AndroLlmPageActivity.Section.MEMORY
+                                )
+                            )
+                        },
+                        onOpenVoice = { open(ComposeRoutes.VOICE) },
+                        onOpenDeveloper = { open(ComposeRoutes.DEVELOPER) },
+                        onOpenChat = {
+                            HudSoundManager.playTapSound()
+                            (activity as? MainActivity)?.selectTab(MainActivity.TAB_CHAT)
+                        }
+                    )
+                }
+            }
+        }
+    }
+
     override fun onDestroyView() {
+        localAiDashboardKey = null
         super.onDestroyView()
         _binding = null
     }

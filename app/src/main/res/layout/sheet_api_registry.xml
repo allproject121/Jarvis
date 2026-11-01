@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#070A10"
+    android:background="?attr/themeBg"
     android:paddingHorizontal="16dp"
     android:paddingTop="12dp"
     android:paddingBottom="24dp">
@@ -16,7 +16,7 @@
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="14dp"
-        android:background="#223046" />
+        android:background="?attr/themeCardBorder" />
 
     <!-- Header Section -->
     <LinearLayout
@@ -41,7 +41,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="PLANETARY SENSOR &amp; API HUB"
-                    android:textColor="#00E5FF"
+                    android:textColor="?attr/themeAccent"
                     android:textSize="15sp"
                     android:textStyle="bold"
                     android:fontFamily="monospace" />
@@ -51,11 +51,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:background="#152438"
+                    android:background="?attr/themeChipBg"
                     android:paddingHorizontal="6dp"
                     android:paddingVertical="1dp"
                     android:text="24 FEEDS"
-                    android:textColor="#64FFDA"
+                    android:textColor="?attr/themeAccent"
                     android:textSize="10sp"
                     android:fontFamily="monospace"
                     android:textStyle="bold" />
@@ -66,7 +66,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="All repo intelligence APIs, endpoints &amp; live test diagnostics"
-                android:textColor="#8898AA"
+                android:textColor="?attr/themeTextSecondary"
                 android:textSize="11sp" />
         </LinearLayout>
 
@@ -75,15 +75,15 @@
             android:id="@+id/btnPingAllApis"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
-            android:backgroundTint="#132338"
+            android:backgroundTint="?attr/themeChipBg"
             android:fontFamily="monospace"
             android:paddingHorizontal="10dp"
             android:text="⚡ PING ALL"
-            android:textColor="#00E5FF"
+            android:textColor="?attr/themeAccent"
             android:textSize="10sp"
             android:textStyle="bold"
             app:cornerRadius="8dp"
-            app:strokeColor="#00E5FF"
+            app:strokeColor="?attr/themeAccent"
             app:strokeWidth="1dp" />
     </LinearLayout>
 
@@ -108,10 +108,10 @@
                 android:layout_height="32dp"
                 android:checked="true"
                 android:text="ALL (24)"
-                android:textColor="#00E5FF"
+                android:textColor="?attr/themeAccent"
                 android:textSize="11sp"
-                app:chipBackgroundColor="#132338"
-                app:chipStrokeColor="#00E5FF"
+                app:chipBackgroundColor="?attr/themeChipBg"
+                app:chipStrokeColor="?attr/themeAccent"
                 app:chipStrokeWidth="1dp" />
 
             <com.google.android.material.chip.Chip
@@ -120,10 +120,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="32dp"
                 android:text="AVIATION"
-                android:textColor="#C5D1DF"
+                android:textColor="?attr/themeTextSecondary"
                 android:textSize="11sp"
-                app:chipBackgroundColor="#0D111A"
-                app:chipStrokeColor="#1F2839"
+                app:chipBackgroundColor="?attr/themeCardBg"
+                app:chipStrokeColor="?attr/themeCardBorder"
                 app:chipStrokeWidth="1dp" />
 
             <com.google.android.material.chip.Chip
@@ -132,10 +132,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="32dp"
                 android:text="CCTV"
-                android:textColor="#C5D1DF"
+                android:textColor="?attr/themeTextSecondary"
                 android:textSize="11sp"
-                app:chipBackgroundColor="#0D111A"
-                app:chipStrokeColor="#1F2839"
+                app:chipBackgroundColor="?attr/themeCardBg"
+                app:chipStrokeColor="?attr/themeCardBorder"
                 app:chipStrokeWidth="1dp" />
 
             <com.google.android.material.chip.Chip
@@ -144,10 +144,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="32dp"
                 android:text="SPACE"
-                android:textColor="#C5D1DF"
+                android:textColor="?attr/themeTextSecondary"
                 android:textSize="11sp"
-                app:chipBackgroundColor="#0D111A"
-                app:chipStrokeColor="#1F2839"
+                app:chipBackgroundColor="?attr/themeCardBg"
+                app:chipStrokeColor="?attr/themeCardBorder"
                 app:chipStrokeWidth="1dp" />
 
             <com.google.android.material.chip.Chip
@@ -156,10 +156,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="32dp"
                 android:text="WEATHER"
-                android:textColor="#C5D1DF"
+                android:textColor="?attr/themeTextSecondary"
                 android:textSize="11sp"
-                app:chipBackgroundColor="#0D111A"
-                app:chipStrokeColor="#1F2839"
+                app:chipBackgroundColor="?attr/themeCardBg"
+                app:chipStrokeColor="?attr/themeCardBorder"
                 app:chipStrokeWidth="1dp" />
 
             <com.google.android.material.chip.Chip
@@ -168,10 +168,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="32dp"
                 android:text="SEISMIC"
-                android:textColor="#C5D1DF"
+                android:textColor="?attr/themeTextSecondary"
                 android:textSize="11sp"
-                app:chipBackgroundColor="#0D111A"
-                app:chipStrokeColor="#1F2839"
+                app:chipBackgroundColor="?attr/themeCardBg"
+                app:chipStrokeColor="?attr/themeCardBorder"
                 app:chipStrokeWidth="1dp" />
 
             <com.google.android.material.chip.Chip
@@ -180,10 +180,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="32dp"
                 android:text="DEFENSE"
-                android:textColor="#C5D1DF"
+                android:textColor="?attr/themeTextSecondary"
                 android:textSize="11sp"
-                app:chipBackgroundColor="#0D111A"
-                app:chipStrokeColor="#1F2839"
+                app:chipBackgroundColor="?attr/themeCardBg"
+                app:chipStrokeColor="?attr/themeCardBorder"
                 app:chipStrokeWidth="1dp" />
 
             <com.google.android.material.chip.Chip
@@ -192,10 +192,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="32dp"
                 android:text="AUDIO"
-                android:textColor="#C5D1DF"
+                android:textColor="?attr/themeTextSecondary"
                 android:textSize="11sp"
-                app:chipBackgroundColor="#0D111A"
-                app:chipStrokeColor="#1F2839"
+                app:chipBackgroundColor="?attr/themeCardBg"
+                app:chipStrokeColor="?attr/themeCardBorder"
                 app:chipStrokeWidth="1dp" />
         </com.google.android.material.chip.ChipGroup>
     </HorizontalScrollView>
@@ -205,10 +205,10 @@
         android:id="@+id/etSearchApis"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:background="@drawable/bg_cyber_detail_box"
+        android:background="@drawable/bg_themed_detail_box"
         android:hint="Search APIs by name, domain or keyword..."
-        android:textColorHint="#4B5E78"
-        android:textColor="#FFFFFF"
+        android:textColorHint="?attr/themeTextMuted"
+        android:textColor="?attr/themeTextPrimary"
         android:textSize="12sp"
         android:paddingHorizontal="12dp"
         android:drawableStart="@android:drawable/ic_menu_search"

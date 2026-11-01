@@ -60,14 +60,21 @@ class LocalAiEngine private constructor(
         currentConfig = config
         _engineState.value = LocalEngineState.Loading
 
+        // B4 fix: sync the active model with the requested config and apply inference settings
+        if (modelManager.isModelReady(config.modelId)) {
+            modelManager.setActiveModel(config.modelId)
+        }
+        localPhoneProvider.configure(config)
+
         val isReady = localPhoneProvider.initialize()
         if (isReady) {
             _engineState.value = LocalEngineState.Ready
             Log.i(TAG, "Local AI Engine ready with model: ${config.modelId}")
             true
         } else {
-            val msg = if (!modelManager.isModelReady(config.modelId)) {
-                "Local model '${config.modelId}' is not downloaded. Please download it in Settings."
+            val activeId = modelManager.activeModelId.value
+            val msg = if (!modelManager.isModelReady(activeId)) {
+                "Local model '$activeId' is not downloaded. Please download it in Settings."
             } else {
                 "Failed to initialize native llama.cpp model."
             }
@@ -101,7 +108,12 @@ class LocalAiEngine private constructor(
         }
 
         // 2. Stream from native LocalPhoneProvider if ready or weights exist
-        if (localPhoneProvider.isReady() || modelManager.isModelReady(currentConfig.modelId)) {
+        // Check the model the user actually selected (activeModelId), not the config default:
+        // with e.g. Llama 3.2 downloaded but not Qwen, the default id wrongly reported "not installed".
+        if (localPhoneProvider.isReady() ||
+            modelManager.isModelReady(modelManager.activeModelId.value) ||
+            modelManager.isModelReady(currentConfig.modelId)
+        ) {
             var emittedAny = false
             try {
                 localPhoneProvider.streamResponse(

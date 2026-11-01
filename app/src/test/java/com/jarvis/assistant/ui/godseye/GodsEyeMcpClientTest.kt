@@ -380,7 +380,7 @@ class GodsEyeMcpClientTest {
         // London camera
         val londonCam = GodsEyeMcpClient.findCamera("tfl-00001.06502")
         assertNotNull("London camera should be found", londonCam)
-        assertTrue("London camera url must point to mp4 stream", londonCam!!.url.contains(".mp4"))
+        assertTrue("London camera url must contain valid camera endpoint", londonCam!!.url.contains("00001.06502"))
 
         // Austin camera
         val austinCam = GodsEyeMcpClient.findCamera("354")

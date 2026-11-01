@@ -81,7 +81,7 @@ class SuperCoreActivity : AppCompatActivity() {
             binding.btnSetDefaultAssistant.isEnabled = false
         } else {
             binding.tvDefaultAssistantBadge.text = "NOT SET"
-            binding.tvDefaultAssistantBadge.setTextColor(ContextCompat.getColor(this, R.color.primary_cyan))
+            binding.tvDefaultAssistantBadge.setTextColor(ThemeManager.attrColor(this, R.attr.themeAccent, ContextCompat.getColor(this, R.color.primary_cyan)))
             binding.tvDefaultAssistantBadge.setBackgroundResource(R.drawable.bg_jarvis_status_badge)
             binding.btnSetDefaultAssistant.text = "SET JARVIS AS DEFAULT ASSISTANT"
             binding.btnSetDefaultAssistant.isEnabled = true

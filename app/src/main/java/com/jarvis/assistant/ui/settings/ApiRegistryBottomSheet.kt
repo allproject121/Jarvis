@@ -26,6 +26,7 @@ import com.jarvis.assistant.data.model.PlanetaryApiRegistry
 import com.jarvis.assistant.data.model.PlanetaryApiRegistry.ApiCategory
 import com.jarvis.assistant.data.model.PlanetaryApiRegistry.ApiEntry
 import com.jarvis.assistant.ui.godseye.GodsEyeActivity
+import com.jarvis.assistant.util.ThemeManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -213,12 +214,14 @@ class ApiRegistryBottomSheet : BottomSheetDialogFragment() {
             holder.tvVoiceCommand.text = item.voiceCommand
 
             // Status indicator dot
+            val ctx = holder.itemView.context
+            val accentColor = ThemeManager.attrColor(ctx, R.attr.themeAccent, Color.parseColor("#00E5FF"))
             val dotColor = when {
                 item.lastStatus == "OK" -> Color.parseColor("#00E676")
-                item.lastStatus.startsWith("HTTP") -> Color.parseColor("#FFD600")
+                item.lastStatus.startsWith("HTTP") -> Color.parseColor("#F59E0B")
                 item.lastStatus.contains("ERR") || item.lastStatus.contains("TIMEOUT") -> Color.parseColor("#FF3D00")
-                item.lastStatus == "TESTING..." -> Color.parseColor("#00E5FF")
-                else -> Color.parseColor("#64FFDA")
+                item.lastStatus == "TESTING..." -> accentColor
+                else -> accentColor
             }
             holder.dotStatus.backgroundTintList = android.content.res.ColorStateList.valueOf(dotColor)
 
@@ -240,7 +243,7 @@ class ApiRegistryBottomSheet : BottomSheetDialogFragment() {
             holder.btnTestPing.setOnClickListener {
                 holder.tvPingResultDetail.text = "Testing live HTTP ping..."
                 holder.tvPingStatus.text = "PINGING..."
-                holder.tvPingStatus.setTextColor(Color.parseColor("#00E5FF"))
+                holder.tvPingStatus.setTextColor(accentColor)
                 onPingClick(item, position)
             }
 

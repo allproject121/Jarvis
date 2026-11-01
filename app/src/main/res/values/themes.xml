@@ -592,6 +592,85 @@
         <item name="themeAccentLight">#26FFFFFF</item>
     </style>
 
+
+    <!-- 14. ANDROLLM NIGHT - the AndroLLM blackout desk (pure black, white ink, aurora violet) -->
+    <style name="Theme.JarvisAssistant.AndroLlmNight" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">#000000</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowBackground">#000000</item>
+        <item name="colorPrimary">#7A5CFF</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSurface">#121212</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+
+        <item name="themeBg">#000000</item>
+        <item name="themeSurface">#F2121212</item>
+        <item name="themeCardBg">#F2121212</item>
+        <item name="themeCardBorder">#2A2A2A</item>
+        <item name="themeCardGlassStart">#F21A1A1A</item>
+        <item name="themeCardGlassEnd">#E60A0A0A</item>
+        <item name="themeDockBg">#F20A0A0A</item>
+        <item name="themeDockGlassStart">#F2121212</item>
+        <item name="themeDockGlassEnd">#E6000000</item>
+        <item name="themeDockBorder">#407A5CFF</item>
+        <item name="themeGlassSpecular">#807A5CFF</item>
+        <item name="themeChipBg">#E01A1A1A</item>
+        <item name="themeInputBg">#F2121212</item>
+        <item name="themeGlowBlob1">@drawable/bg_liquid_glow_dark_1</item>
+        <item name="themeGlowBlob2">@drawable/bg_liquid_glow_dark_2</item>
+        <item name="themeGlowBlob3">@drawable/bg_liquid_glow_dark_3</item>
+
+        <item name="themeTextPrimary">#FFFFFF</item>
+        <item name="themeTextSecondary">#A3A3A3</item>
+        <item name="themeTextMuted">#888888</item>
+        <item name="themeAccent1">#7A5CFF</item>
+        <item name="themeAccent2">#CFC2FF</item>
+        <item name="themeAccent3">#9D85FF</item>
+        <item name="themeAccent">#7A5CFF</item>
+        <item name="themeAccentLight">#267A5CFF</item>
+    </style>
+
+    <!-- 15. ANDROLLM PARCHMENT - the AndroLLM daylight ledger (parchment, ink, terracotta) -->
+    <style name="Theme.JarvisAssistant.AndroLlmParchment" parent="Theme.Material3.Light.NoActionBar">
+        <item name="android:statusBarColor">#F5F4ED</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">#F5F4ED</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowBackground">#F5F4ED</item>
+        <item name="colorPrimary">#D97757</item>
+        <item name="colorOnPrimary">#FBFAF4</item>
+        <item name="colorSurface">#FBFAF4</item>
+        <item name="colorOnSurface">#141413</item>
+
+        <item name="themeBg">#F5F4ED</item>
+        <item name="themeSurface">#F7FBFAF4</item>
+        <item name="themeCardBg">#F7FBFAF4</item>
+        <item name="themeCardBorder">#E2DFD3</item>
+        <item name="themeCardGlassStart">#FAFFFFFF</item>
+        <item name="themeCardGlassEnd">#EBFBFAF4</item>
+        <item name="themeDockBg">#F2FBFAF4</item>
+        <item name="themeDockGlassStart">#FAFFFFFF</item>
+        <item name="themeDockGlassEnd">#EBF5F4ED</item>
+        <item name="themeDockBorder">#E2DFD3</item>
+        <item name="themeGlassSpecular">#FFFFFF</item>
+        <item name="themeChipBg">#ECEBE3</item>
+        <item name="themeInputBg">#FFFFFF</item>
+        <item name="themeGlowBlob1">@drawable/bg_liquid_glow_sunset_1</item>
+        <item name="themeGlowBlob2">@drawable/bg_liquid_glow_sunset_2</item>
+        <item name="themeGlowBlob3">@drawable/bg_liquid_glow_sunset_3</item>
+
+        <item name="themeTextPrimary">#141413</item>
+        <item name="themeTextSecondary">#5E5D59</item>
+        <item name="themeTextMuted">#8F8D87</item>
+        <item name="themeAccent1">#D97757</item>
+        <item name="themeAccent2">#B3573E</item>
+        <item name="themeAccent3">#E69D81</item>
+        <item name="themeAccent">#D97757</item>
+        <item name="themeAccentLight">#F6E3DA</item>
+    </style>
+
     <style name="Theme.JarvisAssistant.MidnightOnyx" parent="Theme.JarvisAssistant.Dark" />
     <style name="Theme.JarvisAssistant.CyberpunkNeon" parent="Theme.JarvisAssistant.Amethyst" />
     <style name="Theme.JarvisAssistant.EmeraldObsidian" parent="Theme.JarvisAssistant.Emerald" />

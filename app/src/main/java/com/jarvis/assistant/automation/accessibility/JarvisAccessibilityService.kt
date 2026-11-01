@@ -225,6 +225,11 @@ class JarvisAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         event ?: return
+        // AndroLLM automation: feed the UI state tracker / window monitor (additive, never throws).
+        try {
+            com.jarvis.assistant.androllm.accessibility.state.WindowMonitor.onEvent(event)
+            com.jarvis.assistant.androllm.accessibility.state.UIStateTracker.onEvent(event)
+        } catch (_: Exception) {}
         val pkg = event.packageName?.toString().orEmpty()
         if (event.eventType in setOf(
                 AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,

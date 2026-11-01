@@ -110,6 +110,74 @@
     electricCyanRim.position.set(2.0, 1.6, -1.0);
     scene.add(electricCyanRim);
 
+    // REDMAGIC pedestal under-glow (lights the metallic deck from just above the neon rings)
+    const pedestalGlow = new THREE.PointLight(0xff0055, 1.4, 2.2);
+    pedestalGlow.position.set(0, 0.18, 0.35);
+    scene.add(pedestalGlow);
+
+    /* -------------------------------------------------------------------------
+       REDMAGIC Character Rim Lighting
+       mora.glb ships VRM/KHR_materials_unlit materials (MeshBasicMaterial), so
+       scene lights never touch her body - the magenta/cyan point lights above
+       only affect the pedestal. We inject a view-space fresnel rim term into
+       her unlit materials so the theme colour actually wraps her silhouette.
+       Uniforms are shared by every material -> one theme update recolours all.
+       ------------------------------------------------------------------------- */
+    const moraRimUniforms = {
+      uMoraRimColorA: { value: new THREE.Color(0xff0055).convertSRGBToLinear() }, // left side (primary)
+      uMoraRimColorB: { value: new THREE.Color(0xff2d2d).convertSRGBToLinear() }, // right side (secondary)
+      uMoraRimStrength: { value: 0.55 },
+      uMoraRimPower: { value: 2.6 },
+      uMoraTint: { value: new THREE.Color(1, 1, 1) }
+    };
+
+    function applyMoraRimLighting(root) {
+      const processed = new Set();
+      root.traverse(function(node) {
+        if (!node.isMesh || !node.material) return;
+        const mats = Array.isArray(node.material) ? node.material : [node.material];
+        for (const mat of mats) {
+          if (processed.has(mat) || !mat.isMeshBasicMaterial) continue;
+          processed.add(mat);
+          mat.customProgramCacheKey = function() { return "mora_redmagic_rim_v1"; };
+          mat.onBeforeCompile = function(shader) {
+            Object.assign(shader.uniforms, moraRimUniforms);
+            shader.vertexShader = shader.vertexShader
+              .replace("#include <common>", "#include <common>\nvarying vec3 vMoraRimN;\nvarying vec3 vMoraRimV;")
+              .replace("#include <fog_vertex>", [
+                "#include <fog_vertex>",
+                "vec3 moraN = normal;",
+                "#ifdef USE_SKINNING",
+                "  mat4 moraSkin = skinWeight.x * boneMatX + skinWeight.y * boneMatY + skinWeight.z * boneMatZ + skinWeight.w * boneMatW;",
+                "  moraN = ( bindMatrixInverse * moraSkin * bindMatrix * vec4( moraN, 0.0 ) ).xyz;",
+                "#endif",
+                "vMoraRimN = normalize( normalMatrix * moraN );",
+                "vMoraRimV = normalize( -mvPosition.xyz );"
+              ].join("\n"));
+            shader.fragmentShader = shader.fragmentShader
+              .replace("#include <common>", [
+                "#include <common>",
+                "varying vec3 vMoraRimN;",
+                "varying vec3 vMoraRimV;",
+                "uniform vec3 uMoraRimColorA;",
+                "uniform vec3 uMoraRimColorB;",
+                "uniform float uMoraRimStrength;",
+                "uniform float uMoraRimPower;",
+                "uniform vec3 uMoraTint;"
+              ].join("\n"))
+              .replace("#include <envmap_fragment>", [
+                "#include <envmap_fragment>",
+                "float moraFacing = clamp( abs( dot( normalize( vMoraRimN ), normalize( vMoraRimV ) ) ), 0.0, 1.0 );",
+                "float moraRim = pow( 1.0 - moraFacing, uMoraRimPower );",
+                "vec3 moraRimCol = mix( uMoraRimColorB, uMoraRimColorA, smoothstep( -0.45, 0.45, -vMoraRimN.x ) );",
+                "outgoingLight = outgoingLight * uMoraTint + moraRimCol * moraRim * uMoraRimStrength;"
+              ].join("\n"));
+          };
+          mat.needsUpdate = true;
+        }
+      });
+    }
+
     /* =========================================================================
        REDMAGIC 3D Cyber Ground Pedestal / Architectural Standing Dock
        Solid physical command platform anchoring Mora firmly to the ground.
@@ -311,20 +379,27 @@
 
     
     function applyMoraTheme(themeKey, customHex) {
-      const key = (themeKey || "").toLowerCase();
-      let primary = 0xff0055;   // Default REDMAGIC magenta
-      let secondary = 0x00f0ff; // Default cyber cyan
+      const key = (themeKey || "").toLowerCase().trim();
+      // REDMAGIC signature palette (magenta + red). Used for every app skin that
+      // has no accent colour of its own (dark, amoled, androllm_night, ...), so
+      // Mora keeps her red/magenta identity instead of inheriting a violet/white skin.
+      let primary = 0xff0055;   // REDMAGIC magenta
+      let secondary = 0xff2d2d; // REDMAGIC red
       let particle = 0xff0055;
 
-      if (customHex && typeof customHex === "string" && customHex.startsWith("#")) {
+      // A custom hex only applies when the user actually chose a custom colour
+      // (theme key "custom" or the hex itself). Previously any stale customHex
+      // overrode the palette and turned the secondary accents white.
+      const hexSource = key.startsWith("#") ? key : ((key === "custom" || key === "") ? (customHex || "") : "");
+      if (hexSource && typeof hexSource === "string" && hexSource.startsWith("#")) {
         try {
-          const c = new THREE.Color(customHex);
+          const c = new THREE.Color(hexSource);
           primary = c.getHex();
-          secondary = 0xffffff;
+          secondary = c.clone().offsetHSL(0.04, 0, 0.12).getHex();
           particle = c.getHex();
         } catch (_){}
       }
-      
+
       if (key === "red" || key === "crimson" || key === "ruby") {
         primary = 0xff1744;   // Vibrant Electric Red
         secondary = 0xff5252; // Neon Coral Red
@@ -353,6 +428,10 @@
         primary = 0xff6a3d;
         secondary = 0xfb7185;
         particle = 0xff6a3d;
+      } else if (key === "androllm_parchment") {
+        primary = 0xd97757;   // AndroLLM terracotta
+        secondary = 0xb3573e;
+        particle = 0xe69d81;
       } else if (key === "stealth") {
         primary = 0x38bdf8;
         secondary = 0x64748b;
@@ -367,6 +446,18 @@
       tickMaterials.forEach((tm, idx) => {
         if (tm && tm.color) tm.color.setHex(idx % 2 === 0 ? primary : secondary);
       });
+      // Scene lighting + character rim follow the theme too (previously only the
+      // pedestal meshes were recoloured, the lights stayed hard-coded magenta/cyan).
+      cyberMagentaRim.color.setHex(primary);
+      electricCyanRim.color.setHex(secondary);
+      pedestalGlow.color.setHex(primary);
+      moraRimUniforms.uMoraRimColorA.value.setHex(primary).convertSRGBToLinear();
+      moraRimUniforms.uMoraRimColorB.value.setHex(secondary).convertSRGBToLinear();
+      const hudBadge = document.getElementById("hudBadge");
+      const primaryCss = "#" + new THREE.Color(primary).getHexString();
+      if (hudBadge) hudBadge.style.borderColor = primaryCss + "99";
+      moraIdleDotColor = primaryCss;
+      if (hudDot && currentState === "idle") { hudDot.style.background = primaryCss; hudDot.style.boxShadow = "0 0 8px " + primaryCss; }
       console.log("Mora theme applied:", key, customHex);
     }
 
@@ -512,9 +603,11 @@
             this.actions[rawName] = action;
             if (rawName.includes("idle")) this.actions["idle"] = action;
             if (rawName.includes("talking") || rawName.includes("talk") || rawName.includes("speak")) {
-              this.actions["talking"] = action;
-              this.actions["talking_0"] = action;
-              this.actions["talking_1"] = action;
+              // Keep every talking variant (talking_0 AND talking_1). Previously each one
+              // overwrote "talking"/"talking_0"/"talking_1", so only the last clip was ever used.
+              if (!this.actions["talking"]) this.actions["talking"] = action;
+              this.talkVariants = this.talkVariants || [];
+              if (this.talkVariants.indexOf(rawName) === -1) this.talkVariants.push(rawName);
             }
             if (rawName.includes("wave")) this.actions["wave"] = action;
             if (rawName.includes("joy") || rawName.includes("laugh") || rawName.includes("cheer")) this.actions["joy"] = action;
@@ -566,10 +659,14 @@
 
       applyMorphGroup(group, targetVal, lerpSpeed, dt) {
         if (!group || group.length === 0) return;
+        // Clamp the blend factor to [0,1]. With the raw dt*speed (up to 35x) any frame
+        // hitch / throttled WebView frame (dt >= ~0.06s) overshot and diverged, leaving the
+        // face stuck in extreme blend-shape values instead of moving with speech.
+        const alpha = Math.min(1, Math.max(0, dt * lerpSpeed));
         for (let i = 0; i < group.length; i++) {
           const item = group[i];
           const cur = item.mesh.morphTargetInfluences[item.idx] || 0;
-          item.mesh.morphTargetInfluences[item.idx] = THREE.MathUtils.lerp(cur, targetVal, dt * lerpSpeed);
+          item.mesh.morphTargetInfluences[item.idx] = THREE.MathUtils.lerp(cur, targetVal, alpha);
         }
       }
 
@@ -603,7 +700,11 @@
             desired = "clapping";
           } else if (activeReaction === "excited" || activeReaction === "celebrate" || activeReaction === "party") {
             desired = "excited";
-          } else if (activeReaction === "teach" || activeReaction === "learn" || activeReaction === "nod" || activeReaction === "executing") {
+          } else if (activeReaction === "nod" || activeReaction === "blush" || activeReaction === "headpat" || activeReaction === "shy") {
+            // Previously "nod" fell into the thinking clip and "blush" had no body clip at all,
+            // so 2 of the 5 tap reactions looked like nothing happened.
+            desired = "thankful";
+          } else if (activeReaction === "teach" || activeReaction === "learn" || activeReaction === "executing") {
             desired = "thinking";
           } else if (activeReaction === "curious" || activeReaction === "thinking" || activeReaction === "failed") {
             desired = "thinking";
@@ -612,7 +713,9 @@
           } else if (activeReaction === "cry" || activeReaction === "crying" || activeReaction === "sad") {
             desired = "crying";
           } else if (state === "speaking") {
-            desired = "talking";
+            // Alternate between all talking gesture variants (~4s each) for natural speech body language
+            const variants = this.talkVariants || [];
+            desired = variants.length > 1 ? variants[Math.floor(time / 4.0) % variants.length] : "talking";
           } else if (state === "thinking") {
             desired = "thinking";
           } else if (state === "listening") {
@@ -627,8 +730,22 @@
         }
 
         // 2. Phonetic Viseme Lip-Sync (Mouth opens & closes with words)
+        // Driven by the real TTS / Gemini playback amplitude (JarvisConversationService
+        // onPlaybackAmplitude -> setExternalAudio). Previously the mouth was a fixed 2Hz sine
+        // that flapped identically whether Jarvis was mid-word or silent between sentences.
+        // Mic amplitude never opens the mouth: lip-sync stays gated on state === "speaking".
         const isSpeaking = (state === "speaking");
-        const rawVol = audioLevel > 0.015 ? audioLevel : 0;
+        const rawVol = audioLevel > 0.012 ? audioLevel : 0;
+
+        // Adaptive gain: playback RMS is device/voice dependent, so normalise against a slowly
+        // decaying recent peak (floor 0.08 so background hiss can't fully open the mouth).
+        this.audioPeak = Math.max(0.08, Math.max(this.audioPeak || 0, rawVol) - dt * 0.05);
+        const norm = Math.min(1, rawVol / this.audioPeak);
+        // Fast attack / slower release envelope so syllables read as distinct mouth shapes
+        const envRate = norm > (this.speechEnv || 0) ? 30 : 12;
+        this.speechEnv = THREE.MathUtils.lerp(this.speechEnv || 0, isSpeaking ? norm : 0, Math.min(1, dt * envRate));
+        if (rawVol > 0) this.lastVoiceTime = time;
+        const hasLiveAudio = isSpeaking && (time - (this.lastVoiceTime || -99)) < 0.6;
 
         let targetA = 0;
         let targetO = 0;
@@ -636,19 +753,29 @@
         let targetE = 0;
 
         if (isSpeaking) {
-          // Conversational syllable cadence (~3.2 syllables/sec)
-          const syllPhase = (time * 13.0) % (Math.PI * 2);
-          const openEnv = Math.max(0, Math.sin(syllPhase));
-          const energy = rawVol > 0.015 ? Math.min(1.0, rawVol * 2.8 + 0.35) : (0.75 + Math.sin(time * 5.0) * 0.20);
-          const opening = Math.pow(openEnv, 1.4) * energy;
+          let opening;
+          if (hasLiveAudio) {
+            // Real audio envelope with light syllable texture so long vowels don't freeze open
+            opening = Math.pow(this.speechEnv, 0.75) * (0.72 + 0.28 * Math.abs(Math.sin(time * 11.0)));
+          } else {
+            // Fallback when no amplitude stream arrives (e.g. offline TTS without metering)
+            const syllPhase = (time * 13.0) % (Math.PI * 2);
+            opening = Math.pow(Math.max(0, Math.sin(syllPhase)), 1.4) * (0.75 + Math.sin(time * 5.0) * 0.20);
+          }
+          opening = Math.min(1, opening);
 
           // Sequenced alternating vowels across syllables: A -> O -> I -> E -> A
           const syllCycle = Math.floor((time * 13.0) / (Math.PI * 2)) % 4;
           if (syllCycle === 0) targetA = opening * 0.95;
-          else if (syllCycle === 1) targetO = opening * 0.85;
-          else if (syllCycle === 2) targetI = opening * 0.70;
-          else targetE = opening * 0.75;
+          else if (syllCycle === 1) { targetO = opening * 0.85; targetA = opening * 0.25; }
+          else if (syllCycle === 2) { targetI = opening * 0.70; targetA = opening * 0.20; }
+          else { targetE = opening * 0.75; targetA = opening * 0.20; }
         }
+
+        // REDMAGIC rim light breathes with state: brighter while listening, pulses with voice
+        const rimTarget = isSpeaking ? 0.55 + this.speechEnv * 0.45 : (state === "listening" ? 0.75 : (state === "thinking" ? 0.62 : 0.55));
+        moraRimUniforms.uMoraRimStrength.value = THREE.MathUtils.lerp(moraRimUniforms.uMoraRimStrength.value, rimTarget, Math.min(1, dt * 8));
+        pedestalGlow.intensity = 1.0 + moraRimUniforms.uMoraRimStrength.value * 0.9;
 
         this.applyMorphGroup(this.morphMap.mthA, targetA, 28, dt);
         this.applyMorphGroup(this.morphMap.mthO, targetO, 24, dt);
@@ -698,7 +825,13 @@
           targetBrwFun = 0.75;
           targetMthSmall = 0.35;
           targetAllFun = 0.50;
-        } else if (activeReaction === "curious" || activeReaction === "poke" || activeReaction === "surprise" || activeReaction === "blush") {
+        } else if (activeReaction === "blush" || activeReaction === "headpat" || activeReaction === "shy" || activeReaction === "nod") {
+          // Shy happy face for head pats (closed happy eyes + soft smile)
+          targetMthJoy = 0.75;
+          targetEyeJoy = 0.85;
+          targetBrwJoy = 0.60;
+          targetAllFun = 0.25;
+        } else if (activeReaction === "curious" || activeReaction === "poke" || activeReaction === "surprise") {
           targetAllSurprised = 0.95;
           targetEyeSurprised = 0.95;
           targetMthSurprised = 0.80;
@@ -737,7 +870,7 @@
             pitchX = -0.06;
           } else if (activeReaction === "wave") {
             tiltZ = 0.06;
-          } else if (activeReaction === "teach" || activeReaction === "learn" || activeReaction === "nod") {
+          } else if (activeReaction === "teach" || activeReaction === "learn" || activeReaction === "nod" || activeReaction === "headpat") {
             pitchX = -Math.abs(Math.sin(time * 3.2)) * 0.08;
           } else if (activeReaction === "curious") {
             tiltZ = 0.12;
@@ -769,6 +902,8 @@
     let activeReaction = "none";
     let reactionTimer = 0;
     let extAudioLevel = 0;
+    let extAudioTime = 0;          // performance.now() of the last setExternalAudio push
+    let moraIdleDotColor = "#FF0055";
     let clock = new THREE.Clock();
 
     function setMoraState(state) {
@@ -776,10 +911,12 @@
       currentState = (state || "idle").toLowerCase();
       if (hudState) hudState.textContent = "MORA • " + currentState.toUpperCase();
       if (hudDot) {
-        if (currentState === "speaking") hudDot.style.background = "#00F0FF";
-        else if (currentState === "listening") hudDot.style.background = "#10B981";
-        else if (currentState === "thinking") hudDot.style.background = "#F59E0B";
-        else hudDot.style.background = "#FF0055";
+        let dot = moraIdleDotColor;
+        if (currentState === "speaking") dot = "#00F0FF";
+        else if (currentState === "listening") dot = "#10B981";
+        else if (currentState === "thinking") dot = "#F59E0B";
+        hudDot.style.background = dot;
+        hudDot.style.boxShadow = "0 0 8px " + dot;
       }
 
       // Barge-in interruption
@@ -791,6 +928,13 @@
 
     function triggerMoraReaction(reaction) {
       activeReaction = (reaction || "").toLowerCase();
+      // "stop" / "none" (HomeFragment barge-in) clears the current emote instead of
+      // starting an unknown 2.5s reaction that froze whatever clip was playing.
+      if (activeReaction === "stop" || activeReaction === "none" || activeReaction === "") {
+        activeReaction = "none";
+        reactionTimer = 0;
+        return;
+      }
       if (activeReaction === "dance") reactionTimer = 7.5;
       else if (activeReaction === "joy" || activeReaction === "laugh" || activeReaction === "success") reactionTimer = 5.0;
       else if (activeReaction === "wave") reactionTimer = 4.1;
@@ -801,16 +945,58 @@
       else if (activeReaction === "failed" || activeReaction === "curious" || activeReaction === "thinking") reactionTimer = 3.0;
       else if (activeReaction === "surprise" || activeReaction === "poke") reactionTimer = 2.8;
       else if (activeReaction === "cry" || activeReaction === "crying" || activeReaction === "sad") reactionTimer = 4.0;
+      else if (activeReaction === "blush" || activeReaction === "headpat" || activeReaction === "shy" || activeReaction === "nod") reactionTimer = 3.0;
       else reactionTimer = 2.5;
       console.log("Mora reaction triggered:", activeReaction, "timer:", reactionTimer);
     }
 
-    // Touch & Poke Reaction Handler
+    /* Touch & Poke Reaction Handler
+       - Zone aware: head pat / body poke / tap beside her (projected from live bones)
+       - De-duplicated: on Home the canvas "click" AND HomeFragment's GestureDetector
+         (JarvisOrb.triggerTouchReaction) both fired for the same tap, advancing the
+         cycle twice and restarting the reaction ~300ms later.
+       - Every pool entry maps to a real body clip (old pool had nod/blush/curious which
+         resolved to the thinking clip or no clip at all). */
     let reactionCycle = 0;
-    function onTouchPoke() {
-      const pool = ["wave", "joy", "curious", "nod", "blush"];
-      reactionCycle = (reactionCycle + 1) % pool.length;
-      triggerMoraReaction(pool[reactionCycle]);
+    let lastPokeAt = 0;
+    const POKE_POOLS = {
+      head: ["headpat", "joy", "blush"],
+      body: ["poke", "clapping", "excited", "thankful"],
+      outside: ["wave", "joy", "dance"]
+    };
+
+    function screenPosOfBone(bone) {
+      if (!bone) return null;
+      const v = new THREE.Vector3();
+      bone.getWorldPosition(v);
+      v.project(camera);
+      const rect = canvas.getBoundingClientRect();
+      return { x: rect.left + (v.x + 1) / 2 * rect.width, y: rect.top + (1 - v.y) / 2 * rect.height };
+    }
+
+    function classifyTouch(clientX, clientY) {
+      if (!moraController || typeof clientX !== "number") return "body";
+      const b = moraController.bones;
+      const head = screenPosOfBone(b.head);
+      const hips = screenPosOfBone(b.hips);
+      const foot = screenPosOfBone(b.leftCalf) || hips;
+      if (!head || !hips) return "body";
+      const unit = Math.max(24, Math.abs(hips.y - head.y)); // head-to-hips distance in px
+      if (Math.hypot(clientX - head.x, clientY - (head.y - unit * 0.12)) < unit * 0.42) return "head";
+      const withinX = Math.abs(clientX - hips.x) < unit * 0.55;
+      const withinY = clientY > head.y - unit * 0.3 && clientY < (foot ? foot.y + unit * 1.0 : hips.y + unit * 1.9); // knee + shin/shoes
+      return (withinX && withinY) ? "body" : "outside";
+    }
+
+    function onTouchPoke(e) {
+      const now = performance.now();
+      if (now - lastPokeAt < 650) return; // same physical tap delivered twice (canvas + Kotlin)
+      lastPokeAt = now;
+      const zone = (e && typeof e.clientX === "number") ? classifyTouch(e.clientX, e.clientY) : "body";
+      const pool = POKE_POOLS[zone] || POKE_POOLS.body;
+      reactionCycle = (reactionCycle + 1) % 12;
+      triggerMoraReaction(pool[reactionCycle % pool.length]);
+      console.log("Mora touch:", zone, "->", activeReaction);
       try {
         if (window.Jarvis3DModelBridge && typeof window.Jarvis3DModelBridge.onModelTouchReact === "function") {
           window.Jarvis3DModelBridge.onModelTouchReact();
@@ -818,15 +1004,19 @@
       } catch (_) {}
     }
 
-    canvas.addEventListener("click", onTouchPoke);
+    canvas.addEventListener("click", (e) => {
+      // Ignore the synthetic click that ends a gaze-drag gesture
+      if (Math.hypot(e.clientX - downX, e.clientY - downY) > 18) return;
+      onTouchPoke(e);
+    });
 
     // Pointer Drag Gaze Tracking
     let dragging = false;
-    let lastX = 0, lastY = 0;
+    let lastX = 0, lastY = 0, downX = 0, downY = 0;
     canvas.addEventListener("pointerdown", (e) => {
       dragging = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
+      lastX = downX = e.clientX;
+      lastY = downY = e.clientY;
     });
     canvas.addEventListener("pointermove", (e) => {
       if (!dragging) return;
@@ -869,6 +1059,7 @@
         scene.add(characterPivot);
 
         moraController = new MoraCharacterController(moraModel);
+        applyMoraRimLighting(moraModel);
 
         // Load retargeted clips from mora_clips.js (or fallback to mora_animations.glb)
         if (window.MORA_RETARGETED_CLIPS && window.MORA_RETARGETED_CLIPS.length > 0) {
@@ -902,8 +1093,14 @@
     // Render Loop
     function animate() {
       requestAnimationFrame(animate);
-      const dt = clock.getDelta();
+      // Clamp frame delta: after the WebView is paused/throttled (screen off, Home card hidden,
+      // Activity on top) getDelta() returns seconds, which skipped whole reactions in one frame
+      // and blew up every dt-scaled blend (morphs, gaze, crossfades).
+      const dt = Math.min(clock.getDelta(), 0.1);
       const time = clock.getElapsedTime();
+
+      // Audio pushes stop abruptly when playback ends; decay instead of holding the last value
+      if (performance.now() - extAudioTime > 250) extAudioLevel *= Math.max(0, 1 - dt * 8);
 
       // Cyber pedestal neon ring counter-rotations
       ringMagenta.rotation.z = time * 0.22;
@@ -942,6 +1139,7 @@
       setState: setMoraState,
       setExternalAudio: (amp, bass, high) => {
         extAudioLevel = Math.max(0, Math.min(1, Number(amp) || 0));
+        extAudioTime = performance.now();
       },
       triggerReaction: triggerMoraReaction,
       triggerTouchReaction: onTouchPoke,

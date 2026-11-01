@@ -238,6 +238,11 @@ class JarvisApp : Application() {
         )
 
         VoskModelManager.init(this, CoroutineScope(Dispatchers.Default))
+        com.jarvis.assistant.mcp.McpManager.getInstance(this)
+        // AndroLLM voice add-ons: idle unless the user enables a sherpa flag in Settings.
+        com.jarvis.assistant.androllm.voice.SherpaVoiceController.init(this)
+        // Jarvis Dynamic Island overlay: observes the voice service flows read-only; hidden unless enabled in Settings.
+        runCatching { com.jarvis.assistant.ui.island.DynamicIslandController.init(this) }
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             private var startedActivities = 0

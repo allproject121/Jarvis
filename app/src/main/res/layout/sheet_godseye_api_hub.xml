@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#0F141C"
+    android:background="?attr/themeBg"
     android:paddingTop="12dp">
 
     <!-- Top Drag Handle -->
@@ -13,7 +13,7 @@
         android:layout_width="48dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:background="#334155"
+        android:background="?attr/themeCardBorder"
         android:layout_marginBottom="12dp" />
 
     <!-- Hub Header -->
@@ -41,14 +41,14 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@drawable/ic_code_chip"
-                    app:tint="#00D4FF"
+                    app:tint="?attr/themeAccent"
                     android:contentDescription="API Hub Icon" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="PLANETARY SENSORS &amp; API HUB"
-                    android:textColor="#00D4FF"
+                    android:textColor="?attr/themeAccent"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.08"
@@ -59,7 +59,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Direct access to all planetary intelligence &amp; sensor feeds"
-                android:textColor="#94A3B8"
+                android:textColor="?attr/themeTextSecondary"
                 android:textSize="11sp"
                 android:layout_marginTop="2dp" />
         </LinearLayout>
@@ -73,14 +73,14 @@
             android:background="@drawable/bg_godseye_hud_back"
             android:src="@drawable/ic_close"
             android:padding="7dp"
-            app:tint="#94A3B8"
+            app:tint="?attr/themeTextSecondary"
             android:contentDescription="Close Hub" />
     </RelativeLayout>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#1E293B" />
+        android:background="?attr/themeCardBorder" />
 
     <!-- Scrollable Sensor Sections -->
     <androidx.core.widget.NestedScrollView
@@ -102,10 +102,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="14dp"
-                app:cardBackgroundColor="#0B132B"
+                app:cardBackgroundColor="?attr/themeCardBg"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
-                app:strokeColor="#00E5FF"
+                app:strokeColor="?attr/themeAccent"
                 app:strokeWidth="1.5dp">
 
                 <LinearLayout
@@ -124,7 +124,7 @@
                             android:layout_width="22dp"
                             android:layout_height="22dp"
                             android:src="@drawable/ic_auto_cycle"
-                            app:tint="#00E5FF"
+                            app:tint="?attr/themeAccent"
                             android:contentDescription="Auto Patrol" />
 
                         <LinearLayout
@@ -138,7 +138,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="AUTONOMOUS SENTINEL TOUR"
-                                android:textColor="#00E5FF"
+                                android:textColor="?attr/themeAccent"
                                 android:textSize="13sp"
                                 android:textStyle="bold"
                                 android:fontFamily="monospace" />
@@ -147,7 +147,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Automatically cycles through flights, live CCTV, earthquakes, space launches &amp; storms"
-                                android:textColor="#94A3B8"
+                                android:textColor="?attr/themeTextSecondary"
                                 android:textSize="10.5sp"
                                 android:layout_marginTop="2dp" />
                         </LinearLayout>
@@ -157,11 +157,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="36dp"
                             android:text="START ⟳"
-                            android:textColor="#050811"
+                            android:textColor="?attr/themeBg"
                             android:textSize="11sp"
                             android:textStyle="bold"
                             android:fontFamily="monospace"
-                            android:backgroundTint="#00E5FF"
+                            android:backgroundTint="?attr/themeAccent"
                             app:cornerRadius="8dp" />
                     </LinearLayout>
                 </LinearLayout>
@@ -186,7 +186,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🚀 ORBITAL ROCKET LAUNCHES"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeTextPrimary"
                         android:textSize="13sp"
                         android:textStyle="bold"
                         android:layout_alignParentStart="true"
@@ -196,10 +196,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="LL2 v2.3"
-                        android:textColor="#00D4FF"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="10sp"
                         android:textStyle="bold"
-                        android:background="#162E3E"
+                        android:background="?attr/themeAccentLight"
                         android:paddingHorizontal="6dp"
                         android:paddingVertical="2dp"
                         android:layout_alignParentEnd="true"
@@ -210,7 +210,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Real-time upcoming orbital missions: SpaceX, ISRO, NASA, ESA with countdowns &amp; pads."
-                    android:textColor="#94A3B8"
+                    android:textColor="?attr/themeTextSecondary"
                     android:textSize="11sp"
                     android:layout_marginTop="4dp" />
 
@@ -219,11 +219,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="38dp"
                     android:text="DIRECT CONNECT • FETCH LAUNCHES"
-                    android:textColor="#0F141C"
+                    android:textColor="?attr/themeBg"
                     android:textSize="11sp"
                     android:textStyle="bold"
                     android:background="@drawable/bg_godseye_hud_back"
-                    android:backgroundTint="#00D4FF"
+                    android:backgroundTint="?attr/themeAccent"
                     android:layout_marginTop="10dp" />
 
                 <ProgressBar
@@ -231,7 +231,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:indeterminate="true"
-                    android:indeterminateTint="#00D4FF"
+                    android:indeterminateTint="?attr/themeAccent"
                     android:layout_gravity="center_horizontal"
                     android:layout_marginTop="8dp"
                     android:visibility="gone" />
@@ -263,7 +263,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="📻 WORLDWIDE LIVE RADIO"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeTextPrimary"
                         android:textSize="13sp"
                         android:textStyle="bold"
                         android:layout_alignParentStart="true"
@@ -276,7 +276,7 @@
                         android:textColor="#10B981"
                         android:textSize="10sp"
                         android:textStyle="bold"
-                        android:background="#132B25"
+                        android:background="?attr/themeChipBg"
                         android:paddingHorizontal="6dp"
                         android:paddingVertical="2dp"
                         android:layout_alignParentEnd="true"
@@ -287,7 +287,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Direct audio streaming from planetary broadcast transmitters around the world."
-                    android:textColor="#94A3B8"
+                    android:textColor="?attr/themeTextSecondary"
                     android:textSize="11sp"
                     android:layout_marginTop="4dp" />
 
@@ -298,7 +298,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:background="#162E3E"
+                    android:background="?attr/themeAccentLight"
                     android:padding="8dp"
                     android:layout_marginTop="8dp"
                     android:visibility="gone">
@@ -309,7 +309,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Playing: ..."
-                        android:textColor="#00D4FF"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:singleLine="true"
@@ -337,7 +337,7 @@
                         android:layout_height="36dp"
                         android:layout_weight="1"
                         android:text="TOP GLOBAL"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeTextPrimary"
                         android:textSize="10sp"
                         android:background="@drawable/bg_godseye_hud_card"
                         android:layout_marginEnd="4dp" />
@@ -348,7 +348,7 @@
                         android:layout_height="36dp"
                         android:layout_weight="1"
                         android:text="INDIA STATIONS"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeTextPrimary"
                         android:textSize="10sp"
                         android:background="@drawable/bg_godseye_hud_card"
                         android:layout_marginHorizontal="2dp" />
@@ -359,7 +359,7 @@
                         android:layout_height="36dp"
                         android:layout_weight="1"
                         android:text="AMBIENT"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeTextPrimary"
                         android:textSize="10sp"
                         android:background="@drawable/bg_godseye_hud_card"
                         android:layout_marginStart="4dp" />
@@ -402,7 +402,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="✈️ AIRCRAFT INTEL &amp; ROUTE LOOKUP"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeTextPrimary"
                         android:textSize="13sp"
                         android:textStyle="bold"
                         android:layout_alignParentStart="true"
@@ -415,7 +415,7 @@
                         android:textColor="#F59E0B"
                         android:textSize="10sp"
                         android:textStyle="bold"
-                        android:background="#332512"
+                        android:background="?attr/themeChipBg"
                         android:paddingHorizontal="6dp"
                         android:paddingVertical="2dp"
                         android:layout_alignParentEnd="true"
@@ -426,7 +426,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Decode airframe registration, owner/operator, and flight route by callsign or hex."
-                    android:textColor="#94A3B8"
+                    android:textColor="?attr/themeTextSecondary"
                     android:textSize="11sp"
                     android:layout_marginTop="4dp" />
 
@@ -443,8 +443,8 @@
                         android:layout_height="40dp"
                         android:layout_weight="1"
                         android:hint="Callsign (e.g. AIC101) or Hex (e.g. 800b4a)"
-                        android:textColor="#FFFFFF"
-                        android:textColorHint="#64748B"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textColorHint="?attr/themeTextMuted"
                         android:textSize="12sp"
                         android:background="@drawable/bg_godseye_hud_back"
                         android:paddingHorizontal="10dp"
@@ -478,10 +478,10 @@
                     android:id="@+id/tvAircraftResult"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="#E2E8F0"
+                    android:textColor="?attr/themeTextPrimary"
                     android:textSize="11sp"
                     android:fontFamily="monospace"
-                    android:background="#161B26"
+                    android:background="?attr/themeInputBg"
                     android:padding="10dp"
                     android:layout_marginTop="8dp"
                     android:visibility="gone" />
@@ -506,7 +506,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🌀 NOAA TROPICAL CYCLONES"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeTextPrimary"
                         android:textSize="13sp"
                         android:textStyle="bold"
                         android:layout_alignParentStart="true"
@@ -519,7 +519,7 @@
                         android:textColor="#38BDF8"
                         android:textSize="10sp"
                         android:textStyle="bold"
-                        android:background="#162E3E"
+                        android:background="?attr/themeAccentLight"
                         android:paddingHorizontal="6dp"
                         android:paddingVertical="2dp"
                         android:layout_alignParentEnd="true"
@@ -530,7 +530,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Direct telemetry of active hurricanes, cyclones, central pressure mb &amp; wind intensities."
-                    android:textColor="#94A3B8"
+                    android:textColor="?attr/themeTextSecondary"
                     android:textSize="11sp"
                     android:layout_marginTop="4dp" />
 
@@ -560,10 +560,10 @@
                     android:id="@+id/tvCyclonesResult"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="#E2E8F0"
+                    android:textColor="?attr/themeTextPrimary"
                     android:textSize="11sp"
                     android:fontFamily="monospace"
-                    android:background="#161B26"
+                    android:background="?attr/themeInputBg"
                     android:padding="10dp"
                     android:layout_marginTop="8dp"
                     android:visibility="gone" />
@@ -588,7 +588,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🌐 GDELT REAL-TIME GEO-INTEL"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeTextPrimary"
                         android:textSize="13sp"
                         android:textStyle="bold"
                         android:layout_alignParentStart="true"
@@ -601,7 +601,7 @@
                         android:textColor="#A855F7"
                         android:textSize="10sp"
                         android:textStyle="bold"
-                        android:background="#2E1C3F"
+                        android:background="?attr/themeChipBg"
                         android:paddingHorizontal="6dp"
                         android:paddingVertical="2dp"
                         android:layout_alignParentEnd="true"
@@ -612,7 +612,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Real-time planetary news &amp; security event feeds across thousands of international news sources."
-                    android:textColor="#94A3B8"
+                    android:textColor="?attr/themeTextSecondary"
                     android:textSize="11sp"
                     android:layout_marginTop="4dp" />
 
@@ -665,7 +665,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="📹 WORLDWIDE LIVE CCTV FEEDS"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeTextPrimary"
                         android:textSize="13sp"
                         android:textStyle="bold"
                         android:layout_alignParentStart="true"
@@ -678,7 +678,7 @@
                         android:textColor="#10B981"
                         android:textSize="10sp"
                         android:textStyle="bold"
-                        android:background="#132E27"
+                        android:background="?attr/themeChipBg"
                         android:paddingHorizontal="6dp"
                         android:paddingVertical="2dp"
                         android:layout_alignParentEnd="true"
@@ -689,7 +689,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Real verified live street &amp; highway cameras. Select any camera to engage 3D globe tracking &amp; live frame projection."
-                    android:textColor="#94A3B8"
+                    android:textColor="?attr/themeTextSecondary"
                     android:textSize="11sp"
                     android:layout_marginTop="4dp" />
 

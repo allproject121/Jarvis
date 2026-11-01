@@ -101,7 +101,7 @@ class JarvisMatrixActivity : AppCompatActivity() {
             HudSoundManager.playTapSound()
             chips.forEach { chip ->
                 chip.setBackgroundResource(com.jarvis.assistant.R.drawable.bg_jarvis_row_item)
-                chip.setTextColor(ContextCompat.getColor(this, R.color.text_muted))
+                chip.setTextColor(ThemeManager.attrColor(this, R.attr.themeTextSecondary, ContextCompat.getColor(this, R.color.text_muted)))
             }
             activeChip.setBackgroundResource(com.jarvis.assistant.R.drawable.bg_jarvis_pill_button)
             activeChip.setTextColor(android.graphics.Color.WHITE)

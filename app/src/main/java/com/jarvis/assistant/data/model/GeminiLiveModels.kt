@@ -62,6 +62,8 @@ object GeminiConstants {
     const val PERSONALITY_EXECUTIVE = "Executive Mode"
     const val PERSONALITY_TACTICAL = "Tactical Mode"
     const val PERSONALITY_AGGRESSIVE = "Aggressive Mode"
+    /** Maria: Hinglish female assistant persona (see [MariaPersona]). */
+    const val PERSONALITY_MARIA = "Maria Mode"
 
     val SUPPORTED_PERSONALITIES = listOf(
         PERSONALITY_ASSISTANT,
@@ -70,7 +72,8 @@ object GeminiConstants {
         PERSONALITY_ROSHAN,
         PERSONALITY_COMPANION,
         PERSONALITY_FOCUS,
-        PERSONALITY_PROFESSIONAL
+        PERSONALITY_PROFESSIONAL,
+        PERSONALITY_MARIA
     )
 
     const val WS_BASE_URL = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"

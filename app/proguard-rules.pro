@@ -37,3 +37,8 @@
     public static int v(...);
     public static int i(...);
 }
+
+# AndroLLM feature layer: LiteRT-LM JNI callbacks and engine classes
+-keep class com.google.ai.edge.litertlm.** { *; }
+-keep class com.jarvis.assistant.androllm.engine.** { *; }
+-keep class com.k2fsa.sherpa.onnx.** { *; }

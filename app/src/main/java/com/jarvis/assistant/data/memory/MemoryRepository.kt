@@ -80,9 +80,19 @@ class MemoryRepository(private val memoryDao: MemoryDao) {
     }
 
     suspend fun deleteMemoriesByKeyword(keyword: String): Int {
+        // Same WHERE clause as the delete: capture ids first so the vector
+        // index does not keep recalling deleted memories.
+        val matchedIds = memoryDao.searchMemories(keyword).map { it.id }
         val deleted = memoryDao.deleteMemoriesByKeyword(keyword)
+        vectorEngine?.let { engine -> matchedIds.forEach { engine.removeMemory(it) } }
         return deleted
     }
+
+    suspend fun getMemoryById(id: Long): MemoryEntity? = memoryDao.getMemoryById(id)
+
+    suspend fun getAllMemoryIds(): List<Long> = memoryDao.getAllMemoryIds()
+
+    suspend fun countMemories(): Int = memoryDao.countMemories()
 
     suspend fun clearAll() {
         memoryDao.clearAllMemories()

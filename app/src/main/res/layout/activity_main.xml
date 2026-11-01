@@ -240,6 +240,48 @@
             </LinearLayout>
         </FrameLayout>
 
+        <!-- Tab: AI Hub (embedded AndroLLM Compose UI, same Activity) -->
+        <FrameLayout
+            android:id="@+id/tabAiHub"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true">
+
+            <LinearLayout
+                android:id="@+id/pillTabAiHub"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:minWidth="52dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="3dp">
+
+                <ImageView
+                    android:id="@+id/ivTabAiHub"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_androllm_layers"
+                    app:tint="?attr/themeTextMuted"
+                    android:contentDescription="AI Hub" />
+
+                <TextView
+                    android:id="@+id/tvTabAiHub"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AI Hub"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:includeFontPadding="false"
+                    android:layout_marginTop="2dp"
+                    android:textColor="?attr/themeTextMuted" />
+            </LinearLayout>
+        </FrameLayout>
+
         <!-- Tab 5: Studio (Customization Studio in dock) -->
         <FrameLayout
             android:id="@+id/tabStudio"

@@ -41,6 +41,8 @@ class MainActivity : AppCompatActivity() {
         const val TAB_CHAT = 1
         const val TAB_SETTINGS = 2
         const val TAB_UPDATES = 3
+        /** Embedded AndroLLM Compose UI (AI Hub). */
+        const val TAB_ANDROLLM = 4
     }
 
     private lateinit var binding: ActivityMainBinding
@@ -53,8 +55,34 @@ class MainActivity : AppCompatActivity() {
     private val chatFragment by lazy { ChatFragment() }
     private val settingsFragment by lazy { SettingsFragment() }
     private val updatesFragment by lazy { UpdatesFragment() }
+    private val androLlmFragment by lazy { com.jarvis.assistant.ui.compose.AndroLlmFragment() }
+    // AndroLLM screens shown inside Jarvis' own Home / Chat tabs when chosen in Customization.
+    private val androLlmHomeFragment by lazy {
+        com.jarvis.assistant.ui.compose.AndroLlmFragment.embedded(com.jarvis.assistant.ui.compose.navigation.ComposeRoutes.HOME)
+    }
+    private val androLlmChatFragment by lazy {
+        com.jarvis.assistant.ui.compose.AndroLlmFragment.embedded(com.jarvis.assistant.ui.compose.navigation.ComposeRoutes.CHAT)
+    }
+
+    private fun isAndroLlmHomeStyle() =
+        com.jarvis.assistant.androllm.AndroLlmUiStyle.homeStyle(this) == com.jarvis.assistant.androllm.AndroLlmUiStyle.ANDROLLM
+
+    private fun isAndroLlmChatStyle() =
+        com.jarvis.assistant.androllm.AndroLlmUiStyle.chatStyle(this) == com.jarvis.assistant.androllm.AndroLlmUiStyle.ANDROLLM
+
+    private fun activeChatFragment(): Fragment = if (isAndroLlmChatStyle()) androLlmChatFragment else chatFragment
+
+    /** Re-applies Home/Chat style choices made in Customization Studio. */
+    fun applyUiStyles() {
+        binding.tabAiHub.visibility =
+            if (com.jarvis.assistant.androllm.AndroLlmUiStyle.showAiHubTab(this)) View.VISIBLE else View.GONE
+        if (currentTab == TAB_ANDROLLM && binding.tabAiHub.visibility == View.GONE) currentTab = TAB_HOME
+        // Tabs only exist once onCreate passed the integrity gate and added them.
+        if (!isFinishing && !isDestroyed && homeFragment.isAdded) selectTab(currentTab)
+    }
 
     fun getActiveHomeFragment(): Fragment {
+        if (isAndroLlmHomeStyle()) return androLlmHomeFragment
         val prefs = com.jarvis.assistant.JarvisApp.instance.preferences
         return if (prefs.isJarvisCompanionMode) jarvisCompanionHomeFragment else homeFragment
     }
@@ -194,7 +222,7 @@ class MainActivity : AppCompatActivity() {
         com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.rootMainLayout)
 
         val requestedTab = intent.getIntExtra("TARGET_TAB", -1)
-        currentTab = if (requestedTab in listOf(TAB_HOME, TAB_CHAT, TAB_SETTINGS, TAB_UPDATES)) {
+        currentTab = if (requestedTab in listOf(TAB_HOME, TAB_CHAT, TAB_SETTINGS, TAB_UPDATES, TAB_ANDROLLM)) {
             requestedTab
         } else {
             savedInstanceState?.getInt("CURRENT_TAB", TAB_HOME) ?: TAB_HOME
@@ -251,6 +279,7 @@ class MainActivity : AppCompatActivity() {
 
         setupNavigationDock()
         selectTab(currentTab)
+        mountAgentDialogs()
         observeViewModel()
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -284,6 +313,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         viewModel.refreshSettings()
+        // Apply Home/Chat style changes made in Customization Studio.
+        applyUiStyles()
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
             binding.bottomDock.setRenderEffect(null)
         }
@@ -311,6 +342,10 @@ class MainActivity : AppCompatActivity() {
     private fun setupNavigationDock() {
         binding.tabHome.setOnClickListener { selectTab(TAB_HOME) }
         binding.tabChat.setOnClickListener { selectTab(TAB_CHAT) }
+        binding.tabAiHub.setOnClickListener {
+            com.jarvis.assistant.util.HudSoundManager.playTapSound()
+            selectTab(TAB_ANDROLLM)
+        }
 
         // Tab 4: God's Eye Tactical View (Replaces Settings as requested)
         binding.tabGodsEye.setOnClickListener {
@@ -353,6 +388,7 @@ class MainActivity : AppCompatActivity() {
             binding.tabMic,
             binding.tabGodsEye,
             binding.tabStudio,
+            binding.tabAiHub,
             binding.btnToggleDockMode,
             binding.layoutCompactIsland
         ).forEach { com.jarvis.assistant.util.HudAnimationHelper.attachSpringTouch(it) }
@@ -362,7 +398,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun setBottomDockVisibility(visible: Boolean, animated: Boolean = true) {
+    fun setBottomDockVisibility(requestedVisible: Boolean, animated: Boolean = true) {
+        // The AI Hub tab brings its own bottom navigation; hidden fragments (e.g. HomeFragment
+        // on resume) must not bring the Jarvis dock back on top of it.
+        val visible = requestedVisible && currentTab != TAB_ANDROLLM
         val dock = binding.bottomDock
         if (animated) {
             if (visible) {
@@ -382,23 +421,50 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun selectTab(tab: Int) {
-        if (tab != TAB_HOME) {
-            setBottomDockVisibility(true, animated = false)
+        // Lazily add the AndroLLM-style Home/Chat screens only when they are chosen.
+        val lazyTabs = buildList {
+            if (tab == TAB_HOME && isAndroLlmHomeStyle()) add(androLlmHomeFragment to "TAB_HOME_ANDROLLM")
+            if (tab == TAB_CHAT && isAndroLlmChatStyle()) add(androLlmChatFragment to "TAB_CHAT_ANDROLLM")
+        }
+        lazyTabs.filter { !it.first.isAdded }.takeIf { it.isNotEmpty() }?.let { toAdd ->
+            val addTrans = supportFragmentManager.beginTransaction()
+            toAdd.forEach { (frag, fragTag) -> addTrans.add(R.id.fragmentContainer, frag, fragTag).hide(frag) }
+            addTrans.commitNowAllowingStateLoss()
+        }
+        if (tab == TAB_ANDROLLM && !androLlmFragment.isAdded) {
+            // Added lazily so its Back callback is registered after MainActivity's own and wins
+            // while the AI Hub tab is visible.
+            supportFragmentManager.beginTransaction()
+                .add(R.id.fragmentContainer, androLlmFragment, com.jarvis.assistant.ui.compose.AndroLlmFragment.TAG)
+                .hide(androLlmFragment)
+                .commitNowAllowingStateLoss()
         }
         val previousTab = currentTab
         currentTab = tab
+        if (tab == TAB_ANDROLLM) {
+            // The AndroLLM UI brings its own bottom navigation.
+            setBottomDockVisibility(false, animated = false)
+        } else if (tab != TAB_HOME || previousTab == TAB_ANDROLLM) {
+            setBottomDockVisibility(true, animated = false)
+        }
 
         val activeHome = getActiveHomeFragment()
         val inactiveHome = getInactiveHomeFragment()
 
         val tabs = listOf(
             TAB_HOME to activeHome,
-            TAB_CHAT to chatFragment,
+            TAB_CHAT to activeChatFragment(),
             TAB_SETTINGS to settingsFragment,
-            TAB_UPDATES to updatesFragment
+            TAB_UPDATES to updatesFragment,
+            TAB_ANDROLLM to androLlmFragment
         )
 
         val trans = supportFragmentManager.beginTransaction()
+        // Hide every Home/Chat variant that is not the chosen one (Jarvis, Companion, AndroLLM).
+        val activeVariants = setOf(activeHome, activeChatFragment())
+        listOf(homeFragment, jarvisCompanionHomeFragment, androLlmHomeFragment, chatFragment, androLlmChatFragment)
+            .filter { it.isAdded && it !in activeVariants }
+            .forEach { trans.hide(it); it.view?.visibility = View.GONE }
         tabs.forEach { (tabId, frag) ->
             if (frag.isAdded) {
                 if (tabId == tab) {
@@ -485,7 +551,8 @@ class MainActivity : AppCompatActivity() {
             Triple(TAB_HOME, binding.pillTabHome, Pair(binding.ivTabHome, binding.tvTabHome)),
             Triple(TAB_CHAT, binding.pillTabChat, Pair(binding.ivTabChat, binding.tvTabChat)),
             Triple(998, binding.pillTabGodsEye, Pair(binding.ivTabGodsEye, binding.tvTabGodsEye)),
-            Triple(999, binding.pillTabStudio, Pair(binding.ivTabStudio, binding.tvTabStudio))
+            Triple(999, binding.pillTabStudio, Pair(binding.ivTabStudio, binding.tvTabStudio)),
+            Triple(TAB_ANDROLLM, binding.pillTabAiHub, Pair(binding.ivTabAiHub, binding.tvTabAiHub))
         )
 
         navItems.forEach { (tabId, pill, views) ->
@@ -547,6 +614,7 @@ class MainActivity : AppCompatActivity() {
             TAB_CHAT -> binding.pillTabChat
             998 -> binding.pillTabGodsEye
             999 -> binding.pillTabStudio
+            TAB_ANDROLLM -> binding.pillTabAiHub
             else -> binding.pillTabHome
         }
 
@@ -828,5 +896,21 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    /**
+     * App-wide host for AndroLLM agent dialogs (high-risk tool confirmations and lazy permission
+     * requests) so they appear over any Jarvis screen, not only inside the AI Hub.
+     */
+    private fun mountAgentDialogs() {
+        val host = androidx.compose.ui.platform.ComposeView(this).apply {
+            setContent {
+                com.jarvis.assistant.ui.compose.theme.AndroLLMTheme {
+                    com.jarvis.assistant.ui.compose.feature.settings.ToolConfirmationPrompt()
+                    com.jarvis.assistant.ui.compose.feature.settings.PermissionRequestHost()
+                }
+            }
+        }
+        binding.rootMainLayout.addView(host, android.view.ViewGroup.LayoutParams(0, 0))
     }
 }

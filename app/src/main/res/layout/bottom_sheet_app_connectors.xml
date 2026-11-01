@@ -160,7 +160,7 @@
                 android:textSize="11sp"
                 android:gravity="center"
                 android:textColor="?attr/themeTextMuted"
-                android:background="@drawable/bg_jarvis_pill_inactive"
+                android:background="@drawable/bg_themed2_pill_inactive"
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
                 android:layout_marginEnd="6dp" />
@@ -173,7 +173,7 @@
                 android:textSize="11sp"
                 android:gravity="center"
                 android:textColor="?attr/themeTextMuted"
-                android:background="@drawable/bg_jarvis_pill_inactive"
+                android:background="@drawable/bg_themed2_pill_inactive"
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp" />
         </LinearLayout>

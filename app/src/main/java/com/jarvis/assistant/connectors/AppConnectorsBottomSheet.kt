@@ -113,14 +113,14 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
     private fun setFilterMode(mode: FilterMode) {
         currentFilterMode = mode
 
-        binding.chipFilterAll.setBackgroundResource(if (mode == FilterMode.ALL) R.drawable.bg_jarvis_pill_active else R.drawable.bg_jarvis_pill_inactive)
-        binding.chipFilterAll.setTextColor(if (mode == FilterMode.ALL) Color.WHITE else Color.parseColor("#94A3B8"))
+        binding.chipFilterAll.setBackgroundResource(if (mode == FilterMode.ALL) R.drawable.bg_jarvis_pill_active else R.drawable.bg_themed2_pill_inactive)
+        binding.chipFilterAll.setTextColor(if (mode == FilterMode.ALL) Color.WHITE else themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
 
-        binding.chipFilterConnected.setBackgroundResource(if (mode == FilterMode.CONNECTED) R.drawable.bg_jarvis_pill_active else R.drawable.bg_jarvis_pill_inactive)
-        binding.chipFilterConnected.setTextColor(if (mode == FilterMode.CONNECTED) Color.WHITE else Color.parseColor("#94A3B8"))
+        binding.chipFilterConnected.setBackgroundResource(if (mode == FilterMode.CONNECTED) R.drawable.bg_jarvis_pill_active else R.drawable.bg_themed2_pill_inactive)
+        binding.chipFilterConnected.setTextColor(if (mode == FilterMode.CONNECTED) Color.WHITE else themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
 
-        binding.chipFilterDisconnected.setBackgroundResource(if (mode == FilterMode.DISCONNECTED) R.drawable.bg_jarvis_pill_active else R.drawable.bg_jarvis_pill_inactive)
-        binding.chipFilterDisconnected.setTextColor(if (mode == FilterMode.DISCONNECTED) Color.WHITE else Color.parseColor("#94A3B8"))
+        binding.chipFilterDisconnected.setBackgroundResource(if (mode == FilterMode.DISCONNECTED) R.drawable.bg_jarvis_pill_active else R.drawable.bg_themed2_pill_inactive)
+        binding.chipFilterDisconnected.setTextColor(if (mode == FilterMode.DISCONNECTED) Color.WHITE else themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
 
         populateConnectorsList()
     }
@@ -162,7 +162,7 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
         if (filtered.isEmpty()) {
             val emptyTv = TextView(requireContext()).apply {
                 text = if (currentSearchQuery.isNotBlank()) "No applications found matching '$currentSearchQuery'" else "No applications in this category"
-                setTextColor(Color.parseColor("#94A3B8"))
+                setTextColor(themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
                 textSize = 13f
                 gravity = Gravity.CENTER
                 setPadding(0, (32 * density).toInt(), 0, (32 * density).toInt())
@@ -211,7 +211,7 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
                     setImageDrawable(appIcon)
                 } else {
                     setImageResource(R.drawable.ic_verified_badge)
-                    setColorFilter(Color.parseColor("#00E5FF"))
+                    setColorFilter(themeColor(R.attr.themeAccent, Color.parseColor("#00E5FF")))
                 }
                 contentDescription = conn.name
             }
@@ -254,7 +254,7 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
 
             val tvTitle = TextView(requireContext()).apply {
                 text = conn.name
-                setTextColor(Color.WHITE)
+                setTextColor(themeColor(R.attr.themeTextPrimary, Color.WHITE))
                 textSize = 14f
                 paint.isFakeBoldText = true
                 maxLines = 1
@@ -264,11 +264,11 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
 
             val tvCategory = TextView(requireContext()).apply {
                 text = conn.category
-                setTextColor(Color.parseColor("#00E5FF"))
+                setTextColor(themeColor(R.attr.themeAccent, Color.parseColor("#00E5FF")))
                 textSize = 9.5f
                 paint.isFakeBoldText = true
                 setPadding((6 * density).toInt(), (1 * density).toInt(), (6 * density).toInt(), (1 * density).toInt())
-                setBackgroundResource(R.drawable.bg_jarvis_pill_inactive)
+                setBackgroundResource(R.drawable.bg_themed2_pill_inactive)
                 val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                     marginStart = (6 * density).toInt()
                 }
@@ -280,7 +280,7 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
             // Status Badge
             val tvStatus = TextView(requireContext()).apply {
                 text = if (conn.isConnected) "🟢 FULL AUTONOMOUS ACCESS (CONNECTED)" else "⚪ BASIC AUTOMATION ONLY (NOT CONNECTED)"
-                setTextColor(if (conn.isConnected) Color.parseColor("#4ADE80") else Color.parseColor("#94A3B8"))
+                setTextColor(if (conn.isConnected) Color.parseColor("#4ADE80") else themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
                 textSize = 10f
                 paint.isFakeBoldText = true
                 setPadding(0, (2 * density).toInt(), 0, 0)
@@ -293,7 +293,7 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
             // Description / Capability Summary
             val tvDesc = TextView(requireContext()).apply {
                 text = conn.description
-                setTextColor(Color.parseColor("#94A3B8"))
+                setTextColor(themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
                 textSize = 11f
                 setPadding(0, (6 * density).toInt(), 0, 0)
             }
@@ -312,7 +312,7 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
                 } else {
                     manager.setConnectorEnabled(conn.id, false, lifecycleScope)
                     tvStatus.text = "⚪ BASIC AUTOMATION ONLY (NOT CONNECTED)"
-                    tvStatus.setTextColor(Color.parseColor("#94A3B8"))
+                    tvStatus.setTextColor(themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
                     Toast.makeText(requireContext(), "Disconnected '${conn.name}'", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -320,6 +320,10 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
             container.addView(card)
         }
     }
+
+    /** Resolve a Jarvis theme colour attr so code-built rows follow the active theme. */
+    private fun themeColor(attr: Int, fallback: Int): Int =
+        com.jarvis.assistant.util.ThemeManager.attrColor(requireContext(), attr, fallback)
 
     private fun loadAppIcon(packageName: String): Drawable? {
         if (packageName == "phone") {

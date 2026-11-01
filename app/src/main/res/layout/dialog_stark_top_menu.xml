@@ -198,7 +198,7 @@
                         android:layout_height="20dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_verified_badge"
-                        app:tint="@color/primary_cyan"
+                        app:tint="?attr/themeAccent"
                         android:contentDescription="SuperCore" />
                 </FrameLayout>
 
@@ -222,7 +222,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="OS Assistant, WhatsApp Reader &amp; Driving"
-                        android:textColor="@color/primary_cyan"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="11.5sp"
                         android:fontFamily="sans-serif"
                         android:layout_marginTop="1dp" />

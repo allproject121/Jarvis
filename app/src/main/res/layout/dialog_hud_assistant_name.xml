@@ -159,7 +159,7 @@
             android:layout_height="44dp"
             android:layout_weight="1.2"
             android:text="CONFIRM &amp; SAVE"
-            android:textColor="#070914"
+            android:textColor="?attr/themeBg"
             android:textSize="12sp"
             android:textStyle="bold"
             android:background="@drawable/bg_jarvis_pill_button"

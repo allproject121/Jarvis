@@ -28,6 +28,7 @@ class SpoonKnifeDemoActivity : AppCompatActivity() {
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
+        com.jarvis.assistant.util.ThemeManager.applyTheme(this)
         super.onCreate(savedInstanceState)
         instance = this
 
@@ -39,7 +40,7 @@ class SpoonKnifeDemoActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor(0xFF121212.toInt())
+            setBackgroundColor(com.jarvis.assistant.util.ThemeManager.attrColor(this@SpoonKnifeDemoActivity, com.jarvis.assistant.R.attr.themeBg, 0xFF121212.toInt()))
         }
 
         // Header Toolbar
@@ -51,19 +52,19 @@ class SpoonKnifeDemoActivity : AppCompatActivity() {
             )
             setPadding((16 * density).toInt(), 0, (16 * density).toInt(), 0)
             gravity = Gravity.CENTER_VERTICAL
-            setBackgroundColor(0xFF1E1E1E.toInt())
+            setBackgroundColor(com.jarvis.assistant.util.ThemeManager.attrColor(this@SpoonKnifeDemoActivity, com.jarvis.assistant.R.attr.themeDockBg, 0xFF1E1E1E.toInt()))
         }
 
         val title = TextView(this).apply {
             text = "Spoon-Knife Demo Screen"
             textSize = 18f
-            setTextColor(0xFFFFFFFF.toInt())
+            setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this@SpoonKnifeDemoActivity, com.jarvis.assistant.R.attr.themeTextPrimary, 0xFFFFFFFF.toInt()))
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f)
         }
 
         val closeBtn = Button(this).apply {
             text = "Close"
-            setTextColor(0xFF00E5FF.toInt())
+            setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this@SpoonKnifeDemoActivity, com.jarvis.assistant.R.attr.themeAccent, 0xFF00E5FF.toInt()))
             setBackgroundColor(0x00000000)
             setOnClickListener { finish() }
         }

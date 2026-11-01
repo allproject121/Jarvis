@@ -56,6 +56,8 @@ class ThemeSelectionBottomSheet : BottomSheetDialogFragment() {
         binding.cardThemeRed.setOnClickListener { selectTheme("red", "Crimson Ruby") }
         binding.cardThemeSunset.setOnClickListener { selectTheme("sunset", "Peach Sunset") }
         binding.cardThemeStealth.setOnClickListener { selectTheme("stealth", "Stealth OLED Black") }
+        binding.cardThemeAndroNight.setOnClickListener { selectTheme(ThemeManager.THEME_ANDROLLM_NIGHT, "AndroLLM Night") }
+        binding.cardThemeAndroParchment.setOnClickListener { selectTheme(ThemeManager.THEME_ANDROLLM_PARCHMENT, "AndroLLM Parchment") }
 
         binding.btnApplyCustom.setOnClickListener {
             val hex = binding.etCustomHex.text.toString().trim()
@@ -146,6 +148,8 @@ class ThemeSelectionBottomSheet : BottomSheetDialogFragment() {
         binding.ivCheckSunset.visibility = if (activeTheme == "sunset") View.VISIBLE else View.GONE
         binding.ivCheckStealth.visibility = if (activeTheme == "stealth" || activeTheme == "black") View.VISIBLE else View.GONE
         binding.ivCheckCustom.visibility = if (activeTheme == "custom") View.VISIBLE else View.GONE
+        binding.ivCheckAndroNight.visibility = if (activeTheme == ThemeManager.THEME_ANDROLLM_NIGHT) View.VISIBLE else View.GONE
+        binding.ivCheckAndroParchment.visibility = if (activeTheme == ThemeManager.THEME_ANDROLLM_PARCHMENT) View.VISIBLE else View.GONE
     }
 
     override fun onDestroyView() {

@@ -176,7 +176,7 @@ class OverlayAvatarActivity : AppCompatActivity() {
             if (isActive) {
                 btnActivateCustomAvatar.text = "✓ Active"
                 btnActivateCustomAvatar.setBackgroundResource(R.drawable.bg_jarvis_chip)
-                btnActivateCustomAvatar.setTextColor(android.graphics.Color.parseColor("#38bdf8"))
+                btnActivateCustomAvatar.setTextColor(ThemeManager.attrColor(this, R.attr.themeAccent, android.graphics.Color.parseColor("#38bdf8")))
             } else {
                 btnActivateCustomAvatar.text = "Use As Avatar"
                 btnActivateCustomAvatar.setBackgroundResource(R.drawable.bg_jarvis_row_item)

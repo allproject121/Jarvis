@@ -47,6 +47,9 @@ class TaskProgressOverlay(private val context: Context) {
         fun hideOverlay() {
             instance?.remove()
         }
+
+        /** True while the floating task overlay is attached to the window (read by the Dynamic Island). */
+        fun isShowing(): Boolean = instance?.attached == true
     }
 
     private val mainHandler = Handler(Looper.getMainLooper())

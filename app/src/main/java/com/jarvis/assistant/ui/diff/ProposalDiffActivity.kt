@@ -39,6 +39,7 @@ class ProposalDiffActivity : AppCompatActivity() {
     private lateinit var binding: ActivityProposalDiffBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        com.jarvis.assistant.util.ThemeManager.applyTheme(this)
         super.onCreate(savedInstanceState)
         binding = ActivityProposalDiffBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -100,7 +101,7 @@ class ProposalDiffActivity : AppCompatActivity() {
 
             when {
                 line.startsWith("+++") || line.startsWith("---") || line.startsWith("diff --git") -> {
-                    builder.setSpan(ForegroundColorSpan(COLOR_FILE_HEADER), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    builder.setSpan(ForegroundColorSpan(com.jarvis.assistant.util.ThemeManager.attrColor(this, com.jarvis.assistant.R.attr.themeTextPrimary, COLOR_FILE_HEADER)), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                     builder.setSpan(StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
                 line.startsWith("+") -> {
@@ -110,11 +111,11 @@ class ProposalDiffActivity : AppCompatActivity() {
                     builder.setSpan(ForegroundColorSpan(COLOR_DELETION), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
                 line.startsWith("@@") -> {
-                    builder.setSpan(ForegroundColorSpan(COLOR_CHUNK_HEADER), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    builder.setSpan(ForegroundColorSpan(com.jarvis.assistant.util.ThemeManager.attrColor(this, com.jarvis.assistant.R.attr.themeAccent, COLOR_CHUNK_HEADER)), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                     builder.setSpan(StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
                 else -> {
-                    builder.setSpan(ForegroundColorSpan(COLOR_CONTEXT), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    builder.setSpan(ForegroundColorSpan(com.jarvis.assistant.util.ThemeManager.attrColor(this, com.jarvis.assistant.R.attr.themeTextSecondary, COLOR_CONTEXT)), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
             }
 

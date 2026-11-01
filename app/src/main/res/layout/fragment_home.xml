@@ -629,6 +629,14 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- 4c. On-Device AI dashboard (merged AndroLLM home; toggle: HomeDashboardPrefs) -->
+            <androidx.compose.ui.platform.ComposeView
+                android:id="@+id/composeLocalAiDashboard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone" />
+
             <!-- 5. Three Compact Cards (Screen Sharing, Memories, Language) -->
             <LinearLayout
                 android:id="@+id/layoutActionGrid"

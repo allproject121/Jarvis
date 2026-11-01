@@ -196,7 +196,7 @@
                         android:paddingHorizontal="4dp"
                         android:paddingVertical="1dp"
                         android:text="3D"
-                        android:textColor="#38bdf8"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="8.5sp"
                         android:textStyle="bold" />
                 </FrameLayout>

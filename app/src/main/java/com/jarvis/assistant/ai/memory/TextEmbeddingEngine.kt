@@ -32,6 +32,36 @@ class TextEmbeddingEngine(private val context: Context) {
     private var isNeuralModelLoaded = false
 
     /**
+     * Optional neural embedder (e.g. the AndroLLM LiteRT embedding engine).
+     * Returns null when unavailable, in which case the built-in hashing
+     * projection is used. Not installed by default.
+     */
+    interface ExternalEmbedder {
+        suspend fun embed(text: String): FloatArray?
+    }
+
+    @Volatile
+    private var externalEmbedder: ExternalEmbedder? = null
+
+    @Volatile
+    private var externalEmbedderId: String = ""
+
+    /**
+     * Installs (or clears, with null) a neural embedder. [id] identifies the
+     * embedding space; when it changes, existing vectors must be re-indexed
+     * (see AndroLLM MemoryMaintenance, which compares [embedderSignature]).
+     */
+    fun setExternalEmbedder(id: String, embedder: ExternalEmbedder?) {
+        externalEmbedder = embedder
+        externalEmbedderId = if (embedder == null) "" else id
+        isNeuralModelLoaded = embedder != null
+    }
+
+    /** Identifies the active embedding space ("hash-384" by default). */
+    fun embedderSignature(): String =
+        if (externalEmbedder != null) "external:$externalEmbedderId" else "hash-$EMBEDDING_DIMENSION"
+
+    /**
      * Generates a 384-dimensional normalized embedding vector for the provided text.
      */
     suspend fun generateEmbedding(text: String): FloatArray = withContext(Dispatchers.Default) {
@@ -40,9 +70,14 @@ class TextEmbeddingEngine(private val context: Context) {
             return@withContext FloatArray(EMBEDDING_DIMENSION)
         }
 
-        if (isNeuralModelLoaded) {
-            // Future pluggable ONNX/MediaPipe inference:
-            // return runNeuralEmbeddingModel(clean)
+        val external = externalEmbedder
+        if (isNeuralModelLoaded && external != null) {
+            val vector = runCatching { external.embed(text.trim()) }
+                .onFailure { Log.w(TAG, "External embedder failed, using hashing projection: ${it.message}") }
+                .getOrNull()
+            if (vector != null && vector.isNotEmpty()) {
+                return@withContext VectorMath.normalize(vector.copyOf())
+            }
         }
 
         // Fast, high-accuracy semantic projection & contextual n-gram hashing

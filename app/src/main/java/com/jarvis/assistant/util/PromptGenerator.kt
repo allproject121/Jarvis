@@ -169,6 +169,8 @@ $secretCompanionRules
 $secretCompanionRules
 """.trimIndent()
 
+            GeminiConstants.PERSONALITY_MARIA.lowercase(), "maria" -> com.jarvis.assistant.data.model.MariaPersona.SYSTEM_PROMPT
+
             GeminiConstants.PERSONALITY_PROFESSIONAL, GeminiConstants.PERSONALITY_FOCUS -> """
 [PERSONALITY: Professional / Focus Mode]
 - You speak in formal, polished, executive English.

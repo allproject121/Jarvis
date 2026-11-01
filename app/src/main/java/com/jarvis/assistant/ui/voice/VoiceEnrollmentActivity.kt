@@ -19,6 +19,7 @@ import com.jarvis.assistant.R
 import com.jarvis.assistant.audio.OwnerVoiceManager
 import com.jarvis.assistant.audio.VoskModelManager
 import com.jarvis.assistant.databinding.ActivityVoiceEnrollmentBinding
+import com.jarvis.assistant.util.ThemeManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
@@ -96,7 +97,10 @@ class VoiceEnrollmentActivity : AppCompatActivity() {
 
         if (hasProfile) {
             binding.tvEnrollmentStatus.text = if (isEnabled) "OWNER VOICE: ACTIVE" else "OWNER VOICE: PAUSED"
-            binding.tvEnrollmentStatus.setTextColor(getColor(if (isEnabled) R.color.primary_cyan else R.color.text_secondary))
+            binding.tvEnrollmentStatus.setTextColor(
+                if (isEnabled) ThemeManager.attrColor(this, R.attr.themeAccent, getColor(R.color.primary_cyan))
+                else ThemeManager.attrColor(this, R.attr.themeTextSecondary, getColor(R.color.text_secondary))
+            )
             binding.tvStatusDescription.text = "Jarvis is calibrated to your voice. Any speech or commands from other people are automatically blocked."
             binding.viewStatusDot.setBackgroundResource(if (isEnabled) R.drawable.circle_cyan else R.drawable.circle_cyan)
         } else {
@@ -224,7 +228,7 @@ class VoiceEnrollmentActivity : AppCompatActivity() {
 
         if (pcmAudio.size < 16000 * 2 * 0.4) {
             binding.btnRecordSample.isEnabled = true
-            binding.btnRecordSample.setBackgroundColor(getColor(R.color.primary_cyan))
+            binding.btnRecordSample.setBackgroundColor(ThemeManager.attrColor(this@VoiceEnrollmentActivity, R.attr.themeAccent, getColor(R.color.primary_cyan)))
             binding.tvRecordFeedback.text = "Recording was too short. Please speak the full phrase and tap Stop."
             binding.btnRecordSample.text = "RETRY SAMPLE ${currentSampleIndex + 1}"
             return
@@ -238,7 +242,7 @@ class VoiceEnrollmentActivity : AppCompatActivity() {
 
             withContext(Dispatchers.Main) {
                 binding.btnRecordSample.isEnabled = true
-                binding.btnRecordSample.setBackgroundColor(getColor(R.color.primary_cyan))
+                binding.btnRecordSample.setBackgroundColor(ThemeManager.attrColor(this@VoiceEnrollmentActivity, R.attr.themeAccent, getColor(R.color.primary_cyan)))
 
                 if (vector != null && vector.isNotEmpty()) {
                     recordedVectors.add(vector)

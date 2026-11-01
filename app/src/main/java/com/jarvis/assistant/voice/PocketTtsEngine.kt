@@ -80,7 +80,7 @@ class PocketTtsEngine private constructor(private val context: Context) {
                     if (!pending.isNullOrBlank()) {
                         pendingSpeechText = null
                         pendingSpeechCallback = null
-                        speak(pending, cb)
+                        speakWithJarvisVoice(pending, cb)
                     }
                 } else {
                     Log.w(TAG, "System TextToSpeech initialization failed with status: $status")
@@ -107,6 +107,10 @@ class PocketTtsEngine private constructor(private val context: Context) {
 
     /**
      * Synthesizes and speaks text aloud in Hindi or English.
+     *
+     * When "Edge neural" is selected as Jarvis' speech engine (Settings, default OFF) the text
+     * is spoken with the Edge neural voice; any Edge failure falls back to the original
+     * Android TTS / PocketTTS path below. Gemini Live never goes through this engine.
      */
     fun speak(text: String, onComplete: (() -> Unit)? = null) {
         if (text.isBlank()) {
@@ -114,6 +118,37 @@ class PocketTtsEngine private constructor(private val context: Context) {
             return
         }
 
+        if (com.jarvis.assistant.voice.edge.EdgeTtsSpeaker.isUsable(context)) {
+            stop()
+            isStopRequested.set(false)
+            isSpeaking.set(true)
+            com.jarvis.assistant.voice.edge.EdgeTtsSpeaker.speak(
+                context = context,
+                text = text,
+                flush = true,
+                onDone = {
+                    isSpeaking.set(false)
+                    onComplete?.invoke()
+                },
+                onFailed = { speakWithJarvisVoice(text, onComplete) }
+            )
+            return
+        }
+
+        speakWithJarvisVoice(text, onComplete)
+    }
+
+    /** Speaks with Jarvis' own voice only (never Edge) - used as the Edge fallback. */
+    fun speakJarvisDefault(text: String, onComplete: (() -> Unit)? = null) {
+        if (text.isBlank()) {
+            onComplete?.invoke()
+            return
+        }
+        speakWithJarvisVoice(text, onComplete)
+    }
+
+    /** Jarvis' original speech path: Android TTS first, native PocketTTS PCM fallback. */
+    private fun speakWithJarvisVoice(text: String, onComplete: (() -> Unit)?) {
         stop()
         isStopRequested.set(false)
         isSpeaking.set(true)
@@ -247,6 +282,7 @@ class PocketTtsEngine private constructor(private val context: Context) {
      */
     fun stop() {
         isStopRequested.set(true)
+        com.jarvis.assistant.voice.edge.EdgeTtsSpeaker.stop()
         try {
             systemTts?.stop()
         } catch (_: Exception) {}

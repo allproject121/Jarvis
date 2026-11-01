@@ -32,8 +32,10 @@ import com.jarvis.assistant.ui.matrix.JarvisMatrixActivity
 import com.jarvis.assistant.ui.memory.MemoryActivity
 import com.jarvis.assistant.ui.permission.PermissionActivity
 import com.jarvis.assistant.ui.supercore.SuperCoreActivity
+import com.jarvis.assistant.androllm.accessibility.settings.AccessibilitySettingsStore
 import com.jarvis.assistant.ui.voice.VoiceEnrollmentActivity
 import com.jarvis.assistant.util.HudSoundManager
+import com.jarvis.assistant.voice.normalize.NormalizationSettingsStore
 import com.jarvis.assistant.wallpaper.JarvisWallpaperService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -49,6 +51,7 @@ class SettingsFragment : Fragment() {
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
     private val preferences by lazy { JarvisApp.instance.preferences }
+    private val accessibilityStore by lazy { AccessibilitySettingsStore.getInstance(requireContext()) }
     private var isUpdatingSwitchProgrammatically = false
 
     override fun onCreateView(
@@ -75,6 +78,8 @@ class SettingsFragment : Fragment() {
 
         loadUserData()
         setupClickListeners()
+        setupObservers()
+        setupLocalAiRows()
     }
 
     override fun onResume() {
@@ -82,6 +87,7 @@ class SettingsFragment : Fragment() {
         if (_binding != null) {
             com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
             loadUserData()
+            setupLocalAiRows()
         }
     }
 
@@ -112,8 +118,55 @@ class SettingsFragment : Fragment() {
             binding.switchBlurEffect.isChecked = preferences.isBlurEffectEnabled
             binding.switchBatterySaver.isChecked = preferences.isBatterySaverEnabled
             binding.switchDeveloperLinks.isChecked = preferences.showDeveloperLinks
+
+            // AndroLLM Switches & Accordion initial states
+            binding.switchMcpBridgeEnabled.isChecked = preferences.isMcpBridgeEnabled
+            val normalization = NormalizationSettingsStore.run {
+                load(requireContext())
+                current()
+            }
+            binding.switchNormalizeNumbers.isChecked = normalization.numbers
+            binding.switchNormalizeCurrency.isChecked = normalization.currency
+            binding.switchSentenceAssembler.isChecked = preferences.isSentenceAssemblerEnabled
         } finally {
             isUpdatingSwitchProgrammatically = false
+        }
+
+        // Auto-scroll lives in the accessibility DataStore, so it loads asynchronously.
+        lifecycleScope.launch {
+            val autoScroll = accessibilityStore.current().autoScrollIntoView
+            if (_binding == null) return@launch
+            isUpdatingSwitchProgrammatically = true
+            try {
+                binding.switchAutoScroll.isChecked = autoScroll
+            } finally {
+                isUpdatingSwitchProgrammatically = false
+            }
+        }
+
+        // Accessibility status badge
+        val isAccessibilityActive = com.jarvis.assistant.automation.accessibility.JarvisAccessibilityService.isRunning()
+        if (isAccessibilityActive) {
+            binding.tvAccessibilityStatusBadge.text = "ACTIVE"
+            binding.tvAccessibilityStatusBadge.setTextColor(Color.parseColor("#10B981"))
+        } else {
+            binding.tvAccessibilityStatusBadge.text = "INACTIVE"
+            binding.tvAccessibilityStatusBadge.setTextColor(Color.parseColor("#EF4444"))
+        }
+
+        // Model Hub status
+        val localModelMgr = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(requireContext(), viewLifecycleOwner.lifecycleScope)
+        val activeModelId = localModelMgr.activeModelId.value
+        val activeDescriptor = com.jarvis.assistant.ai.local.LocalAiConfig.AVAILABLE_MODELS.find { it.id == activeModelId }
+        val activeModelName = activeDescriptor?.name ?: "Qwen 2.5 (1.5B Instruct)"
+        binding.tvModelHubActiveModel.text = "Active: $activeModelName • ${com.jarvis.assistant.ai.local.LocalAiConfig.AVAILABLE_MODELS.size} Models Available"
+
+        if (localModelMgr.isModelReady(com.jarvis.assistant.ai.local.LocalAiConfig.MODEL_LLAMA_3_2_1B)) {
+            binding.btnDownloadLlama.text = "Loaded & Ready (809 MB)"
+            binding.btnDownloadLlama.isEnabled = true
+        } else {
+            binding.btnDownloadLlama.text = "Download Weights (809 MB)"
+            binding.btnDownloadLlama.isEnabled = true
         }
 
         // Voice profile status
@@ -186,6 +239,91 @@ class SettingsFragment : Fragment() {
 
         binding.rowQuickGodsEye.setOnClickListener {
             startActivity(Intent(requireContext(), GodsEyeActivity::class.java))
+        }
+
+        // ==================== ANDROLLM ACCORDIONS & TELEMETRY ====================
+        setupAccordion(binding.accordionModelHubHeader, binding.accordionModelHubBody, binding.ivAccordionModelHubChevron)
+        setupAccordion(binding.accordionMcpHeader, binding.accordionMcpBody, binding.ivAccordionMcpChevron)
+        setupAccordion(binding.accordionAccessibilityHeader, binding.accordionAccessibilityBody, binding.ivAccordionAccessibilityChevron)
+        setupAccordion(binding.accordionNormalizationHeader, binding.accordionNormalizationBody, binding.ivAccordionNormalizationChevron)
+
+        binding.cardTelemetryDashboard.setOnClickListener {
+            HudSoundManager.playTapSound()
+            showTelemetryDetailDialog()
+        }
+
+        val localModelManager = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(requireContext(), viewLifecycleOwner.lifecycleScope)
+        binding.btnDownloadLlama.setOnClickListener {
+            HudSoundManager.playTapSound()
+            localModelManager.downloadModel(com.jarvis.assistant.ai.local.LocalAiConfig.MODEL_LLAMA_3_2_1B)
+        }
+
+        binding.switchMcpBridgeEnabled.setOnCheckedChangeListener { _, isChecked ->
+            if (isUpdatingSwitchProgrammatically) return@setOnCheckedChangeListener
+            HudSoundManager.playTapSound()
+            preferences.isMcpBridgeEnabled = isChecked
+            val msg = if (isChecked) "Local MCP Bridge enabled (Port 3000)" else "Local MCP Bridge disabled"
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+        }
+
+        binding.btnAddMcpServer.setOnClickListener {
+            HudSoundManager.playTapSound()
+            showAddMcpServerDialog()
+        }
+
+        // Merged AndroLLM pages, opened inside Jarvis (AndroLlmPageActivity)
+        binding.btnOpenModelManager.setOnClickListener {
+            openAndroLlmRoute(com.jarvis.assistant.ui.compose.navigation.ComposeRoutes.MODELS)
+        }
+        binding.btnManageMcpServers.setOnClickListener {
+            openAndroLlmSection(AndroLlmPageActivity.Section.MCP)
+        }
+        binding.btnOpenScreenAutomation.setOnClickListener {
+            openAndroLlmSection(AndroLlmPageActivity.Section.AUTOMATION)
+        }
+        binding.btnOpenVoiceNormalization.setOnClickListener {
+            openAndroLlmSection(AndroLlmPageActivity.Section.VOICE)
+        }
+
+        binding.switchAutoScroll.setOnCheckedChangeListener { _, isChecked ->
+            if (isUpdatingSwitchProgrammatically) return@setOnCheckedChangeListener
+            HudSoundManager.playTapSound()
+            // The accessibility controller reads AccessibilitySettings.autoScrollIntoView
+            // (AccessibilityController.kt), not an AppPreferences flag.
+            lifecycleScope.launch {
+                accessibilityStore.update { it.copy(autoScrollIntoView = isChecked) }
+            }
+            val msg = if (isChecked) "Auto-scroll elements into view enabled" else "Auto-scroll disabled"
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+        }
+
+        binding.btnOpenAccessibilitySettings.setOnClickListener {
+            HudSoundManager.playTapSound()
+            try {
+                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Unable to open Accessibility Settings", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // The TTS pipeline reads NormalizationSettingsStore (TextNormalizationPipeline),
+        // so these switches must write there — AppPreferences flags were never read.
+        binding.switchNormalizeNumbers.setOnCheckedChangeListener { _, isChecked ->
+            if (isUpdatingSwitchProgrammatically) return@setOnCheckedChangeListener
+            NormalizationSettingsStore.update(requireContext()) { it.copy(numbers = isChecked) }
+            HudSoundManager.playTapSound()
+        }
+
+        binding.switchNormalizeCurrency.setOnCheckedChangeListener { _, isChecked ->
+            if (isUpdatingSwitchProgrammatically) return@setOnCheckedChangeListener
+            NormalizationSettingsStore.update(requireContext()) { it.copy(currency = isChecked) }
+            HudSoundManager.playTapSound()
+        }
+
+        binding.switchSentenceAssembler.setOnCheckedChangeListener { _, isChecked ->
+            if (isUpdatingSwitchProgrammatically) return@setOnCheckedChangeListener
+            preferences.isSentenceAssemblerEnabled = isChecked
+            HudSoundManager.playTapSound()
         }
 
         // ==================== SECTION 1: ASSISTANT & NEURAL CORE ====================
@@ -582,6 +720,8 @@ class SettingsFragment : Fragment() {
         badgeFriday.visibility = if (active == "friday") View.VISIBLE else View.GONE
         badgeEdith.visibility = if (active == GeminiConstants.PERSONALITY_ASSISTANT.lowercase() || active == "edith") View.VISIBLE else View.GONE
         badgePari.visibility = if (active == GeminiConstants.PERSONALITY_GIRLFRIEND.lowercase() || active == "pari") View.VISIBLE else View.GONE
+        dialogView.findViewById<View>(R.id.badgeDialogPersonaMaria)?.visibility =
+            if (com.jarvis.assistant.data.model.MariaPersona.isActive(preferences.personality)) View.VISIBLE else View.GONE
 
         cardJarvisCompanion.setOnClickListener {
             HudSoundManager.playTapSound()
@@ -637,6 +777,20 @@ class SettingsFragment : Fragment() {
             loadUserData()
             (activity as? MainActivity)?.switchExperienceMode(preferences.experienceMode)
             Toast.makeText(requireContext(), "Pari Romantic Mode Activated", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+
+        // Maria (Hinglish assistant persona)
+        dialogView.findViewById<View>(R.id.cardDialogPersonaMaria)?.setOnClickListener {
+            HudSoundManager.playTapSound()
+            com.jarvis.assistant.data.model.MariaPersona.activate(requireContext(), preferences)
+            loadUserData()
+            (activity as? MainActivity)?.switchExperienceMode(preferences.experienceMode)
+            Toast.makeText(requireContext(), "Maria Hinglish Assistant Activated", Toast.LENGTH_SHORT).show()
+            com.jarvis.assistant.voice.PocketTtsEngine.speak(
+                com.jarvis.assistant.data.model.MariaPersona.randomGreeting(),
+                requireContext()
+            )
             dialog.dismiss()
         }
 
@@ -1264,8 +1418,238 @@ class SettingsFragment : Fragment() {
             .show()
     }
 
+    // ==================== ON-DEVICE AI (merged AndroLLM settings) ====================
+
+    private fun openAndroLlmRoute(route: String) {
+        HudSoundManager.playTapSound()
+        startActivity(AndroLlmPageActivity.routeIntent(requireContext(), route))
+    }
+
+    private fun openAndroLlmSection(section: AndroLlmPageActivity.Section) {
+        HudSoundManager.playTapSound()
+        startActivity(AndroLlmPageActivity.sectionIntent(requireContext(), section))
+    }
+
+    /**
+     * Builds the "ON-DEVICE AI, MODELS & AGENT" card: Jarvis-styled rows that open each merged
+     * AndroLLM page inside Jarvis. MCP is not repeated here — it lives in the existing MCP
+     * accordion above ("Manage Servers"). Rebuilt on resume so badges stay current.
+     */
+    private fun setupLocalAiRows() {
+        val b = _binding ?: return
+        val ctx = context ?: return
+        val container = b.layoutLocalAiRows
+        container.removeAllViews()
+
+        val liteRtOn = runCatching {
+            com.jarvis.assistant.androllm.AndroLlmFlags.isEnabled(ctx, com.jarvis.assistant.androllm.AndroLlmFlags.LITERT_ENGINE)
+        }.getOrDefault(false)
+        val routes = com.jarvis.assistant.ui.compose.navigation.ComposeRoutes
+
+        data class Row(val icon: Int, val title: String, val subtitle: String, val badge: String?, val onClick: () -> Unit)
+        val rows = listOf(
+            Row(R.drawable.ic_code_chip, "Code Studio", "AI coding IDE • projects, editor, AI edit, Auto-Fix, preview & terminal",
+                "NEW") { com.jarvis.assistant.codestudio.CodeStudioActivity.open(ctx) },
+            Row(R.drawable.ic_code_chip, "AI Engines", "LiteRT-LM on-device engine & cloud gateway",
+                if (liteRtOn) "LITERT ON" else null) { openAndroLlmSection(AndroLlmPageActivity.Section.ENGINES) },
+            Row(R.drawable.ic_androllm_layers, "Models & Downloads", "Full model manager • Hugging Face, import, benchmark",
+                "MODELS") { openAndroLlmRoute(routes.MODELS) },
+            Row(R.drawable.ic_settings_db, "Model Defaults & Storage", "Default local model, downloads & disk usage",
+                null) { openAndroLlmSection(AndroLlmPageActivity.Section.MODELS) },
+            Row(R.drawable.ic_chat_bubble, "Chat & Attachments", "Chat behaviour, attachments & export",
+                null) { openAndroLlmSection(AndroLlmPageActivity.Section.CHAT) },
+            Row(R.drawable.ic_settings_book, "Prompt Library", "Prompt Studio templates & presets",
+                null) { openAndroLlmRoute(routes.PROMPTS) },
+            Row(R.drawable.ic_settings_db, "Memory", "Long-term memory, knowledge graph & inspector",
+                null) { openAndroLlmSection(AndroLlmPageActivity.Section.MEMORY) },
+            Row(R.drawable.ic_androllm_waveform, "Voice", "Sherpa / Whisper ASR, TTS, AndroLLM voice assistant, normalization",
+                null) { openAndroLlmSection(AndroLlmPageActivity.Section.VOICE) },
+            Row(R.drawable.ic_androllm_robot, "Agent & Tools", "Tool graph, planner & tool toggles",
+                null) { openAndroLlmSection(AndroLlmPageActivity.Section.AGENT) },
+            Row(R.drawable.ic_settings_advanced, "Tool Debug", "Inspect & test agent tool calls",
+                null) { openAndroLlmRoute(routes.TOOL_DEBUG) },
+            Row(R.drawable.ic_auto_cycle, "Screen Automation", "Accessibility automation & tool confirmations",
+                null) { openAndroLlmSection(AndroLlmPageActivity.Section.AUTOMATION) },
+            Row(R.drawable.ic_settings_shield, "AI Feature Access", "Permissions used by on-device AI tools",
+                null) { openAndroLlmSection(AndroLlmPageActivity.Section.PERMISSIONS) },
+            Row(R.drawable.ic_settings_connectors, "Cloud Providers", "Cloud gateway models, keys & usage",
+                null) { openAndroLlmRoute(routes.CLOUD) },
+            Row(R.drawable.ic_settings_pc, "Developer & Diagnostics", "Runtime registry, LiteRT diagnostics, benchmarks",
+                "DEV") { openAndroLlmRoute(routes.DEVELOPER) }
+        )
+
+        val inflater = LayoutInflater.from(ctx)
+        rows.forEachIndexed { index, row ->
+            val item = inflater.inflate(R.layout.item_jarvis_settings_link_row, container, false)
+            item.findViewById<View>(R.id.rowDivider).visibility = if (index == 0) View.GONE else View.VISIBLE
+            item.findViewById<ImageView>(R.id.ivRowIcon).setImageResource(row.icon)
+            item.findViewById<TextView>(R.id.tvRowTitle).text = row.title
+            item.findViewById<TextView>(R.id.tvRowSubtitle).text = row.subtitle
+            item.findViewById<TextView>(R.id.tvRowBadge).apply {
+                if (row.badge != null) {
+                    text = row.badge
+                    visibility = View.VISIBLE
+                } else {
+                    visibility = View.GONE
+                }
+            }
+            item.findViewById<View>(R.id.rowRoot).setOnClickListener { row.onClick() }
+            container.addView(item)
+        }
+    }
+
+    private fun setupAccordion(header: View, body: View, chevron: ImageView) {
+        header.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val isExpanded = body.visibility == View.VISIBLE
+            if (isExpanded) {
+                body.visibility = View.GONE
+                chevron.setImageResource(R.drawable.ic_chevron_down)
+            } else {
+                body.visibility = View.VISIBLE
+                chevron.setImageResource(R.drawable.ic_chevron_up)
+            }
+        }
+    }
+
+    private fun showTelemetryDetailDialog() {
+        val telemetryRepo = com.jarvis.assistant.telemetry.TelemetryRepository.getInstance(requireContext())
+        val metrics = telemetryRepo.deviceMetrics.value
+        val model = metrics?.deviceModel ?: "Android Device"
+        val ram = if (metrics != null) "${metrics.totalRamMb - metrics.availableRamMb} MB / ${metrics.totalRamMb} MB" else "Active"
+        val cores = metrics?.cpuCores ?: Runtime.getRuntime().availableProcessors()
+        val vulkan = if (metrics?.isVulkanSupported == true) "Vulkan 1.3 Available" else "OpenGLES Only"
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("1Hz System Diagnostics & Telemetry")
+            .setMessage(
+                "DEVICE: $model\n" +
+                "CPU CORES: $cores Thread Units\n" +
+                "RAM UTILIZATION: $ram\n" +
+                "GRAPHICS ACCELERATION: $vulkan\n" +
+                "SAMPLING FREQUENCY: 1.0 Hz Rolling Window (300 samples)\n" +
+                "THREADING PROFILE: Mobile Low-Latency Cores\n" +
+                "LOCAL AI ENGINE: GGUF llama.cpp Runtime"
+            )
+            .setPositiveButton("Dismiss", null)
+            .show()
+    }
+
+    private fun showAddMcpServerDialog() {
+        val layout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(48, 24, 48, 12)
+        }
+        val etName = EditText(requireContext()).apply {
+            hint = "Server Name (e.g. Local MCP Bridge)"
+            setText("Local MCP Bridge")
+        }
+        val etUrl = EditText(requireContext()).apply {
+            hint = "Streamable HTTP endpoint (e.g. http://127.0.0.1:3000/mcp)"
+            setText("http://127.0.0.1:3000/mcp")
+        }
+        val etToken = EditText(requireContext()).apply {
+            hint = "Bearer token (optional)"
+        }
+        layout.addView(etName)
+        layout.addView(etUrl)
+        layout.addView(etToken)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Register MCP Server")
+            .setView(layout)
+            .setPositiveButton("Register") { _, _ ->
+                val name = etName.text.toString().trim()
+                val url = etUrl.text.toString().trim()
+                if (url.isNotBlank()) {
+                    val server = com.jarvis.assistant.mcp.McpServer.fromName(
+                        name = name.ifBlank { "Custom Server" },
+                        url = url,
+                        authToken = etToken.text.toString()
+                    )
+                    com.jarvis.assistant.mcp.McpManager.getInstance(requireContext())
+                        .registerServer(server)
+                    Toast.makeText(requireContext(), "MCP Server '${server.name}' saved. Connecting…", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun setupObservers() {
+        // 1Hz Telemetry Flow
+        viewLifecycleOwner.lifecycleScope.launch {
+            val telemetryRepo = com.jarvis.assistant.telemetry.TelemetryRepository.getInstance(requireContext())
+            telemetryRepo.startSampling()
+            telemetryRepo.deviceMetrics.collect { metrics ->
+                if (metrics != null && _binding != null) {
+                    val usedRam = metrics.totalRamMb - metrics.availableRamMb
+                    binding.tvTelemetryRam.text = "${usedRam}MB"
+                    binding.tvTelemetryThreadingProfile.text = "${metrics.cpuCores}T • ${metrics.deviceModel.take(12)}"
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val telemetryRepo = com.jarvis.assistant.telemetry.TelemetryRepository.getInstance(requireContext())
+            telemetryRepo.history.collect { samples ->
+                val latest = samples.lastOrNull()
+                if (latest != null && _binding != null) {
+                    binding.tvTelemetryTps.text = if (latest.tokensPerSecond > 0f) String.format(Locale.ROOT, "%.1f", latest.tokensPerSecond) else "0.0"
+                    val ttft = telemetryRepo.generationHistory.value.lastOrNull()?.firstTokenMs ?: 0L
+                    binding.tvTelemetryTtft.text = if (ttft > 0L) "${ttft}ms" else "--"
+                }
+            }
+        }
+
+        // Local Model Download Flow
+        val localModelManager = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(requireContext(), viewLifecycleOwner.lifecycleScope)
+        viewLifecycleOwner.lifecycleScope.launch {
+            localModelManager.downloadState.collect { state ->
+                if (_binding == null) return@collect
+                when (state) {
+                    is com.jarvis.assistant.ai.local.ModelDownloadState.Downloading -> {
+                        binding.progressBarLlama.visibility = View.VISIBLE
+                        binding.tvDownloadProgressLlama.visibility = View.VISIBLE
+                        binding.progressBarLlama.progress = state.progressPercent
+                        val mb = state.bytesDownloaded / (1024 * 1024)
+                        val totalMb = state.totalBytes / (1024 * 1024)
+                        binding.tvDownloadProgressLlama.text = "Downloading: ${state.progressPercent}% ($mb MB / $totalMb MB)"
+                        binding.btnDownloadLlama.isEnabled = false
+                        binding.btnDownloadLlama.text = "Downloading (${state.progressPercent}%)"
+                    }
+                    is com.jarvis.assistant.ai.local.ModelDownloadState.Completed -> {
+                        binding.progressBarLlama.visibility = View.GONE
+                        binding.tvDownloadProgressLlama.visibility = View.VISIBLE
+                        binding.tvDownloadProgressLlama.text = "Model ready and verified (GGUF magic valid)"
+                        binding.btnDownloadLlama.isEnabled = true
+                        binding.btnDownloadLlama.text = "Loaded & Ready (809 MB)"
+                    }
+                    is com.jarvis.assistant.ai.local.ModelDownloadState.Error -> {
+                        binding.progressBarLlama.visibility = View.GONE
+                        binding.tvDownloadProgressLlama.visibility = View.VISIBLE
+                        binding.tvDownloadProgressLlama.text = "Download error: ${state.message}"
+                        binding.btnDownloadLlama.isEnabled = true
+                        binding.btnDownloadLlama.text = "Retry Download"
+                    }
+                    is com.jarvis.assistant.ai.local.ModelDownloadState.Idle -> {
+                        if (localModelManager.isModelReady(com.jarvis.assistant.ai.local.LocalAiConfig.MODEL_LLAMA_3_2_1B)) {
+                            binding.progressBarLlama.visibility = View.GONE
+                            binding.tvDownloadProgressLlama.visibility = View.VISIBLE
+                            binding.tvDownloadProgressLlama.text = "Model ready on device"
+                            binding.btnDownloadLlama.text = "Loaded & Ready (809 MB)"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        context?.let { ctx ->
+            com.jarvis.assistant.telemetry.TelemetryRepository.getInstance(ctx).stopSampling()
+        }
         _binding = null
     }
 }

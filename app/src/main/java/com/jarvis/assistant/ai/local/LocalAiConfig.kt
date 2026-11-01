@@ -9,17 +9,18 @@ data class LocalAiConfig(
     val topK: Int = 40,
     val topP: Float = 0.9f,
     val maxTokens: Int = 512,
-    val contextWindowLimit: Int = 2048,
-    val threads: Int = 4,
+    val contextWindowLimit: Int = JarvisThreadManager.recommendedContextLength(),
+    val threads: Int = JarvisThreadManager.recommendedThreads(),
     val enableGpuAcceleration: Boolean = false
 ) {
     companion object {
         const val MODEL_QWEN_0_5B = "qwen-2.5-0.5b-instruct"
         const val MODEL_QWEN_1_5B = "qwen-2.5-1.5b-instruct"
-        const val MODEL_HERMES_1_5B = "hermes-2-pro-1.5b"
         const val MODEL_SMOLLM_1_7B = "smollm2-1.7b-instruct"
+        const val MODEL_LLAMA_3_2_1B = "llama-3.2-1b-instruct"
+        const val MODEL_DEEPSEEK_R1_1_5B = "deepseek-r1-distill-qwen-1.5b"
 
-        const val DEFAULT_MODEL_ID = MODEL_QWEN_0_5B
+        const val DEFAULT_MODEL_ID = MODEL_QWEN_1_5B
 
         val AVAILABLE_MODELS = listOf(
             LocalModelDescriptor(
@@ -45,17 +46,6 @@ data class LocalAiConfig(
                 description = "Ultra-fast multilingual model with superior Hindi/Hinglish language fluency and fast token generation."
             ),
             LocalModelDescriptor(
-                id = MODEL_HERMES_1_5B,
-                name = "Hermes 2 Pro (1.5B Qwen)",
-                provider = "Nous Research",
-                parameters = "1.5 Billion",
-                quantization = "GGUF Q4_K_M",
-                downloadSizeBytes = 986_099_840L, // ~940 MB
-                downloadUrl = "https://huggingface.co/NousResearch/Hermes-2-Pro-Qwen-1.5B-GGUF/resolve/main/Hermes-2-Pro-Qwen-1.5B-Q4_K_M.gguf",
-                recommendedMinRamGb = 4,
-                description = "Official Nous Research agentic model with native structured tool calling and autonomous reasoning support."
-            ),
-            LocalModelDescriptor(
                 id = MODEL_SMOLLM_1_7B,
                 name = "SmolLM2 (1.7B Instruct)",
                 provider = "HuggingFace",
@@ -65,6 +55,28 @@ data class LocalAiConfig(
                 downloadUrl = "https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct-GGUF/resolve/main/smollm2-1.7b-instruct-q4_k_m.gguf",
                 recommendedMinRamGb = 4,
                 description = "Ultra-compact mobile instruction model designed for extreme battery efficiency and low memory footprint."
+            ),
+            LocalModelDescriptor(
+                id = MODEL_LLAMA_3_2_1B,
+                name = "Llama 3.2 (1B Instruct)",
+                provider = "Meta AI",
+                parameters = "1.23 Billion",
+                quantization = "GGUF Q4_K_M",
+                downloadSizeBytes = 848_297_984L, // ~809 MB
+                downloadUrl = "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+                recommendedMinRamGb = 4,
+                description = "Meta's state-of-the-art lightweight instruction tuned on-device model with high reasoning capacity."
+            ),
+            LocalModelDescriptor(
+                id = MODEL_DEEPSEEK_R1_1_5B,
+                name = "DeepSeek R1 (1.5B Distill)",
+                provider = "DeepSeek AI",
+                parameters = "1.5 Billion",
+                quantization = "GGUF Q4_K_M",
+                downloadSizeBytes = 1_117_262_848L, // ~1.04 GB
+                downloadUrl = "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf",
+                recommendedMinRamGb = 4,
+                description = "DeepSeek's distilled reasoning model capable of deep chain-of-thought analysis directly on your phone."
             )
         )
 
@@ -89,7 +101,9 @@ data class LocalModelDescriptor(
     val downloadSizeBytes: Long,
     val downloadUrl: String,
     val recommendedMinRamGb: Int,
-    val description: String
+    val description: String,
+    /** Optional SHA-256 of the GGUF file (verified after download when present). */
+    val sha256: String? = null
 ) {
     val formattedSize: String
         get() {

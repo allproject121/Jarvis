@@ -71,7 +71,14 @@ class HermesAgentProvider private constructor(
             }
         }
 
-        val tools = if (availableTools.isNotEmpty()) availableTools else toolDispatcher.getAvailableToolSchemas()
+        toolDispatcher.startNewTurn(java.util.UUID.randomUUID().toString())
+        val agentPipelineOn = com.jarvis.assistant.androllm.agent.integration.AgentPipeline.isEnabled(context)
+        if (agentPipelineOn) com.jarvis.assistant.androllm.agent.integration.AgentPipeline.beginTurn(context, cleanGoal)
+        val tools = when {
+            availableTools.isNotEmpty() -> availableTools
+            agentPipelineOn -> com.jarvis.assistant.androllm.agent.integration.AgentPipeline.routedSchemas(context, cleanGoal).ifEmpty { toolDispatcher.getAvailableToolSchemas() }
+            else -> toolDispatcher.getAvailableToolSchemas()
+        }
         val hermesSystemPrompt = buildHermesSystemPrompt(systemPrompt, memoryContext, tools)
 
         val workingHistory = chatHistory.toMutableList()
@@ -111,7 +118,7 @@ class HermesAgentProvider private constructor(
                 Log.i(TAG, "Hermes Step $stepCount: Executing tool '${call.functionName}' with args: ${call.arguments}")
 
                 emit(AiStreamChunk(token = "\n[Executing ${call.functionName}...]", isComplete = false))
-                val result = toolDispatcher.dispatchTool(call)
+                val result = if (agentPipelineOn) com.jarvis.assistant.androllm.agent.integration.AgentPipeline.dispatch(context, call) else toolDispatcher.dispatchTool(call)
 
                 val responseMsg = result.resultJson.optString("message", "Success")
                 emit(AiStreamChunk(token = "\n$responseMsg", isComplete = false))
@@ -140,7 +147,11 @@ class HermesAgentProvider private constructor(
     }.flowOn(Dispatchers.IO)
 
     override suspend fun executeToolCall(toolCall: AiToolCall): AiToolResult {
-        return toolDispatcher.dispatchTool(toolCall)
+        return if (com.jarvis.assistant.androllm.agent.integration.AgentPipeline.isEnabled(context)) {
+            com.jarvis.assistant.androllm.agent.integration.AgentPipeline.dispatch(context, toolCall)
+        } else {
+            toolDispatcher.dispatchTool(toolCall)
+        }
     }
 
     override suspend fun unload() = withContext(Dispatchers.IO) {

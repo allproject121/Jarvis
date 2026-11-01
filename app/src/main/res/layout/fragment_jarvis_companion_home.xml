@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#0B0416"
+    android:background="?attr/themeBg"
     android:scrollbars="none"
     android:clipToPadding="false"
     android:paddingStart="16dp"
@@ -39,7 +39,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="JARVIS AI 5.2"
-                    android:textColor="#C084FC"
+                    android:textColor="?attr/themeAccent"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.08" />
@@ -49,7 +49,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Companion Core · Online"
-                    android:textColor="#A855F7"
+                    android:textColor="?attr/themeAccent"
                     android:textSize="12sp"
                     android:letterSpacing="0.03" />
             </LinearLayout>
@@ -61,7 +61,7 @@
                 android:layout_height="36dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:background="@drawable/bg_mode_switch_banner"
+                android:background="@drawable/bg_themed2_mode_banner"
                 android:orientation="horizontal"
                 android:gravity="center"
                 android:paddingStart="12dp"
@@ -73,7 +73,7 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_sparkle"
-                    app:tint="#60A5FA"
+                    app:tint="?attr/themeAccent"
                     android:contentDescription="Jarvis icon" />
 
                 <TextView
@@ -81,7 +81,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:text="⚡ JARVIS MODE"
-                    android:textColor="#93C5FD"
+                    android:textColor="?attr/themeAccent"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.05" />
@@ -111,7 +111,7 @@
                 android:layout_width="130dp"
                 android:layout_height="130dp"
                 android:layout_gravity="center"
-                android:background="@drawable/bg_jarvis_mode_pill"
+                android:background="@drawable/bg_themed2_mode_pill"
                 android:clickable="true"
                 android:focusable="true"
                 android:elevation="12dp">
@@ -139,7 +139,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="TAP ORB TO TALK TO MAYA"
-                    android:textColor="#F3E8FF"
+                    android:textColor="?attr/themeTextPrimary"
                     android:textSize="13sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.06" />
@@ -149,7 +149,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="PocketTTS 24kHz Native Vocoder Ready"
-                    android:textColor="#C084FC"
+                    android:textColor="?attr/themeAccent"
                     android:textSize="11sp"
                     android:layout_marginTop="2dp" />
             </LinearLayout>
@@ -160,7 +160,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="NEURAL PERSONAS &amp; VOICES"
-            android:textColor="#E9D5FF"
+            android:textColor="?attr/themeTextPrimary"
             android:textSize="13sp"
             android:textStyle="bold"
             android:letterSpacing="0.08"
@@ -185,7 +185,7 @@
                     android:layout_width="140dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="10dp"
-                    android:background="@drawable/bg_jarvis_character_active"
+                    android:background="@drawable/bg_themed2_character_active"
                     android:orientation="vertical"
                     android:padding="12dp">
 
@@ -193,7 +193,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🌸 MAYA"
-                        android:textColor="#F8FAFC"
+                        android:textColor="?attr/themeTextPrimary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -201,7 +201,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Sweet Companion\nHindi / Hinglish"
-                        android:textColor="#C084FC"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="11sp"
                         android:layout_marginTop="4dp" />
 
@@ -210,7 +210,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:background="@drawable/bg_jarvis_mode_pill"
+                        android:background="@drawable/bg_themed2_mode_pill"
                         android:gravity="center"
                         android:padding="4dp"
                         android:text="🔊 TEST VOICE"
@@ -225,7 +225,7 @@
                     android:layout_width="140dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="10dp"
-                    android:background="@drawable/bg_jarvis_character_inactive"
+                    android:background="@drawable/bg_themed2_character_inactive"
                     android:orientation="vertical"
                     android:padding="12dp">
 
@@ -233,7 +233,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="⚡ MAYA PRO"
-                        android:textColor="#F8FAFC"
+                        android:textColor="?attr/themeTextPrimary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -241,7 +241,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Executive Agent\nFast &amp; Crisp"
-                        android:textColor="#94A3B8"
+                        android:textColor="?attr/themeTextSecondary"
                         android:textSize="11sp"
                         android:layout_marginTop="4dp" />
 
@@ -250,11 +250,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:background="#261042"
+                        android:background="?attr/themeChipBg"
                         android:gravity="center"
                         android:padding="4dp"
                         android:text="🔊 TEST VOICE"
-                        android:textColor="#C084FC"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="10sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -265,7 +265,7 @@
                     android:layout_width="140dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="10dp"
-                    android:background="@drawable/bg_jarvis_character_inactive"
+                    android:background="@drawable/bg_themed2_character_inactive"
                     android:orientation="vertical"
                     android:padding="12dp">
 
@@ -281,7 +281,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Secret Level 3\nPassionate Partner"
-                        android:textColor="#FDA4AF"
+                        android:textColor="?attr/themeTextSecondary"
                         android:textSize="11sp"
                         android:layout_marginTop="4dp" />
 
@@ -305,7 +305,7 @@
                     android:layout_width="140dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="10dp"
-                    android:background="@drawable/bg_jarvis_character_inactive"
+                    android:background="@drawable/bg_themed2_character_inactive"
                     android:orientation="vertical"
                     android:padding="12dp">
 
@@ -313,7 +313,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🛡️ F.R.I.D.A.Y."
-                        android:textColor="#F8FAFC"
+                        android:textColor="?attr/themeTextPrimary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -321,7 +321,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Cyber Protocol\nBritish AI Tone"
-                        android:textColor="#94A3B8"
+                        android:textColor="?attr/themeTextSecondary"
                         android:textSize="11sp"
                         android:layout_marginTop="4dp" />
 
@@ -330,11 +330,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:background="#261042"
+                        android:background="?attr/themeChipBg"
                         android:gravity="center"
                         android:padding="4dp"
                         android:text="🔊 TEST VOICE"
-                        android:textColor="#C084FC"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="10sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -345,7 +345,7 @@
                     android:layout_width="140dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="10dp"
-                    android:background="@drawable/bg_jarvis_character_inactive"
+                    android:background="@drawable/bg_themed2_character_inactive"
                     android:orientation="vertical"
                     android:padding="12dp">
 
@@ -353,7 +353,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🖤 VENOM"
-                        android:textColor="#F8FAFC"
+                        android:textColor="?attr/themeTextPrimary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -361,7 +361,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Deep Aggressive\nDark Symbiote"
-                        android:textColor="#94A3B8"
+                        android:textColor="?attr/themeTextSecondary"
                         android:textSize="11sp"
                         android:layout_marginTop="4dp" />
 
@@ -370,11 +370,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:background="#261042"
+                        android:background="?attr/themeChipBg"
                         android:gravity="center"
                         android:padding="4dp"
                         android:text="🔊 TEST VOICE"
-                        android:textColor="#C084FC"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="10sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -386,7 +386,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="AUTONOMOUS DIRECTIVES &amp; TOOLS"
-            android:textColor="#E9D5FF"
+            android:textColor="?attr/themeTextPrimary"
             android:textSize="13sp"
             android:textStyle="bold"
             android:letterSpacing="0.08"
@@ -416,7 +416,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🎨 ChatGPT Image"
-                    android:textColor="#F8FAFC"
+                    android:textColor="?attr/themeTextPrimary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
@@ -424,7 +424,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Autonomous prompt -> ChatGPT image generation &amp; download"
-                    android:textColor="#C084FC"
+                    android:textColor="?attr/themeAccent"
                     android:textSize="11sp"
                     android:layout_marginTop="4dp" />
 
@@ -433,7 +433,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="34dp"
                     android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_jarvis_mode_pill"
+                    android:background="@drawable/bg_themed2_mode_pill"
                     android:text="EXECUTE"
                     android:textColor="#FFFFFF"
                     android:textSize="11sp"
@@ -455,7 +455,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🎬 Gemini Video/Img"
-                    android:textColor="#F8FAFC"
+                    android:textColor="?attr/themeTextPrimary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
@@ -463,7 +463,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Veo video &amp; Imagen generation macro via Gemini app"
-                    android:textColor="#C084FC"
+                    android:textColor="?attr/themeAccent"
                     android:textSize="11sp"
                     android:layout_marginTop="4dp" />
 
@@ -472,7 +472,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="34dp"
                     android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_jarvis_mode_pill"
+                    android:background="@drawable/bg_themed2_mode_pill"
                     android:text="EXECUTE"
                     android:textColor="#FFFFFF"
                     android:textSize="11sp"
@@ -502,7 +502,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🚨 Touch Guard"
-                    android:textColor="#F8FAFC"
+                    android:textColor="?attr/themeTextPrimary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
@@ -511,7 +511,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Anti-theft motion detector: DISARMED"
-                    android:textColor="#94A3B8"
+                    android:textColor="?attr/themeTextSecondary"
                     android:textSize="11sp"
                     android:layout_marginTop="4dp" />
 
@@ -520,7 +520,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="34dp"
                     android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_jarvis_mode_pill"
+                    android:background="@drawable/bg_themed2_mode_pill"
                     android:text="ARM GUARD"
                     android:textColor="#FFFFFF"
                     android:textSize="11sp"
@@ -542,7 +542,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🎙️ PocketTTS Voice"
-                    android:textColor="#F8FAFC"
+                    android:textColor="?attr/themeTextPrimary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
@@ -550,7 +550,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Offline 24kHz neural speech generator"
-                    android:textColor="#C084FC"
+                    android:textColor="?attr/themeAccent"
                     android:textSize="11sp"
                     android:layout_marginTop="4dp" />
 
@@ -559,7 +559,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="34dp"
                     android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_jarvis_mode_pill"
+                    android:background="@drawable/bg_themed2_mode_pill"
                     android:text="TEST SPEECH"
                     android:textColor="#FFFFFF"
                     android:textSize="11sp"
@@ -589,7 +589,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="💬 WhatsApp Reply"
-                    android:textColor="#F8FAFC"
+                    android:textColor="?attr/themeTextPrimary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
@@ -597,7 +597,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Notification reading &amp; voice remote reply"
-                    android:textColor="#C084FC"
+                    android:textColor="?attr/themeAccent"
                     android:textSize="11sp"
                     android:layout_marginTop="4dp" />
 
@@ -606,7 +606,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="34dp"
                     android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_jarvis_mode_pill"
+                    android:background="@drawable/bg_themed2_mode_pill"
                     android:text="SETTINGS"
                     android:textColor="#FFFFFF"
                     android:textSize="11sp"
@@ -628,7 +628,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🔒 AppLock Shield"
-                    android:textColor="#F8FAFC"
+                    android:textColor="?attr/themeTextPrimary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
@@ -636,7 +636,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Hardware biometric app protection"
-                    android:textColor="#C084FC"
+                    android:textColor="?attr/themeAccent"
                     android:textSize="11sp"
                     android:layout_marginTop="4dp" />
 
@@ -645,7 +645,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="34dp"
                     android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_jarvis_mode_pill"
+                    android:background="@drawable/bg_themed2_mode_pill"
                     android:text="MANAGE LOCK"
                     android:textColor="#FFFFFF"
                     android:textSize="11sp"

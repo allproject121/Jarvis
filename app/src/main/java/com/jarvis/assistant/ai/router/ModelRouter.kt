@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
@@ -42,7 +44,7 @@ class ModelRouter private constructor(
         const val DEFAULT_LOCAL_ENDPOINT = "http://127.0.0.1:11434"
 
         /** Default local model tag (must exist in the user's Ollama install). */
-        const val DEFAULT_LOCAL_MODEL = "qwen3.8:27b"
+        const val DEFAULT_LOCAL_MODEL = "qwen3:8b"
 
         @Volatile
         private var instance: ModelRouter? = null
@@ -56,6 +58,9 @@ class ModelRouter private constructor(
 
     private val localAiEngine = LocalAiEngine.getInstance(context, scope)
     private val hermesAgentProvider = com.jarvis.assistant.ai.provider.HermesAgentProvider.getInstance(context, scope)
+    // Optional AndroLLM providers (lazy: nothing is constructed unless their mode is selected).
+    private val liteRtProvider by lazy { com.jarvis.assistant.ai.provider.LiteRtLmProvider.getInstance(context, scope) }
+    private val cloudGatewayProvider by lazy { com.jarvis.assistant.ai.provider.CloudGatewayProvider.getInstance(context, scope) }
     private val vectorMemoryEngine = VectorMemoryEngine.getInstance(context, scope)
     private val chatGptClient = ChatGptClient()
     private val localHostClient = com.jarvis.assistant.network.LocalHostLlmClient()
@@ -190,6 +195,57 @@ class ModelRouter private constructor(
                 }
             }
 
+            AiModelMode.LOCAL_LITERT -> {
+                if (!com.jarvis.assistant.androllm.AndroLlmFlags.isEnabled(context, com.jarvis.assistant.androllm.AndroLlmFlags.LITERT_ENGINE)) {
+                    Log.i(TAG, "LiteRT-LM mode selected but the LiteRT engine flag is off -> Local Offline AI")
+                    _lastActiveProviderName.value = "Local Offline AI"
+                    _isOfflineFallbackActive.value = false
+                    localAiEngine.generateStreaming(clean, systemPrompt, memoryContext, chatHistory).collect { emit(it) }
+                } else {
+                    Log.i(TAG, "Routing query to optional LiteRT-LM on-device engine (User Selected)")
+                    _lastActiveProviderName.value = "LiteRT-LM (On-device)"
+                    _isOfflineFallbackActive.value = false
+                    var receivedAny = false
+                    liteRtProvider.streamResponse(clean, systemPrompt, memoryContext, chatHistory)
+                        .map { it.token }
+                        .filter { it.isNotEmpty() }
+                        .catch { e ->
+                            Log.w(TAG, "LiteRT-LM failed (${e.message}) -> Falling back to Local Offline AI")
+                            if (!receivedAny) triggerLocalFallback(clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
+                        }
+                        .collect { token ->
+                            receivedAny = true
+                            emit(token)
+                        }
+                }
+            }
+
+            AiModelMode.CLOUD_GATEWAY -> {
+                val gatewayEnabled = com.jarvis.assistant.androllm.AndroLlmFlags.isEnabled(context, com.jarvis.assistant.androllm.AndroLlmFlags.CLOUD_GATEWAY)
+                if (gatewayEnabled && hasNet) {
+                    Log.i(TAG, "Routing query to optional AndroLLM Cloud Gateway (User Selected)")
+                    _lastActiveProviderName.value = "Cloud Gateway"
+                    _isOfflineFallbackActive.value = false
+                    var receivedAny = false
+                    cloudGatewayProvider.streamResponse(clean, systemPrompt, memoryContext, chatHistory)
+                        .map { it.token }
+                        .filter { it.isNotEmpty() }
+                        .catch { e ->
+                            Log.w(TAG, "Cloud Gateway failed (${e.message}) -> Local Host / Offline failover")
+                            if (!receivedAny) {
+                                tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
+                            }
+                        }
+                        .collect { token ->
+                            receivedAny = true
+                            emit(token)
+                        }
+                } else {
+                    Log.w(TAG, "Cloud Gateway unavailable (enabled=$gatewayEnabled, hasNet=$hasNet) -> Local Host / Offline")
+                    tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
+                }
+            }
+
             AiModelMode.AUTO_HYBRID -> {
                 if (hasNet && openAiApiKey.isNotBlank()) {
                     Log.i(TAG, "AUTO_HYBRID: Online network active -> Routing to Cloud ChatGPT")
@@ -241,6 +297,9 @@ class ModelRouter private constructor(
             _lastActiveProviderName.value = "Local Host AI ($model)"
             _isOfflineFallbackActive.value = false
             var receivedAnyChunk = false
+            // Set when the catch below already ran the offline fallback, so it isn't run twice
+            // (that produced the same offline answer duplicated in one reply).
+            var fallbackDone = false
             localHostClient.streamChatCompletion(
                 rawEndpoint = endpoint,
                 modelName = model,
@@ -250,12 +309,13 @@ class ModelRouter private constructor(
                 chatHistory = chatHistory
             ).catch { e ->
                 Log.w(TAG, "Local Host unreachable: ${e.message} -> Falling back to on-device offline tools")
+                fallbackDone = true
                 triggerLocalFallback(userPrompt, systemPrompt, memoryContext, chatHistory, emitBlock)
             }.collect { chunk ->
                 receivedAnyChunk = true
                 emitBlock(chunk)
             }
-            if (!receivedAnyChunk) {
+            if (!receivedAnyChunk && !fallbackDone) {
                 triggerLocalFallback(userPrompt, systemPrompt, memoryContext, chatHistory, emitBlock)
             }
         } catch (e: Exception) {

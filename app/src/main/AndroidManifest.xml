@@ -17,6 +17,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
@@ -49,6 +50,12 @@
         </intent>
     </queries>
 
+    <!-- AndroLLM tools: calendar, Wi-Fi -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
     <application
         android:name=".JarvisApp"
         android:allowBackup="false"
@@ -71,6 +78,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Jarvis Code Studio: AI coding IDE (same task, Jarvis theme) -->
+        <activity
+            android:name=".codestudio.CodeStudioActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- AndroLLM settings/pages merged into Jarvis Settings (same task, Jarvis theme) -->
+        <activity
+            android:name=".ui.settings.AndroLlmPageActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".ui.settings.SettingsActivity"
@@ -141,7 +163,7 @@
 
         <activity
             android:name=".ui.godseye.GodsEyeActivity"
-            android:exported="true"
+            android:exported="false"
             android:hardwareAccelerated="true"
             android:launchMode="singleTop"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
@@ -306,6 +328,21 @@
             android:name=".core.JarvisReminderReceiver"
             android:exported="false" />
 
+        <!-- AndroLLM tools: reminder/alarm notifications -->
+        <receiver
+            android:name=".androllm.tools.impl.ReminderNotifications$ReminderReceiver"
+            android:exported="false" />
+        <!-- AndroLLM optional voice assistant mode (off by default; never runs alongside Jarvis' voice service) -->
+        <service
+            android:name=".androllm.voice.assistant.service.VoiceAssistantService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
+        <!-- WorkManager foreground host for ModelDownloadWorker (FOREGROUND_SERVICE_TYPE_DATA_SYNC).
+             Without this type the app crashes on launch (Android 14+) whenever a download job resumes. -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
     </application>
 
 </manifest>

@@ -1,0 +1,1230 @@
+package com.jarvis.assistant.androllm.engine.api
+
+import com.jarvis.assistant.androllm.engine.support.Result
+import com.jarvis.assistant.androllm.engine.support.getOrNull
+import com.jarvis.assistant.androllm.engine.support.getOrThrow
+import com.jarvis.assistant.androllm.engine.support.Model
+import com.jarvis.assistant.androllm.engine.backend.BackendCapabilities
+import com.jarvis.assistant.androllm.engine.backend.BackendSelector
+import com.jarvis.assistant.androllm.engine.utils.CoherenceChecker
+import com.jarvis.assistant.androllm.engine.utils.CoherenceResult
+import com.jarvis.assistant.androllm.engine.models.BackendBenchmarkResult
+import com.jarvis.assistant.androllm.engine.models.EngineCapabilities
+import com.jarvis.assistant.androllm.engine.models.EngineConfig
+import com.jarvis.assistant.androllm.engine.models.EngineDebugInfo
+import com.jarvis.assistant.androllm.engine.models.EngineModelInfo
+import com.jarvis.assistant.androllm.engine.models.EngineStats
+import com.jarvis.assistant.androllm.engine.models.GenerationConfig
+import com.jarvis.assistant.androllm.engine.models.MemoryStats
+import com.jarvis.assistant.androllm.engine.models.ModelLoadConfig
+import com.jarvis.assistant.androllm.engine.models.StreamChunk
+import com.jarvis.assistant.androllm.engine.models.BackendType
+import com.jarvis.assistant.androllm.engine.models.ChatPromptMessage
+import com.jarvis.assistant.androllm.engine.core.BufferPool
+import com.jarvis.assistant.androllm.engine.core.OutputSanitizer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong        /**
+         * Tokenizer control markers that must never appear in decoded output
+         * (see LiteRtLmEngine.stripControlTokens). Used by the load-time
+         * self-test to reject mismatched containers.
+         */
+        private val CONTROL_TOKEN_MARKERS = listOf(
+            "<|im_start|>", "<|im_end|>", "<|endoftext|>", "<|end_of_text|>",
+            "<|end_of_turn|>", "<think>", "</think>", "<bos>", "<eos>", "<pad>", "<unk>",
+            "<start_of_turn>", "<end_of_turn>"
+        )
+
+        /**
+         * No-op placeholder engine used in tests and as a safe fallback
+         * when the native library is unavailable.
+         */
+class NoOpInferenceEngine : InferenceEngine {
+
+    override val capabilities = EngineCapabilities(
+        name = "AndroLLM Engine (Placeholder)",
+        version = "1.0.0",
+        backend = BackendType.CPU
+    )
+
+    private val _backendCapabilities = MutableStateFlow<BackendCapabilities>(BackendCapabilities.UNKNOWN)
+    override val backendCapabilities: StateFlow<BackendCapabilities> = _backendCapabilities.asStateFlow()
+
+    private val _engineState = MutableStateFlow<EngineState>(EngineState.Unloaded)
+    override val engineState = _engineState.asStateFlow()
+
+    private val _stats = MutableStateFlow<EngineStats?>(null)
+    override val stats = _stats.asStateFlow()
+
+    private var loadedModel: EngineModelInfo? = null
+
+    override suspend fun initialize(config: EngineConfig): Result<Unit> = com.jarvis.assistant.androllm.engine.support.runCatching {
+        if (_engineState.value == EngineState.Unloaded) {
+            _engineState.value = EngineState.Loading("Loading...")
+        }
+    }
+
+    override fun isLoaded(): Boolean = loadedModel != null
+
+    override fun getLoadedModel(): EngineModelInfo? = loadedModel
+
+    override suspend fun loadModel(model: Model, config: ModelLoadConfig): Result<EngineModelInfo> =
+        com.jarvis.assistant.androllm.engine.support.runCatching {
+            _engineState.value = EngineState.Loading("Loading...")
+            val info = EngineModelInfo(
+                id = model.id,
+                filePath = model.filePath ?: "",
+                contextLength = config.contextLength,
+                vocabSize = 0,
+                backend = BackendType.CPU,
+                quantization = model.quantization
+            )
+            loadedModel = info
+            _engineState.value = EngineState.Ready(
+                model = info,
+                memoryStats = null,
+                promptCount = 0,
+                loadedSinceMs = System.currentTimeMillis()
+            )
+            info
+        }
+
+    override suspend fun unloadModel(): Result<Unit> = com.jarvis.assistant.androllm.engine.support.runCatching {
+        loadedModel = null
+        _engineState.value = EngineState.Unloaded
+    }
+
+    override fun tokenStream(prompt: String, config: GenerationConfig): kotlinx.coroutines.flow.Flow<Result<StreamChunk>> =
+        kotlinx.coroutines.flow.flow {
+            emit(Result.Success(StreamChunk("This is a ", false)))
+            kotlinx.coroutines.delay(50)
+            emit(Result.Success(StreamChunk("placeholder ", false)))
+            kotlinx.coroutines.delay(50)
+            emit(Result.Success(StreamChunk("response. ", false)))
+            kotlinx.coroutines.delay(50)
+            emit(Result.Success(StreamChunk("LLM inference is provided by the local LiteRT-LM engine.", true, 4)))
+        }
+
+    override suspend fun buildChatPrompt(
+        messages: List<ChatPromptMessage>,
+        addAssistant: Boolean
+    ): Result<String> = com.jarvis.assistant.androllm.engine.support.runCatching {
+        buildString {
+            for (message in messages) {
+                append("<|im_start|>${message.role}\n${message.content}<|im_end|>\n")
+            }
+            if (addAssistant) append("<|im_start|>assistant\n")
+        }
+    }
+
+    override suspend fun generate(prompt: String, config: GenerationConfig): Result<String> =
+        com.jarvis.assistant.androllm.engine.support.runCatching {
+            "This is a placeholder response. LLM inference is provided by the local LiteRT-LM engine."
+        }
+
+    override fun cancel(): Result<Unit> = Result.Success(Unit)
+
+    override fun benchmark(iterations: Int): kotlinx.coroutines.flow.Flow<Result<com.jarvis.assistant.androllm.engine.models.BenchmarkResult>> =
+        kotlinx.coroutines.flow.flow {
+            emit(
+                Result.Success(
+                    com.jarvis.assistant.androllm.engine.models.BenchmarkResult(
+                        iterations = iterations,
+                        averageTokensPerSecond = 10f,
+                        bestTokensPerSecond = 12f,
+                        averagePromptTokensPerSecond = 50f
+                    )
+                )
+            )
+        }
+
+    override suspend fun resetChat(): Result<Unit> = Result.Success(Unit)
+
+    override suspend fun getDebugInfo(): Result<EngineDebugInfo?> = Result.Success(null)
+
+    override fun release() {
+        loadedModel = null
+        _engineState.value = EngineState.Unloaded
+    }
+}
+
+/**
+ * Default [EngineRepository] backed by an [InferenceEngine].
+ */
+class DefaultEngineRepository constructor(
+    private val engine: InferenceEngine
+) : EngineRepository {
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    private val _engineState = MutableStateFlow<EngineState>(EngineState.Unloaded)
+    override val engineState: StateFlow<EngineState> = _engineState.asStateFlow()
+
+    private val _generationState = MutableStateFlow<GenerationState>(GenerationState.Idle)
+    override val generationState: StateFlow<GenerationState> = _generationState.asStateFlow()
+
+    private val _performanceStats = MutableStateFlow<EngineStats?>(null)
+    override val performanceStats: StateFlow<EngineStats?> = _performanceStats.asStateFlow()
+
+    override fun takeLastNativeToolCalls(): List<com.jarvis.assistant.androllm.engine.core.NativeToolCall> =
+        engine.takeLastNativeToolCalls()
+
+    private val _memoryStats = MutableStateFlow<MemoryStats?>(null)
+    override val memoryStats: StateFlow<MemoryStats?> = _memoryStats.asStateFlow()
+
+    private val _backendCapabilities = MutableStateFlow<BackendCapabilities>(BackendCapabilities.UNKNOWN)
+    override val backendCapabilities: StateFlow<BackendCapabilities> = _backendCapabilities.asStateFlow()
+
+    /**
+     * Serializes [generate] and [generateQuiet] so interactive chat generation
+     * and background memory extraction/summarization never overlap on the
+     * single native engine handle.
+     */
+    private val generationMutex = Mutex()
+
+    /**
+     * Set by [cancelGeneration] while a [generate] run is in flight. The native
+     * loop exits cleanly on cancel (it does not throw), so without this flag a
+     * cancelled run would be republished as [GenerationState.Completed] and its
+     * partial text persisted as a full assistant response — corrupting the
+     * context for the next prompt.
+     */
+    private val cancelRequested = AtomicBoolean(false)
+
+    override val capabilities: EngineCapabilities
+        get() = engine.capabilities
+
+    init {
+        // Forward the startup probe from the engine so the adaptive settings
+        // UI and the developer benchmark stay in sync with it.
+        scope.launch {
+            engine.backendCapabilities.collect { _backendCapabilities.value = it }
+        }
+
+        engine.engineState
+            .onEach { state ->
+                _engineState.value = state
+            }
+            .catch { _engineState.value = EngineState.Failed(it.message ?: "Engine error") }
+            .launchIn(scope)
+
+        engine.stats
+            .onEach { _performanceStats.value = it }
+            .launchIn(scope)
+
+        // The engine owns the polling cadence because only it knows whether a
+        // native model is resident. Forward every live snapshot to feature UIs.
+        engine.memoryStats
+            .onEach { _memoryStats.value = it }
+            .launchIn(scope)
+    }
+
+    override suspend fun initialize(): Result<Unit> = com.jarvis.assistant.androllm.engine.support.runCatching {
+        engine.initialize(EngineConfig())
+    }
+
+    override suspend fun loadModel(
+        model: Model,
+        config: ModelLoadConfig
+    ): Result<Unit> = generationMutex.withLock {
+        com.jarvis.assistant.androllm.engine.support.runCatching {
+            // Delegate-mode contract: AUTO (config.backend == null) may traverse
+            // NPU → GPU → CPU silently. An EXPLICIT backend request (GPU/NPU/
+            // CPU, or the legacy gpuLayers == 0 CPU override) is honored
+            // verbatim — the selected delegate is NEVER silently swapped for
+            // another at any point of the model lifecycle.
+            val requestedBackend = config.backend
+                ?: if (config.gpuLayers == 0) BackendType.CPU else BackendType.AUTO
+            val autoMode = requestedBackend == BackendType.AUTO
+            android.util.Log.i(
+                TAG,
+                "MODEL LOAD begin: ${model.name} requested=$requestedBackend " +
+                    "(autoMode=$autoMode) selfTest=${config.runSelfTest}"
+            )
+            engine.loadModel(model, config).getOrThrow()
+            android.util.Log.i(
+                TAG,
+                "DELEGATE ACTIVE after load: ${engine.capabilities.backend} " +
+                    "(delegate=${engine.getLoadedModel()?.delegate ?: "?"})"
+            )
+
+            // Post-load SELF-TEST — runs EXACTLY ONCE per model initialization
+            // and nowhere else. It is never invoked during prompt generation;
+            // the only per-turn work is the actual chat decode.
+            if (config.runSelfTest) {
+                android.util.Log.i(TAG, "SELF-TEST begin (initialization-only coherence probe)")
+                when (val probeResult = probeCoherence()) {
+                    is CoherenceResult.Pass -> {
+                        android.util.Log.i(
+                            TAG,
+                            "SELF-TEST pass on ${engine.capabilities.backend} — keeping the active delegate"
+                        )
+                    }
+                    is CoherenceResult.Fail -> {
+                        android.util.Log.e(TAG, "SELF-TEST failed: ${probeResult.reason}")
+                        teardownFailedModel(probeResult.reason)
+                        if (autoMode && config.gpuLayers != 0) {
+                            // AUTO MODE ONLY: the probed delegate produced
+                            // degenerate text on this device/driver, so the
+                            // automatic chain falls through to CPU — exactly
+                            // what Auto means. Explicit selections never take
+                            // this path (see below).
+                            android.util.Log.w(
+                                TAG,
+                                "FALLBACK REASON: AUTO-mode self-test failed — retrying on CPU (gpuLayers=0)"
+                            )
+                            _engineState.value = EngineState.Loading("GPU output check failed — retrying on CPU")
+                            engine.loadModel(model, config.copy(gpuLayers = 0)).getOrThrow()
+                            when (val cpuResult = probeCoherence()) {
+                                is CoherenceResult.Pass -> {
+                                    android.util.Log.i(TAG, "SELF-TEST pass on CPU after AUTO fallback")
+                                }
+                                is CoherenceResult.Fail -> {
+                                    android.util.Log.e(TAG, "Model self-test failed on CPU too: ${cpuResult.reason}")
+                                    teardownFailedModel(cpuResult.reason)
+                                    _engineState.value = EngineState.Failed("Model self-test failed: ${cpuResult.reason}")
+                                    return Result.error("Model self-test failed: ${cpuResult.reason}")
+                                }
+                            }
+                        } else {
+                            // EXPLICIT backend request: the user chose this
+                            // delegate. Never switch it out from under them —
+                            // surface a clear error instead. The next attempt
+                            // is theirs to make (retry / pick another mode).
+                            val message =
+                                "${requestedBackend.name} inference failed the initialization self-test: ${probeResult.reason} " +
+                                    "The selected delegate was NOT switched — choose Auto for automatic fallback."
+                            _engineState.value = EngineState.Failed(
+                                message = message,
+                                stage = "selftest",
+                                suggestion = if (!autoMode && requestedBackend != BackendType.CPU) {
+                                    "Switch the backend preference to Auto to allow an automatic CPU fallback."
+                                } else null,
+                                retryable = true
+                            )
+                            return Result.error(message)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun unloadModel(): Result<Unit> = generationMutex.withLock {
+        com.jarvis.assistant.androllm.engine.support.runCatching {
+            engine.unloadModel()
+            _engineState.value = EngineState.Unloaded
+            _memoryStats.value = null
+        }
+    }
+
+    /**
+     * Bounded coherence probe used by the load-time self-test. A broken model
+     * must fail FAST, not hang the load forever: if the probe produces no
+     * tokens within [SELF_TEST_TIMEOUT_MS], the load is rejected with the
+     * stall reason instead of an opaque "no output".
+     */
+    private suspend fun probeCoherence(): CoherenceResult {
+        var probeStalled = false
+        val probeText = try {
+            withTimeout(SELF_TEST_TIMEOUT_MS) {
+                engine.generate(
+                    "Hi",
+                    GenerationConfig(temperature = 0f, maxTokens = 12, seed = -1, debugTokenLogging = true)
+                ).getOrNull()
+            }
+        } catch (e: TimeoutCancellationException) {
+            probeStalled = true
+            android.util.Log.e(TAG, "Self-test probe stalled: no tokens within ${SELF_TEST_TIMEOUT_MS}ms")
+            null
+        } catch (e: Exception) {
+            null
+        }
+        if (probeStalled) {
+            return CoherenceResult.Fail(
+                "model did not produce any tokens within ${SELF_TEST_TIMEOUT_MS / 1000}s — inference is broken on this backend"
+            )
+        }
+        val coherence = CoherenceChecker.check(probeText)
+        if (coherence !is CoherenceResult.Pass) return coherence
+        // Template/tokenizer mismatch guard: a model that decodes control
+        // tokens (im_start / think / bos / ...) instead of assistant text is a
+        // broken or mismatched container (e.g. Qwen3 weights with a Gemma
+        // template). It must never reach the chat — reject it at load with the
+        // real reason instead of streaming <|im_start|> to the UI. Same marker
+        // set the engine strips defensively at the stream boundary
+        // (LiteRtLmEngine.stripControlTokens).
+        val leaked = CONTROL_TOKEN_MARKERS.firstOrNull { probeText?.contains(it) == true }
+        if (leaked != null) {
+            android.util.Log.e(TAG, "Self-test probe emitted control token '$leaked': ${probeText?.take(80)}")
+            return CoherenceResult.Fail(
+                "model decodes the '$leaked' control token instead of assistant text — " +
+                    "the chat template and tokenizer do not match this artifact (broken or repacked container). " +
+                    "Re-download the model from the catalog."
+            )
+        }
+        return coherence
+    }
+
+    /**
+     * Tears down a model whose self-test failed. Cancel FIRST: an interruptible
+     * hang exits its native loop at the next cancel check; destroy() then frees
+     * the context without racing a live decode. Also clears the engine's
+     * Kotlin-side generationActive flag so the next load attempt isn't wedged
+     * on "generation already in progress".
+     */
+    private suspend fun teardownFailedModel(reason: String) {
+        engine.cancel()
+        runCatching { engine.unloadModel() }
+        android.util.Log.w(TAG, "Unloaded model after failed self-test: $reason")
+    }
+
+    override suspend fun buildChatPrompt(
+        messages: List<ChatPromptMessage>,
+        addAssistant: Boolean
+    ): Result<String> = engine.buildChatPrompt(messages, addAssistant)
+
+    override suspend fun generate(
+        prompt: String,
+        config: GenerationConfig
+    ): Result<Unit> = generationMutex.withLock {
+        android.util.Log.i(TAG, "GENERATION LOCK acquired (raw path)")
+        android.util.Log.i(TAG, "Generation Started")
+        // A fresh run never inherits a stale cancel (e.g. one requested while
+        // the engine was idle or waiting behind background work).
+        cancelRequested.set(false)
+
+        if (!engine.isLoaded()) {
+            _generationState.value = GenerationState.Failed("Model not loaded")
+            return Result.error("Model not loaded")
+        }
+
+        _generationState.value = GenerationState.Generating(prompt = prompt, streamingText = "", generatedTokens = 0L)
+        android.util.Log.i(TAG, "Generation started: promptLen=${prompt.length} maxTokens=${config.maxTokens} delegate=${engine.capabilities.backend}")
+
+        // PERFORMANCE: use pooled buffers to avoid per-generation allocations.
+        val pooledFull = BufferPool.borrowBuilder(BufferPool.LARGE)
+        val pooledDisplay = BufferPool.borrowBuilder(BufferPool.LARGE)
+        val fullTextBuilder = pooledFull.builder
+        val displayBuilder = pooledDisplay.builder
+        var lastEmitTime = 0L
+        var tokenCount = 0L
+        // Stall detection (watchdog): the watchdog fires when NO token has
+        // arrived within its current budget — [firstTokenTimeoutMs] before
+        // the first token (prefill-heavy), [INTER_TOKEN_TIMEOUT_MS] between
+        // tokens afterwards. A decode that hangs (hung GPU fence, dead
+        // sampler, wedged native callback) is cancelled, force-unwound and
+        // reported instead of spinning forever; generations that ARE
+        // producing tokens are never touched because every chunk refreshes
+        // [lastActivityAt]. The hard ceiling (scaled to the requested token
+        // budget) remains as the backstop for a run that produces forever.
+        val promptLength = prompt.length
+        val firstTokenTimeoutMs = stallTimeoutMs(promptLength)
+        val hardTimeoutMs = hardGenerationTimeoutMs(config.maxTokens)
+        val lastActivityAt = AtomicLong(System.currentTimeMillis())
+        val tokensSeen = AtomicLong(0L)
+        val stallDetected = AtomicBoolean(false)
+        // Token count snapshot taken when the watchdog fires: if tokens kept
+        // arriving after the trigger (budget-boundary race), the run actually
+        // made progress and must NOT be reported as a timeout.
+        val tokensAtStall = AtomicLong(-1L)
+        try {
+            withTimeout(hardTimeoutMs) {
+                coroutineScope {
+                    // CRITICAL: the watchdog runs on the repository's OWN
+                    // multi-threaded scope, NOT the caller's dispatcher. The
+                    // native decode loop executes inline on the collection
+                    // thread (channelFlow) — if a single-threaded caller
+                    // (e.g. a Main-scope caller that forgot to dispatch) is
+                    // blocked in JNI, a watchdog launched in the caller's
+                    // context could never be scheduled and stall detection
+                    // would silently never fire ("no output, no timeout").
+                    val watchdog = scope.launch {
+                        try {
+                            while (true) {
+                                // delay() is the cancellation point: the
+                                // finally below cancels this job on normal
+                                // completion, ending the loop.
+                                delay(WATCHDOG_POLL_MS)
+                                val budget = if (tokensSeen.get() == 0L) firstTokenTimeoutMs else INTER_TOKEN_TIMEOUT_MS
+                                val idleFor = System.currentTimeMillis() - lastActivityAt.get()
+                                if (idleFor > budget) {
+                                    stallDetected.set(true)
+                                    tokensAtStall.set(tokensSeen.get())
+                                    android.util.Log.e(
+                                        TAG,
+                                        "STALL: no token for ${idleFor}ms " +
+                                            "(budget=${budget}ms, ${if (tokensSeen.get() == 0L) "before first token" else "mid-decode"}) — cancelling generation"
+                                    )
+                                    engine.cancel()
+                                    // Grace period for the native loop to unwind
+                                    // through onError/onDone. If it is wedged so
+                                    // hard that even cancel cannot close the flow,
+                                    // force-cancel the collection scope: cleanup
+                                    // runs in callbackFlow's awaitClose handlers
+                                    // and the UI recovers immediately.
+                                    delay(STALL_UNWIND_GRACE_MS)
+                                    android.util.Log.e(
+                                        TAG,
+                                        "STALL: native loop did not unwind within ${STALL_UNWIND_GRACE_MS}ms — forcing collection cancel"
+                                    )
+                                    this@coroutineScope.cancel(
+                                        kotlinx.coroutines.CancellationException("generation stalled")
+                                    )
+                                    break
+                                }
+                            }
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            // Normal completion — cancelled from the finally below.
+                        }
+                    }
+                    try {
+                        engine.tokenStream(prompt, config)
+                            .onEach { result ->
+                                when (result) {
+                                    is Result.Success -> {
+                                        val chunk = result.data
+                                        if (chunk.delta.isNotEmpty() && !chunk.finished) {
+                                            lastActivityAt.set(System.currentTimeMillis())
+                                            tokensSeen.incrementAndGet()
+                                            if (tokenCount == 0L && chunk.generatedTokens >= 0L) {
+                                                android.util.Log.i(TAG, "First token received (prefill done)")
+                                            }
+                                            // Prefer the native token counter when the backend reports it;
+                                            // otherwise count emitted deltas (1 delta = 1 token piece).
+                                            if (chunk.generatedTokens > 0) tokenCount = chunk.generatedTokens else tokenCount++
+                                            // Reasoning deltas stream for live progress but are never
+                                            // part of the final text (assistant message = answer only).
+                                            displayBuilder.append(chunk.delta)
+                                            if (!chunk.isThinking) fullTextBuilder.append(chunk.delta)
+                                            val now = System.currentTimeMillis()
+                                            if (now - lastEmitTime >= 16L) {
+                                                lastEmitTime = now
+                                                _generationState.value = GenerationState.Generating(
+                                                    prompt = prompt,
+                                                    streamingText = OutputSanitizer.streamingReady(displayBuilder.toString()),
+                                                    generatedTokens = tokenCount
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    is Result.Error -> throw result.exception
+                                }
+                            }
+                            .collect()
+                    } finally {
+                        watchdog.cancel()
+                    }
+                }
+            }
+
+            val stalled = stallDetected.get() && tokensSeen.get() == tokensAtStall.get()
+            if (stalled) {
+                _generationState.value = GenerationState.Failed(
+                    message = "Generation timed out. Please try again. " +
+                        "(inference stalled — no tokens for ${if (tokensSeen.get() == 0L) "${firstTokenTimeoutMs / 1000}s" else "${INTER_TOKEN_TIMEOUT_MS / 1000}s"})",
+                    partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+                )
+                return Result.error("Generation timed out")
+            }
+            if (cancelRequested.getAndSet(false)) {
+                // A cancel was requested mid-flight (Stop pressed). The native
+                // loop exits cleanly, so completion must NOT be published here:
+                // a cancelled run never surfaces as a full response and its
+                // partial text is never fed back into the next prompt.
+                android.util.Log.w(TAG, "Generation cancelled by user after $tokenCount tokens")
+                _generationState.value = GenerationState.Cancelled
+                return Result.Success(Unit)
+            }
+            val stats = engine.stats.firstOrNull()
+            if (stats.isCorruptedStop()) {
+                android.util.Log.e(TAG, "Generation corrupted: stopReason=${stats?.stopReason}")
+                _generationState.value = GenerationState.Failed(
+                    message = "Decode error — try again",
+                    partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+                )
+                return Result.error("Decode error")
+            }
+            // NO-PROGRESS TERMINAL GUARD: the native loop now fails a run that
+            // performs many decode iterations without producing any output
+            // (broken tokenizer / corrupt weights / sampler returning only
+            // control tokens). The native side throws for this case, so this is
+            // defense-in-depth for a stats blob that reaches us instead — it
+            // must surface the no-progress failure, never a blank completion.
+            if (stats?.stopReason == "no_progress") {
+                android.util.Log.e(TAG, "Generation no-progress: stopReason=${stats?.stopReason}")
+                _generationState.value = GenerationState.Failed(
+                    message = "No-progress generation loop detected: the engine decoded repeatedly but produced no output. " +
+                        "Try a smaller model, disable the GPU, or re-download the model.",
+                    partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+                )
+                return Result.error("No-progress generation loop detected")
+            }
+            // ZERO-OUTPUT TERMINAL GUARD — the exact "stuck generating" cycle.
+            // A run that produced NO output text is only a legitimate completion
+            // when the model hit EOS/EOG on the very first sample. Every other
+            // outcome — an unknown/empty stop reason (the native recovery
+            // ladder exhausted its retries and returned a bare "{}" stats blob,
+            // which decodes to an empty EngineStats whose stopReason is ""), a
+            // silent decode failure, or a zero-token "max_tokens" — means the
+            // backend never produced a response. Publishing Completed("") would
+            // leave the chat with a vanished assistant placeholder and NO error
+            // (the UI appears to loop forever), and the next send/regenerate
+            // would re-enter the same failing cycle. Fail visibly instead.
+            // NOTE: the native bridge reports end-of-generation as "eog"
+            // (llama.cpp convention) — treated identically to "eos" here so an
+            // immediate-EOG empty completion is legitimate, not a failure.
+            if (fullTextBuilder.isEmpty() && stats?.stopReason != "eos" && stats?.stopReason != "eog") {
+                android.util.Log.e(
+                    TAG,
+                    "Generation produced no tokens (stopReason=${stats?.stopReason ?: "?"}) — surfacing as failure"
+                )
+                _generationState.value = GenerationState.Failed(
+                    message = "The model produced no tokens (stop reason: ${stats?.stopReason?.ifBlank { "unknown" } ?: "unknown"}). " +
+                        "Inference failed on this backend — try a smaller model, disable the GPU, or re-download the model.",
+                    partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+                )
+                return Result.error("No tokens generated")
+            }
+            android.util.Log.i(
+                TAG,
+                "GENERATION COMPLETE: tokens=$tokenCount ttft=${stats?.firstTokenMs}ms tps=${stats?.tokensPerSecond ?: 0f} totalMs=${stats?.totalTimeMs ?: 0} stop=${stats?.stopReason ?: "?"} delegateAfter=${engine.capabilities.backend}"
+            )
+            _generationState.value = GenerationState.Completed(text = OutputSanitizer.sanitize(fullTextBuilder.toString()), stats = stats)
+            Result.Success(Unit)
+        } catch (e: TimeoutCancellationException) {
+            android.util.Log.e(
+                TAG,
+                "Generation timed out after ${hardTimeoutMs / 1000}s (${fullTextBuilder.length} chars, $tokenCount tokens)"
+            )
+            _generationState.value = GenerationState.Failed(
+                message = "Generation timed out. Please try again. (exceeded the ${hardTimeoutMs / 1000}s limit)",
+                partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+            )
+            Result.error("Generation timed out")
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            val stalled = stallDetected.get() && tokensSeen.get() == tokensAtStall.get()
+            if (stalled) {
+                // The stall watchdog force-unwound this collection (the native
+                // loop never returned on its own). Report the timeout instead
+                // of propagating what looks like a user cancellation.
+                android.util.Log.e(TAG, "Generation unwound after stall — reporting timeout")
+                _generationState.value = GenerationState.Failed(
+                    message = stallFailureMessage(firstTokenTimeoutMs, tokensSeen.get() == 0L),
+                    partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+                )
+                Result.error("Generation timed out")
+            } else {
+                // External cancellation (Stop / conversation switch): make
+                // sure a Generating state can never survive it.
+                if (_generationState.value is GenerationState.Generating) {
+                    _generationState.value = GenerationState.Cancelled
+                }
+                throw e
+            }
+        } catch (e: Exception) {
+            val stalled = stallDetected.get() && tokensSeen.get() == tokensAtStall.get()
+            if (stalled) {
+                // The engine surfaced the watchdog's abort as a stream error
+                // ("CANCELLED: …"). Report the TIMEOUT, not the raw native
+                // cancellation reason.
+                android.util.Log.e(TAG, "Generation aborted by watchdog: ${e.message}")
+                _generationState.value = GenerationState.Failed(
+                    message = stallFailureMessage(firstTokenTimeoutMs, tokensSeen.get() == 0L),
+                    partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+                )
+                return Result.error("Generation timed out")
+            }
+            android.util.Log.e(TAG, "Generation failed: ${e.message}", e)
+            _generationState.value = GenerationState.Failed(
+                message = e.message ?: "Generation failed",
+                partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+            )
+            Result.Error(e)
+        } finally {
+            BufferPool.returnBuilder(pooledFull)
+            BufferPool.returnBuilder(pooledDisplay)
+            android.util.Log.i(TAG, "GENERATION LOCK released (raw path) - GENERATION JOB DESTROYED")
+            android.util.Log.i(TAG, "Generation Lock Released")
+            android.util.Log.i(TAG, "Generation Job Destroyed")
+        }
+    }
+
+    /**
+     * Friendly message for a watchdog-detected FIRST-TOKEN stall. This is an
+     * INITIALIZATION/PREFILL failure (the delegate never began decoding), not
+     * a generation timeout — load/warm-up time is never counted here because
+     * both complete before the model is Ready.
+     */
+    private fun stallFailureMessage(firstTokenBudgetMs: Long, hadTokens: Boolean): String =
+        if (!hadTokens) {
+            "Initialization stalled — no first token within ${firstTokenBudgetMs / 1000}s. " +
+                "The delegate did not start decoding. Please try again."
+        } else {
+            "Generation timed out. Please try again. (decoding stalled — no tokens for ${INTER_TOKEN_TIMEOUT_MS / 1000}s)"
+        }
+
+    override suspend fun generateChat(
+        messages: List<ChatPromptMessage>,
+        addAssistant: Boolean,
+        config: GenerationConfig
+    ): Result<Unit> = generationMutex.withLock {
+        android.util.Log.i(TAG, "GENERATION LOCK acquired (chat path)")
+        android.util.Log.i(TAG, "Generation Started")
+        cancelRequested.set(false)
+
+        if (!engine.isLoaded()) {
+            _generationState.value = GenerationState.Failed("Model not loaded")
+            return Result.error("Model not loaded")
+        }
+
+        val lastUser = messages.lastOrNull { it.role == "user" }?.content ?: "(chat)"
+        _generationState.value = GenerationState.Generating(prompt = lastUser, streamingText = "", generatedTokens = 0L)
+        android.util.Log.i(TAG, "Chat generation started: messages=${messages.size} lastUserLen=${lastUser.length} delegate=${engine.capabilities.backend}")
+
+        // PERFORMANCE: use pooled buffers to avoid per-generation allocations.
+        val pooledFull = BufferPool.borrowBuilder(BufferPool.LARGE)
+        val pooledDisplay = BufferPool.borrowBuilder(BufferPool.LARGE)
+        val fullTextBuilder = pooledFull.builder
+        val displayBuilder = pooledDisplay.builder
+        var lastEmitTime = 0L
+        var tokenCount = 0L
+        // Same stall detection as [generate]: no first token within
+        // [stallTimeoutMs] ⇒ cancel + report; hard ceiling (scaled to the
+        // requested token budget) as backstop.
+        val promptLength = messages.sumOf { it.content.length }
+        val firstTokenTimeoutMs = stallTimeoutMs(promptLength)
+        val hardTimeoutMs = hardGenerationTimeoutMs(config.maxTokens)
+        val lastActivityAt = AtomicLong(System.currentTimeMillis())
+        val tokensSeen = AtomicLong(0L)
+        val stallDetected = AtomicBoolean(false)
+        // Token count snapshot taken when the watchdog fires: if tokens kept
+        // arriving after the trigger (budget-boundary race), the run actually
+        // made progress and must NOT be reported as a timeout.
+        val tokensAtStall = AtomicLong(-1L)
+        try {
+            withTimeout(hardTimeoutMs) {
+                coroutineScope {
+                    // Watchdog on the repository scope
+                    val watchdog = scope.launch {
+                        try {
+                            while (true) {
+                                delay(WATCHDOG_POLL_MS)
+                                val budget = if (tokensSeen.get() == 0L) firstTokenTimeoutMs else INTER_TOKEN_TIMEOUT_MS
+                                val idleFor = System.currentTimeMillis() - lastActivityAt.get()
+                                if (idleFor > budget) {
+                                    stallDetected.set(true)
+                                    tokensAtStall.set(tokensSeen.get())
+                                    android.util.Log.e(
+                                        TAG,
+                                        "STALL: no chat token for ${idleFor}ms (budget=${budget}ms, " +
+                                            "${if (tokensSeen.get() == 0L) "before first token" else "mid-decode"}) - cancelling chat generation"
+                                    )
+                                    engine.cancel()
+                                    // Grace period, then force-unwind a wedged flow (see [generate]).
+                                    delay(STALL_UNWIND_GRACE_MS)
+                                    android.util.Log.e(TAG, "STALL: forcing chat collection cancel after unwind grace")
+                                    this@coroutineScope.cancel(
+                                        kotlinx.coroutines.CancellationException("chat generation stalled")
+                                    )
+                                    break
+                                }
+                            }
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            // Normal completion — cancelled from the finally below.
+                        }
+                    }
+                    try {
+                        engine.generateChatStream(messages, addAssistant, config)
+                            .onEach { result ->
+                                when (result) {
+                                    is Result.Success -> {
+                                        val chunk = result.data
+                                        if (chunk.delta.isNotEmpty() && !chunk.finished) {
+                                            lastActivityAt.set(System.currentTimeMillis())
+                                            tokensSeen.incrementAndGet()
+                                            if (chunk.generatedTokens > 0) tokenCount = chunk.generatedTokens else tokenCount++
+                                            // Thinking deltas stream for live progress but never enter
+                                            // the final assistant message (answer text only).
+                                            displayBuilder.append(chunk.delta)
+                                            if (!chunk.isThinking) fullTextBuilder.append(chunk.delta)
+                                            val now = System.currentTimeMillis()
+                                            if (now - lastEmitTime >= 16L) {
+                                                lastEmitTime = now
+                                                _generationState.value = GenerationState.Generating(
+                                                    prompt = lastUser,
+                                                    streamingText = OutputSanitizer.streamingReady(displayBuilder.toString()),
+                                                    generatedTokens = tokenCount
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    is Result.Error -> throw result.exception
+                                }
+                            }
+                            .collect()
+                    } finally {
+                        watchdog.cancel()
+                    }
+                }
+            }
+
+            val stalled = stallDetected.get() && tokensSeen.get() == tokensAtStall.get()
+            if (stalled) {
+                _generationState.value = GenerationState.Failed(
+                    message = stallFailureMessage(firstTokenTimeoutMs, tokensSeen.get() == 0L),
+                    partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+                )
+                return Result.error("Generation timed out")
+            }
+            if (cancelRequested.getAndSet(false)) {
+                android.util.Log.w(TAG, "Chat generation cancelled by user after $tokenCount tokens")
+                _generationState.value = GenerationState.Cancelled
+                return Result.Success(Unit)
+            }
+
+            val stats = engine.stats.firstOrNull()
+            if (stats.isCorruptedStop()) {
+                // The native side rolled the turn back (the partial response is
+                // NOT part of the conversation — the KV cache was restored to
+                // the pre-turn state), so surface it as a failure instead of
+                // persisting a corrupted partial response. The native engine
+                // reports "corrupted" (not "decode_error") for NaN/INF logits,
+                // invalid token ids, decode failures, degenerate repetition and
+                // mid-stream backend errors.
+                android.util.Log.e(TAG, "Chat generation corrupted: stopReason=${stats?.stopReason}")
+                _generationState.value = GenerationState.Failed(
+                    message = "Decode error — try again",
+                    partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+                )
+                return Result.error("Decode error")
+            }
+            // NO-PROGRESS TERMINAL GUARD — same rule as [generate]: the native
+            // loop fails a run that decodes many iterations without output; if
+            // its stats blob reaches us instead of the thrown error, surface
+            // the no-progress failure rather than a blank completion.
+            if (stats?.stopReason == "no_progress") {
+                android.util.Log.e(TAG, "Chat generation no-progress: stopReason=${stats?.stopReason}")
+                _generationState.value = GenerationState.Failed(
+                    message = "No-progress generation loop detected: the engine decoded repeatedly but produced no output. " +
+                        "Try a smaller model, disable the GPU, or re-download the model.",
+                    partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+                )
+                return Result.error("No-progress generation loop detected")
+            }
+            // ZERO-OUTPUT TERMINAL GUARD — same rule as [generate]: a chat run
+            // that produced NO text is only a valid completion when the model
+            // hit EOS/EOG immediately. Otherwise (recovery-ladder exhaustion →
+            // "{}" stats → empty stop reason, silent decode failure, or a
+            // zero-token "max_tokens") the turn MUST surface as a visible
+            // failure. The previous behavior published Completed(""), which
+            // made the assistant placeholder vanish with no error and let the
+            // next prompt re-enter the same failing cycle — the "endless
+            // loop" (Preparing → Generating → nothing) symptom.
+            // NOTE: the native bridge reports end-of-generation as "eog"
+            // (llama.cpp convention) — treated identically to "eos" here so an
+            // immediate-EOG empty completion is legitimate, not a failure.
+            if (fullTextBuilder.isEmpty() && stats?.stopReason != "eos" && stats?.stopReason != "eog") {
+                android.util.Log.e(
+                    TAG,
+                    "Chat generation produced no tokens (stopReason=${stats?.stopReason ?: "?"}) — surfacing as failure"
+                )
+                _generationState.value = GenerationState.Failed(
+                    message = "The model produced no tokens (stop reason: ${stats?.stopReason?.ifBlank { "unknown" } ?: "unknown"}). " +
+                        "Inference failed on this backend — try a smaller model, disable the GPU, or re-download the model.",
+                    partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+                )
+                return Result.error("No tokens generated")
+            }
+            android.util.Log.i(
+                TAG,
+                "CHAT GENERATION COMPLETE: tokens=$tokenCount ttft=${stats?.firstTokenMs}ms tps=${stats?.tokensPerSecond ?: 0f} totalMs=${stats?.totalTimeMs ?: 0} stop=${stats?.stopReason ?: "?"} delegateAfter=${engine.capabilities.backend}"
+            )
+            _generationState.value = GenerationState.Completed(text = OutputSanitizer.sanitize(fullTextBuilder.toString()), stats = stats)
+            Result.Success(Unit)
+        } catch (e: TimeoutCancellationException) {
+            android.util.Log.e(
+                TAG,
+                "Chat generation timed out after ${hardTimeoutMs / 1000}s (${fullTextBuilder.length} chars, $tokenCount tokens)"
+            )
+            _generationState.value = GenerationState.Failed(
+                message = "Generation timed out. Please try again. (exceeded the ${hardTimeoutMs / 1000}s limit)",
+                partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+            )
+            Result.error("Generation timed out")
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            val stalled = stallDetected.get() && tokensSeen.get() == tokensAtStall.get()
+            if (stalled) {
+                // Forced unwind after a watchdog stall (see [generate]).
+                android.util.Log.e(TAG, "Chat generation unwound after stall — reporting timeout")
+                _generationState.value = GenerationState.Failed(
+                    message = stallFailureMessage(firstTokenTimeoutMs, tokensSeen.get() == 0L),
+                    partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+                )
+                Result.error("Generation timed out")
+            } else {
+                // External cancellation: never leave a Generating state behind.
+                if (_generationState.value is GenerationState.Generating) {
+                    _generationState.value = GenerationState.Cancelled
+                }
+                throw e
+            }
+        } catch (e: Exception) {
+            val stalled = stallDetected.get() && tokensSeen.get() == tokensAtStall.get()
+            if (stalled) {
+                android.util.Log.e(TAG, "Chat generation aborted by watchdog: ${e.message}")
+                _generationState.value = GenerationState.Failed(
+                    message = stallFailureMessage(firstTokenTimeoutMs, tokensSeen.get() == 0L),
+                    partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+                )
+                return Result.error("Generation timed out")
+            }
+            android.util.Log.e(TAG, "Chat generation failed: ${e.message}", e)
+            _generationState.value = GenerationState.Failed(
+                message = e.message ?: "Generation failed",
+                partialText = OutputSanitizer.sanitize(fullTextBuilder.toString())
+            )
+            Result.Error(e)
+        } finally {
+            BufferPool.returnBuilder(pooledFull)
+            BufferPool.returnBuilder(pooledDisplay)
+            android.util.Log.i(TAG, "GENERATION LOCK released (chat path) - GENERATION JOB DESTROYED")
+            android.util.Log.i(TAG, "Generation Lock Released")
+            android.util.Log.i(TAG, "Generation Job Destroyed")
+        }
+    }
+
+    /**
+     * True when the native engine reported a corrupted run (NaN/INF logits,
+     * invalid token id, decode failure, degenerate repetition, mid-stream
+     * backend error). The native bridge uses "corrupted" as the canonical stop
+     * reason; "decode_error" is accepted for older builds. A corrupted run must
+     * NEVER be published as Completed — its partial text would be persisted as
+     * an assistant message and poison the next prompt's context.
+     */
+    private fun EngineStats?.isCorruptedStop(): Boolean =
+        this != null && (stopReason == "corrupted" || stopReason == "decode_error")
+
+    override suspend fun generateQuiet(
+        prompt: String,
+        config: GenerationConfig,
+        timeoutMs: Long
+    ): Result<String> = try {
+        generationMutex.withLock {
+            if (!engine.isLoaded()) {
+                Result.error("Model not loaded")
+            } else {
+                // Bounded with a REAL deadline. A bare withTimeout CANNOT
+                // interrupt the blocking JNI nativeGenerate call: the
+                // TimeoutCancellationException is only delivered once the
+                // native loop returns on its own, so a hung decode would hold
+                // the generation mutex for the whole budget (wedging every
+                // later chat turn) and the caller's own withTimeoutOrNull
+                // would be a paper tiger that fires only AFTER the native
+                // call unwinds — exactly the device symptom: the planner's
+                // 30s budget was ignored and the pass ran the full 300s.
+                // The watchdog below runs on the repository's OWN
+                // multi-threaded scope (never the caller's dispatcher, which
+                // may be blocked in JNI) and actively aborts the native loop
+                // via engine.cancel() at the deadline — the same pattern as
+                // the first-token stall watchdog in [generate].
+                val watchdogFired = AtomicBoolean(false)
+                val text = withTimeout(timeoutMs) {
+                    coroutineScope {
+                        val watchdog = scope.launch {
+                            try {
+                                delay(timeoutMs)
+                                watchdogFired.set(true)
+                                android.util.Log.e(
+                                    TAG,
+                                    "Quiet generation watchdog: aborting native decode after ${timeoutMs}ms"
+                                )
+                                engine.cancel()
+                            } catch (e: kotlinx.coroutines.CancellationException) {
+                                // Normal completion — the watchdog was
+                                // cancelled in the finally below before the
+                                // deadline elapsed.
+                            }
+                        }
+                        try {
+                            engine.generate(prompt, config).getOrNull()
+                        } finally {
+                            watchdog.cancel()
+                        }
+                    }
+                }
+                if (watchdogFired.get()) {
+                    // The deadline elapsed and the engine was aborted — the
+                    // partial output of a timed-out run must never be treated
+                    // as a completed generation (same rule as cancelled chat).
+                    Result.error("Quiet generation timed out")
+                } else if (text == null) {
+                    Result.error("Generation failed")
+                } else if (engine.stats.firstOrNull().isCorruptedStop()) {
+                    // The memory pipeline must never index a corrupted extractor
+                    // output — fail the run so the caller skips it.
+                    Result.error("Decode error")
+                } else if (text.isEmpty() && engine.stats.firstOrNull()?.stopReason != "eos" &&
+                           engine.stats.firstOrNull()?.stopReason != "eog") {
+                    // Same zero-output terminal guard as the streaming paths:
+                    // an empty quiet run (memory extraction, tool planning) that
+                    // did not end on EOS/EOG (the native bridge reports "eog") is
+                    // a silent failure — fail it so the caller surfaces an error
+                    // instead of treating nothing as a completed generation.
+                    Result.error("No tokens generated")
+                } else {
+                    Result.Success(text)
+                }
+            }
+        }
+    } catch (e: TimeoutCancellationException) {
+        android.util.Log.e(TAG, "Quiet generation timed out")
+        Result.error("Quiet generation timed out")
+    } catch (e: kotlinx.coroutines.CancellationException) {
+        // Background pipelines (memory extraction) are cancelled when a new
+        // chat turn supersedes them — that must propagate as cancellation,
+        // never be swallowed into Result.Error.
+        throw e
+    } catch (e: Exception) {
+        Result.Error(e)
+    }
+
+    override suspend fun cancelGeneration(): Result<Unit> = com.jarvis.assistant.androllm.engine.support.runCatching {
+        cancelRequested.set(true)
+        engine.cancel()
+        _generationState.value = GenerationState.Cancelled
+    }
+
+    override suspend fun resetChat(): Result<Unit> = com.jarvis.assistant.androllm.engine.support.runCatching {
+        engine.resetChat()
+    }
+
+    companion object {
+        private const val TAG = "DefaultEngineRepository"
+
+        /**
+         * Stall detection (user requirement): if no first token arrives within
+         * this window the generation is cancelled and reported instead of
+         * spinning forever (hung GPU fence / dead sampler / broken model).
+         * This is the FLOOR — [stallTimeoutMs] scales it up for long prompts.
+         */
+        private const val FIRST_TOKEN_TIMEOUT_MS = 5_000L
+
+        /**
+         * Never wait longer than this for a first token, however long the prompt.
+         * Raised from 60s to 240s: on a Vulkan device-lost CPU fallback a large
+         * planner prompt (3000+ tokens) can legitimately take 1-2 minutes of
+         * prefill before the first generated token — the old cap false-stalled
+         * healthy-but-slow CPU runs. Real stalls are still escaped by the
+         * per-run watchdog ([generateQuiet] watchdog + [hardGenerationTimeoutMs]).
+         */
+        private const val FIRST_TOKEN_TIMEOUT_MAX_MS = 240_000L
+
+        /**
+         * Prefill budget per estimated prompt token (~4 chars/token): prompt
+         * encoding on CPU scales with the prompt, so a large system prompt +
+         * history can legitimately take longer than the 5s floor on weak
+         * devices. 50ms/token ≈ 20 tokens/s of prefill — the low end of a
+         * 7B-class CPU prefill on a phone. A healthy decode always beats it;
+         * a stuck one never does. (20ms/token assumed ~50 tok/s and could
+         * false-stall large models on CPU.)
+         */
+        private const val MS_PER_PROMPT_TOKEN = 50L
+
+        /**
+         * Hard ceiling for the whole run — escapes a run that never ends. The
+         * floor keeps the previous 300s behavior for typical configs; the
+         * ceiling never gets stricter than it was before this change.
+         */
+        private const val HARD_FLOOR_MS = 300_000L
+
+        /** Absolute maximum: no run is ever allowed past 30 minutes. */
+        private const val HARD_TIMEOUT_MAX_MS = 1_800_000L
+
+        /**
+         * Per-requested-token budget on top of the floor: a legitimately long
+         * generation (hundreds of tokens at CPU speeds) must not be killed by
+         * a fixed ceiling; a run producing tokens forever (broken stop tokens)
+         * must still be escaped.
+         */
+        private const val MS_PER_GENERATED_TOKEN = 2_000L
+
+        /** Bound for the post-load coherence probe so a broken model fails fast. */
+        private const val SELF_TEST_TIMEOUT_MS = 30_000L
+
+        /**
+         * How often the stall watchdog re-checks decode activity.
+         * Cheap (a timestamp compare); small enough to react promptly.
+         */
+        private const val WATCHDOG_POLL_MS = 500L
+
+        /**
+         * Maximum silence between two generated tokens once decoding has
+         * started (inter-token stall budget). Generations that are ACTIVELY
+         * producing tokens refresh the activity timestamp on every chunk and
+         * are never affected; a wedged decode (hung GPU fence, dead sampler,
+         * native callback that never fires) is cancelled within this window
+         * instead of hanging the UI until the hard ceiling.
+         */
+        private const val INTER_TOKEN_TIMEOUT_MS = 30_000L
+
+        /**
+         * Grace period after the watchdog's engine.cancel() for the native
+         * loop to unwind through its own onError/onDone callbacks before the
+         * collection scope is force-cancelled.
+         */
+        private const val STALL_UNWIND_GRACE_MS = 15_000L
+
+        /**
+         * First-token stall budget for a prompt of [promptLength] characters.
+         * Floor: [FIRST_TOKEN_TIMEOUT_MS] (the user-required 5s — a healthy
+         * engine always produces its first token within it on typical prompts).
+         * Scaled: +[MS_PER_PROMPT_TOKEN] per estimated prompt token so a long
+         * CPU prefill is never misreported as a stall. Capped at
+         * [FIRST_TOKEN_TIMEOUT_MAX_MS].
+         */
+        fun stallTimeoutMs(promptLength: Int): Long {
+            val estimatedTokens = promptLength.coerceAtLeast(0) / 4
+            return (FIRST_TOKEN_TIMEOUT_MS + estimatedTokens * MS_PER_PROMPT_TOKEN)
+                .coerceIn(FIRST_TOKEN_TIMEOUT_MS, FIRST_TOKEN_TIMEOUT_MAX_MS)
+        }
+
+        /**
+         * Hard ceiling for a run requesting [maxTokens] tokens. Never below
+         * [HARD_FLOOR_MS] (previous fixed behavior) and never above
+         * [HARD_TIMEOUT_MAX_MS].
+         */
+        fun hardGenerationTimeoutMs(maxTokens: Int): Long {
+            val budget = maxTokens.coerceAtLeast(0).toLong() * MS_PER_GENERATED_TOKEN + HARD_FLOOR_MS
+            return budget.coerceIn(HARD_FLOOR_MS, HARD_TIMEOUT_MAX_MS)
+        }
+    }
+
+    override suspend fun getDebugInfo(): Result<EngineDebugInfo?> = engine.getDebugInfo()
+
+    override suspend fun benchmarkBackends(
+        prompt: String
+    ): Result<List<BackendBenchmarkResult>> = generationMutex.withLock {
+        com.jarvis.assistant.androllm.engine.support.runCatching {
+            val info = engine.getLoadedModel() ?: return Result.Success(emptyList())
+            val caps = backendCapabilities.value
+            val model = Model(
+                id = info.id,
+                name = info.generalName,
+                filePath = info.filePath,
+                quantization = info.quantization,
+                architecture = info.architecture,
+                family = info.family
+            )
+            // Chain: NPU → GPU → CPU, pruned by the probe + model flags — the
+            // same order the engine uses for an AUTO load.
+            val candidates = BackendSelector.orderedCandidates(BackendType.AUTO, caps, model)
+                .map { it.type }
+                .distinct()
+            val original = caps.selectedBackend
+            val results = mutableListOf<BackendBenchmarkResult>()
+            for (type in candidates) {
+                results += benchmarkSingleBackend(model, type, prompt)
+            }
+            // Restore the backend the user had selected before benchmarking.
+            runCatching { engine.loadModel(model, ModelLoadConfig(backend = original)) }
+            results
+        }
+    }
+
+    /**
+     * Loads [model] on [type] and runs [prompt] once, measuring throughput,
+     * first-token latency, initialization time and peak RAM. Never throws — a
+     * failed backend is reported as a non-succeeded result so the comparison
+     * table still shows every backend it tried.
+     */
+    private suspend fun benchmarkSingleBackend(
+        model: Model,
+        type: BackendType,
+        prompt: String
+    ): BackendBenchmarkResult {
+        val loadStartedAt = System.currentTimeMillis()
+        val load = engine.loadModel(model, ModelLoadConfig(backend = type, runSelfTest = false))
+        if (load is Result.Error) {
+            android.util.Log.w(TAG, "Backend benchmark: ${type.name} load failed — ${load.exception.message}")
+            return BackendBenchmarkResult(
+                backend = type,
+                backendLabel = type.name,
+                succeeded = false,
+                error = load.exception.message ?: "load failed"
+            )
+        }
+        val initTimeMs = (System.currentTimeMillis() - loadStartedAt).coerceAtLeast(0L)
+        val loadedInfo = engine.getLoadedModel()
+        var tokenCount = 0L
+        var firstTokenMs = 0L
+        val startedAt = System.currentTimeMillis()
+        var failed = false
+        var failure: String? = null
+        try {
+            engine.tokenStream(prompt, GenerationConfig(maxTokens = 64))
+                .collect { res ->
+                    when (res) {
+                        is Result.Success -> {
+                            val chunk = res.data
+                            if (chunk.delta.isNotEmpty() && !chunk.finished) {
+                                if (firstTokenMs == 0L) firstTokenMs = System.currentTimeMillis() - startedAt
+                                if (!chunk.isThinking) tokenCount++
+                            }
+                        }
+                        is Result.Error -> throw res.exception
+                    }
+                }
+        } catch (e: Throwable) {
+            failed = true
+            failure = e.message ?: "generation failed"
+            android.util.Log.w(TAG, "Backend benchmark: ${type.name} generation failed — $failure")
+        }
+        val elapsedMs = (System.currentTimeMillis() - startedAt).coerceAtLeast(1L)
+        val stats = engine.stats.firstOrNull()
+        val tps = if (tokenCount > 0) tokenCount * 1000f / elapsedMs else 0f
+        return BackendBenchmarkResult(
+            backend = type,
+            backendLabel = type.name,
+            vendor = loadedInfo?.vendor.orEmpty(),
+            accelerator = loadedInfo?.accelerator.orEmpty(),
+            averageTokensPerSecond = tps,
+            peakTokensPerSecond = tps,
+            promptLatencyMs = stats?.promptTimeMs ?: 0L,
+            firstTokenMs = firstTokenMs,
+            generationTimeMs = elapsedMs,
+            initTimeMs = initTimeMs,
+            peakRamBytes = stats?.memoryPeakBytes ?: 0L,
+            succeeded = !failed,
+            error = failure.orEmpty()
+        )
+    }
+
+    override fun release() {
+        engine.release()
+        cancelRequested.set(false)
+        _engineState.value = EngineState.Unloaded
+        _generationState.value = GenerationState.Idle
+        _memoryStats.value = null
+    }
+}

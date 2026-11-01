@@ -45,6 +45,7 @@ class JarvisAppLockActivity : AppCompatActivity() {
     private var appLabel: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        com.jarvis.assistant.util.ThemeManager.applyTheme(this)
         super.onCreate(savedInstanceState)
         binding = ActivityJarvisAppLockBinding.inflate(layoutInflater)
         setContentView(binding.root)

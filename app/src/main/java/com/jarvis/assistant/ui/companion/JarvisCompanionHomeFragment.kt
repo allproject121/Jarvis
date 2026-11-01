@@ -167,19 +167,19 @@ class JarvisCompanionHomeFragment : Fragment() {
         binding.tvJarvisActivePersonaLabel.text = "Active: $active Core · Online"
 
         binding.cardCharMaya.setBackgroundResource(
-            if (active == "Maya") R.drawable.bg_jarvis_character_active else R.drawable.bg_jarvis_character_inactive
+            if (active == "Maya") R.drawable.bg_themed2_character_active else R.drawable.bg_themed2_character_inactive
         )
         binding.cardCharMayaPro.setBackgroundResource(
-            if (active == "Maya Pro") R.drawable.bg_jarvis_character_active else R.drawable.bg_jarvis_character_inactive
+            if (active == "Maya Pro") R.drawable.bg_themed2_character_active else R.drawable.bg_themed2_character_inactive
         )
         binding.cardCharMayaIntimate.setBackgroundResource(
-            if (active == "Maya Intimate") R.drawable.bg_jarvis_character_active else R.drawable.bg_jarvis_character_inactive
+            if (active == "Maya Intimate") R.drawable.bg_themed2_character_active else R.drawable.bg_themed2_character_inactive
         )
         binding.cardCharFriday.setBackgroundResource(
-            if (active == "Friday") R.drawable.bg_jarvis_character_active else R.drawable.bg_jarvis_character_inactive
+            if (active == "Friday") R.drawable.bg_themed2_character_active else R.drawable.bg_themed2_character_inactive
         )
         binding.cardCharVenom.setBackgroundResource(
-            if (active == "Venom") R.drawable.bg_jarvis_character_active else R.drawable.bg_jarvis_character_inactive
+            if (active == "Venom") R.drawable.bg_themed2_character_active else R.drawable.bg_themed2_character_inactive
         )
     }
 

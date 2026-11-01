@@ -1,7 +1,9 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("kotlin-kapt")
+    id("com.google.devtools.ksp")
+    id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 fun configuredValue(name: String): String? =
@@ -20,10 +22,24 @@ val verificationEndpoint = configuredValue("JARVIS_VERIFICATION_ENDPOINT").orEmp
 val releaseSigningReady = listOf(releaseStorePath, releaseStorePassword, releaseKeyAlias, releaseKeyPassword).all { !it.isNullOrBlank() }
 
 android {
+    ndkVersion = "26.1.10909125"
     namespace = "com.jarvis.assistant"
     compileSdk = 36
 
     defaultConfig {
+        // Phones only (Jarvis' own jniLibs ship arm64-v8a + armeabi-v7a); drops emulator-only x86 libs.
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
+        // whisper.cpp (AndroLLM offline speech-to-text)
+        externalNativeBuild {
+            cmake {
+                cppFlags += listOf("-std=c++17", "-fexceptions", "-frtti")
+                arguments += listOf(
+                    "-DANDROID_STL=c++_shared", "-DCMAKE_BUILD_TYPE=Release",
+                    "-DGGML_OPENMP=OFF", "-DGGML_BUILD_TESTS=OFF", "-DGGML_BUILD_EXAMPLES=OFF",
+                    "-DGGML_CCACHE=OFF", "-DGGML_CPU_ALL_VARIANTS=OFF"
+                )
+            }
+        }
         applicationId = "com.jarvis.assistant"
         minSdk = 28
         targetSdk = 36
@@ -65,12 +81,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+
 
     buildFeatures {
         viewBinding = true
+        compose = true
         buildConfig = true
     }
 
@@ -109,6 +124,36 @@ tasks.matching { it.name == "packageRelease" }.configureEach {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
+
+    // Jetpack Compose (AndroLLM UI)
+    implementation(platform("androidx.compose:compose-bom:2024.10.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material3:material3-window-size-class")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.animation:animation")
+    implementation("androidx.compose.runtime:runtime-livedata")
+    implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+    implementation("androidx.navigation:navigation-compose:2.8.3")
+    implementation("androidx.window:window:1.3.0")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+
+    // AndroLLM feature layer (optional secondary engine + features; Gemini Live stays primary)
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.16.0")
+    implementation("com.google.ai.edge.litert:litert:2.2.0") {
+        exclude(group = "androidx.lifecycle", module = "lifecycle-runtime")
+    }
+    implementation("com.github.k2-fsa:sherpa-onnx:1.13.4")
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
@@ -126,9 +171,9 @@ dependencies {
     implementation("net.ladenthin:llama-android:5.1.0")
 
     // Room Database
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-runtime:2.8.4")
+    implementation("androidx.room:room-ktx:2.8.4")
+    ksp("androidx.room:room-compiler:2.8.4")
 
     // Security Crypto for EncryptedSharedPreferences
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
@@ -143,4 +188,20 @@ dependencies {
     testImplementation("org.json:json:20231013")
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
 
+android {
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
+    packaging {
+        jniLibs { pickFirsts += "**/libc++_shared.so" }
+    }
+}

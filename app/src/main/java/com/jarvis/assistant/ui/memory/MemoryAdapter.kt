@@ -40,7 +40,12 @@ class MemoryAdapter(
                 MemoryEntity.CATEGORY_CONTACTS -> R.color.status_green
                 else -> R.color.status_amber
             }
-            val color = ContextCompat.getColor(context, colorRes)
+            val color = if (item.category == MemoryEntity.CATEGORY_PREFERENCES) {
+                // Brand accent follows the active Jarvis theme
+                com.jarvis.assistant.util.ThemeManager.attrColor(context, R.attr.themeAccent, ContextCompat.getColor(context, colorRes))
+            } else {
+                ContextCompat.getColor(context, colorRes)
+            }
             binding.tvMemoryCategory.setTextColor(color)
 
             binding.btnEditMemory.setOnClickListener { onEdit(item) }

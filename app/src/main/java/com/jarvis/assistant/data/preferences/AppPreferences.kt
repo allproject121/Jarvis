@@ -50,7 +50,7 @@ class AppPreferences(context: Context) {
         private const val LEGACY_WIFI_ENDPOINT = "http://192.168.0.101:11434"
 
         /** Default local model tag (must exist in the user's Ollama install). */
-        const val DEFAULT_LOCAL_HOST_MODEL = "qwen3.8:27b"
+        const val DEFAULT_LOCAL_HOST_MODEL = "qwen3:8b"
         private const val KEY_API_KEY = "key_api_key"
         private const val KEY_MODEL = "key_model"
         private const val KEY_VOICE = "key_voice"
@@ -168,6 +168,10 @@ class AppPreferences(context: Context) {
         private const val KEY_PRIVACY_MODE = "key_privacy_mode"
         private const val KEY_HOME_ASSISTANT_URL = "key_home_assistant_url"
         private const val KEY_HOME_ASSISTANT_TOKEN = "key_home_assistant_token"
+        private const val KEY_MCP_BRIDGE_ENABLED = "key_mcp_bridge_enabled"
+        private const val KEY_NORMALIZE_NUMBERS = "key_normalize_numbers"
+        private const val KEY_NORMALIZE_CURRENCY = "key_normalize_currency"
+        private const val KEY_SENTENCE_ASSEMBLER = "key_sentence_assembler"
         private const val KEY_SMART_HOME_WEBHOOK_URL = "key_smart_home_webhook_url"
     }
 
@@ -402,6 +406,8 @@ class AppPreferences(context: Context) {
                 "pink", "rose" -> "pink"
                 "orange" -> "orange"
                 "indigo" -> "indigo"
+                "androllm_night", "androllm", "androllm_dark", "desk_night" -> "androllm_night"
+                "androllm_parchment", "androllm_light", "parchment" -> "androllm_parchment"
                 "custom" -> "custom"
                 else -> stored
             }
@@ -862,6 +868,22 @@ class AppPreferences(context: Context) {
     var isPrivacyModeEnabled: Boolean
         get() = prefs.getBoolean(KEY_PRIVACY_MODE, false)
         set(value) = prefs.edit().putBoolean(KEY_PRIVACY_MODE, value).apply()
+
+    var isMcpBridgeEnabled: Boolean
+        get() = prefs.getBoolean(KEY_MCP_BRIDGE_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_MCP_BRIDGE_ENABLED, value).apply()
+
+    var isNormalizeNumbersEnabled: Boolean
+        get() = prefs.getBoolean(KEY_NORMALIZE_NUMBERS, true)
+        set(value) = prefs.edit().putBoolean(KEY_NORMALIZE_NUMBERS, value).apply()
+
+    var isNormalizeCurrencyEnabled: Boolean
+        get() = prefs.getBoolean(KEY_NORMALIZE_CURRENCY, true)
+        set(value) = prefs.edit().putBoolean(KEY_NORMALIZE_CURRENCY, value).apply()
+
+    var isSentenceAssemblerEnabled: Boolean
+        get() = prefs.getBoolean(KEY_SENTENCE_ASSEMBLER, true)
+        set(value) = prefs.edit().putBoolean(KEY_SENTENCE_ASSEMBLER, value).apply()
 
     fun activateJarvisCompanionMode(enable: Boolean) {
         if (enable) {

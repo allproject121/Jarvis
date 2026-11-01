@@ -11,6 +11,28 @@ import com.jarvis.assistant.R
 
 object ThemeManager {
 
+    /** AndroLLM's own looks, offered as first-class Jarvis themes. */
+    const val THEME_ANDROLLM_NIGHT = "androllm_night"
+    const val THEME_ANDROLLM_PARCHMENT = "androllm_parchment"
+
+    /** Resolved theme: XML style, window/background colour and whether it is a light theme. */
+    data class ThemeSpec(val styleRes: Int, val bgColor: Int, val isLight: Boolean)
+
+    /** The currently selected (normalised, lower-case) theme key. */
+    fun currentThemeKey(): String {
+        val prefs = try { JarvisApp.instance.preferences } catch (_: Exception) { null }
+        return (prefs?.appTheme ?: "dark").lowercase()
+    }
+
+    /** Resolve the [ThemeSpec] for the theme currently stored in preferences. */
+    fun currentThemeSpec(): ThemeSpec {
+        val prefs = try { JarvisApp.instance.preferences } catch (_: Exception) { null }
+        return resolveThemeSpec(prefs?.appTheme ?: "dark", prefs?.customThemeColor ?: "#22D3EE")
+    }
+
+    /** True when the active Jarvis theme is a light theme (dark text on a light ground). */
+    fun isLightTheme(): Boolean = currentThemeSpec().isLight
+
     /**
      * Apply the selected theme to the activity and optionally refresh the supplied root view.
      * Also applies the optional glass blur effect if enabled.
@@ -51,6 +73,8 @@ object ThemeManager {
             "amethyst", "purple", "neon_purple" -> Color.parseColor("#C084FC")
             "sunset" -> Color.parseColor("#FF6A3D")
             "dark", "obsidian" -> Color.parseColor("#22D3EE")
+            THEME_ANDROLLM_NIGHT -> Color.parseColor("#7A5CFF")
+            THEME_ANDROLLM_PARCHMENT -> Color.parseColor("#D97757")
             "custom" -> {
                 try {
                     val parsed = Color.parseColor(customHex)
@@ -83,6 +107,8 @@ object ThemeManager {
             "red", "ruby", "crimson", "arc_red", "crimson_ruby" -> Color.parseColor("#140407")
             "amethyst", "purple", "neon_purple" -> Color.parseColor("#0B061A")
             "dark", "obsidian" -> Color.parseColor("#070914")
+            THEME_ANDROLLM_NIGHT -> Color.parseColor("#000000")
+            THEME_ANDROLLM_PARCHMENT -> Color.parseColor("#F5F4ED")
             "custom" -> {
                 try {
                     val parsed = Color.parseColor(customHex ?: "#070914")
@@ -114,12 +140,10 @@ object ThemeManager {
         }
     }
 
-    /** Apply the theme resources and window colours. */
-    fun applyTheme(activity: Activity) {
-        val prefs = try { JarvisApp.instance.preferences } catch (_: Exception) { null }
-        val themeKey = (prefs?.appTheme ?: "dark").lowercase()
-        val customHex = prefs?.customThemeColor ?: "#22D3EE"
-
+    /** Map a theme key (+ custom hex) to its XML style, background colour and light/dark flag. */
+    fun resolveThemeSpec(rawThemeKey: String, customHex: String?): ThemeSpec {
+        val themeKey = rawThemeKey.lowercase()
+        val hex = customHex ?: "#22D3EE"
         val (themeRes, bgColor, isLight) = when (themeKey) {
             "pearl_white", "white", "light" ->
                 Triple(R.style.Theme_JarvisAssistant_PearlWhite, Color.parseColor("#F8FAFC"), true)
@@ -157,9 +181,15 @@ object ThemeManager {
             "dark", "obsidian" ->
                 Triple(R.style.Theme_JarvisAssistant_Dark, Color.parseColor("#070914"), false)
 
+            THEME_ANDROLLM_NIGHT ->
+                Triple(R.style.Theme_JarvisAssistant_AndroLlmNight, Color.parseColor("#000000"), false)
+
+            THEME_ANDROLLM_PARCHMENT ->
+                Triple(R.style.Theme_JarvisAssistant_AndroLlmParchment, Color.parseColor("#F5F4ED"), true)
+
             "custom" -> {
                 try {
-                    val parsed = Color.parseColor(customHex)
+                    val parsed = Color.parseColor(hex)
                     val hsv = FloatArray(3)
                     Color.colorToHSV(parsed, hsv)
                     val s = hsv[1]
@@ -190,6 +220,15 @@ object ThemeManager {
 
             else -> Triple(R.style.Theme_JarvisAssistant_Dark, Color.parseColor("#070914"), false)
         }
+        return ThemeSpec(themeRes, bgColor, isLight)
+    }
+
+    /** Apply the theme resources and window colours. */
+    fun applyTheme(activity: Activity) {
+        val spec = currentThemeSpec()
+        val themeRes = spec.styleRes
+        val bgColor = spec.bgColor
+        val isLight = spec.isLight
 
         try {
             activity.setTheme(themeRes)
@@ -213,6 +252,26 @@ object ThemeManager {
             }
         } catch (e: Throwable) {
             android.util.Log.e("ThemeManager", "Error applying theme to ${activity.localClassName}", e)
+        }
+    }
+
+    /**
+     * Resolve a theme colour attribute (e.g. R.attr.themeTextPrimary) from [context]'s theme.
+     * Use this instead of hardcoded Color.parseColor(...) for surfaces/text so code-driven
+     * colours follow the active Jarvis theme. Returns [fallback] if the attr is missing.
+     */
+    @JvmStatic
+    fun attrColor(context: Context, attr: Int, fallback: Int = Color.GRAY): Int {
+        val tv = android.util.TypedValue()
+        if (!context.theme.resolveAttribute(attr, tv, true)) return fallback
+        return try {
+            if (tv.type in android.util.TypedValue.TYPE_FIRST_COLOR_INT..android.util.TypedValue.TYPE_LAST_COLOR_INT) {
+                tv.data
+            } else if (tv.resourceId != 0) {
+                androidx.core.content.ContextCompat.getColor(context, tv.resourceId)
+            } else fallback
+        } catch (_: Exception) {
+            fallback
         }
     }
 

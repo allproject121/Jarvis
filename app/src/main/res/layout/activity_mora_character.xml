@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0A0D14">
+    android:background="?attr/themeBg">
 
     <!-- Top Bar -->
     <LinearLayout
@@ -28,7 +28,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_back"
             android:contentDescription="Back"
-            app:tint="#FFFFFF" />
+            app:tint="?attr/themeTextPrimary" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -41,7 +41,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="REDMAGIC MORA"
-                android:textColor="#FFFFFF"
+                android:textColor="?attr/themeTextPrimary"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:letterSpacing="0.05" />
@@ -51,7 +51,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Interactive Cyber AI Companion"
-                android:textColor="#FF0055"
+                android:textColor="?attr/themeAccent"
                 android:textSize="12sp"
                 android:letterSpacing="0.04" />
         </LinearLayout>
@@ -61,7 +61,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="LIVE 3D"
-            android:textColor="#00F0FF"
+            android:textColor="?attr/themeAccent"
             android:textSize="11sp"
             android:textStyle="bold"
             android:paddingHorizontal="10dp"
@@ -86,7 +86,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="#111622"
+        android:background="?attr/themeSurface"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -110,7 +110,7 @@
                     android:text="Wave 👋"
                     android:textSize="12sp"
                     android:textColor="#FFFFFF"
-                    android:backgroundTint="#FF0055"
+                    android:backgroundTint="?attr/themeAccent"
                     android:layout_marginEnd="8dp" />
 
                 <Button
@@ -119,8 +119,8 @@
                     android:layout_height="36dp"
                     android:text="Joy ✨"
                     android:textSize="12sp"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="#252F42"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:backgroundTint="?attr/themeChipBg"
                     android:layout_marginEnd="8dp" />
 
                 <Button
@@ -129,8 +129,8 @@
                     android:layout_height="36dp"
                     android:text="Learn 💡"
                     android:textSize="12sp"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="#252F42"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:backgroundTint="?attr/themeChipBg"
                     android:layout_marginEnd="8dp" />
 
                 <Button
@@ -139,8 +139,8 @@
                     android:layout_height="36dp"
                     android:text="Dance 💃"
                     android:textSize="12sp"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="#252F42"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:backgroundTint="?attr/themeChipBg"
                     android:layout_marginEnd="8dp" />
 
                 <Button
@@ -149,8 +149,8 @@
                     android:layout_height="36dp"
                     android:text="Speak 💬"
                     android:textSize="12sp"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="#252F42" />
+                    android:textColor="?attr/themeTextPrimary"
+                    android:backgroundTint="?attr/themeChipBg" />
             </LinearLayout>
         </HorizontalScrollView>
 
@@ -175,7 +175,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="READY • TAP MORA TO INTERACT"
-                android:textColor="#A0AEC0"
+                android:textColor="?attr/themeTextSecondary"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:layout_marginStart="8dp" />
@@ -187,7 +187,7 @@
                 android:text="Set As Active"
                 android:textSize="11sp"
                 android:textColor="#FFFFFF"
-                android:backgroundTint="#00F0FF" />
+                android:backgroundTint="?attr/themeAccent" />
         </LinearLayout>
     </LinearLayout>
 

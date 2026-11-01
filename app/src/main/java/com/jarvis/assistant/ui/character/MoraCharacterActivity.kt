@@ -47,6 +47,7 @@ class MoraCharacterActivity : AppCompatActivity() {
                 android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
             )
         }
+        com.jarvis.assistant.util.ThemeManager.applyTheme(this)
         binding = ActivityMoraCharacterBinding.inflate(layoutInflater)
         setContentView(binding.root)
         com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
