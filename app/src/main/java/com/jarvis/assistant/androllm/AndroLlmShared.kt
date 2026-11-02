@@ -56,36 +56,32 @@ object AndroLlmUiStyle {
     const val JARVIS = "jarvis"
     const val ANDROLLM = "androllm"
 
-    fun homeStyle(context: Context): String =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_HOME, JARVIS) ?: JARVIS
+    // Enforce unified Jarvis Stark HUD across Home and Chat tabs
+    fun homeStyle(context: Context): String = JARVIS
 
-    fun chatStyle(context: Context): String =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_CHAT, JARVIS) ?: JARVIS
+    fun chatStyle(context: Context): String = JARVIS
 
     fun setHomeStyle(context: Context, style: String) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_HOME, style).apply()
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_HOME, JARVIS).apply()
     }
 
     fun setChatStyle(context: Context, style: String) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_CHAT, style).apply()
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_CHAT, JARVIS).apply()
     }
 
     private const val KEY_AI_HUB_TAB = "show_ai_hub_tab"
     private const val KEY_SPLASH = "show_androllm_splash"
 
-    /** Whether the dock shows the "AI Hub" tab (the full AndroLLM workspace). Off by default. */
-    fun showAiHubTab(context: Context): Boolean =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_AI_HUB_TAB, false)
+    /** AI Hub tab in dock is merged into Home Dual-Brain Hub to prevent duplicate interfaces. */
+    fun showAiHubTab(context: Context): Boolean = false
 
     fun setShowAiHubTab(context: Context, show: Boolean) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_AI_HUB_TAB, show).apply()
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_AI_HUB_TAB, false).apply()
     }
 
-    /** Whether the AI Hub starts with AndroLLM's splash/onboarding instead of its home. Off by default. */
-    fun showSplash(context: Context): Boolean =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_SPLASH, false)
+    fun showSplash(context: Context): Boolean = false
 
     fun setShowSplash(context: Context, show: Boolean) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_SPLASH, show).apply()
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_SPLASH, false).apply()
     }
 }

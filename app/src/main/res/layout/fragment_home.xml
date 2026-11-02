@@ -271,7 +271,7 @@
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@drawable/ic_sparkle"
-                    app:tint="#A855F7"
+                    app:tint="?attr/themeAccent"
                     android:contentDescription="Mode icon" />
 
                 <TextView
@@ -289,7 +289,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="SWITCH TO JARVIS 💜"
-                    android:textColor="#C084FC"
+                    android:textColor="?attr/themeAccent"
                     android:textSize="11sp"
                     android:textStyle="bold"
                     android:paddingStart="10dp"
@@ -420,11 +420,11 @@
                         android:id="@+id/tvBrainActiveBadge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/bg_jarvis_status_badge_green"
+                        android:background="@drawable/bg_jarvis_status_badge"
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="3dp"
                         android:text="GEMINI LIVE + ANDROLLM"
-                        android:textColor="#4ADE80"
+                        android:textColor="?attr/themeAccent"
                         android:textSize="10sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -472,7 +472,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="🟢 Bidirectional WebSocket"
-                            android:textColor="#4ADE80"
+                            android:textColor="?attr/themeAccent"
                             android:textSize="10.5sp"
                             android:layout_marginTop="2dp" />
                     </LinearLayout>
@@ -513,7 +513,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="🟢 On-Device Fallback Ready"
-                            android:textColor="#22D3EE"
+                            android:textColor="?attr/themeAccent"
                             android:textSize="10.5sp"
                             android:layout_marginTop="2dp" />
                     </LinearLayout>
@@ -548,8 +548,8 @@
                         android:layout_weight="1"
                         android:text="🧠 Memory"
                         android:textSize="10.5sp"
-                        android:textColor="?attr/themeTextPrimary"
-                        app:strokeColor="?attr/themeCardBorder"
+                        android:textColor="?attr/themeAccent"
+                        app:strokeColor="?attr/themeAccent"
                         app:cornerRadius="8dp"
                         android:paddingVertical="0dp"
                         android:layout_marginStart="2dp"
@@ -563,8 +563,8 @@
                         android:layout_weight="1"
                         android:text="🛡️ Agent Matrix"
                         android:textSize="10.5sp"
-                        android:textColor="?attr/themeTextPrimary"
-                        app:strokeColor="?attr/themeCardBorder"
+                        android:textColor="?attr/themeAccent"
+                        app:strokeColor="?attr/themeAccent"
                         app:cornerRadius="8dp"
                         android:paddingVertical="0dp"
                         android:layout_marginStart="4dp" />
@@ -921,7 +921,7 @@
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:src="@drawable/ic_stack_memory"
-                        app:tint="?attr/themeAccent2"
+                        app:tint="?attr/themeAccent"
                         android:layout_marginEnd="7dp" />
 
                     <LinearLayout
@@ -971,7 +971,7 @@
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:src="@drawable/ic_settings_language"
-                        app:tint="?attr/themeAccent3"
+                        app:tint="?attr/themeAccent"
                         android:layout_marginEnd="7dp" />
 
                     <LinearLayout
@@ -1389,7 +1389,7 @@
                                 android:layout_height="20dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_settings_voice"
-                                app:tint="?attr/themeAccent2" />
+                                app:tint="?attr/themeAccent" />
                         </FrameLayout>
 
                         <LinearLayout
@@ -1403,7 +1403,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="VOICE ARCHITECTURE"
-                                android:textColor="?attr/themeAccent2"
+                                android:textColor="?attr/themeAccent"
                                 android:textSize="10sp"
                                 android:letterSpacing="0.08"
                                 android:textStyle="bold" />
@@ -1468,7 +1468,7 @@
                                 android:layout_height="20dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_nav_gods_eye"
-                                app:tint="?attr/themeAccent3" />
+                                app:tint="?attr/themeAccent" />
                         </FrameLayout>
 
                         <LinearLayout
@@ -1482,7 +1482,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="TACTICAL INTEL"
-                                android:textColor="?attr/themeAccent3"
+                                android:textColor="?attr/themeAccent"
                                 android:textSize="10sp"
                                 android:letterSpacing="0.08"
                                 android:textStyle="bold" />
