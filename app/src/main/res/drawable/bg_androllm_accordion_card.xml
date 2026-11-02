@@ -3,10 +3,10 @@
     <item>
         <shape android:shape="rectangle">
             <corners android:radius="18dp" />
-            <solid android:color="?attr/themeCardBg" />
+            <solid android:color="#0D1629" />
             <stroke
                 android:width="1.2dp"
-                android:color="?attr/themeCardBorder" />
+                android:color="#1F2E4D" />
         </shape>
     </item>
     <item
@@ -23,8 +23,8 @@
             <gradient
                 android:type="linear"
                 android:angle="270"
-                android:startColor="?attr/themeAccentLight"
-                android:centerColor="#05FFFFFF"
+                android:startColor="#1A22D3EE"
+                android:centerColor="#0522D3EE"
                 android:endColor="#00000000" />
         </shape>
     </item>
