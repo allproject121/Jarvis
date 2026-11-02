@@ -551,9 +551,7 @@ class SettingsFragment : Fragment() {
             ApiRegistryBottomSheet().show(childFragmentManager, "ApiRegistryBottomSheet")
         }
 
-        binding.rowMemory.setOnClickListener {
-            startActivity(Intent(requireContext(), MemoryActivity::class.java))
-        }
+
 
         binding.rowDeveloperLinksToggle.setOnClickListener {
             binding.switchDeveloperLinks.toggle()

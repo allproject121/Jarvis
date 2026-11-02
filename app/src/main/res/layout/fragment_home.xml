@@ -1630,7 +1630,7 @@
             android:layout_width="16dp"
             android:layout_height="16dp"
             android:src="@drawable/ic_zen_mode"
-            app:tint="#00F0FF"
+            app:tint="?attr/themeAccent"
             android:contentDescription="Restore HUD" />
 
         <TextView
