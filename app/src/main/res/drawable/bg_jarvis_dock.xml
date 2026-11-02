@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Layer 1: Frosted dynamic glass dock base -->
+    <!-- Layer 1: Frosted Cyber Obsidian Dock Base -->
     <item>
         <shape android:shape="rectangle">
             <corners android:radius="36dp" />
@@ -27,13 +27,13 @@
             <gradient
                 android:type="linear"
                 android:angle="0"
-                android:startColor="#00FFFFFF"
+                android:startColor="#00000000"
                 android:centerColor="?attr/themeGlassSpecular"
-                android:endColor="#00FFFFFF" />
+                android:endColor="#00000000" />
         </shape>
     </item>
 
-    <!-- Layer 3: Apple-style Top Specular Glass Sheen -->
+    <!-- Layer 3: Top Specular Glass Sheen -->
     <item
         android:top="2dp"
         android:left="4dp"
@@ -48,8 +48,8 @@
             <gradient
                 android:type="linear"
                 android:angle="270"
-                android:startColor="#25FFFFFF"
-                android:centerColor="#08FFFFFF"
+                android:startColor="#2000F0FF"
+                android:centerColor="#0600F0FF"
                 android:endColor="#00000000" />
         </shape>
     </item>

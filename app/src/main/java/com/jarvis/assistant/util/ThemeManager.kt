@@ -72,7 +72,7 @@ object ThemeManager {
             "red", "ruby", "crimson", "arc_red", "crimson_ruby" -> Color.parseColor("#FF4D5E")
             "amethyst", "purple", "neon_purple" -> Color.parseColor("#C084FC")
             "sunset" -> Color.parseColor("#FF6A3D")
-            "dark", "obsidian" -> Color.parseColor("#22D3EE")
+            "dark", "obsidian" -> Color.parseColor("#00F0FF")
             THEME_ANDROLLM_NIGHT -> Color.parseColor("#7A5CFF")
             THEME_ANDROLLM_PARCHMENT -> Color.parseColor("#D97757")
             "custom" -> {
@@ -80,10 +80,10 @@ object ThemeManager {
                     val parsed = Color.parseColor(customHex)
                     parsed
                 } catch (_: Exception) {
-                    Color.parseColor("#22D3EE")
+                    Color.parseColor("#00F0FF")
                 }
             }
-            else -> Color.parseColor("#22D3EE")
+            else -> Color.parseColor("#00F0FF")
         }
     }
 
@@ -106,12 +106,12 @@ object ThemeManager {
             "indigo" -> Color.parseColor("#050614")
             "red", "ruby", "crimson", "arc_red", "crimson_ruby" -> Color.parseColor("#140407")
             "amethyst", "purple", "neon_purple" -> Color.parseColor("#0B061A")
-            "dark", "obsidian" -> Color.parseColor("#070914")
+            "dark", "obsidian" -> Color.parseColor("#060812")
             THEME_ANDROLLM_NIGHT -> Color.parseColor("#000000")
             THEME_ANDROLLM_PARCHMENT -> Color.parseColor("#F5F4ED")
             "custom" -> {
                 try {
-                    val parsed = Color.parseColor(customHex ?: "#070914")
+                    val parsed = Color.parseColor(customHex ?: "#060812")
                     val hsv = FloatArray(3)
                     Color.colorToHSV(parsed, hsv)
                     val s = hsv[1]
@@ -125,7 +125,7 @@ object ThemeManager {
                             h in 16f..45f -> Color.parseColor("#0E0602") // orange
                             h in 46f..65f -> Color.parseColor("#0A0802") // gold
                             h in 66f..165f -> Color.parseColor("#020A06") // emerald
-                            h in 166f..205f -> Color.parseColor("#070914") // cyan
+                            h in 166f..205f -> Color.parseColor("#060812") // cyan
                             h in 206f..255f -> Color.parseColor("#050614") // indigo
                             h in 256f..295f -> Color.parseColor("#0B061A") // amethyst
                             h in 296f..344f -> Color.parseColor("#0E0308") // pink
@@ -143,7 +143,7 @@ object ThemeManager {
     /** Map a theme key (+ custom hex) to its XML style, background colour and light/dark flag. */
     fun resolveThemeSpec(rawThemeKey: String, customHex: String?): ThemeSpec {
         val themeKey = rawThemeKey.lowercase()
-        val hex = customHex ?: "#22D3EE"
+        val hex = customHex ?: "#00F0FF"
         val (themeRes, bgColor, isLight) = when (themeKey) {
             "pearl_white", "white", "light" ->
                 Triple(R.style.Theme_JarvisAssistant_PearlWhite, Color.parseColor("#F8FAFC"), true)
@@ -179,7 +179,7 @@ object ThemeManager {
                 Triple(R.style.Theme_JarvisAssistant_Amethyst, Color.parseColor("#0B061A"), false)
 
             "dark", "obsidian" ->
-                Triple(R.style.Theme_JarvisAssistant_Dark, Color.parseColor("#070914"), false)
+                Triple(R.style.Theme_JarvisAssistant_Dark, Color.parseColor("#060812"), false)
 
             THEME_ANDROLLM_NIGHT ->
                 Triple(R.style.Theme_JarvisAssistant_AndroLlmNight, Color.parseColor("#000000"), false)
@@ -206,7 +206,7 @@ object ThemeManager {
                             h in 16f..45f -> Triple(R.style.Theme_JarvisAssistant_Orange, Color.parseColor("#0E0602"), false)
                             h in 46f..65f -> Triple(R.style.Theme_JarvisAssistant_Gold, Color.parseColor("#0A0802"), false)
                             h in 66f..165f -> Triple(R.style.Theme_JarvisAssistant_Emerald, Color.parseColor("#020A06"), false)
-                            h in 166f..205f -> Triple(R.style.Theme_JarvisAssistant_Dark, Color.parseColor("#070914"), false)
+                            h in 166f..205f -> Triple(R.style.Theme_JarvisAssistant_Dark, Color.parseColor("#060812"), false)
                             h in 206f..255f -> Triple(R.style.Theme_JarvisAssistant_Indigo, Color.parseColor("#050614"), false)
                             h in 256f..295f -> Triple(R.style.Theme_JarvisAssistant_Amethyst, Color.parseColor("#0B061A"), false)
                             h in 296f..344f -> Triple(R.style.Theme_JarvisAssistant_Pink, Color.parseColor("#0E0308"), false)
@@ -214,11 +214,11 @@ object ThemeManager {
                         }
                     }
                 } catch (_: Exception) {
-                    Triple(R.style.Theme_JarvisAssistant_Dark, Color.parseColor("#070914"), false)
+                    Triple(R.style.Theme_JarvisAssistant_Dark, Color.parseColor("#060812"), false)
                 }
             }
 
-            else -> Triple(R.style.Theme_JarvisAssistant_Dark, Color.parseColor("#070914"), false)
+            else -> Triple(R.style.Theme_JarvisAssistant_Dark, Color.parseColor("#060812"), false)
         }
         return ThemeSpec(themeRes, bgColor, isLight)
     }

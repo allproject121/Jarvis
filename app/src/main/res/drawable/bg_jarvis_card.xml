@@ -3,7 +3,7 @@
     android:color="?attr/themeAccentLight">
     <item>
         <layer-list>
-            <!-- Layer 1: Frosted acrylic glass fill with theme border -->
+            <!-- Layer 1: Frosted Cyber Obsidian Glass Fill -->
             <item>
                 <shape android:shape="rectangle">
                     <corners android:radius="20dp" />
@@ -18,7 +18,7 @@
                 </shape>
             </item>
 
-            <!-- Layer 2: Apple Liquid Glass Top Specular Sheen -->
+            <!-- Layer 2: Holographic Top Specular Edge Sheen -->
             <item
                 android:top="1dp"
                 android:left="1dp"
@@ -33,9 +33,9 @@
                     <gradient
                         android:type="linear"
                         android:angle="270"
-                        android:startColor="#22FFFFFF"
-                        android:centerColor="#09FFFFFF"
-                        android:endColor="#00FFFFFF" />
+                        android:startColor="#2600F0FF"
+                        android:centerColor="#0800F0FF"
+                        android:endColor="#00000000" />
                 </shape>
             </item>
         </layer-list>

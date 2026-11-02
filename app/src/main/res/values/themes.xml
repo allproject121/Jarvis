@@ -44,29 +44,29 @@
 
     <!-- 2. DARK THEME - LIQUID OBSIDIAN GLASS EDITION (STARK HUD) -->
     <style name="Theme.JarvisAssistant.Dark" parent="Theme.Material3.Dark.NoActionBar">
-        <item name="android:statusBarColor">#070914</item>
+        <item name="android:statusBarColor">#060812</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:navigationBarColor">#070914</item>
+        <item name="android:navigationBarColor">#060812</item>
         <item name="android:windowLightNavigationBar">false</item>
-        <item name="android:windowBackground">#070914</item>
-        <item name="colorPrimary">#22D3EE</item>
-        <item name="colorOnPrimary">#070914</item>
-        <item name="colorSurface">#1F121C38</item>
+        <item name="android:windowBackground">#060812</item>
+        <item name="colorPrimary">#00F0FF</item>
+        <item name="colorOnPrimary">#060812</item>
+        <item name="colorSurface">#0E1528</item>
         <item name="colorOnSurface">#F8FAFC</item>
 
-        <item name="themeBg">#070914</item>
-        <item name="themeSurface">#E0121C38</item>
-        <item name="themeCardBg">#E0121C38</item>
-        <item name="themeCardBorder">#4D38BDF8</item>
-        <item name="themeCardGlassStart">#E014234C</item>
-        <item name="themeCardGlassEnd">#CC0A1128</item>
-        <item name="themeDockBg">#F2070914</item>
-        <item name="themeDockGlassStart">#F20F172A</item>
-        <item name="themeDockGlassEnd">#E6070A17</item>
-        <item name="themeDockBorder">#4D38BDF8</item>
-        <item name="themeGlassSpecular">#8038BDF8</item>
-        <item name="themeChipBg">#E01E293B</item>
-        <item name="themeInputBg">#E0121C38</item>
+        <item name="themeBg">#060812</item>
+        <item name="themeSurface">#E60E1528</item>
+        <item name="themeCardBg">#E60E1528</item>
+        <item name="themeCardBorder">#3300F0FF</item>
+        <item name="themeCardGlassStart">#F2142244</item>
+        <item name="themeCardGlassEnd">#EB090F1E</item>
+        <item name="themeDockBg">#F5060914</item>
+        <item name="themeDockGlassStart">#F5101930</item>
+        <item name="themeDockGlassEnd">#EB050710</item>
+        <item name="themeDockBorder">#4D00F0FF</item>
+        <item name="themeGlassSpecular">#8000F0FF</item>
+        <item name="themeChipBg">#142038</item>
+        <item name="themeInputBg">#0E1528</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_dark_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_dark_2</item>
         <item name="themeGlowBlob3">@drawable/bg_liquid_glow_dark_3</item>
@@ -74,11 +74,11 @@
         <item name="themeTextPrimary">#F8FAFC</item>
         <item name="themeTextSecondary">#94A3B8</item>
         <item name="themeTextMuted">#64748B</item>
-        <item name="themeAccent1">#22D3EE</item>
-        <item name="themeAccent2">#8B5CF6</item>
-        <item name="themeAccent3">#3B82F6</item>
-        <item name="themeAccent">#22D3EE</item>
-        <item name="themeAccentLight">#1F22D3EE</item>
+        <item name="themeAccent1">#00F0FF</item>
+        <item name="themeAccent2">#38BDF8</item>
+        <item name="themeAccent3">#A855F7</item>
+        <item name="themeAccent">#00F0FF</item>
+        <item name="themeAccentLight">#2600F0FF</item>
     </style>
 
     <!-- 3. RED THEME - LIQUID RUBY GLASS EDITION -->

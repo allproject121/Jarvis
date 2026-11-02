@@ -79,7 +79,37 @@
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="10dp">
 
-                <!-- Upper menu removed per user request -->
+                <!-- Left: Holographic System Status Pill -->
+                <LinearLayout
+                    android:id="@+id/badgeHeaderSystem"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_status_badge"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="5dp">
+
+                    <View
+                        android:layout_width="6dp"
+                        android:layout_height="6dp"
+                        android:background="@drawable/bg_jarvis_mic_center"
+                        android:backgroundTint="?attr/themeAccent" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="MK-VIII"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="10sp"
+                        android:letterSpacing="0.10"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginStart="6dp" />
+                </LinearLayout>
+
                 <ImageButton
                     android:id="@+id/btnTopChat"
                     android:layout_width="0dp"
@@ -307,6 +337,14 @@
                 android:layout_gravity="center"
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="6dp">
+
+                <ImageView
+                    android:id="@+id/orbArcReactorRings"
+                    android:layout_width="270dp"
+                    android:layout_height="270dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/bg_arc_reactor_rings"
+                    android:importantForAccessibility="no" />
 
                 <View
                     android:id="@+id/orbHaloRing"

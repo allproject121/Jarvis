@@ -248,6 +248,7 @@ class HomeFragment : Fragment() {
         if (binding.orbHaloRing.visibility != View.GONE) {
             HudAnimationHelper.startBreathingHalo(binding.orbHaloRing)
         }
+        HudAnimationHelper.startArcReactorRotation(binding.orbArcReactorRings)
 
         // Stark Tactical Protocols Click Handlers
         binding.cardHomeWallpaper.setOnClickListener {

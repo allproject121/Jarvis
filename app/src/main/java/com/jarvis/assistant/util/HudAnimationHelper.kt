@@ -79,4 +79,17 @@ object HudAnimationHelper {
             start()
         }
     }
+
+    /**
+     * Starts a continuous, subtle slow rotation animation for the Arc Reactor HUD rings.
+     */
+    fun startArcReactorRotation(ringsView: View?): ValueAnimator? {
+        if (ringsView == null) return null
+        return ObjectAnimator.ofFloat(ringsView, View.ROTATION, 0f, 360f).apply {
+            duration = 45000L
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = android.view.animation.LinearInterpolator()
+            start()
+        }
+    }
 }

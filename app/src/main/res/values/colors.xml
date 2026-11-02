@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Professional Clean White Palette -->
-    <color name="bg_space">#F8FAFC</color>
-    <color name="bg_card">#FFFFFF</color>
-    <color name="bg_card_secondary">#F1F5F9</color>
-    <color name="bg_input">#FFFFFF</color>
-    <color name="border_subtle">#E2E8F0</color>
+    <!-- Stark HUD Cybernetic Obsidian Palette -->
+    <color name="bg_space">#060812</color>
+    <color name="bg_card">#0E1528</color>
+    <color name="bg_card_secondary">#121C35</color>
+    <color name="bg_input">#0E1528</color>
+    <color name="border_subtle">#263554</color>
 
-    <!-- Professional Slate Typography -->
-    <color name="text_primary">#0F172A</color>
-    <color name="text_secondary">#475569</color>
+    <!-- Futuristic High-Contrast Typography -->
+    <color name="text_primary">#F8FAFC</color>
+    <color name="text_secondary">#94A3B8</color>
     <color name="text_muted">#64748B</color>
-    <color name="text_subtle">#94A3B8</color>
+    <color name="text_subtle">#475569</color>
 
-    <!-- Royal Sapphire / Apple / Gemini Accent -->
-    <color name="primary_cyan">#2563EB</color>
-    <color name="neon_blue">#3B82F6</color>
-    <color name="purple_glow">#4F46E5</color>
-    <color name="accent_sapphire">#2563EB</color>
-    <color name="accent_sapphire_light">#DBEAFE</color>
-    <color name="accent_dark">#0F172A</color>
+    <!-- Stark Electric Cyan & Quantum Accents -->
+    <color name="primary_cyan">#00F0FF</color>
+    <color name="neon_blue">#38BDF8</color>
+    <color name="purple_glow">#A855F7</color>
+    <color name="accent_sapphire">#00F0FF</color>
+    <color name="accent_sapphire_light">#2600F0FF</color>
+    <color name="accent_dark">#060812</color>
 
     <!-- Status Colors -->
     <color name="status_green">#10B981</color>
@@ -27,34 +27,34 @@
     <color name="status_amber">#F59E0B</color>
 
     <!-- Theme Variables mapped for UI components -->
-    <color name="jarvis_primary">#2563EB</color>
-    <color name="jarvis_primary_bright">#2563EB</color>
-    <color name="jarvis_red_bright">#2563EB</color>
-    <color name="jarvis_red">#2563EB</color>
-    <color name="jarvis_primary_dark">#1D4ED8</color>
-    <color name="jarvis_primary_glow">#332563EB</color>
-    <color name="jarvis_card_bg">#FFFFFF</color>
-    <color name="jarvis_card_border">#E2E8F0</color>
-    <color name="jarvis_dock_bg">#FFFFFF</color>
-    <color name="jarvis_dock_border">#E2E8F0</color>
-    <color name="jarvis_text_dark">#475569</color>
-    <color name="jarvis_text_muted">#64748B</color>
-    <color name="jarvis_avatar_bg">#EFF6FF</color>
-    <color name="jarvis_input_bg">#FFFFFF</color>
-    <color name="jarvis_chip_bg">#F1F5F9</color>
+    <color name="jarvis_primary">#00F0FF</color>
+    <color name="jarvis_primary_bright">#54F4FF</color>
+    <color name="jarvis_red_bright">#00F0FF</color>
+    <color name="jarvis_red">#00F0FF</color>
+    <color name="jarvis_primary_dark">#0284C7</color>
+    <color name="jarvis_primary_glow">#4000F0FF</color>
+    <color name="jarvis_card_bg">#0E1528</color>
+    <color name="jarvis_card_border">#3300F0FF</color>
+    <color name="jarvis_dock_bg">#080D1A</color>
+    <color name="jarvis_dock_border">#4D00F0FF</color>
+    <color name="jarvis_text_dark">#F8FAFC</color>
+    <color name="jarvis_text_muted">#94A3B8</color>
+    <color name="jarvis_avatar_bg">#121D38</color>
+    <color name="jarvis_input_bg">#0E1528</color>
+    <color name="jarvis_chip_bg">#142038</color>
 
     <!-- Legacy compatibility aliases -->
-    <color name="naira_red">#2563EB</color>
-    <color name="naira_red_bright">#2563EB</color>
-    <color name="naira_red_dark">#1D4ED8</color>
-    <color name="naira_red_glow">#332563EB</color>
-    <color name="naira_card_bg">#FFFFFF</color>
-    <color name="naira_card_border">#E2E8F0</color>
-    <color name="naira_dock_bg">#FFFFFF</color>
-    <color name="naira_dock_border">#E2E8F0</color>
-    <color name="naira_text_pink">#475569</color>
-    <color name="naira_text_muted">#64748B</color>
-    <color name="naira_avatar_bg">#EFF6FF</color>
-    <color name="naira_input_bg">#FFFFFF</color>
-    <color name="naira_chip_bg">#F1F5F9</color>
+    <color name="naira_red">#00F0FF</color>
+    <color name="naira_red_bright">#54F4FF</color>
+    <color name="naira_red_dark">#0284C7</color>
+    <color name="naira_red_glow">#4000F0FF</color>
+    <color name="naira_card_bg">#0E1528</color>
+    <color name="naira_card_border">#3300F0FF</color>
+    <color name="naira_dock_bg">#080D1A</color>
+    <color name="naira_dock_border">#4D00F0FF</color>
+    <color name="naira_text_pink">#F8FAFC</color>
+    <color name="naira_text_muted">#94A3B8</color>
+    <color name="naira_avatar_bg">#121D38</color>
+    <color name="naira_input_bg">#0E1528</color>
+    <color name="naira_chip_bg">#142038</color>
 </resources>

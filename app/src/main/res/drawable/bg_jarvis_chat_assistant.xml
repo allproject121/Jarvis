@@ -1,13 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <corners
-        android:topLeftRadius="20dp"
-        android:topRightRadius="20dp"
-        android:bottomLeftRadius="6dp"
-        android:bottomRightRadius="20dp" />
-    <solid android:color="?attr/themeCardBg" />
-    <stroke
-        android:width="1dp"
-        android:color="?attr/themeCardBorder" />
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base frosted cyber card -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners
+                android:topLeftRadius="20dp"
+                android:topRightRadius="20dp"
+                android:bottomLeftRadius="4dp"
+                android:bottomRightRadius="20dp" />
+            <gradient
+                android:type="linear"
+                android:angle="135"
+                android:startColor="?attr/themeCardGlassStart"
+                android:endColor="?attr/themeCardGlassEnd" />
+            <stroke
+                android:width="1.2dp"
+                android:color="?attr/themeCardBorder" />
+        </shape>
+    </item>
+    <!-- Left Cyber Accent Bar -->
+    <item
+        android:left="0dp"
+        android:top="8dp"
+        android:bottom="8dp"
+        android:width="3dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="1.5dp" />
+            <solid android:color="?attr/themeAccent" />
+        </shape>
+    </item>
+</layer-list>
