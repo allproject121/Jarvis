@@ -3232,9 +3232,25 @@ class JarvisConversationService : Service() {
                                 result.put(k, resJson.get(k))
                             }
                         } else {
-                            Log.w("JarvisService", "Unknown toolCall name: $name")
-                            result.put("success", false)
-                            result.put("message", "Unknown tool: $name")
+                            // Forward all unhandled tools to unified JarvisToolDispatcher!
+                            try {
+                                val dispatcher = com.jarvis.assistant.automation.dispatcher.JarvisToolDispatcher.getInstance(this@JarvisConversationService)
+                                val aiRes = dispatcher.dispatchTool(com.jarvis.assistant.ai.provider.AiToolCall(callId, name, args))
+                                val resJson = aiRes.resultJson
+                                val keys = resJson.keys()
+                                while (keys.hasNext()) {
+                                    val k = keys.next()
+                                    result.put(k, resJson.get(k))
+                                }
+                                result.put("success", aiRes.isSuccess)
+                                if (aiRes.errorMessage != null && !result.has("message")) {
+                                    result.put("message", aiRes.errorMessage)
+                                }
+                            } catch (e: Exception) {
+                                Log.e("JarvisService", "Dispatcher error for '$name': ${e.message}")
+                                result.put("success", false)
+                                result.put("message", "Tool execution error: ${e.message}")
+                            }
                         }
                     }
                 }

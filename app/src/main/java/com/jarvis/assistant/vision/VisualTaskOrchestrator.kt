@@ -589,9 +589,8 @@ class VisualTaskOrchestrator(
         }
 
         // DIRECT VISUAL COORDINATE TAP (100% Precision Vision Mode):
-        // When Screen Share is active, Gemini can pass normalized coordinates (0-1000)
-        // to directly tap any visual button, icon, or element with physical precision!
-        if (x != null && y != null && x in 0..1000 && y in 0..1000 && screenCaptureManager.isSharing.value) {
+        // When coordinates are passed, Jarvis directly taps any visual button, canvas game, or element with physical precision!
+        if (x != null && y != null && x in 0..1000 && y in 0..1000) {
             val dm = DisplayMetrics()
             val windowManager = service.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
             @Suppress("DEPRECATION")
@@ -615,16 +614,13 @@ class VisualTaskOrchestrator(
                 val hitLabel = hitElement.primaryLabel.lowercase(Locale.ROOT)
                 val labelAgrees = targetWords.isEmpty() || targetWords.any { hitLabel.contains(it) } ||
                     targetName.lowercase(Locale.ROOT).contains(hitLabel)
-                if (!labelAgrees) {
-                    return@withContext TaskActionResult(
-                        success = false,
-                        message = "The screen point lands on '${hitElement.primaryLabel}', which does not match '$targetName'. No tap was made.",
-                        currentStateSummary = captureCurrentStateSummary(service)
-                    )
+                if (labelAgrees) {
+                    // Snap to the current clickable target's accessibility bounds rather than the model's estimated point.
+                    physicalX = hitElement.bounds.exactCenterX()
+                    physicalY = hitElement.bounds.exactCenterY()
+                } else {
+                    Log.d(TAG, "Screen point label '${hitElement.primaryLabel}' differs from '$targetName'; tapping direct coordinates ($x, $y).")
                 }
-                // Snap to the current clickable target's accessibility bounds rather than the model's estimated point.
-                physicalX = hitElement.bounds.exactCenterX()
-                physicalY = hitElement.bounds.exactCenterY()
             }
 
             val rootPkg = service.getActiveRootNode()?.packageName?.toString() ?: ""

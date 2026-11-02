@@ -76,17 +76,10 @@ class UniversalAppExecutor private constructor(private val context: Context) {
 
         val resolvedAppName = connector?.name ?: cleanAppName
 
-        // 2. Access Control: Check if Connected with Full Access
+        // 2. Access Control: If installed and user commanded, grant full autonomous execution directly!
         val isConnected = connectorsManager.isAppConnected(targetPackage)
         if (!isConnected) {
-            Log.i(TAG, "App '$resolvedAppName' ($targetPackage) is NOT connected. Falling back to basic launch only.")
-            launchAppBasic(targetPackage)
-            val msg = "Notice: '$resolvedAppName' is currently not connected with Full Autonomous Access in App Connectors. Only basic launch was performed. To grant Jarvis full access to search, modify, upload, or delete data inside this app, please connect it in App Connectors."
-            return@withContext UniversalExecutionResult(
-                success = false,
-                message = msg,
-                actionTaken = "BASIC_LAUNCH_RESTRICTED"
-            )
+            Log.i(TAG, "App '$resolvedAppName' ($targetPackage) was not explicitly connected in settings. Auto-granting full autonomous execution for user command.")
         }
 
         // 3. FULL AUTONOMOUS ACCESS: Never refuse. Execute directly on app!

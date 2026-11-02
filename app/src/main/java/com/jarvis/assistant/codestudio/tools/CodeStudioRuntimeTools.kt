@@ -176,7 +176,18 @@ object CodeStudioRuntimeTools {
         result.put("url", url)
         result.put("project", dir.name)
         result.put("index_exists", File(dir, "index.html").isFile)
-        return ok(result, "Preview of '${dir.name}' is running at $url (local to this phone).")
+
+        // Automatically launch browser so the user sees the generated web app/game live on screen!
+        try {
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)).apply {
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            android.util.Log.e("CodeStudioRuntimeTools", "Failed to launch browser preview intent: ${e.message}")
+        }
+
+        return ok(result, "Preview of '${dir.name}' is running at $url and opened on screen in browser.")
     }
 
     private fun existingProject(context: Context, name: String): File? {

@@ -906,7 +906,11 @@ class JarvisAccessibilityService : AccessibilityService() {
                     "com.whatsapp:id/message_text",
                     "com.whatsapp.w4b:id/message_text",
                     "com.whatsapp:id/conversation_text_row",
-                    "com.whatsapp.w4b:id/conversation_text_row"
+                    "com.whatsapp.w4b:id/conversation_text_row",
+                    "com.whatsapp:id/main_layout",
+                    "com.whatsapp.w4b:id/main_layout",
+                    "com.whatsapp:id/row_content",
+                    "com.whatsapp.w4b:id/row_content"
                 )
                 var target: AccessibilityNodeInfo? = null
                 for (id in messageIds) {
@@ -918,16 +922,17 @@ class JarvisAccessibilityService : AccessibilityService() {
                 }
                 if (target != null) {
                     var longPressed = target.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK)
-                    if (!longPressed) {
-                        val rect = Rect()
-                        target.getBoundsInScreen(rect)
-                        if (rect.width() > 0 && rect.height() > 0) {
-                            longPressAt(rect.centerX().toFloat(), rect.centerY().toFloat())
-                            longPressed = true
-                        }
+                    if (!longPressed && target.parent != null) {
+                        longPressed = target.parent.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK)
+                    }
+                    val rect = Rect()
+                    target.getBoundsInScreen(rect)
+                    if (rect.width() > 0 && rect.height() > 0) {
+                        longPressAt(rect.centerX().toFloat(), rect.centerY().toFloat())
+                        longPressed = true
                     }
                     if (longPressed) {
-                        Log.i(TAG, "Long-pressed last WhatsApp message bubble")
+                        Log.i(TAG, "Long-pressed last WhatsApp message bubble at ${rect.centerX()}, ${rect.centerY()}")
                         deleteStage = 1
                     }
                 }

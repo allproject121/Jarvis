@@ -1788,6 +1788,40 @@ class GeminiLiveWebSocket(
                                 })
                             })
                         })
+
+                        // DYNAMICALLY INJECT ALL REMAINING TOOLS FROM DISPATCHER & CODE STUDIO
+                        try {
+                            val existingNames = mutableSetOf<String>()
+                            for (idx in 0 until length()) {
+                                optJSONObject(idx)?.optString("name")?.let { if (it.isNotEmpty()) existingNames.add(it) }
+                            }
+
+                            // 1. Code Studio runtime tools (generate_project, start_preview, run_shell_command)
+                            for (schema in com.jarvis.assistant.codestudio.tools.CodeStudioRuntimeTools.schemas()) {
+                                val fn = schema.optJSONObject("function") ?: schema
+                                val name = fn.optString("name")
+                                if (name.isNotEmpty() && existingNames.add(name)) {
+                                    val copy = JSONObject(fn.toString())
+                                    copy.optJSONObject("parameters")?.let { normalizeParamTypes(it) }
+                                    put(copy)
+                                }
+                            }
+
+                            // 2. JarvisToolDispatcher tools (ui_click, ui_gesture, ui_read_screen, ui_launch_app, ui_run, dynamic self-healing tools, etc.)
+                            val appContext = com.jarvis.assistant.JarvisApp.instance
+                            val dispatcherSchemas = com.jarvis.assistant.automation.dispatcher.JarvisToolDispatcher.getInstance(appContext).getAvailableToolSchemas(includeDisabled = false)
+                            for (schema in dispatcherSchemas) {
+                                val fn = schema.optJSONObject("function") ?: schema
+                                val name = fn.optString("name")
+                                if (name.isNotEmpty() && existingNames.add(name)) {
+                                    val copy = JSONObject(fn.toString())
+                                    copy.optJSONObject("parameters")?.let { normalizeParamTypes(it) }
+                                    put(copy)
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Dynamic tool injection error: ${e.message}")
+                        }
                     })
                 }))
             })
@@ -2143,4 +2177,23 @@ class GeminiLiveWebSocket(
         }
         listener.onConnectionStateChanged("OFFLINE")
     }
+
+    private fun normalizeParamTypes(obj: JSONObject) {
+        if (obj.has("type")) {
+            val t = obj.optString("type")
+            if (t.isNotEmpty()) obj.put("type", t.uppercase())
+        }
+        val props = obj.optJSONObject("properties")
+        if (props != null) {
+            val keys = props.keys()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                val p = props.optJSONObject(key)
+                if (p != null) normalizeParamTypes(p)
+            }
+        }
+        val items = obj.optJSONObject("items")
+        if (items != null) normalizeParamTypes(items)
+    }
+
 }
