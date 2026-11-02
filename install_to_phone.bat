@@ -13,7 +13,7 @@ echo Checking connected devices...
 %ADB% devices
 
 echo Installing Jarvis-Latest-Debug.apk...
-%ADB% install -r -d "%~dp0Jarvis-Latest-Debug.apk"
+%ADB% install -r -d -t "%~dp0Jarvis-Latest-Debug.apk"
 
 if %ERRORLEVEL% EQU 0 (
     echo.
