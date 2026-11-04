@@ -159,12 +159,12 @@ class LocalPhoneProvider private constructor(
         val modelFamily = com.jarvis.assistant.ai.compat.ModelFamily.resolveFromModelId(activeId)
 
         // 1. Build prompt formatted to the active model family's official chat template
+        // The on-device model has a ~2K-token context (~4.4K chars). Even the agent router's routed
+        // set is full-length JSON, so the offline brain always gets the compact everyday set unless
+        // a caller passes its own list. (Full lists overflowed it: 170K-char prompts, garbage output.)
         val fullTools = when {
             availableTools.isNotEmpty() -> availableTools
-            agentPipelineOn -> com.jarvis.assistant.androllm.agent.integration.AgentPipeline
-                .routedSchemas(context, cleanPrompt)
-                .ifEmpty { toolDispatcher.getAvailableToolSchemas() }
-            else -> toolDispatcher.getAvailableToolSchemas()
+            else -> toolDispatcher.getOfflineToolSchemas()
         }
         val fullPrompt = buildPromptWithinContext(modelFamily, cleanPrompt, systemPrompt, memoryContext, chatHistory, fullTools)
 
@@ -207,15 +207,8 @@ class LocalPhoneProvider private constructor(
                             }
 
                             emit(AiStreamChunk(token = "", isComplete = false, toolCallDetected = candidateTool))
-                            val toolResult = if (agentPipelineOn) {
-                                com.jarvis.assistant.androllm.agent.integration.AgentPipeline.dispatch(context, candidateTool)
-                            } else {
-                                toolDispatcher.dispatchTool(candidateTool)
-                            }
-                            Log.i(TAG, "Offline tool execution finished: isSuccess=${toolResult.isSuccess}")
-
                             // Continue conversational answer after tool execution
-                            val cleanMessage = toolResult.resultJson.optString("message", "Action completed.")
+                            val cleanMessage = runOfflineTool(candidateTool, agentPipelineOn)
                             emit(AiStreamChunk(token = "\n$cleanMessage", isComplete = false))
                             break
                         }
@@ -230,6 +223,23 @@ class LocalPhoneProvider private constructor(
                     }
 
                     if (output.stop) break
+                }
+            }
+
+            // Stream ended (e.g. on the "</tool_call>" stop word) while a request was pending:
+            // parse the complete text once more so the action still runs.
+            if (!hasDispatchedTool && toolCallPending) {
+                val lateTool = ToolCallParser.parseToolCall(tokenAccumulator.toString())
+                if (lateTool != null) {
+                    hasDispatchedTool = true
+                    Log.i(TAG, "Offline LLM triggered tool call at end of stream: ${lateTool.functionName}")
+                    val visiblePrefix = ToolCallParser.cleanConversationalText(tokenAccumulator.substring(emittedLength)).trim()
+                    if (visiblePrefix.isNotEmpty()) {
+                        emit(AiStreamChunk(token = visiblePrefix, isComplete = false))
+                    }
+                    emit(AiStreamChunk(token = "", isComplete = false, toolCallDetected = lateTool))
+                    val cleanMessage = runOfflineTool(lateTool, agentPipelineOn)
+                    emit(AiStreamChunk(token = "\n$cleanMessage", isComplete = false))
                 }
             }
 
@@ -248,6 +258,17 @@ class LocalPhoneProvider private constructor(
             emit(AiStreamChunk(token = "", isComplete = true))
         }
     }.flowOn(Dispatchers.IO)
+
+    /** Runs a tool the offline model asked for and returns the sentence Jarvis should say about it. */
+    private suspend fun runOfflineTool(tool: AiToolCall, agentPipelineOn: Boolean): String {
+        val toolResult = if (agentPipelineOn) {
+            com.jarvis.assistant.androllm.agent.integration.AgentPipeline.dispatch(context, tool)
+        } else {
+            toolDispatcher.dispatchTool(tool)
+        }
+        Log.i(TAG, "Offline tool execution finished: isSuccess=${toolResult.isSuccess}")
+        return toolResult.resultJson.optString("message", "Action completed.")
+    }
 
     /**
      * Quiet, TOOL-FREE single-shot generation for background pipelines

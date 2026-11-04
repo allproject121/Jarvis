@@ -55,7 +55,7 @@ class VectorMemoryEngine private constructor(
         // ranking and retrieval honour it. Local DB read only — no LLM calls.
         scope.launch(Dispatchers.IO) {
             runCatching {
-                com.jarvis.assistant.androllm.memory.store.AndroMemoryStore.getInstance(context).loadRegistry()
+                ((context as? com.jarvis.assistant.JarvisApp) ?: com.jarvis.assistant.JarvisApp.instance).memoryRepository.loadRegistry()
             }.onFailure { Log.w(TAG, "AndroLLM memory metadata unavailable: ${it.message}") }
         }
     }

@@ -16,7 +16,7 @@ object MemoryMetaRegistry {
 
     private val cache = ConcurrentHashMap<Long, MemoryMetaEntity>()
 
-    /** Persists access counts; installed by [AndroMemoryStore]. */
+    /** Persists access counts; installed by [com.jarvis.assistant.data.memory.MemoryRepository]. */
     @Volatile
     var accessSink: ((List<Long>) -> Unit)? = null
 

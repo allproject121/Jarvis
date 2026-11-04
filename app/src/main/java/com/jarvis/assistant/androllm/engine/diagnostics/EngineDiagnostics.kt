@@ -1,5 +1,6 @@
 package com.jarvis.assistant.androllm.engine.diagnostics
 
+import com.jarvis.assistant.ai.diagnostics.EngineCrashGuard
 import com.jarvis.assistant.androllm.engine.backend.BackendCapabilities
 import com.jarvis.assistant.androllm.engine.models.EngineDebugInfo
 import com.jarvis.assistant.androllm.engine.models.EngineStats

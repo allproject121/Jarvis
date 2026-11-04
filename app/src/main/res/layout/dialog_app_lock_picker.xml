@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="22dp"
+    android:paddingEnd="22dp"
+    android:paddingTop="8dp">
+
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/switchAppLockMaster"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="App lock"
+        android:textColor="?attr/themeTextPrimary"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvAppLockSummary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="Checked apps ask for Face / Fingerprint / PIN each time you open them."
+        android:textColor="?attr/themeTextSecondary"
+        android:textSize="12sp" />
+
+    <LinearLayout
+        android:id="@+id/layoutAppLockAccessibility"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_jarvis_action_card"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="6dp"
+        android:paddingBottom="6dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Needs Jarvis Accessibility to be ON"
+            android:textColor="#F59E0B"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAppLockOpenAccessibility"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Turn on"
+            android:textAllCaps="false"
+            android:textColor="?attr/themeAccent" />
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/etAppLockSearch"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_jarvis_input_field"
+        android:hint="Search apps"
+        android:importantForAutofill="no"
+        android:inputType="textNoSuggestions"
+        android:maxLines="1"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:textColor="?attr/themeTextPrimary"
+        android:textColorHint="?attr/themeTextMuted"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/tvAppLockLoading"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:text="Loading apps..."
+        android:textColor="?attr/themeTextMuted"
+        android:textSize="13sp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvAppLockApps"
+        android:layout_width="match_parent"
+        android:layout_height="340dp"
+        android:layout_marginTop="8dp"
+        android:clipToPadding="false"
+        android:scrollbars="vertical" />
+
+</LinearLayout>

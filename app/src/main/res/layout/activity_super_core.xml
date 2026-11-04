@@ -135,24 +135,7 @@
                     android:textStyle="bold"
                     android:textColor="?attr/themeBg"
                     app:backgroundTint="?attr/themeAccent"
-                    app:cornerRadius="12dp"
-                    android:layout_marginBottom="14dp" />
-
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/switchScreenIntelligence"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Screen &amp; Web Link Intelligence"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Automatically reads visible text and links on your active screen when assistant is invoked."
-                    android:textColor="?attr/themeTextMuted"
-                    android:textSize="11sp"
-                    android:layout_marginStart="4dp" />
+                    app:cornerRadius="12dp" />
             </LinearLayout>
 
             <!-- Card 2: Smart WhatsApp & Messaging Auto-Reader -->
@@ -226,15 +209,7 @@
                     android:id="@+id/switchWhatsAppReader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="WhatsApp &amp; WhatsApp Business"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp" />
-
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/switchTelegramReader"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Telegram &amp; Signal Messages"
+                    android:text="Read Incoming Messages (WhatsApp, Telegram, Signal, SMS)"
                     android:textColor="?attr/themeTextPrimary"
                     android:textSize="14sp" />
 
@@ -317,6 +292,28 @@
                     android:text="Voice Caller ID Announcement"
                     android:textColor="?attr/themeTextPrimary"
                     android:textSize="14sp" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchDrivingAutoRejectSms"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Calls While Driving: Auto-Reject + SMS Reply"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvDrivingAutoReplyText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:text="Auto-reply SMS text"
+                    android:textColor="?attr/themeTextSecondary"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <!-- Card 4: Local Host AI & Neural Memory -->
@@ -367,7 +364,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Ollama on PC, Mem0 persistent user memory, and MUSE experience-driven reflection engine."
+                    android:text="Ollama on PC and Mem0 persistent user memory (when off, Jarvis will not save or recall long-term facts)."
                     android:textColor="?attr/themeTextSecondary"
                     android:textSize="13sp"
                     android:layout_marginBottom="14dp" />
@@ -377,14 +374,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Mem0 Persistent User Memory"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp" />
-
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/switchMuseExperience"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="MUSE Experience-Driven Self-Learning"
                     android:textColor="?attr/themeTextPrimary"
                     android:textSize="14sp" />
 

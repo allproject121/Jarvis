@@ -129,12 +129,12 @@ class JarvisApp : Application() {
         SecurityManager.verify(this)
         instance = this
         preferences = AppPreferences(this)
-        chatRepository = ChatRepository(preferences)
+        chatRepository = ChatRepository(preferences, this)
 
         // Memory System
         memoryDatabase = MemoryDatabase.getInstance(this)
-        memoryRepository = MemoryRepository(memoryDatabase.memoryDao())
-        memoryManager = MemoryManager(memoryRepository, preferences, chatRepository, appScope)
+        memoryRepository = MemoryRepository(memoryDatabase.memoryDao(), this)
+        memoryManager = MemoryManager(memoryRepository, preferences, chatRepository, appScope, this)
 
         // Unified Local AI, Semantic Memory & Academic Vault
         vectorMemoryEngine = com.jarvis.assistant.ai.memory.VectorMemoryEngine.getInstance(this, appScope)
@@ -147,6 +147,11 @@ class JarvisApp : Application() {
         // Without this the index starts empty on every cold start and JARVIS
         // forgets everything it learned in previous sessions.
         memoryRepository.attachVectorEngine(vectorMemoryEngine)
+        // Maya feature packs: install at startup so schedules (wiki, price alerts, watches,
+        // post reminders) re-arm after a reboot without waiting for the first tool call.
+        appScope.launch(Dispatchers.IO) {
+            try { com.jarvis.assistant.automation.dispatcher.MayaToolRegistry.ensureInstalled(this@JarvisApp) } catch (_: Throwable) {}
+        }
         appScope.launch(Dispatchers.IO) {
             runCatching {
                 val stored = memoryRepository.getAllMemories()
@@ -243,6 +248,19 @@ class JarvisApp : Application() {
         com.jarvis.assistant.androllm.voice.SherpaVoiceController.init(this)
         // Jarvis Dynamic Island overlay: observes the voice service flows read-only; hidden unless enabled in Settings.
         runCatching { com.jarvis.assistant.ui.island.DynamicIslandController.init(this) }
+        // AndroLLM agent tool graph: with the agent pipeline on (the default),
+        // warm the tool registry once in the background. JarvisDispatcherHooks
+        // .filterSchemas only appends the AndroLLM registry tools when the
+        // graph already exists, so warming it here makes every caller see the
+        // same tool list from the first turn. Fully guarded: a failure can
+        // never affect startup.
+        appScope.launch(Dispatchers.IO) {
+            runCatching {
+                if (com.jarvis.assistant.androllm.agent.AgentFlags.isPipelineEnabled(this@JarvisApp)) {
+                    com.jarvis.assistant.androllm.agent.AgentToolGraph.getInstance(this@JarvisApp).ensureRegistered()
+                }
+            }.onFailure { android.util.Log.w("JarvisApp", "Agent tool graph warm-up failed: ${it.message}") }
+        }
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             private var startedActivities = 0

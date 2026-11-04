@@ -7,7 +7,7 @@ import com.jarvis.assistant.androllm.cloud.model.CloudToolCallFunction
 import com.jarvis.assistant.androllm.agent.context.AgentPlanner
 import com.jarvis.assistant.automation.agent.AgentVariableStore
 import com.jarvis.assistant.androllm.agent.core.ToolEvent
-import com.jarvis.assistant.androllm.agent.coordinator.ToolLoopGuard
+import com.jarvis.assistant.automation.guard.ToolLoopGuard
 import com.jarvis.assistant.androllm.agent.coordinator.ToolRunCoordinator
 import com.jarvis.assistant.androllm.agent.planner.ToolPlanner
 import kotlinx.serialization.json.Json

@@ -127,7 +127,7 @@ class MemoryActivity : AppCompatActivity() {
             binding.tvMemorySyncRatio.text = "SYNCING..."
             binding.tvMemorySyncRatio.setTextColor(android.graphics.Color.parseColor("#F59E0B"))
             lifecycleScope.launch {
-                val pipeline = com.jarvis.assistant.androllm.memory.AndroMemoryPipeline.getInstance(this@MemoryActivity)
+                val pipeline = com.jarvis.assistant.data.memory.MemoryManager.getInstance(this@MemoryActivity)
                 val totalIndexed = pipeline.syncAllMemories(allMemories)
                 updateVectorHealthUi(totalIndexed, allMemories.size)
                 android.widget.Toast.makeText(this@MemoryActivity, "Re-Indexed " + totalIndexed + "/" + allMemories.size + " memories into Vector Engine!", android.widget.Toast.LENGTH_SHORT).show()
@@ -137,6 +137,12 @@ class MemoryActivity : AppCompatActivity() {
         binding.btnOpenMemoryInspector.setOnClickListener {
             com.jarvis.assistant.util.HudSoundManager.playTapSound()
             startActivity(com.jarvis.assistant.ui.settings.AndroLlmPageActivity.sectionIntent(this, com.jarvis.assistant.ui.settings.AndroLlmPageActivity.Section.MEMORY))
+        }
+
+        // Maya parity (WP6): wiki, rules, episodes, notices & backup screen.
+        binding.btnOpenMayaWiki.setOnClickListener {
+            com.jarvis.assistant.util.HudSoundManager.playTapSound()
+            startActivity(com.jarvis.assistant.maya.memory.WikiActivity.intent(this))
         }
     }
 
@@ -151,7 +157,7 @@ class MemoryActivity : AppCompatActivity() {
             memoryRepo.getAllMemoriesFlow().collectLatest { memories ->
                 allMemories = memories
                 filterAndDisplay()
-                val pipeline = com.jarvis.assistant.androllm.memory.AndroMemoryPipeline.getInstance(this@MemoryActivity)
+                val pipeline = com.jarvis.assistant.data.memory.MemoryManager.getInstance(this@MemoryActivity)
                 val stats = pipeline.stats()
                 updateVectorHealthUi(stats.indexedCount, memories.size)
             }

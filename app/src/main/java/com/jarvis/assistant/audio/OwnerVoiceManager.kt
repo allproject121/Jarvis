@@ -26,6 +26,24 @@ object OwnerVoiceManager {
     const val RELAXED_THRESHOLD = 0.78f   // Relaxed: tolerant of noisy environments
 
     /**
+     * True when an owner voiceprint has been saved. While false, [verifySpeakerAudio]
+     * accepts ANY voice (deliberate fallback so voice control keeps working before enrollment).
+     */
+    fun isEnrolled(prefs: AppPreferences): Boolean =
+        prefs.hasOwnerVoiceProfile() || prefs.getOwnerVoiceSamples().isNotEmpty()
+
+    /** True when the voice lock is actually filtering speakers (enrolled AND switched on). */
+    fun isVoiceLockActive(prefs: AppPreferences): Boolean =
+        prefs.isOwnerVoiceEnabled && isEnrolled(prefs)
+
+    /** One-line, user-facing voice lock status. */
+    fun voiceLockStatusLine(prefs: AppPreferences): String = when {
+        !isEnrolled(prefs) -> "Voice lock: not enrolled — any voice is accepted"
+        !prefs.isOwnerVoiceEnabled -> "Voice lock: enrolled (paused) — any voice is accepted"
+        else -> "Voice lock: enrolled — only your voice is accepted"
+    }
+
+    /**
      * Calculates the cosine distance between two speaker embedding vectors:
      * distance = 1.0 - (dot(v1, v2) / (norm(v1) * norm(v2)))
      * Range is [0.0, 2.0]. Lower values indicate identical vocal characteristics.
@@ -199,7 +217,8 @@ object OwnerVoiceManager {
      * Verifies raw PCM audio against the enrolled owner profile.
      */
     fun verifySpeakerAudio(pcmAudio: ByteArray, prefs: AppPreferences): VoiceMatchResult {
-        if (!prefs.isOwnerVoiceEnabled || !prefs.hasOwnerVoiceProfile()) {
+        // Not enrolled (or voice lock paused): accept any voice - see isEnrolled().
+        if (!isVoiceLockActive(prefs)) {
             return VoiceMatchResult(
                 isMatch = true,
                 distance = 0.0f,

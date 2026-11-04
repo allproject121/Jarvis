@@ -1,5 +1,6 @@
 package com.jarvis.assistant.androllm.models.catalog
 
+import com.jarvis.assistant.androllm.engine.support.ModelMetadataRegistry
 import com.jarvis.assistant.androllm.models.gguf.GgufReader
 import com.jarvis.assistant.androllm.models.gguf.GgufType
 import java.io.File

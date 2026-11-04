@@ -4,7 +4,7 @@ import com.jarvis.assistant.androllm.agent.core.ToolBackend
 import com.jarvis.assistant.androllm.agent.core.ToolCall
 import com.jarvis.assistant.androllm.agent.core.ToolCallParser
 import com.jarvis.assistant.androllm.agent.core.ToolResult
-import com.jarvis.assistant.androllm.agent.confirmation.ToolConfirmationManager
+import com.jarvis.assistant.automation.agent.ToolConfirmationManager
 import com.jarvis.assistant.androllm.agent.executor.ToolExecutor
 import com.jarvis.assistant.androllm.agent.registry.ToolRegistry
 import com.jarvis.assistant.androllm.agent.router.ToolRouter

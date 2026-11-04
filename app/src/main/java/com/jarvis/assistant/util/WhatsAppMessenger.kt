@@ -121,6 +121,7 @@ object WhatsAppMessenger {
             ActivityLauncherHelper.startActivitySafely(context, intent)
             JarvisAccessibilityService.instance?.scheduleWhatsAppAutoSend()
             val targetAppName = targetApp?.label ?: if (chosenPackage.contains("w4b")) "WhatsApp Business" else "WhatsApp"
+            com.jarvis.assistant.maya.media.SentMessageLog.record(context, targetContact.name, phoneDigits, message, chosenPackage)
             SendResult.Success(targetContact.name, phoneDigits, targetAppName)
         } catch (e: Exception) {
             try {
@@ -129,6 +130,7 @@ object WhatsAppMessenger {
                 }
                 ActivityLauncherHelper.startActivitySafely(context, fallbackIntent)
                 JarvisAccessibilityService.instance?.scheduleWhatsAppAutoSend()
+                com.jarvis.assistant.maya.media.SentMessageLog.record(context, targetContact.name, phoneDigits, message, "com.whatsapp")
                 SendResult.Success(targetContact.name, phoneDigits, "WhatsApp")
             } catch (e2: Exception) {
                 SendResult.Error("Could not launch WhatsApp. Is WhatsApp installed on your device?")

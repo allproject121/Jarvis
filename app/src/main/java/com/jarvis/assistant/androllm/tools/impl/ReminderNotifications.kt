@@ -100,7 +100,7 @@ object ReminderNotifications {
         )
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val canExact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || am.canScheduleExactAlarms()
-        return try {
+        val scheduled = try {
             if (canExact) {
                 am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pi)
             } else {
@@ -111,6 +111,17 @@ object ReminderNotifications {
             // Exact alarms blocked → inexact.
             runCatching { am.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pi) }.isSuccess
         }
+        if (scheduled) {
+            // Remembered so Jarvis' get_scheduled_tasks tool can list it (AlarmManager can't be queried).
+            com.jarvis.assistant.automation.schedule.JarvisScheduleStore.record(
+                context,
+                kind = if (isAlarm) "alarm" else "reminder",
+                label = text,
+                triggerAtMs = triggerAtMillis,
+                source = if (isAlarm) "set_alarm" else "create_reminder"
+            )
+        }
+        return scheduled
     }
 
     class ReminderReceiver : BroadcastReceiver() {

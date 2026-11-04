@@ -15,6 +15,14 @@ object ThemeManager {
     const val THEME_ANDROLLM_NIGHT = "androllm_night"
     const val THEME_ANDROLLM_PARCHMENT = "androllm_parchment"
 
+    /** The Maya companion look (deep charcoal-navy, electric-blue neon, Inter). Dark only. */
+    const val THEME_MAYA = "maya"
+    const val MAYA_ACCENT_HEX = "#1E90FF"
+    const val MAYA_BG_HEX = "#14161C"
+
+    /** True when the Maya theme is the active Jarvis theme. */
+    fun isMayaTheme(): Boolean = currentThemeKey() == THEME_MAYA
+
     /** Resolved theme: XML style, window/background colour and whether it is a light theme. */
     data class ThemeSpec(val styleRes: Int, val bgColor: Int, val isLight: Boolean)
 
@@ -75,6 +83,7 @@ object ThemeManager {
             "dark", "obsidian" -> Color.parseColor("#00F0FF")
             THEME_ANDROLLM_NIGHT -> Color.parseColor("#7A5CFF")
             THEME_ANDROLLM_PARCHMENT -> Color.parseColor("#D97757")
+            THEME_MAYA -> Color.parseColor(MAYA_ACCENT_HEX)
             "custom" -> {
                 try {
                     val parsed = Color.parseColor(customHex)
@@ -109,6 +118,7 @@ object ThemeManager {
             "dark", "obsidian" -> Color.parseColor("#060812")
             THEME_ANDROLLM_NIGHT -> Color.parseColor("#000000")
             THEME_ANDROLLM_PARCHMENT -> Color.parseColor("#F5F4ED")
+            THEME_MAYA -> Color.parseColor(MAYA_BG_HEX)
             "custom" -> {
                 try {
                     val parsed = Color.parseColor(customHex ?: "#060812")
@@ -186,6 +196,9 @@ object ThemeManager {
 
             THEME_ANDROLLM_PARCHMENT ->
                 Triple(R.style.Theme_JarvisAssistant_AndroLlmParchment, Color.parseColor("#F5F4ED"), true)
+
+            THEME_MAYA ->
+                Triple(R.style.Theme_JarvisAssistant_Maya, Color.parseColor(MAYA_BG_HEX), false)
 
             "custom" -> {
                 try {

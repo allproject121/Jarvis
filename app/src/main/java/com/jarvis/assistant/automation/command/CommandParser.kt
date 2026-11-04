@@ -85,6 +85,32 @@ object CommandParser {
             return ParsedCommandResult(JarvisCommand.Flash(false), 0.98f, "FLASH_OFF")
         }
 
+        // 3a. Driving Mode (must run before the generic "<x> chalu karo" open-app suffix)
+        val driveWords = "(?:driving|drive|car)\\s+mode"
+        if (clean.matches(Regex("$prefix(?:turn\\s+on|enable|activate|start|switch\\s+on)\\s+(?:the\\s+)?$driveWords$")) ||
+            clean.matches(Regex("$prefix(?:turn|switch)\\s+(?:the\\s+)?$driveWords\\s+on$")) ||
+            clean.matches(Regex("$prefix$driveWords\\s+(?:on|chalu|chalu\\s+karo|chalu\\s+kar\\s+do|on\\s+karo|on\\s+kar\\s+do|shuru\\s+karo|activate\\s+karo)$"))
+        ) {
+            return ParsedCommandResult(JarvisCommand.SetDrivingMode(true), 0.98f, "DRIVING_MODE_ON")
+        }
+        if (clean.matches(Regex("$prefix(?:turn\\s+off|disable|deactivate|stop|exit|switch\\s+off)\\s+(?:the\\s+)?$driveWords$")) ||
+            clean.matches(Regex("$prefix(?:turn|switch)\\s+(?:the\\s+)?$driveWords\\s+off$")) ||
+            clean.matches(Regex("$prefix$driveWords\\s+(?:off|band|bandh|band\\s+karo|band\\s+kar\\s+do|bandh\\s+karo|off\\s+karo|off\\s+kar\\s+do)$"))
+        ) {
+            return ParsedCommandResult(JarvisCommand.SetDrivingMode(false), 0.98f, "DRIVING_MODE_OFF")
+        }
+
+        // 3a-2. Integrated-protocol phrases whose handlers already exist in CommandExecutor (macros,
+        //       Termux file write, Voice Guardian roles, watchlist removal, GitHub issues, n8n).
+        //       Checked here, before the YouTube "<x> chalao" suffix and the generic open-app
+        //       "<x> chalu karo" suffix, so they aren't swallowed. Free text (file content, issue
+        //       titles, workflow descriptions) is taken from the case-preserved input.
+        val cased = normalizedInput
+            .replace(Regex("(?i)^(hey jarvis|hi jarvis|hello jarvis|ok jarvis|jarvis|service)[,\\s]*"), "")
+            .replace(Regex("[.,!?:;\"'\\s]+$"), "")
+            .trim()
+        parseProtocolCommand(clean, cased)?.let { return it }
+
         // 3b. YouTube Subscribe (Strict Anchoring)
         if (clean.matches(Regex("$prefix(?:subscribe|hit\\s+subscribe|click\\s+subscribe|press\\s+subscribe|subscribe\\s+to\\s+(?:this|the)\\s+channel|subscribe\\s+(?:karo|kardo|kar\\s+do))$"))) {
             return ParsedCommandResult(JarvisCommand.SubscribeChannel, 0.97f, "YOUTUBE_SUBSCRIBE")
@@ -621,6 +647,158 @@ object CommandParser {
         }
 
         return ParsedCommandResult(null, 0.0f)
+    }
+
+    // ── Integrated-protocol phrases (see step 3a-2 in parse) ─────────────────
+
+    private const val P = "^(?:please\\s+|can you\\s+|could you\\s+|just\\s+)?"
+    private const val REPO = "([A-Za-z0-9_.\\-]+(?:/[A-Za-z0-9_.\\-]+)?)"
+    private const val ROLE_WORDS = "(boss|owner|malik|admin|family|parivar|friend|dost|guest|mehman|mehmaan|blocked)"
+    private const val HATAO = "(?:hatao|hata\\s+do|nikalo|nikal\\s+do|remove\\s+karo|delete\\s+karo)"
+    private val NON_NAMES = setOf("profile", "the", "my", "all", "a", "an", "voice", "role")
+
+    /** Maps a spoken role word to the GuardianRole enum name. */
+    internal fun normalizeGuardianRole(word: String): String? = when (word.trim().lowercase(Locale.ROOT)) {
+        "boss", "owner", "malik", "admin" -> "BOSS"
+        "family", "parivar" -> "FAMILY"
+        "friend", "dost" -> "FRIEND"
+        "guest", "mehman", "mehmaan" -> "GUEST"
+        "blocked" -> "BLOCKED"
+        else -> null
+    }
+
+    /** "schedule" for time-based descriptions, "form" for forms, otherwise "webhook". */
+    internal fun inferN8nTrigger(description: String): String {
+        val d = description.lowercase(Locale.ROOT)
+        return when {
+            Regex("\\b(every|daily|hourly|weekly|monthly|schedule[d]?|cron|har\\s+din|roz|rozana|subah|morning|night|at\\s+\\d)\\b").containsMatchIn(d) -> "schedule"
+            Regex("\\bform\\b").containsMatchIn(d) -> "form"
+            else -> "webhook"
+        }
+    }
+
+    private fun splitRepo(raw: String): Pair<String, String> {
+        val r = raw.trim().trimEnd('.', '/')
+        return if (r.contains('/')) r.substringBefore('/') to r.substringAfter('/') else "" to r
+    }
+
+    private fun result(cmd: JarvisCommand, pattern: String) = ParsedCommandResult(cmd, 0.97f, pattern)
+
+    private fun parseProtocolCommand(clean: String, cased: String): ParsedCommandResult? {
+        val ic = RegexOption.IGNORE_CASE
+
+        // ── Macros: "run macro <name>", "macro <name> chalao", "<name> macro chalao" ──
+        val chalao = "(?:chalao|chala\\s+do|run\\s+karo|run\\s+kar\\s+do|chalu\\s+karo|start\\s+karo)"
+        val macroName = (Regex("$P(?:run|execute|start|trigger)\\s+(?:the\\s+|my\\s+)?macro\\s+(.+)$").find(clean)
+            ?: Regex("^macro\\s+(.+?)\\s+$chalao$").find(clean)
+            ?: Regex("^(.+?)\\s+macro\\s+$chalao$").find(clean))
+            ?.groupValues?.get(1)?.trim()
+        if (!macroName.isNullOrBlank()) {
+            return result(JarvisCommand.RunMacro(macroName), "RUN_MACRO")
+        }
+
+        // ── Termux file write ──
+        val path = "([~\\w./\\-]+)"
+        Regex("${P}termux\\s+(?:file\\s+)?$path\\s+(?:mein|me|main|men)\\s+likho[:\\s]+(.+)$", ic).find(cased)?.let {
+            return result(JarvisCommand.TermuxWriteFile(it.groupValues[1], it.groupValues[2].trim()), "TERMUX_WRITE_FILE")
+        }
+        Regex("${P}termux\\s+(?:file\\s+)?$path\\s+(?:mein|me|main|men)\\s+(.+?)\\s+likho$", ic).find(cased)?.let {
+            return result(JarvisCommand.TermuxWriteFile(it.groupValues[1], it.groupValues[2].trim()), "TERMUX_WRITE_FILE")
+        }
+        Regex("${P}write\\s+(?:to|in|into)\\s+(?:the\\s+)?termux\\s+file\\s+$path[:\\s]+(.+)$", ic).find(cased)?.let {
+            return result(JarvisCommand.TermuxWriteFile(it.groupValues[1], it.groupValues[2].trim()), "TERMUX_WRITE_FILE")
+        }
+        Regex("${P}write\\s+(.+?)\\s+(?:to|in|into)\\s+(?:the\\s+)?termux\\s+file\\s+$path$", ic).find(cased)?.let {
+            return result(JarvisCommand.TermuxWriteFile(it.groupValues[2], it.groupValues[1].trim()), "TERMUX_WRITE_FILE")
+        }
+
+        // ── Voice Guardian: remove voice ──
+        val removeVoiceName = (Regex("$P(?:remove|delete|unenroll)\\s+(?:the\\s+)?voice\\s+(?:profile\\s+)?(?:of\\s+|for\\s+)?([a-z0-9]+)$").find(clean)
+            ?: Regex("$P(?:remove|delete|unenroll)\\s+([a-z0-9]+)(?:'s)?\\s+voice(?:\\s+profile)?$").find(clean)
+            ?: Regex("^(?:voice|awaaz|awaz)\\s+([a-z0-9]+)\\s+$HATAO$").find(clean)
+            ?: Regex("^([a-z0-9]+)\\s+(?:ki|ka)\\s+(?:voice|awaaz|awaz)\\s+$HATAO$").find(clean))
+            ?.groupValues?.get(1)?.trim()
+        if (!removeVoiceName.isNullOrBlank() && removeVoiceName !in NON_NAMES) {
+            return result(JarvisCommand.RemoveVoice(removeVoiceName), "REMOVE_VOICE")
+        }
+
+        // ── Voice Guardian: set role ──
+        val roleMatch = Regex("${P}set\\s+(?:the\\s+)?voice\\s+role\\s+(?:of\\s+|for\\s+)?([a-z0-9]+)\\s+(?:to|as)\\s+(?:a\\s+|an\\s+)?$ROLE_WORDS$").find(clean)
+            ?: Regex("$P(?:set|change|make)\\s+([a-z0-9]+)(?:'s)?\\s+(?:voice\\s+)?role\\s+(?:to|as)\\s+(?:a\\s+|an\\s+)?$ROLE_WORDS$").find(clean)
+            ?: Regex("^([a-z0-9]+)\\s+ko\\s+$ROLE_WORDS\\s+(?:role\\s+)?(?:banao|bana\\s+do|do|de\\s+do|set\\s+karo)$").find(clean)
+            ?: Regex("^([a-z0-9]+)\\s+ka\\s+role\\s+$ROLE_WORDS\\s+(?:karo|kar\\s+do|set\\s+karo|banao)$").find(clean)
+        if (roleMatch != null) {
+            val who = roleMatch.groupValues[1].trim()
+            val role = normalizeGuardianRole(roleMatch.groupValues[2])
+            if (role != null && who.isNotBlank() && who !in NON_NAMES) {
+                return result(JarvisCommand.SetVoiceRole(who, role), "SET_VOICE_ROLE")
+            }
+        }
+
+        // ── Watchlist removal ──
+        val sym = "([a-z0-9.\\-]+)"
+        val removeSym = (Regex("$P(?:remove|delete|drop)\\s+$sym\\s+from\\s+(?:my\\s+|the\\s+)?watch\\s*list$").find(clean)
+            ?: Regex("^watch\\s*list\\s+se\\s+$sym\\s+$HATAO$").find(clean)
+            ?: Regex("^$sym\\s+(?:ko\\s+)?watch\\s*list\\s+se\\s+$HATAO$").find(clean))
+            ?.groupValues?.get(1)?.trim()
+        if (!removeSym.isNullOrBlank()) {
+            return result(JarvisCommand.RemoveFromWatchlist(removeSym.uppercase(Locale.ROOT)), "STOCK_REMOVE_WATCHLIST")
+        }
+
+        // ── GitHub issues: list ──
+        val issuesList = Regex("$P(?:show|list|get|open|check)\\s+(?:me\\s+)?(?:my\\s+|the\\s+)?(?:open\\s+)?github\\s+issues(?:\\s+(?:for|in|of|on|from)\\s+(?:the\\s+)?(?:repo\\s+|repository\\s+)?$REPO)?$", ic).find(clean)
+            ?: Regex("^github\\s+issues(?:\\s+(?:for|in|of)\\s+(?:the\\s+)?(?:repo\\s+|repository\\s+)?$REPO)?$", ic).find(clean)
+            ?: Regex("^github\\s+(?:ke\\s+)?issues\\s+(?:dikhao|batao)(?:\\s+$REPO)?$", ic).find(clean)
+            ?: Regex("^github\\s+(?:pe\\s+|par\\s+)?$REPO\\s+(?:repo\\s+)?(?:ke|ki|ka)\\s+issues\\s+(?:dikhao|batao)$", ic).find(clean)
+            ?: Regex("^$REPO\\s+(?:repo\\s+)?(?:ke|ki|ka)\\s+github\\s+issues\\s+(?:dikhao|batao)$", ic).find(clean)
+        if (issuesList != null) {
+            val (owner, repo) = splitRepo(issuesList.groupValues.getOrNull(1).orEmpty())
+            return result(JarvisCommand.ListGitHubIssues(owner, repo), "GITHUB_LIST_ISSUES")
+        }
+
+        // ── GitHub issues: create ──
+        val verb = "(?:create|open|file|raise|make|add)\\s+(?:a\\s+|an\\s+)?(?:new\\s+)?github\\s+issue"
+        val titled = "(?:titled\\s+|called\\s+|named\\s+|saying\\s+)?"
+        // Each entry yields (repo, title); the first matching phrase wins.
+        val createIssueParsers: List<(String) -> Pair<String, String>?> = listOf(
+            { s -> Regex("$P$verb\\s+(?:in|on|for)\\s+(?:the\\s+)?(?:repo|repository)\\s+$REPO\\s*[:,\\-]?\\s+$titled(.+)$", ic).find(s)
+                ?.let { it.groupValues[1] to it.groupValues[2] } },
+            { s -> Regex("$P$verb\\s+$titled[:,\\-]?\\s*(.+?)\\s+(?:in|on|for)\\s+(?:the\\s+)?(?:repo|repository)\\s+$REPO$", ic).find(s)
+                ?.let { it.groupValues[2] to it.groupValues[1] } },
+            { s -> Regex("$P$verb\\s+$titled[:,\\-]?\\s*(.+?)\\s+(?:in|on|for)\\s+([A-Za-z0-9_.\\-]+/[A-Za-z0-9_.\\-]+)$", ic).find(s)
+                ?.let { it.groupValues[2] to it.groupValues[1] } },
+            { s -> Regex("$P$verb\\s+$titled[:,\\-]?\\s*(.+)$", ic).find(s)
+                ?.let { "" to it.groupValues[1] } },
+            { s -> Regex("^(?:$REPO\\s+(?:repo\\s+)?(?:mein|me|main)\\s+)?github\\s+issue\\s+(?:banao|bana\\s+do|create\\s+karo|daalo|dalo)[:,\\s]+(.+?)(?:\\s*,?\\s+(?:repo|repository)\\s+$REPO\\s+(?:mein|me|main))?$", ic).find(s)
+                ?.let { it.groupValues[1].ifBlank { it.groupValues[3] } to it.groupValues[2] } },
+            { s -> Regex("^github\\s+issue\\s+(.+?)\\s+(?:banao|bana\\s+do|create\\s+karo)$", ic).find(s)
+                ?.let { "" to it.groupValues[1] } }
+        )
+        var (issueRepo, rawTitle) = createIssueParsers.firstNotNullOfOrNull { it(cased) } ?: ("" to "")
+        // "create github issue in repo jarvis" (no title yet) → keep the repo, let the executor ask for a title.
+        Regex("^(?:in|on|for)\\s+(?:the\\s+)?(?:repo|repository)\\s+$REPO$", ic).find(rawTitle.trim())?.let {
+            issueRepo = it.groupValues[1]
+            val (owner, repo) = splitRepo(issueRepo)
+            return result(JarvisCommand.CreateGitHubIssue(owner, repo, "", ""), "GITHUB_CREATE_ISSUE")
+        }
+        val issueTitle = rawTitle.trim().trim('"', '\'', ':', ',', '-').trim()
+        if (issueTitle.isNotBlank()) {
+            val (owner, repo) = splitRepo(issueRepo)
+            return result(JarvisCommand.CreateGitHubIssue(owner, repo, issueTitle, ""), "GITHUB_CREATE_ISSUE")
+        }
+
+        // ── n8n workflow generation ──
+        val n8nDesc = (Regex("$P(?:create|make|generate|build|design)\\s+(?:a\\s+|an\\s+|new\\s+)*n8n\\s+workflow(?:\\s+(?:for|to|that|which|jo))?[:\\s]+(.+)$", ic).find(cased)
+            ?: Regex("^n8n\\s+workflow\\s+(?:banao|bana\\s+do|generate\\s+karo|create\\s+karo)[:,\\s]+(.+)$", ic).find(cased)
+            ?: Regex("^(.+?)\\s+(?:ka|ke\\s+liye|ki)\\s+n8n\\s+workflow\\s+(?:banao|bana\\s+do|generate\\s+karo|create\\s+karo)$", ic).find(cased))
+            ?.groupValues?.get(1)?.trim()
+        if (!n8nDesc.isNullOrBlank()) {
+            val name = n8nDesc.split(Regex("\\s+")).take(6).joinToString(" ")
+                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
+            return result(JarvisCommand.GenerateN8nWorkflow(name, inferN8nTrigger(n8nDesc), n8nDesc), "N8N_WORKFLOW")
+        }
+
+        return null
     }
 
     private fun parseNumericLevel(token: String): Int? {

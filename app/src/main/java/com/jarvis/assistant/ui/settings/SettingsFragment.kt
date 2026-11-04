@@ -53,6 +53,8 @@ class SettingsFragment : Fragment() {
     private val preferences by lazy { JarvisApp.instance.preferences }
     private val accessibilityStore by lazy { AccessibilitySettingsStore.getInstance(requireContext()) }
     private var isUpdatingSwitchProgrammatically = false
+    /** Maya group (characters, Maya screens, overlay, wallpaper, licences). */
+    private var mayaRows: com.jarvis.assistant.maya.ui.MayaSettingsRows? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -80,6 +82,7 @@ class SettingsFragment : Fragment() {
         setupClickListeners()
         setupObservers()
         setupLocalAiRows()
+        mayaRows = com.jarvis.assistant.maya.ui.MayaSettingsRows(this).also { it.bind(binding.root) }
     }
 
     override fun onResume() {
@@ -88,6 +91,7 @@ class SettingsFragment : Fragment() {
             com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
             loadUserData()
             setupLocalAiRows()
+            mayaRows?.refresh()
         }
     }
 
@@ -97,6 +101,7 @@ class SettingsFragment : Fragment() {
             binding.root.visibility = View.VISIBLE
             com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
             loadUserData()
+            mayaRows?.refresh()
         } else if (hidden && _binding != null) {
             binding.root.visibility = View.GONE
         }
@@ -120,7 +125,6 @@ class SettingsFragment : Fragment() {
             binding.switchDeveloperLinks.isChecked = preferences.showDeveloperLinks
 
             // AndroLLM Switches & Accordion initial states
-            binding.switchMcpBridgeEnabled.isChecked = preferences.isMcpBridgeEnabled
             val normalization = NormalizationSettingsStore.run {
                 load(requireContext())
                 current()
@@ -196,6 +200,7 @@ class SettingsFragment : Fragment() {
         binding.tvCurrentPersona.text = if (isCompanion) "JARVIS Companion Mode" else preferences.personality.capitalize(Locale.ROOT)
         binding.switchDirectAutonomousMode.isChecked = preferences.isDirectAutonomousMode
         binding.tvOwnerVoiceBadge.text = if (hasVoiceProfile) "VERIFIED" else "SETUP"
+        binding.tvOwnerVoiceSubtitle.text = com.jarvis.assistant.audio.OwnerVoiceManager.voiceLockStatusLine(preferences)
         binding.switchSilentMode.isChecked = preferences.isSilentExecutionMode
 
         // Section 4: Security
@@ -267,14 +272,6 @@ class SettingsFragment : Fragment() {
         binding.btnDownloadLlama.setOnClickListener {
             HudSoundManager.playTapSound()
             localModelManager.downloadModel(com.jarvis.assistant.ai.local.LocalAiConfig.MODEL_LLAMA_3_2_1B)
-        }
-
-        binding.switchMcpBridgeEnabled.setOnCheckedChangeListener { _, isChecked ->
-            if (isUpdatingSwitchProgrammatically) return@setOnCheckedChangeListener
-            HudSoundManager.playTapSound()
-            preferences.isMcpBridgeEnabled = isChecked
-            val msg = if (isChecked) "Local MCP Bridge enabled (Port 3000)" else "Local MCP Bridge disabled"
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
         }
 
         binding.btnAddMcpServer.setOnClickListener {
@@ -530,7 +527,11 @@ class SettingsFragment : Fragment() {
 
         binding.switchBatterySaver.setOnCheckedChangeListener { _, isChecked ->
             preferences.isBatterySaverEnabled = isChecked
-            val msg = if (isChecked) "Battery saver active â€” Background polling throttled" else "Battery saver disabled â€” Full performance"
+            val msg = if (isChecked) {
+                "Battery saver ON: telemetry sampling every 5 s (was 1 s) and slower Dynamic Island polling"
+            } else {
+                "Battery saver OFF: telemetry back to 1 s sampling"
+            }
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
         }
 
@@ -1066,22 +1067,15 @@ class SettingsFragment : Fragment() {
             hint = "Email signature (e.g. Sent via Jarvis AI)"
             setText(preferences.emailSignature)
         }
-        val etSmtp = EditText(requireContext()).apply {
-            hint = "Custom SMTP server (optional)"
-            setText(preferences.emailCustomSmtp)
-        }
 
         layout.addView(TextView(requireContext()).apply { text = "Signature:"; setTextColor(Color.LTGRAY); textSize = 13f })
         layout.addView(etSig)
-        layout.addView(TextView(requireContext()).apply { text = "SMTP Server (optional):"; setTextColor(Color.LTGRAY); textSize = 13f; setPadding(0, 20, 0, 0) })
-        layout.addView(etSmtp)
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Email Configuration")
             .setView(layout)
             .setPositiveButton("Save") { _, _ ->
                 preferences.emailSignature = etSig.text.toString().trim()
-                preferences.emailCustomSmtp = etSmtp.text.toString().trim()
                 Toast.makeText(requireContext(), "Email configuration updated", Toast.LENGTH_SHORT).show()
             }
             .setNeutralButton("Send Test Mail") { _, _ ->
@@ -1103,7 +1097,7 @@ class SettingsFragment : Fragment() {
     private fun showWhatsAppDialog() {
         val items = arrayOf(
             "Auto-read incoming WhatsApp messages",
-            "Auto-reply with AI response when away",
+            "Ask me before Jarvis sends a reply or WhatsApp message",
             "Screen calls & announce caller names"
         )
         val checked = booleanArrayOf(
@@ -1217,10 +1211,62 @@ class SettingsFragment : Fragment() {
                 Toast.makeText(requireContext(), "Emergency contacts saved", Toast.LENGTH_SHORT).show()
             }
             .setNeutralButton("TEST SOS DISPATCH") { _, _ ->
-                EmergencySosManager.triggerSos(requireContext(), "28.6139Â° N, 77.2090Â° E")
+                val typed = etContacts.text.toString().trim()
+                if (typed.isNotBlank() && typed != preferences.emergencySosContacts) {
+                    preferences.emergencySosContacts = typed
+                }
+                startSosDispatch()
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    /**
+     * Sends the SOS SMS with the phone's real location. Refuses when no
+     * emergency contacts are configured; asks for SMS / location permission
+     * first when missing (location denied -> "location unavailable").
+     */
+    private fun startSosDispatch() {
+        if (EmergencySosManager.configuredContacts().isEmpty()) {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("No Emergency Contacts")
+                .setMessage("SOS was not sent because no emergency contacts are configured. Add at least one phone number in Emergency SOS and tap Save Contacts.")
+                .setPositiveButton("Add Contacts") { _, _ -> showEmergencySosDialog() }
+                .setNegativeButton("Close", null)
+                .show()
+            return
+        }
+        val missing = listOf(
+            android.Manifest.permission.SEND_SMS,
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION
+        ).filter {
+            ContextCompat.checkSelfPermission(requireContext(), it) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isNotEmpty()) {
+            sosPermissionLauncher.launch(missing.toTypedArray())
+        } else {
+            dispatchSosWithLocation()
+        }
+    }
+
+    private val sosPermissionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
+    ) {
+        val ctx = context ?: return@registerForActivityResult
+        if (ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.SEND_SMS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(ctx, "SMS permission denied - SOS message not sent.", Toast.LENGTH_LONG).show()
+            return@registerForActivityResult
+        }
+        dispatchSosWithLocation()
+    }
+
+    private fun dispatchSosWithLocation() {
+        val appContext = requireContext().applicationContext
+        Toast.makeText(appContext, "Getting your location for SOS (up to 10 s)...", Toast.LENGTH_SHORT).show()
+        EmergencySosManager.fetchCurrentLocation(appContext, timeoutMs = 10_000L) { location ->
+            EmergencySosManager.triggerSos(appContext, EmergencySosManager.formatLocation(location))
+        }
     }
 
     private fun showWatchmanLogDialog() {
@@ -1326,18 +1372,24 @@ class SettingsFragment : Fragment() {
         val isDriving = manager.isDrivingMode.value
         val autoCar = preferences.isDrivingModeAutoCarEnabled
         val announceCaller = preferences.isCallerIdAnnouncementEnabled
+        val autoReject = manager.drivingCallMode == com.jarvis.assistant.data.preferences.AppPreferences.DRIVING_CALL_MODE_AUTO_REJECT_SMS
 
-        val items = arrayOf(
+        val items = mutableListOf(
             if (isDriving) "Exit Driving Mode" else "Activate Driving Mode Now",
             "Auto-Engage on Car Bluetooth: " + if (autoCar) "ON" else "OFF",
             "Caller ID Voice Announcement: " + if (announceCaller) "ON" else "OFF",
-            "Open Google Maps Navigation"
+            "Open Google Maps Navigation",
+            "When a call comes while driving: " + if (autoReject) "Auto-reject + SMS reply" else "Announce caller"
         )
+        // The SMS text only matters for auto-reject.
+        if (autoReject) items.add("Auto-reply SMS text: \"${manager.autoReplyText}\"")
 
         com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
             .setTitle("Driving Mode Sentinel")
-            .setItems(items) { _, which ->
+            .setItems(items.toTypedArray()) { _, which ->
                 when (which) {
+                    4 -> showDrivingCallModeDialog()
+                    5 -> showDrivingAutoReplyTextDialog()
                     0 -> {
                         manager.setDrivingMode(!isDriving)
                         val newState = if (!isDriving) "ENGAGED" else "DISENGAGED"
@@ -1369,6 +1421,30 @@ class SettingsFragment : Fragment() {
             }
             .setPositiveButton("Close", null)
             .show()
+    }
+
+    /** "When a call comes while driving": Announce caller / Auto-reject + SMS reply. */
+    private fun showDrivingCallModeDialog() {
+        DrivingCallSettings.showCallModeDialog(
+            requireContext(),
+            requestPermissions = { missing -> drivingCallPermissionLauncher.launch(missing) },
+            onChanged = { if (_binding != null) showDrivingModeDialog() }
+        )
+    }
+
+    private fun showDrivingAutoReplyTextDialog() {
+        DrivingCallSettings.showAutoReplyTextDialog(requireContext()) {
+            if (_binding != null) showDrivingModeDialog()
+        }
+    }
+
+    private val drivingCallPermissionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
+    ) {
+        val ctx = context ?: return@registerForActivityResult
+        // Enables auto-reject only when call control + SMS were granted; otherwise reverts to Announce.
+        Toast.makeText(ctx, DrivingCallSettings.applyAfterPermissionResult(ctx), Toast.LENGTH_LONG).show()
+        if (_binding != null) showDrivingModeDialog()
     }
 
     private fun showPcHubDialog() {
@@ -1565,13 +1641,14 @@ class SettingsFragment : Fragment() {
         val vulkan = if (metrics?.isVulkanSupported == true) "Vulkan 1.3 Available" else "OpenGLES Only"
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("1Hz System Diagnostics & Telemetry")
+            .setTitle("System Diagnostics & Telemetry")
             .setMessage(
                 "DEVICE: $model\n" +
                 "CPU CORES: $cores Thread Units\n" +
                 "RAM UTILIZATION: $ram\n" +
                 "GRAPHICS ACCELERATION: $vulkan\n" +
-                "SAMPLING FREQUENCY: 1.0 Hz Rolling Window (300 samples)\n" +
+                "SAMPLING: every ${com.jarvis.assistant.telemetry.TelemetryRepository.currentSampleIntervalMs() / 1000} s" +
+                (if (preferences.isBatterySaverEnabled) " (Battery saver)" else "") + ", rolling window of 300 samples\n" +
                 "THREADING PROFILE: Mobile Low-Latency Cores\n" +
                 "LOCAL AI ENGINE: GGUF llama.cpp Runtime"
             )
@@ -1807,6 +1884,7 @@ class SettingsFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        mayaRows = null
         context?.let { ctx ->
             com.jarvis.assistant.telemetry.TelemetryRepository.getInstance(ctx).stopSampling()
         }

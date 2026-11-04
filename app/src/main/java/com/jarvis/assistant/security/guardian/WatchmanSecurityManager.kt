@@ -30,10 +30,15 @@ class WatchmanSecurityManager(private val context: Context) {
     /**
      * Stealth photo capture of intruder from front camera.
      */
-    fun captureIntruderPhoto(onComplete: ((File?) -> Unit)? = null) {
+    fun captureIntruderPhoto(callback: ((File?) -> Unit)? = null) {
+        // Report exactly once, whichever path ends the capture (success, error, disconnect).
+        val reported = java.util.concurrent.atomic.AtomicBoolean(false)
+        val onComplete: ((File?) -> Unit) = { file ->
+            if (reported.compareAndSet(false, true)) callback?.invoke(file)
+        }
         val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as? CameraManager
         if (cameraManager == null) {
-            onComplete?.invoke(null)
+            onComplete(null)
             return
         }
 
@@ -46,7 +51,7 @@ class WatchmanSecurityManager(private val context: Context) {
 
             if (frontCameraId == null) {
                 Log.w(TAG, "No suitable camera found for intruder capture.")
-                onComplete?.invoke(null)
+                onComplete(null)
                 return
             }
 
@@ -71,7 +76,7 @@ class WatchmanSecurityManager(private val context: Context) {
 
                                 camera.close()
                                 reader.close()
-                                onComplete?.invoke(file)
+                                onComplete(file)
                             }
                         }, handler)
 
@@ -89,13 +94,13 @@ class WatchmanSecurityManager(private val context: Context) {
                                     } catch (e: Exception) {
                                         Log.e(TAG, "Failed to capture still: ${e.message}")
                                         camera.close()
-                                        onComplete?.invoke(null)
+                                        onComplete(null)
                                     }
                                 }
 
                                 override fun onConfigureFailed(session: CameraCaptureSession) {
                                     camera.close()
-                                    onComplete?.invoke(null)
+                                    onComplete(null)
                                 }
                             },
                             handler
@@ -103,29 +108,34 @@ class WatchmanSecurityManager(private val context: Context) {
                     } catch (e: SecurityException) {
                         Log.e(TAG, "Camera permission missing: ${e.message}")
                         camera.close()
-                        onComplete?.invoke(null)
+                        onComplete(null)
                     } catch (e: Exception) {
                         Log.e(TAG, "Error in capture setup: ${e.message}")
                         camera.close()
-                        onComplete?.invoke(null)
+                        onComplete(null)
                     }
                 }
 
                 override fun onDisconnected(camera: CameraDevice) {
+                    // e.g. camera taken away / blocked while the app is in the background
                     camera.close()
+                    imageReader.close()
+                    onComplete(null)
                 }
 
                 override fun onError(camera: CameraDevice, error: Int) {
+                    Log.w(TAG, "Camera error $error (background camera access is restricted on Android 11+)")
                     camera.close()
-                    onComplete?.invoke(null)
+                    imageReader.close()
+                    onComplete(null)
                 }
             }, handler)
         } catch (e: SecurityException) {
             Log.e(TAG, "Camera permission missing: ${e.message}")
-            onComplete?.invoke(null)
+            onComplete(null)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to open camera: ${e.message}")
-            onComplete?.invoke(null)
+            onComplete(null)
         }
     }
 }

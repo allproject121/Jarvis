@@ -113,6 +113,7 @@ data class VoiceSettings(
         const val STT_SHERPA = "sherpa"
         const val STT_WHISPER = "whisper"
         const val STT_GEMINI = "gemini"
+        const val STT_DEEPGRAM = "deepgram"
 
         const val TTS_JARVIS = "jarvis"
         const val TTS_SHERPA = "sherpa"
@@ -120,7 +121,7 @@ data class VoiceSettings(
         const val TTS_GEMINI = "gemini"
 
         val WAKE_ENGINES = listOf(WAKE_VOSK, WAKE_SHERPA, WAKE_OPENWAKEWORD)
-        val STT_ENGINES = listOf(STT_JARVIS, STT_SHERPA, STT_WHISPER, STT_GEMINI)
+        val STT_ENGINES = listOf(STT_JARVIS, STT_SHERPA, STT_WHISPER, STT_GEMINI, STT_DEEPGRAM)
         val TTS_ENGINES = listOf(TTS_JARVIS, TTS_SHERPA, TTS_PIPER, TTS_GEMINI)
 
         const val MIN_SENSITIVITY = 0.1f
@@ -158,6 +159,7 @@ data class VoiceSettings(
             STT_SHERPA -> "sherpa-onnx streaming"
             STT_WHISPER -> "whisper.cpp"
             STT_GEMINI -> "Gemini REST"
+            STT_DEEPGRAM -> "Deepgram nova-3 (cloud)"
             else -> "Vosk (Jarvis default)"
         }
 

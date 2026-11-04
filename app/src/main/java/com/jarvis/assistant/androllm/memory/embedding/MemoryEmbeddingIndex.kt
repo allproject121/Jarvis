@@ -33,7 +33,7 @@ import kotlinx.coroutines.withContext
  *     cache so a cold start does not re-embed every memory.
  *  2. **Hybrid retrieval** — [search] scores a query against the persisted
  *     vectors, optionally restricted to candidate ids (project/tag filters);
- *     [com.jarvis.assistant.androllm.memory.AndroMemoryPipeline.retrieve] fuses it
+ *     [com.jarvis.assistant.data.memory.MemoryManager.retrieve] fuses it
  *     with Jarvis' semantic + keyword results.
  *
  * Indexing ([embedPending], [reindexAll]) runs from MemoryMaintenance (manual

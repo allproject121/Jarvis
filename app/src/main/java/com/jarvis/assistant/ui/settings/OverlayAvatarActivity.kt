@@ -37,6 +37,8 @@ class OverlayAvatarActivity : AppCompatActivity() {
     private val preferences get() = JarvisApp.instance.preferences
     private lateinit var assetLoader: WebViewAssetLoader
     private var edgeSelectionReady = false
+    /** "Maya character on home screen" option (floating 3D character + size). */
+    private var mayaOverlayCard: com.jarvis.assistant.maya.ui.MayaOverlaySettingsCard? = null
 
     // Custom 3D Avatar Views
     private lateinit var ivCustomAvatarPreview: ImageView
@@ -112,6 +114,11 @@ class OverlayAvatarActivity : AppCompatActivity() {
         }
 
         setupCustomAvatarCard()
+
+        mayaOverlayCard = com.jarvis.assistant.maya.ui.MayaOverlaySettingsCard(this).also { card ->
+            val root = findViewById<View>(R.id.overlayAvatarRoot) as? android.view.ViewGroup
+            root?.addView(card.view, minOf(1, root.childCount))
+        }
 
         avatarGallery = findViewById(R.id.avatarGallery)
         assetLoader = WebViewAssetLoader.Builder()
@@ -222,6 +229,7 @@ class OverlayAvatarActivity : AppCompatActivity() {
             TaskProgressOverlay.hideOverlay()
         }
         updateCustomAvatarUI()
+        mayaOverlayCard?.refresh()
     }
 
     override fun onStop() {

@@ -73,6 +73,11 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
             showAddExternalConnectorDialog()
         }
 
+        binding.btnServiceConnectors.setOnClickListener {
+            HudSoundManager.playTapSound()
+            startActivity(com.jarvis.assistant.maya.connectors.ConnectorsActivity.intent(requireContext()))
+        }
+
         binding.btnConnectAllApps.setOnClickListener {
             HudSoundManager.playTapSound()
             showConnectAllWarningDialog()
@@ -322,6 +327,30 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
                 }
             }
 
+            // Token-based cloud services (Notion, Linear, Todoist, GitLab, Drive, Vercel, Telegram, GitHub):
+            // linking happens in ConnectorsActivity, so the switch and the card open it instead of toggling.
+            if (manager.isServiceConnector(conn)) {
+                val serviceId = conn.packageName.removePrefix(AppConnectorsManager.MAYA_SERVICE_PREFIX)
+                val openConnectors = View.OnClickListener {
+                    HudSoundManager.playTapSound()
+                    startActivity(com.jarvis.assistant.maya.connectors.ConnectorsActivity.intent(requireContext(), serviceId))
+                }
+                toggleSwitch.setOnCheckedChangeListener(null)
+                toggleSwitch.isClickable = false
+                toggleSwitch.isFocusable = false
+                card.isClickable = true
+                card.setOnClickListener(openConnectors)
+                val tvLink = TextView(requireContext()).apply {
+                    text = if (conn.isConnected) "MANAGE TOKEN ›" else "LINK / TOKEN ›"
+                    setTextColor(themeColor(R.attr.themeAccent, Color.parseColor("#00E5FF")))
+                    textSize = 11f
+                    paint.isFakeBoldText = true
+                    setPadding(0, (6 * density).toInt(), 0, 0)
+                    setOnClickListener(openConnectors)
+                }
+                card.addView(tvLink)
+            }
+
             container.addView(card)
         }
     }
@@ -348,16 +377,16 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("⚡ CONNECT ALL APPS — HIGH RISK CONSENT")
             .setMessage(
-                "Connecting ALL installed applications grants Jarvis FULL AUTONOMOUS ACCESS to your entire phone:\n\n" +
-                "• Autonomous access to Google Drive, Files, WhatsApp, Gmail, Photos, Chrome, Settings, etc.\n" +
-                "• Permission to search files, open documents, upload/save content, and delete items without prompt\n" +
-                "• Autonomous indexing of app data into Neural Vector Semantic Memory\n\n" +
-                "Are you sure you want to authorize FULL ACCESS for all apps at your own risk?"
+                "Connecting ALL installed applications lets Jarvis act on every app:\n\n" +
+                "• Open any installed app and tap/type on its screen via Accessibility\n" +
+                "• What it can do inside each app depends on that app's layout — there is no app-specific API access\n" +
+                "• Each app's connection is recorded in Jarvis' on-device memory\n\n" +
+                "Are you sure you want to connect all apps at your own risk?"
             )
             .setPositiveButton("AUTHORIZE ALL APPS") { _, _ ->
                 manager.connectAllApps(lifecycleScope)
                 populateConnectorsList()
-                Toast.makeText(requireContext(), "Authorized ALL installed apps with Full Access!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Connected all installed apps", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("CANCEL", null)
             .setCancelable(false)
@@ -368,11 +397,11 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("⚠️ HIGH-RISK ACCESS & PRIVACY WARNING")
             .setMessage(
-                "Connecting '${connector.name}' grants Jarvis autonomous access to:\n\n" +
-                "• Full access to inspect internal data, search files, read contents, and delete items\n" +
-                "• Autonomously execute in-app tasks without repetitive confirmation prompts\n" +
-                "• Ingest interactions and app capabilities into On-Device Neural Vector Memory\n\n" +
-                "Your privacy could be affected. Do you accept the full access grant at your own risk?"
+                "Connecting '${connector.name}' lets Jarvis:\n\n" +
+                "• Open this app and tap/type on its screen via Accessibility (app-specific actions depend on the app's layout)\n" +
+                "• Read what is visible on its screen while it acts\n" +
+                "• Record the connection in Jarvis' on-device memory\n\n" +
+                "Your privacy could be affected. Do you accept at your own risk?"
             )
             .setPositiveButton("I UNDERSTAND & ACCEPT RISK") { _, _ ->
                 onConfirm()
@@ -400,29 +429,22 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
             hint = "Package Name or URI Scheme (e.g. com.example.app)"
             textSize = 13.5f
         }
-        val etEndpoint = EditText(requireContext()).apply {
-            hint = "Local Bridge Endpoint (optional, e.g. http://127.0.0.1:8080)"
-            textSize = 13.5f
-        }
 
         layout.addView(etName)
         layout.addView(etPackage)
-        layout.addView(etEndpoint)
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Add External App / Plugin")
-            .setMessage("Register an uninstalled app, custom scheme, or local bridge for autonomous control:")
+            .setMessage("Register an app by package name so Jarvis can open it and tap/type on its screen via Accessibility:")
             .setView(layout)
             .setPositiveButton("ADD CONNECTOR") { _, _ ->
                 val name = etName.text.toString().trim()
                 val pkg = etPackage.text.toString().trim()
-                val endpoint = etEndpoint.text.toString().trim()
                 if (name.isNotBlank() && pkg.isNotBlank()) {
                     manager.addExternalConnector(
                         name = name,
                         packageNameOrEndpoint = pkg,
-                        description = "Custom external plugin connector for autonomous bridge communication.",
-                        bridgeEndpoint = endpoint
+                        description = AppConnectorsManager.ACCESSIBILITY_CAPABILITY
                     )
                     populateConnectorsList()
                     Toast.makeText(requireContext(), "Added external connector '$name'!", Toast.LENGTH_SHORT).show()
@@ -432,6 +454,15 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
             }
             .setNegativeButton("CANCEL", null)
             .show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh service-connector status after returning from ConnectorsActivity.
+        if (_binding != null) {
+            manager.refreshConnectorsList()
+            populateConnectorsList()
+        }
     }
 
     override fun onDestroyView() {

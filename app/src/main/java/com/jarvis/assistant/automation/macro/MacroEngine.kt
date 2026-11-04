@@ -99,6 +99,25 @@ class MacroEngine(
             "go_back" -> {
                 service?.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK) ?: false
             }
+            // Maya screen pack (additive): extra step kinds recorded by maya.screen.MacroRecorder.
+            "go_home" -> {
+                service?.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME) ?: false
+            }
+            "tap_resource_id" -> {
+                val viewId = step.args["id"]?.toString() ?: return false
+                val root = service?.rootInActiveWindow ?: return false
+                val node = root.findAccessibilityNodeInfosByViewId(viewId).firstOrNull { it.isVisibleToUser } ?: return false
+                service.clickNodeAndTap(node)
+            }
+            "tap_coords" -> {
+                val x = (step.args["x"] as? Number)?.toFloat() ?: return false
+                val y = (step.args["y"] as? Number)?.toFloat() ?: return false
+                service?.clickAt(x, y) ?: false
+            }
+            "scroll" -> {
+                val direction = step.args["direction"]?.toString() ?: "down"
+                service?.performSmartScroll(direction, "medium") ?: false
+            }
             "read_screen_text" -> {
                 val collected = readAllScreenText(service)
                 Log.i(TAG, "Screen text read: ${collected.take(100)}...")

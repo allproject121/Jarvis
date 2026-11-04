@@ -57,14 +57,94 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
 
     /**
      * Resets idempotency cache when a new user turn starts.
+     * [liveSession] relaxes the loop caps: one Gemini Live turn can legitimately chain many
+     * screen-automation steps (same tool back-to-back), which the default caps would cut off.
      */
-    fun startNewTurn(turnId: String) {
+    fun startNewTurn(turnId: String, liveSession: Boolean = false) {
         synchronized(idempotencyCache) {
             lastTurnId = turnId
             idempotencyCache.clear()
-            loopGuard = com.jarvis.assistant.automation.guard.ToolLoopGuard()
+            loopGuard = if (liveSession) {
+                com.jarvis.assistant.automation.guard.ToolLoopGuard(maxTotalCalls = 40, maxConsecutiveSameTool = 10, blockIdenticalRepeats = false)
+            } else {
+                com.jarvis.assistant.automation.guard.ToolLoopGuard()
+            }
             com.jarvis.assistant.automation.agent.AgentVariableStore.beginTurn()
         }
+    }
+
+    /**
+     * Returns a block message when Voice Guard is armed, [name] is risky, the owner's voice wasn't
+     * verified in the last 60 s, and the user doesn't approve the confirmation prompt; null = allowed.
+     */
+    private suspend fun enforceVoiceGuard(name: String, args: JSONObject): String? =
+        // Shared with the Gemini Live handlers in JarvisConversationService.
+        com.jarvis.assistant.security.guardian.VoiceGuardGate.check(context, name, args)
+
+    // ── Batch-4 device helpers ──────────────────────────────────────────────
+
+    /** Result of a Do Not Disturb change: [ok] false means nothing changed. */
+    private data class DndOutcome(val ok: Boolean, val message: String, val settingsOpened: Boolean = false)
+
+    private fun applyDnd(enabled: Boolean, mode: String): DndOutcome {
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? android.app.NotificationManager
+            ?: return DndOutcome(false, "Notification service unavailable, so I couldn't change Do Not Disturb.")
+        if (!nm.isNotificationPolicyAccessGranted) {
+            val opened = try {
+                context.startActivity(android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS).apply {
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                })
+                true
+            } catch (e: Exception) {
+                Log.w(TAG, "Couldn't open DND access settings: ${e.message}")
+                false
+            }
+            return DndOutcome(false, "Allow Do Not Disturb access for Jarvis, then ask again", settingsOpened = opened)
+        }
+        val filter = if (!enabled) android.app.NotificationManager.INTERRUPTION_FILTER_ALL else when (mode) {
+            "alarms" -> android.app.NotificationManager.INTERRUPTION_FILTER_ALARMS
+            "total_silence" -> android.app.NotificationManager.INTERRUPTION_FILTER_NONE
+            else -> android.app.NotificationManager.INTERRUPTION_FILTER_PRIORITY
+        }
+        return try {
+            nm.setInterruptionFilter(filter)
+            val now = nm.currentInterruptionFilter
+            val applied = now == filter
+            val label = mode.replace('_', ' ')
+            when {
+                !applied -> DndOutcome(false, "Android didn't apply the Do Not Disturb change (current filter: $now).")
+                enabled -> DndOutcome(true, "Do Not Disturb is ON ($label).")
+                else -> DndOutcome(true, "Do Not Disturb is OFF.")
+            }
+        } catch (e: Exception) {
+            DndOutcome(false, "Couldn't change Do Not Disturb: ${e.message}")
+        }
+    }
+
+    /** Starts a Clock-app countdown (no UI). Returns null on success, otherwise the error. */
+    private fun startClockTimer(seconds: Int, label: String): String? {
+        val intent = android.content.Intent(android.provider.AlarmClock.ACTION_SET_TIMER).apply {
+            putExtra(android.provider.AlarmClock.EXTRA_MESSAGE, label)
+            putExtra(android.provider.AlarmClock.EXTRA_LENGTH, seconds.coerceIn(1, 86_400))
+            putExtra(android.provider.AlarmClock.EXTRA_SKIP_UI, true)
+            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        return try {
+            context.startActivity(intent)
+            null
+        } catch (e: android.content.ActivityNotFoundException) {
+            "No clock app on this phone can take a timer."
+        } catch (e: SecurityException) {
+            "The clock app refused the timer (permission): ${e.message}"
+        } catch (e: Exception) {
+            "Could not set timer: ${e.message}"
+        }
+    }
+
+    private fun dirSize(dir: java.io.File?, depth: Int = 0): Long {
+        if (dir == null || !dir.exists() || depth > 12) return 0L
+        if (dir.isFile) return dir.length()
+        return dir.listFiles()?.sumOf { dirSize(it, depth + 1) } ?: 0L
     }
 
     /**
@@ -122,8 +202,46 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                 }
             }
 
+            // Voice Guard: while armed, risky tools (calls, messages, shell, deletes, dynamic tools...)
+            // need the owner — a recent owner-voice verification, or an explicit confirmation.
+            val guardBlock = enforceVoiceGuard(name, args)
+            if (guardBlock != null) {
+                Log.w(TAG, "Voice Guard blocked '$name'")
+                return@withContext AiToolResult(
+                    callId = callId,
+                    functionName = name,
+                    isSuccess = false,
+                    resultJson = JSONObject().apply {
+                        put("success", false)
+                        put("blocked_by_voice_guard", true)
+                        put("message", guardBlock)
+                    },
+                    errorMessage = guardBlock
+                )
+            }
+
             Log.i(TAG, "Executing tool '$name' (callId=$callId) with args: $args")
             val app = context.applicationContext as? JarvisApp
+
+            // ── 0a. MAYA FEATURE TOOL PACKS (screen verb loop, memory/rules, connectors, business,
+            //        guardian, Termux/PC hub, media ...) — see MayaToolRegistry / MayaToolPacks.
+            MayaToolRegistry.ensureInstalled(context)
+            if (MayaToolRegistry.has(name)) {
+                val outcome = MayaToolRegistry.dispatch(context, name, args)
+                val outJson = JSONObject(outcome.json.toString()).apply {
+                    put("success", outcome.success)
+                    if (!has("message")) put("message", outcome.message)
+                }
+                val packResult = AiToolResult(
+                    callId = callId,
+                    functionName = name,
+                    isSuccess = outcome.success,
+                    resultJson = outJson,
+                    errorMessage = if (outcome.success) null else outcome.message
+                )
+                loopGuard.record(name, args, packResult)
+                return@withContext packResult
+            }
 
             // ── 0. DYNAMIC SELF-HEALING TOOL RUNTIME DISPATCH ────────────────────
             try {
@@ -260,12 +378,25 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                     "set_flashlight" -> {
                         val enabled = args.optBoolean("enabled", true)
                         val msg = withContext(Dispatchers.Main) {
-                            app?.phoneControlManager?.setFlashlight(enabled)
-                                ?: if (enabled) "Flashlight turned on." else "Flashlight turned off."
+                            try {
+                                app?.phoneControlManager?.setFlashlight(enabled)
+                            } catch (e: Exception) {
+                                Log.w(TAG, "set_flashlight failed: ${e.message}")
+                                null
+                            }
                         }
-                        resultJson.put("success", true)
-                        resultJson.put("message", msg)
-                        resultJson.put("flashlight_enabled", enabled)
+                        // setFlashlight returns an error sentence (no hardware / camera busy) instead of throwing.
+                        val toggled = DeviceToolMessages.isFlashlightSuccess(msg)
+                        isSuccess = toggled
+                        val finalMsg = when {
+                            toggled -> msg.orEmpty()
+                            msg.isNullOrBlank() -> "Couldn't control the flashlight - the phone control service isn't available."
+                            else -> "Couldn't turn the flashlight ${if (enabled) "on" else "off"}: $msg"
+                        }
+                        if (!toggled) errorMessage = finalMsg
+                        resultJson.put("success", toggled)
+                        resultJson.put("message", finalMsg)
+                        if (toggled) resultJson.put("flashlight_enabled", enabled)
                     }
 
                     "set_volume" -> {
@@ -319,6 +450,232 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                         resultJson.put("message", "Battery: ${telem.batteryPercent}%, Charging: ${telem.isCharging}, Network: ${telem.networkType}")
                     }
 
+                    "set_driving_mode" -> {
+                        val rawMode = args.optString("call_mode", "").trim()
+                        val callMode = com.jarvis.assistant.core.DrivingCallPolicy.normalizeCallMode(rawMode)
+                        if (!args.has("enabled")) {
+                            isSuccess = false
+                            errorMessage = "Missing 'enabled' argument for set_driving_mode"
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        } else if (rawMode.isNotEmpty() && callMode == null) {
+                            isSuccess = false
+                            errorMessage = "Unknown call_mode '$rawMode' - use 'announce' or 'auto_reject_sms'."
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        } else {
+                            val enabled = args.optBoolean("enabled", false)
+                            val manager = com.jarvis.assistant.core.JarvisDrivingModeManager.getInstance(context)
+                            if (callMode != null) manager.drivingCallMode = callMode
+                            manager.setDrivingMode(enabled)
+                            val actualEnabled = manager.isDrivingMode.value
+                            val actualMode = manager.drivingCallMode
+                            var msg = com.jarvis.assistant.core.DrivingCallPolicy.statusMessage(actualEnabled, actualMode)
+                            if (actualEnabled && actualMode == com.jarvis.assistant.data.preferences.AppPreferences.DRIVING_CALL_MODE_AUTO_REJECT_SMS) {
+                                val canReject = context.checkSelfPermission(android.Manifest.permission.ANSWER_PHONE_CALLS) ==
+                                    android.content.pm.PackageManager.PERMISSION_GRANTED
+                                val canSms = context.checkSelfPermission(android.Manifest.permission.SEND_SMS) ==
+                                    android.content.pm.PackageManager.PERMISSION_GRANTED
+                                if (!canReject) msg += " Note: the phone-call permission isn't granted, so I'll announce calls instead of rejecting them."
+                                else if (!canSms) msg += " Note: SMS permission isn't granted, so calls will be rejected without the auto-reply text."
+                            }
+                            isSuccess = actualEnabled == enabled
+                            if (!isSuccess) errorMessage = msg
+                            resultJson.put("success", isSuccess)
+                            resultJson.put("driving_mode_enabled", actualEnabled)
+                            resultJson.put("call_mode", actualMode.lowercase(java.util.Locale.ROOT))
+                            resultJson.put("message", msg)
+                        }
+                    }
+
+                    "get_battery_status" -> {
+                        val bm = context.getSystemService(Context.BATTERY_SERVICE) as? android.os.BatteryManager
+                        val sticky = try {
+                            context.registerReceiver(null, android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED))
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Battery sticky intent unavailable: ${e.message}")
+                            null
+                        }
+                        if (bm == null && sticky == null) {
+                            isSuccess = false
+                            errorMessage = "Battery information is unavailable on this device."
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        } else {
+                            val level = sticky?.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1) ?: -1
+                            val scale = sticky?.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1) ?: -1
+                            val percent = bm?.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY)
+                                ?.takeIf { it in 0..100 }
+                                ?: if (level >= 0 && scale > 0) (level * 100 / scale) else -1
+                            val status = sticky?.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1) ?: -1
+                            val charging = status == android.os.BatteryManager.BATTERY_STATUS_CHARGING || (bm?.isCharging == true)
+                            val full = status == android.os.BatteryManager.BATTERY_STATUS_FULL
+                            val plug = DeviceStatusFormat.plugLabel(sticky?.getIntExtra(android.os.BatteryManager.EXTRA_PLUGGED, 0) ?: 0)
+                            val tempC = DeviceStatusFormat.temperatureCelsius(sticky?.getIntExtra(android.os.BatteryManager.EXTRA_TEMPERATURE, Int.MIN_VALUE) ?: Int.MIN_VALUE)
+                            val health = DeviceStatusFormat.healthLabel(sticky?.getIntExtra(android.os.BatteryManager.EXTRA_HEALTH, 1) ?: 1)
+                            // computeChargeTimeRemaining (API 28+, minSdk is 28) returns -1 when unknown.
+                            val toFullMs = if (charging) bm?.computeChargeTimeRemaining()?.takeIf { it > 0 } else null
+                            val msg = DeviceStatusFormat.batterySummary(percent, charging, full, plug, tempC, health, toFullMs)
+                            resultJson.put("success", true)
+                            resultJson.put("battery_percent", percent)
+                            resultJson.put("is_charging", charging)
+                            resultJson.put("is_full", full)
+                            resultJson.put("charge_source", plug ?: "none")
+                            if (tempC != null) resultJson.put("temperature_c", tempC)
+                            resultJson.put("health", health)
+                            if (toFullMs != null) resultJson.put("time_to_full_minutes", toFullMs / 60_000L)
+                            resultJson.put("message", msg)
+                        }
+                    }
+
+                    "get_storage_stats" -> {
+                        try {
+                            val stat = android.os.StatFs(android.os.Environment.getDataDirectory().path)
+                            val total = stat.totalBytes
+                            val free = stat.availableBytes
+                            val cache = dirSize(context.cacheDir) + dirSize(context.externalCacheDir)
+                            resultJson.put("success", true)
+                            resultJson.put("total_bytes", total)
+                            resultJson.put("free_bytes", free)
+                            resultJson.put("used_bytes", (total - free).coerceAtLeast(0))
+                            resultJson.put("used_percent", DeviceStatusFormat.usedPercent(total, free))
+                            resultJson.put("total", DeviceStatusFormat.formatBytes(total))
+                            resultJson.put("free", DeviceStatusFormat.formatBytes(free))
+                            resultJson.put("app_cache_bytes", cache)
+                            resultJson.put("app_cache", DeviceStatusFormat.formatBytes(cache))
+                            resultJson.put("message", DeviceStatusFormat.storageSummary(total, free, cache))
+                        } catch (e: Exception) {
+                            isSuccess = false
+                            errorMessage = "Couldn't read storage stats: ${e.message}"
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        }
+                    }
+
+                    "whatsapp_read_messages" -> {
+                        val listener = com.jarvis.assistant.automation.notification.JarvisNotificationListener.Companion
+                        if (!listener.isNotificationServiceEnabled(context)) {
+                            isSuccess = false
+                            errorMessage = "Notification access is off — enable it in Settings"
+                            resultJson.put("success", false)
+                            resultJson.put("permission_denied", true)
+                            resultJson.put("message", errorMessage)
+                        } else {
+                            val contact = args.optString("contact", "").ifBlank { args.optString("sender", "") }.trim()
+                            val limit = if (args.has("limit")) args.optInt("limit", 5) else 5
+                            val items = listener.recentNotifications.value.map {
+                                DeviceStatusFormat.MessageItem(it.packageName, it.sender, it.text, it.timestamp)
+                            }
+                            val msgs = DeviceStatusFormat.filterWhatsApp(items, contact.ifBlank { null }, limit)
+                            val fmt = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+                            resultJson.put("success", true)
+                            resultJson.put("count", msgs.size)
+                            resultJson.put("messages", JSONArray().apply {
+                                msgs.forEach { m ->
+                                    put(JSONObject().apply {
+                                        put("sender", m.sender)
+                                        put("text", m.text)
+                                        put("time", fmt.format(java.util.Date(m.timestamp)))
+                                        put("app", if (m.packageName == "com.whatsapp.w4b") "WhatsApp Business" else "WhatsApp")
+                                    })
+                                }
+                            })
+                            val scope = if (contact.isNotBlank()) " from '$contact'" else ""
+                            val connectedNote = if (listener.instance == null) " (the notification listener isn't connected right now, so new messages may be missing)" else ""
+                            resultJson.put(
+                                "message",
+                                if (msgs.isEmpty()) "No recent WhatsApp messages$scope in notifications. I can only see messages that arrived as notifications while Jarvis was running$connectedNote."
+                                else "Recent WhatsApp messages$scope$connectedNote:\n" + msgs.joinToString("\n") {
+                                    "- ${it.sender} (${fmt.format(java.util.Date(it.timestamp))}): ${it.text.take(200)}"
+                                }
+                            )
+                        }
+                    }
+
+                    "get_scheduled_tasks" -> {
+                        val upcoming = com.jarvis.assistant.automation.schedule.JarvisScheduleStore.upcoming(context)
+                        resultJson.put("success", true)
+                        resultJson.put("count", upcoming.size)
+                        resultJson.put("tasks", JSONArray().apply { upcoming.forEach { put(it.toJson()) } })
+                        resultJson.put(
+                            "message",
+                            com.jarvis.assistant.automation.schedule.ScheduledTaskFormat.describe(upcoming, System.currentTimeMillis())
+                        )
+                    }
+
+                    "set_dnd" -> {
+                        val rawMode = args.optString("mode", "")
+                        val mode = DeviceStatusFormat.normalizeDndMode(rawMode)
+                        if (!args.has("enabled")) {
+                            isSuccess = false
+                            errorMessage = "Missing 'enabled' argument for set_dnd"
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        } else if (mode == null) {
+                            isSuccess = false
+                            errorMessage = "Unknown DND mode '$rawMode' - use priority, alarms or total_silence."
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        } else {
+                            val enabled = args.optBoolean("enabled", true)
+                            val outcome = applyDnd(enabled, mode)
+                            isSuccess = outcome.ok
+                            if (!outcome.ok) errorMessage = outcome.message
+                            resultJson.put("success", outcome.ok)
+                            resultJson.put("dnd_enabled", outcome.ok && enabled)
+                            if (enabled) resultJson.put("mode", mode)
+                            if (outcome.settingsOpened) resultJson.put("settings_opened", true)
+                            resultJson.put("message", outcome.message)
+                        }
+                    }
+
+                    "start_focus_timer" -> {
+                        val minutes = args.optInt("minutes", 0)
+                        if (minutes <= 0) {
+                            isSuccess = false
+                            errorMessage = "How many minutes should the focus timer run?"
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        } else if (minutes > 600) {
+                            isSuccess = false
+                            errorMessage = "A focus timer can be at most 600 minutes (10 hours)."
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        } else {
+                            val timerError = withContext(Dispatchers.Main) { startClockTimer(minutes * 60, "Focus time") }
+                            if (timerError != null) {
+                                isSuccess = false
+                                errorMessage = timerError
+                                resultJson.put("success", false)
+                                resultJson.put("timer_set", false)
+                                resultJson.put("message", timerError)
+                            } else {
+                                val endAt = System.currentTimeMillis() + minutes * 60_000L
+                                com.jarvis.assistant.automation.schedule.JarvisScheduleStore.record(
+                                    context, "focus_timer", "Focus time", endAt, "start_focus_timer"
+                                )
+                                resultJson.put("timer_set", true)
+                                resultJson.put("ends_at", endAt)
+                                var msg = "Focus timer set for $minutes minutes."
+                                if (args.optBoolean("dnd", false)) {
+                                    val dnd = applyDnd(true, "priority")
+                                    resultJson.put("dnd_enabled", dnd.ok)
+                                    if (dnd.ok) {
+                                        msg += " Do Not Disturb is on (priority) — it stays on until you turn it off."
+                                    } else {
+                                        // Timer is running; only the DND part failed. Say so plainly so it isn't retried.
+                                        isSuccess = false
+                                        msg += " The timer IS running (don't set it again), but Do Not Disturb wasn't turned on: ${dnd.message}"
+                                        errorMessage = msg
+                                        if (dnd.settingsOpened) resultJson.put("settings_opened", true)
+                                    }
+                                }
+                                resultJson.put("success", isSuccess)
+                                resultJson.put("message", msg)
+                            }
+                        }
+                    }
+
                     // ── 2. APP LAUNCHING & WEB NAVIGATION ──────────────────────
                     "open_app" -> {
                         val appName = args.optString("app_name", "").ifBlank { args.optString("name", "") }
@@ -338,7 +695,14 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                                     resultJson.put("screen_summary", execResult.screenSummary)
                                 }
                             } else {
-                                val opened = withContext(Dispatchers.Main) {
+                                // Maya parity: names taught with remember_app_name win over fuzzy lookup.
+                                val aliasPkg = try { com.jarvis.assistant.maya.memory.AppAliasStore.resolve(context, appName) } catch (_: Exception) { null }
+                                val aliasIntent = aliasPkg?.let { context.packageManager.getLaunchIntentForPackage(it) }
+                                val opened = if (aliasIntent != null) {
+                                    aliasIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    withContext(Dispatchers.Main) { context.startActivity(aliasIntent) }
+                                    Unit
+                                } else withContext(Dispatchers.Main) {
                                     app?.phoneControlManager?.openApp(appName)
                                 }
                                 val success = opened != null
@@ -365,6 +729,8 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                             val executor = com.jarvis.assistant.connectors.UniversalAppExecutor.getInstance(context)
                             val execResult = executor.executeAppGoal(appName, actionType, targetQuery, userGoal)
 
+                            isSuccess = execResult.success
+                            if (!execResult.success) errorMessage = execResult.message
                             resultJson.put("success", execResult.success)
                             resultJson.put("message", execResult.message)
                             resultJson.put("action_taken", execResult.actionTaken)
@@ -416,11 +782,15 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                     "search_youtube" -> {
                         val query = args.optString("query", "")
                         if (query.isNotBlank()) {
-                            val launched = withContext(Dispatchers.Main) {
-                                app?.phoneControlManager?.openApp("youtube") ?: false
+                            val searchResult = withContext(Dispatchers.Main) {
+                                com.jarvis.assistant.automation.youtube.YouTubeController.searchYouTube(context, query)
                             }
-                            resultJson.put("success", launched != null)
-                            resultJson.put("message", "Searching YouTube for '$query'")
+                            val msg = searchResult.message
+                                ?: if (searchResult.success) "Showing YouTube search results for '$query'." else "Couldn't open YouTube search for '$query'."
+                            isSuccess = searchResult.success
+                            if (!searchResult.success) errorMessage = msg
+                            resultJson.put("success", searchResult.success)
+                            resultJson.put("message", msg)
                         } else {
                             isSuccess = false
                             errorMessage = "Missing YouTube query"
@@ -538,9 +908,18 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                         }
                     }
 
-                    "find_contacts" -> {
+                    "find_contacts", "search_contacts" -> {
                         val query = args.optString("query", "").ifBlank { args.optString("name", "") }
-                        if (query.isNotBlank()) {
+                        val canReadContacts = context.checkSelfPermission(android.Manifest.permission.READ_CONTACTS) ==
+                            android.content.pm.PackageManager.PERMISSION_GRANTED
+                        if (query.isNotBlank() && !canReadContacts) {
+                            // searchContacts() silently returns nothing without the permission - say why instead.
+                            isSuccess = false
+                            errorMessage = "Contacts permission is off - allow Contacts for Jarvis in Settings, then ask again."
+                            resultJson.put("success", false)
+                            resultJson.put("permission_denied", true)
+                            resultJson.put("message", errorMessage)
+                        } else if (query.isNotBlank()) {
                             val limit = if (args.has("limit")) args.optInt("limit", 8).coerceIn(1, 20) else 8
                             val candidates = withContext(Dispatchers.Main) {
                                 ContactCaller.searchContacts(context, query, limit)
@@ -676,16 +1055,27 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
 
                     "press_key" -> {
                         val a11y = JarvisAccessibilityService.instance
-                        val key = args.optString("key", "back")
-                        if (a11y != null) {
-                            val actionCode = when (key.lowercase(java.util.Locale.ROOT)) {
-                                "home" -> AccessibilityService.GLOBAL_ACTION_HOME
-                                "recents" -> AccessibilityService.GLOBAL_ACTION_RECENTS
-                                else -> AccessibilityService.GLOBAL_ACTION_BACK
-                            }
-                            a11y.performGlobalAction(actionCode)
-                            resultJson.put("success", true)
-                            resultJson.put("message", "Pressed $key")
+                        val key = args.optString("key", "back").ifBlank { "back" }.trim().lowercase(java.util.Locale.ROOT)
+                        val actionCode = when (key) {
+                            "back" -> AccessibilityService.GLOBAL_ACTION_BACK
+                            "home" -> AccessibilityService.GLOBAL_ACTION_HOME
+                            "recents", "recent_apps" -> AccessibilityService.GLOBAL_ACTION_RECENTS
+                            "notifications" -> AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS
+                            "quick_settings" -> AccessibilityService.GLOBAL_ACTION_QUICK_SETTINGS
+                            "lock_screen", "lock" -> AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN
+                            else -> null
+                        }
+                        if (actionCode == null) {
+                            isSuccess = false
+                            errorMessage = "Unsupported key '$key'. Supported: ${DeviceToolSchemas.PRESS_KEYS.joinToString()}."
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        } else if (a11y != null) {
+                            val pressed = a11y.performGlobalAction(actionCode)
+                            isSuccess = pressed
+                            if (!pressed) errorMessage = "Android refused the '$key' key press."
+                            resultJson.put("success", pressed)
+                            resultJson.put("message", if (pressed) "Pressed $key" else errorMessage)
                         } else {
                             isSuccess = false
                             errorMessage = "Accessibility service disabled"
@@ -695,15 +1085,76 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                     }
 
                     // ── 6. SURVEILLANCE & GODS EYE MCP ─────────────────────────
-                    "gods_eye_select_camera",
+                    // Same name set the conversation service routes (offline / Hermes reach them here).
+                    "open_gods_eye_view",
+                    "gods_eye_show_view",
+                    "gods_eye_situation_brief",
+                    "gods_eye_get_earthquakes",
+                    "gods_eye_get_active_fires",
+                    "gods_eye_aircraft_in_area",
+                    "gods_eye_satellites_overhead",
+                    "gods_eye_get_recent_launches",
+                    "gods_eye_military_awareness",
+                    "gods_eye_find_cctv_cameras",
+                    "gods_eye_inspect_globe",
+                    "gods_eye_control_layers",
                     "gods_eye_get_space_weather",
                     "gods_eye_get_subsea_cables",
                     "gods_eye_get_public_transit",
-                    "gods_eye_start_auto_tour" -> {
-                        val cameraResult = com.jarvis.assistant.ui.godseye.GodsEyeMcpClient.executeTool(name, args)
-                        resultJson.put("success", true)
-                        resultJson.put("data", cameraResult)
-                        resultJson.put("message", "Gods Eye tool '$name' executed.")
+                    "gods_eye_start_auto_tour",
+                    "gods_eye_select_camera" -> {
+                        val mcpResult = com.jarvis.assistant.ui.godseye.GodsEyeMcpClient.executeTool(name, args)
+                        val ok = mcpResult.optBoolean("success", false)
+                        val viewUrl = mcpResult.optString("view_url", "")
+                        val actionJson = mcpResult.optString("action_json", "")
+                        val shouldShowGlobe = ok && (args.optBoolean("show_on_globe", false) ||
+                            name == "open_gods_eye_view" ||
+                            name == "gods_eye_show_view" ||
+                            name == "gods_eye_select_camera" ||
+                            (name != "gods_eye_inspect_globe" && (viewUrl.isNotBlank() || actionJson.isNotBlank())))
+                        if (shouldShowGlobe) {
+                            withContext(Dispatchers.Main) {
+                                com.jarvis.assistant.ui.godseye.GodsEyeMcpClient.launchOrUpdateGodsEye(
+                                    context,
+                                    viewUrl.takeIf { it.isNotBlank() },
+                                    actionJson.takeIf { it.isNotBlank() }
+                                )
+                            }
+                        }
+                        val gKeys = mcpResult.keys()
+                        while (gKeys.hasNext()) {
+                            val k = gKeys.next()
+                            resultJson.put(k, mcpResult.get(k))
+                        }
+                        isSuccess = ok
+                        resultJson.put("success", ok)
+                        if (!resultJson.has("message")) {
+                            resultJson.put(
+                                "message",
+                                mcpResult.optString("summary", "").ifBlank {
+                                    if (ok) "God's Eye tool '$name' finished." else "God's Eye tool '$name' failed."
+                                }
+                            )
+                        }
+                        if (!ok) errorMessage = resultJson.optString("message")
+                    }
+
+                    "open_gods_eye_radar" -> {
+                        val radarRes = com.jarvis.assistant.network.RealLifeDataHub.openGodsEyeRadar(
+                            context = context,
+                            radarType = args.optString("radar_type", "all"),
+                            location = args.optString("location", "").takeIf { it.isNotBlank() }
+                        )
+                        val rKeys = radarRes.keys()
+                        while (rKeys.hasNext()) {
+                            val k = rKeys.next()
+                            resultJson.put(k, radarRes.get(k))
+                        }
+                        val ok = radarRes.optBoolean("success", false)
+                        isSuccess = ok
+                        resultJson.put("success", ok)
+                        if (!resultJson.has("message")) resultJson.put("message", if (ok) "God's Eye radar opened." else "Couldn't open the God's Eye radar.")
+                        if (!ok) errorMessage = resultJson.optString("message")
                     }
 
                     // ── 7. PRACTICAL DEVICE INFORMATION QUERIES ───────────────
@@ -868,29 +1319,64 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                     "get_wifi_status" -> {
                         val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? android.net.wifi.WifiManager
                         val isEnabled = wifiManager?.isWifiEnabled ?: false
+                        @Suppress("DEPRECATION")
                         val info = wifiManager?.connectionInfo
-                        val ssid = info?.ssid ?: "Unknown"
+                        // ConnectivityManager knows about the Wi-Fi link even when the SSID is
+                        // redacted (no location permission -> "<unknown ssid>", networkId -1).
+                        val onWifi = try {
+                            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
+                            cm?.getNetworkCapabilities(cm.activeNetwork)
+                                ?.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) == true
+                        } catch (_: Exception) { false }
+                        val connected = isEnabled && (onWifi || (info != null && info.networkId != -1))
+                        val ssid = DeviceToolMessages.cleanSsid(info?.ssid)
                         resultJson.put("success", true)
                         resultJson.put("wifi_enabled", isEnabled)
-                        resultJson.put("ssid", ssid)
-                        resultJson.put("message", if (isEnabled) "Wi-Fi is ON, connected to $ssid." else "Wi-Fi is currently OFF.")
+                        resultJson.put("connected", connected)
+                        if (connected) {
+                            resultJson.put("ssid", ssid ?: "")
+                            if (ssid == null) resultJson.put("ssid_hidden", true)
+                        }
+                        resultJson.put("message", DeviceToolMessages.wifiStatusMessage(isEnabled, info?.ssid, connected))
                     }
 
                     "set_wifi" -> {
                         val enabled = args.optBoolean("enabled", true)
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                            val intent = android.content.Intent(android.provider.Settings.Panel.ACTION_WIFI).apply {
-                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            // Android 10+ blocks apps from toggling Wi-Fi: open the panel and say so honestly.
+                            val panelOpened = try {
+                                context.startActivity(android.content.Intent(android.provider.Settings.Panel.ACTION_WIFI).apply {
+                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                })
+                                true
+                            } catch (e: Exception) {
+                                Log.w(TAG, "Wi-Fi panel unavailable, trying Wi-Fi settings: ${e.message}")
+                                try {
+                                    context.startActivity(android.content.Intent(android.provider.Settings.ACTION_WIFI_SETTINGS).apply {
+                                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    })
+                                    true
+                                } catch (_: Exception) { false }
                             }
-                            context.startActivity(intent)
-                            resultJson.put("success", true)
-                            resultJson.put("message", "Opening Wi-Fi control panel.")
+                            isSuccess = false
+                            errorMessage = if (panelOpened) DeviceToolMessages.WIFI_PANEL_MESSAGE
+                            else "Android doesn't let apps switch Wi-Fi directly, and I couldn't open the Wi-Fi settings either."
+                            resultJson.put("success", false)
+                            resultJson.put("panel_opened", panelOpened)
+                            resultJson.put("requires_user_action", true)
+                            resultJson.put("message", errorMessage)
                         } else {
                             val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? android.net.wifi.WifiManager
                             @Suppress("DEPRECATION")
-                            wifiManager?.isWifiEnabled = enabled
-                            resultJson.put("success", true)
-                            resultJson.put("message", if (enabled) "Wi-Fi enabled." else "Wi-Fi disabled.")
+                            val toggled = wifiManager?.setWifiEnabled(enabled) == true
+                            isSuccess = toggled
+                            val msg = when {
+                                toggled -> if (enabled) "Wi-Fi enabled." else "Wi-Fi disabled."
+                                else -> "Couldn't turn Wi-Fi ${if (enabled) "on" else "off"}."
+                            }
+                            if (!toggled) errorMessage = msg
+                            resultJson.put("success", toggled)
+                            resultJson.put("message", msg)
                         }
                     }
 
@@ -923,13 +1409,25 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
 
                     "copy_to_clipboard" -> {
                         val text = args.optString("text", "")
-                        withContext(Dispatchers.Main) {
-                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
-                            val clip = android.content.ClipData.newPlainText("Jarvis", text)
-                            clipboard?.setPrimaryClip(clip)
+                        if (text.isBlank()) {
+                            isSuccess = false
+                            errorMessage = "Nothing to copy - no text was given."
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        } else {
+                            val copied = withContext(Dispatchers.Main) {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+                                val clip = android.content.ClipData.newPlainText("Jarvis", text)
+                                if (clipboard != null) {
+                                    clipboard.setPrimaryClip(clip)
+                                    true
+                                } else false
+                            }
+                            isSuccess = copied
+                            if (!copied) errorMessage = "Clipboard service unavailable."
+                            resultJson.put("success", copied)
+                            resultJson.put("message", if (copied) "Copied to clipboard." else errorMessage)
                         }
-                        resultJson.put("success", true)
-                        resultJson.put("message", "Copied to clipboard.")
                     }
 
                     "take_screenshot" -> {
@@ -989,14 +1487,26 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                             .url("https://wttr.in/${java.net.URLEncoder.encode(loc, "UTF-8")}?format=3")
                             .header("User-Agent", "curl/7.68.0")
                             .build()
-                        val weatherData = try {
-                            client.newCall(req).execute().use { it.body?.string()?.trim() ?: "Weather unavailable" }
+                        val weatherData: String? = try {
+                            client.newCall(req).execute().use { resp ->
+                                val body = resp.body?.string()?.trim()
+                                if (resp.isSuccessful && DeviceToolMessages.isUsableWeatherText(body)) body else null
+                            }
                         } catch (e: Exception) {
-                            "Unable to reach weather service: ${e.message}"
+                            Log.w(TAG, "wttr.in weather fallback failed: ${e.message}")
+                            null
                         }
-                        resultJson.put("success", true)
-                        resultJson.put("weather", weatherData)
-                        resultJson.put("message", weatherData)
+                        if (weatherData != null) {
+                            resultJson.put("success", true)
+                            resultJson.put("weather", weatherData)
+                            resultJson.put("message", weatherData)
+                        } else {
+                            // Both Open-Meteo (named locations) and the wttr.in fallback failed.
+                            isSuccess = false
+                            errorMessage = "Couldn't get the weather for ${if (loc.equals("auto", ignoreCase = true)) "your location" else "'$loc'"} right now - the weather services didn't respond."
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        }
                         }
                     }
 
@@ -1074,17 +1584,48 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                     }
 
                     "add_calendar_event" -> {
-                        val title = args.optString("title", "Event")
+                        val title = args.optString("title", "Event").ifBlank { "Event" }
                         val description = args.optString("description", "")
+                        val rawStart = args.optString("start_time", "").ifBlank { args.optString("start", "") }.trim()
+                        val startMs = DeviceStatusFormat.parseEventStart(rawStart)
+                        val durationMin = args.optInt("duration_minutes", 60).let { if (it > 0) it.coerceAtMost(7 * 24 * 60) else 60 }
+                        val endMs = startMs?.plus(durationMin * 60_000L)
                         val intent = android.content.Intent(android.content.Intent.ACTION_INSERT).apply {
                             data = android.provider.CalendarContract.Events.CONTENT_URI
                             putExtra(android.provider.CalendarContract.Events.TITLE, title)
                             if (description.isNotBlank()) putExtra(android.provider.CalendarContract.Events.DESCRIPTION, description)
+                            if (startMs != null && endMs != null) {
+                                putExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, startMs)
+                                putExtra(android.provider.CalendarContract.EXTRA_EVENT_END_TIME, endMs)
+                            }
                             addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
-                        context.startActivity(intent)
-                        resultJson.put("success", true)
-                        resultJson.put("message", "Opening calendar to add '$title'.")
+                        try {
+                            context.startActivity(intent)
+                            val whenText = if (startMs != null) {
+                                java.text.SimpleDateFormat("EEE d MMM HH:mm", java.util.Locale.getDefault()).format(java.util.Date(startMs)) +
+                                    " for $durationMin min"
+                            } else null
+                            resultJson.put("success", true)
+                            resultJson.put("event_screen_opened", true)
+                            if (startMs != null) {
+                                resultJson.put("start_time_ms", startMs)
+                                resultJson.put("end_time_ms", endMs)
+                            }
+                            resultJson.put(
+                                "message",
+                                when {
+                                    whenText != null -> "Opened the calendar's new-event screen for '$title' on $whenText — tap Save to add it."
+                                    rawStart.isNotBlank() -> "Opened the calendar's new-event screen for '$title', but I couldn't understand the time '$rawStart', so no time was filled in."
+                                    else -> "Opened the calendar's new-event screen for '$title' without a time — set the time and tap Save."
+                                }
+                            )
+                        } catch (e: Exception) {
+                            isSuccess = false
+                            errorMessage = "Couldn't open a calendar app: ${e.message}"
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        }
                     }
 
                     "create_note" -> {
@@ -1116,21 +1657,33 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                     }
 
                     "set_reminder" -> {
-                        val message = args.optString("message", "Reminder")
+                        val message = args.optString("message", "Reminder").ifBlank { "Reminder" }
                         val minutes = args.optInt("minutes", 0)
-                        val intent = android.content.Intent(android.provider.AlarmClock.ACTION_SET_TIMER).apply {
-                            putExtra(android.provider.AlarmClock.EXTRA_MESSAGE, message)
-                            if (minutes > 0) putExtra(android.provider.AlarmClock.EXTRA_LENGTH, minutes * 60)
-                            putExtra(android.provider.AlarmClock.EXTRA_SKIP_UI, true)
-                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                        try {
-                            context.startActivity(intent)
-                            resultJson.put("success", true)
-                            resultJson.put("message", "Reminder set for $minutes minutes: $message")
-                        } catch (e: Exception) {
+                        if (minutes <= 0) {
+                            isSuccess = false
+                            errorMessage = "How many minutes from now?"
                             resultJson.put("success", false)
-                            resultJson.put("message", "Could not set timer: ${e.message}")
+                            resultJson.put("needs_minutes", true)
+                            resultJson.put("message", errorMessage)
+                        } else if (minutes > 1440) {
+                            isSuccess = false
+                            errorMessage = "Clock timers can run at most 24 hours (1440 minutes) - use create_reminder for a specific date/time."
+                            resultJson.put("success", false)
+                            resultJson.put("message", errorMessage)
+                        } else {
+                            val timerError = withContext(Dispatchers.Main) { startClockTimer(minutes * 60, message) }
+                            if (timerError == null) {
+                                com.jarvis.assistant.automation.schedule.JarvisScheduleStore.record(
+                                    context, "timer", message, System.currentTimeMillis() + minutes * 60_000L, "set_reminder"
+                                )
+                                resultJson.put("success", true)
+                                resultJson.put("message", "Reminder timer set for $minutes minutes: $message")
+                            } else {
+                                isSuccess = false
+                                errorMessage = timerError
+                                resultJson.put("success", false)
+                                resultJson.put("message", timerError)
+                            }
                         }
                     }
 
@@ -1529,6 +2082,35 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
         )
 
         tool(
+            name = "search_youtube",
+            description = "Opens YouTube search results for a query (does not auto-play a video).",
+            properties = JSONObject().apply {
+                put("query", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "What to search for on YouTube")
+                })
+            },
+            required = listOf("query")
+        )
+
+        tool(
+            name = "set_driving_mode",
+            description = "Turns Jarvis driving mode on or off. While driving, incoming calls are either announced aloud or auto-rejected with an SMS reply.",
+            properties = JSONObject().apply {
+                put("enabled", JSONObject().apply {
+                    put("type", "boolean")
+                    put("description", "true to turn driving mode on, false to turn it off")
+                })
+                put("call_mode", JSONObject().apply {
+                    put("type", "string")
+                    put("enum", JSONArray(listOf("announce", "auto_reject_sms")))
+                    put("description", "Optional: how to handle incoming calls while driving (announce the caller, or reject and send an auto-reply SMS)")
+                })
+            },
+            required = listOf("enabled")
+        )
+
+        tool(
             name = "send_whatsapp_message",
             description = "Sends a WhatsApp chat message to a contact name or phone number. Requires confirmation before dispatch unless confirmed is explicitly set.",
             properties = JSONObject().apply {
@@ -1834,7 +2416,7 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
 
         tool(
             name = "add_calendar_event",
-            description = "Opens the calendar event creator to schedule meetings, events, or reminders.",
+            description = "Opens the calendar's new-event screen pre-filled with title, details and (when given) start time and duration; the user taps Save.",
             properties = JSONObject().apply {
                 put("title", JSONObject().apply {
                     put("type", "string")
@@ -1843,6 +2425,14 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                 put("description", JSONObject().apply {
                     put("type", "string")
                     put("description", "Optional description or details")
+                })
+                put("start_time", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "Optional start, ISO-8601 (e.g. '2026-11-05T15:30:00+05:30') or 'YYYY-MM-DD HH:mm' in local time")
+                })
+                put("duration_minutes", JSONObject().apply {
+                    put("type", "integer")
+                    put("description", "Optional duration in minutes (default 60)")
                 })
             },
             required = listOf("title")
@@ -1873,7 +2463,7 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
 
         tool(
             name = "set_reminder",
-            description = "Sets a timer or reminder on the phone.",
+            description = "Sets a countdown timer/reminder in the Clock app that goes off N minutes from now (max 1440). For a specific date/time use create_reminder.",
             properties = JSONObject().apply {
                 put("message", JSONObject().apply {
                     put("type", "string")
@@ -1881,11 +2471,22 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                 })
                 put("minutes", JSONObject().apply {
                     put("type", "integer")
-                    put("description", "Duration in minutes from now")
+                    put("description", "Minutes from now (required, 1-1440) - ask the user if they didn't say")
                 })
             },
-            required = listOf("message")
+            required = listOf("message", "minutes")
         )
+
+        // Batch-4 device tools (battery, storage, WhatsApp reading, contacts search, press_key, DND, focus timer, schedule)
+        try {
+            val existing = tools.mapNotNull { it.optJSONObject("function")?.optString("name") }.toSet()
+            DeviceToolSchemas.schemas().forEach { schema ->
+                val sName = schema.optJSONObject("function")?.optString("name")
+                if (sName != null && sName !in existing) tools.add(schema)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error adding device tool schemas: ${e.message}")
+        }
 
         // 13. UI ACCESSIBILITY & APP CONTROLS
         tool(
@@ -2104,14 +2705,90 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
             Log.w(TAG, "Error merging skill schemas: ${e.message}")
         }
 
+        // Dynamic (Jarvis-authored) tools: already in the same {"type":"function","function":{...}}
+        // shape (DynamicTool.toGeminiSchema). Built-in names win on collision; dispatchTool still
+        // routes a dynamic tool by name first.
+        try {
+            val dynamicSchemas = kotlinx.coroutines.runBlocking {
+                kotlinx.coroutines.withTimeoutOrNull(500L) {
+                    DynamicToolRegistry.getInstance(context).toGeminiSchemas()
+                }
+            } ?: emptyList()
+            val existing = tools.mapNotNull { it.optJSONObject("function")?.optString("name") }.toMutableSet()
+            for (schema in dynamicSchemas) {
+                val sName = schema.optJSONObject("function")?.optString("name")
+                if (!sName.isNullOrBlank() && existing.add(sName)) tools.add(schema)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error adding dynamic tool schemas: ${e.message}")
+        }
+
         // Merge imported tools from connected Model Context Protocol (MCP) servers
         try {
             val mcpManager = com.jarvis.assistant.mcp.McpManager.getInstance(context)
             tools.addAll(mcpManager.getMcpToolSchemas())
         } catch (_: Exception) {}
 
+        // Maya feature tool packs: only the CORE set is shown (built-in names win on collision).
+        // The other ~250 stay reachable through find_tool + run_tool; showing them all overloaded
+        // Gemini's tool choice and blew the offline model's 2K context.
+        try {
+            MayaToolRegistry.ensureInstalled(context)
+            val existing = tools.mapNotNull { it.optJSONObject("function")?.optString("name") }.toMutableSet()
+            for (schema in MayaToolRegistry.coreSchemas()) {
+                val sName = schema.optJSONObject("function")?.optString("name")
+                if (!sName.isNullOrBlank() && existing.add(sName)) tools.add(schema)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error adding Maya tool schemas: ${e.message}")
+        }
+
         if (includeDisabled) return tools
         // Per-tool toggles + (only with the AGENT_PIPELINE flag on) AndroLLM registry tools.
         return com.jarvis.assistant.androllm.agent.bridge.JarvisDispatcherHooks.filterSchemas(context, tools)
+    }
+
+    /**
+     * Tool list for the on-device (offline) brain. Its context is ~2K tokens (~4.4K chars), so it
+     * gets only the everyday phone actions, each compacted to name + one short line + param
+     * names/types. The full list (100+ tools, ~170K chars) used to overflow it, and the model
+     * recited the tool list back instead of acting.
+     */
+    fun getOfflineToolSchemas(): List<JSONObject> {
+        val wanted = listOf(
+            "set_flashlight", "set_volume", "open_app", "call_contact", "send_whatsapp_message",
+            "whatsapp_delete_message", "whatsapp_delete_sent_message", "set_reminder",
+            "get_battery_status", "set_wifi", "get_weather", "search_web"
+        )
+        val byName = getAvailableToolSchemas(includeDisabled = false)
+            .associateBy { it.optJSONObject("function")?.optString("name").orEmpty() }
+        return wanted.mapNotNull { byName[it] }.map { compactSchema(it) }
+    }
+
+    private fun compactSchema(schema: JSONObject): JSONObject {
+        val fn = schema.optJSONObject("function") ?: return schema
+        val desc = fn.optString("description").split(Regex("(?<=[.!?])\\s")).firstOrNull().orEmpty().take(70)
+        val params = fn.optJSONObject("parameters")
+        val outProps = JSONObject()
+        params?.optJSONObject("properties")?.let { p ->
+            val keys = p.keys()
+            while (keys.hasNext()) {
+                val k = keys.next()
+                val type = p.optJSONObject(k)?.optString("type").orEmpty().ifBlank { "string" }
+                outProps.put(k, JSONObject().put("type", type))
+            }
+        }
+        return JSONObject().apply {
+            put("type", "function")
+            put("function", JSONObject().apply {
+                put("name", fn.optString("name"))
+                put("description", desc)
+                put("parameters", JSONObject().apply {
+                    put("type", "object")
+                    put("properties", outProps)
+                    put("required", params?.optJSONArray("required") ?: JSONArray())
+                })
+            })
+        }
     }
 }

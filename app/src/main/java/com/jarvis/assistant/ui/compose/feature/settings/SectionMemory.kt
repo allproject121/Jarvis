@@ -53,7 +53,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.jarvis.assistant.androllm.memory.AndroMemoryPipeline
 import com.jarvis.assistant.androllm.memory.Memory
 import com.jarvis.assistant.androllm.memory.MemoryCategory
 import com.jarvis.assistant.androllm.memory.MemoryInspectorStats
@@ -70,6 +69,7 @@ import com.jarvis.assistant.androllm.memory.background.MemoryMaintenance
 import com.jarvis.assistant.androllm.memory.embedding.EmbeddingSource
 import com.jarvis.assistant.androllm.memory.intelligence.MemoryIntelligenceRoute
 import com.jarvis.assistant.androllm.memory.util.MemoryLogger
+import com.jarvis.assistant.data.memory.MemoryManager
 import com.jarvis.assistant.ui.compose.components.CloudGlassCard
 import com.jarvis.assistant.ui.compose.theme.ledger
 import kotlinx.coroutines.Dispatchers
@@ -80,17 +80,15 @@ import java.util.Date
 
 /**
  * "Memory" settings — AndroLLM memory intelligence on top of Jarvis' existing
- * memory core: LLM extraction + rolling summaries (OFF by default), background
+ * memory core (now inside Jarvis' [MemoryManager]): LLM extraction + rolling summaries (ON by default), background
  * indexing (OFF by default), routing, tuning, embedding source (hashing by
  * default), projects / tags / relationships, import / export, the Memory
  * Inspector (stats + log levels) and memory management.
- *
- * Jarvis' own MemoryActivity is unchanged; this is an additional manager.
  */
 @Composable
 fun MemorySettingsSection() {
     val context = LocalContext.current
-    val pipeline = remember { AndroMemoryPipeline.getInstance(context) }
+    val pipeline = remember { MemoryManager.getInstance(context) }
     val settingsStore = pipeline.settingsStore
     val scope = rememberCoroutineScope()
 

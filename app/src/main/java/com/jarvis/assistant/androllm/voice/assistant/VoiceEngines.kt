@@ -164,6 +164,16 @@ object VoiceEngines {
                 val lang = if (s.sttLanguage == "auto") s.language else s.sttLanguage
                 return Built(StreamingRecognizerAdapter(GeminiStreamingRecognizer(language = lang), "Gemini REST"), "Gemini REST")
             }
+            VoiceSettings.STT_DEEPGRAM -> {
+                if (s.offlineOnly) return fallbackStt(app, silence, "offline-only mode is on")
+                val brain = com.jarvis.assistant.maya.brain.BrainSettings.get(app)
+                if (brain.deepgramKey.isBlank()) return fallbackStt(app, silence, "no Deepgram API key (Settings → Voice engine)")
+                val dg = com.jarvis.assistant.maya.brain.DeepgramStreamingRecognizer(
+                    apiKeyProvider = { brain.deepgramKey },
+                    endpointingMs = brain.endpointingMs
+                )
+                return Built(StreamingRecognizerAdapter(dg, "Deepgram"), "Deepgram")
+            }
         }
         return Built(StreamingRecognizerAdapter(VoskStreamingRecognizer(app, silence), "Vosk"), "Vosk")
     }

@@ -151,6 +151,16 @@ class AppPreferences(context: Context) {
         private const val KEY_MESSAGE_AUTO_REPLY_CONFIRM = "key_message_auto_reply_confirm"
         private const val KEY_DRIVING_MODE_AUTO_CAR = "key_driving_mode_auto_car"
         private const val KEY_CALLER_ID_ANNOUNCEMENT = "key_caller_id_announcement"
+        private const val KEY_DRIVING_MODE_ENABLED = "key_driving_mode_enabled"
+        private const val KEY_DRIVING_CAR_DEVICE_ADDRESS = "key_driving_car_device_address"
+        private const val KEY_DRIVING_CALL_MODE = "key_driving_call_mode"
+        private const val KEY_DRIVING_AUTO_REPLY_TEXT = "key_driving_auto_reply_text"
+
+        /** Driving-mode incoming call handling: speak the caller out loud. */
+        const val DRIVING_CALL_MODE_ANNOUNCE = "ANNOUNCE"
+        /** Driving-mode incoming call handling: reject the call and SMS the caller. */
+        const val DRIVING_CALL_MODE_AUTO_REJECT_SMS = "AUTO_REJECT_SMS"
+        const val DEFAULT_DRIVING_AUTO_REPLY_TEXT = "Main abhi drive kar raha hoon, thodi der mein call karta hoon."
         private const val KEY_MEM0_MEMORY_ENABLED = "key_mem0_memory_enabled"
         private const val KEY_MUSE_EXPERIENCE_ENABLED = "key_muse_experience_enabled"
         private const val KEY_SECRET_SETTINGS_ENABLED = "key_secret_settings_enabled"
@@ -878,6 +888,29 @@ class AppPreferences(context: Context) {
     var isCallerIdAnnouncementEnabled: Boolean
         get() = prefs.getBoolean(KEY_CALLER_ID_ANNOUNCEMENT, true)
         set(value) = prefs.edit().putBoolean(KEY_CALLER_ID_ANNOUNCEMENT, value).apply()
+
+    /** Last driving-mode on/off state, restored by JarvisDrivingModeManager after an app restart. */
+    var drivingModeEnabled: Boolean
+        get() = prefs.getBoolean(KEY_DRIVING_MODE_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(KEY_DRIVING_MODE_ENABLED, value).apply()
+
+    /** MAC address of the car Bluetooth device that auto-enabled driving mode ("" = manual / none). */
+    var drivingCarDeviceAddress: String
+        get() = prefs.getString(KEY_DRIVING_CAR_DEVICE_ADDRESS, "") ?: ""
+        set(value) = prefs.edit().putString(KEY_DRIVING_CAR_DEVICE_ADDRESS, value).apply()
+
+    /** DRIVING_CALL_MODE_ANNOUNCE (default) or DRIVING_CALL_MODE_AUTO_REJECT_SMS. */
+    var drivingCallMode: String
+        get() = prefs.getString(KEY_DRIVING_CALL_MODE, DRIVING_CALL_MODE_ANNOUNCE) ?: DRIVING_CALL_MODE_ANNOUNCE
+        set(value) = prefs.edit().putString(
+            KEY_DRIVING_CALL_MODE,
+            if (value == DRIVING_CALL_MODE_AUTO_REJECT_SMS) DRIVING_CALL_MODE_AUTO_REJECT_SMS else DRIVING_CALL_MODE_ANNOUNCE
+        ).apply()
+
+    /** SMS text sent to callers rejected while driving (AUTO_REJECT_SMS mode). */
+    var drivingAutoReplyText: String
+        get() = prefs.getString(KEY_DRIVING_AUTO_REPLY_TEXT, null)?.takeIf { it.isNotBlank() } ?: DEFAULT_DRIVING_AUTO_REPLY_TEXT
+        set(value) = prefs.edit().putString(KEY_DRIVING_AUTO_REPLY_TEXT, value.trim()).apply()
 
     var isMem0MemoryEnabled: Boolean
         get() = prefs.getBoolean(KEY_MEM0_MEMORY_ENABLED, true)

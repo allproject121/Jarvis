@@ -58,10 +58,10 @@ object AndroLlmChatStore {
     private val importMutex = Mutex()
 
     /**
-     * One-time import of Jarvis' existing ChatRepository history into a single
-     * conversation. Read-only: the original turns stay untouched in Jarvis'
-     * preferences. Idempotent: message ids are derived from the turn ids, and
-     * a completion flag prevents a second import.
+     * One-time import of Jarvis' legacy AppPreferences chat history into a single
+     * conversation (run by ChatRepository at startup). Read-only: the original
+     * turns stay untouched in Jarvis' preferences. Idempotent: message ids are
+     * derived from the turn ids, and a completion flag prevents a second import.
      *
      * @return the id of the imported conversation, or null when nothing was imported.
      */
@@ -149,7 +149,8 @@ object AndroLlmChatStore {
         return conversationId
     }
 
-    private const val IMPORTED_CONVERSATION_ID = "jarvis_history_import"
+    /** Conversation holding the legacy (AppPreferences) Jarvis history. */
+    const val IMPORTED_CONVERSATION_ID = "jarvis_history_import"
 }
 
 /** Chat-feature preferences (own SharedPreferences file; never Jarvis' prefs). */
@@ -157,7 +158,6 @@ object ChatPrefs {
     private const val PREFS = "androllm_chat_prefs"
     const val KEY_HISTORY_IMPORTED = "jarvis_history_imported"
     const val KEY_LAST_CONVERSATION = "last_conversation_id"
-    const val KEY_MIRROR_TO_JARVIS = "mirror_to_jarvis_history"
 
     fun prefs(context: Context): SharedPreferences =
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -167,13 +167,5 @@ object ChatPrefs {
 
     fun setLastConversationId(context: Context, id: String) {
         prefs(context).edit().putString(KEY_LAST_CONVERSATION, id).apply()
-    }
-
-    /** When true (default) each Compose chat exchange is also appended to Jarvis' ChatRepository. */
-    fun mirrorToJarvis(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_MIRROR_TO_JARVIS, true)
-
-    fun setMirrorToJarvis(context: Context, enabled: Boolean) {
-        prefs(context).edit().putBoolean(KEY_MIRROR_TO_JARVIS, enabled).apply()
     }
 }

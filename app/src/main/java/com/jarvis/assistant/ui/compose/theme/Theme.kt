@@ -255,3 +255,110 @@ fun ProvideUiScale(
         content()
     }
 }
+/**
+ * Maya colour scheme — the companion look. Dark only: deep charcoal-navy
+ * ground (#14161C), #1A1D26 / #1F2330 surfaces, #F8FAFC ink, #94A3B8
+ * secondary ink and the electric-blue #1E90FF primary with a #4F7CFF accent.
+ */
+val MayaColorScheme: ColorScheme = darkColorScheme(
+    primary = MayaPrimary,
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFF1A2A44),
+    onPrimaryContainer = MayaTintSoft,
+    secondary = MayaAccent,
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFF1C2440),
+    onSecondaryContainer = MayaTintSofter,
+    tertiary = MayaCyanGlow,
+    onTertiary = Color(0xFF04202A),
+    tertiaryContainer = Color(0xFF0F2A33),
+    onTertiaryContainer = MayaTintSofter,
+    error = MayaDanger,
+    onError = Color.White,
+    errorContainer = Color(0xFF3A1419),
+    onErrorContainer = Color(0xFFFFB4AB),
+    background = MayaBg,
+    onBackground = MayaText,
+    surface = MayaSurface,
+    onSurface = MayaText,
+    surfaceVariant = MayaSurfaceRaised,
+    onSurfaceVariant = MayaTextSecondary,
+    surfaceTint = MayaPrimary,
+    inverseSurface = MayaText,
+    inverseOnSurface = MayaBg,
+    inversePrimary = MayaLightBlue,
+    surfaceBright = MayaSurfaceRaised,
+    surfaceDim = MayaBgEdge,
+    surfaceContainerLowest = MayaBgEdge,
+    surfaceContainerLow = Color(0xFF171A21),
+    surfaceContainer = MayaSurface,
+    surfaceContainerHigh = MayaSurfaceRaised,
+    surfaceContainerHighest = Color(0xFF262B38),
+    outline = MayaHairline,
+    outlineVariant = Color(0xFF222633)
+)
+
+/** The Maya ledger: the same palette expressed in AndroLLM's ledger roles. */
+val MayaLedger: LedgerColors = LedgerColors(
+    deskNight = MayaBg,
+    deskNightRaised = Color(0xFF171A21),
+    deskWalnut = MayaSurface,
+    deskWalnutRaised = MayaSurfaceRaised,
+    deskWalnutDeep = Color(0xFF111319),
+    deskPaper = MayaText,
+    deskPaperDim = Color(0xFFE2E8F0),
+    deskInk = MayaTextSecondary,
+    deskInkFaint = MayaTextMuted,
+    deskHairline = MayaHairline,
+    deskHairlineSoft = Color(0xFF222633),
+    lampAmber = MayaPrimary,
+    lampGlow = MayaLightBlue,
+    lampDeep = MayaAccent,
+    lampHalo = Color(0x401E90FF),
+    inkOnLamp = Color.White,
+    emberRed = MayaDangerSoft,
+    emberRedSoft = Color(0xFF3A1419),
+    emberRedHard = Color(0xFFFFB4AB),
+    emberOnRed = Color.White,
+    terracottaSoft = Color(0xFF1A2A44),
+    terracottaDeep = MayaTintSoft,
+    cloudWhite = MayaText,
+    cloudGlassSurface = MayaSurface.copy(alpha = 0.8f),
+    cloudGlassSurfaceVariant = MayaSurfaceRaised.copy(alpha = 0.9f),
+    cloudGlassBorder = MayaHairline.copy(alpha = 0.6f),
+    cloudGlassBorderHighlight = MayaPrimary.copy(alpha = 0.2f),
+    cloudMoonGlow = MayaPrimary.copy(alpha = 0.25f),
+    cloudParticleTint = MayaCyanGlow.copy(alpha = 0.25f),
+    revolutCyberCyan = MayaCyanGlow,
+    revolutGoldTier = MayaWarning,
+    revolutNeonEmerald = MayaSuccess,
+    sunsetGlowAmber = MayaOrange
+)
+
+/**
+ * Material theme for Compose content shown while the Maya theme is active
+ * (character sheet, Maya settings pages): [MayaColorScheme] + Inter typography.
+ * Falls back to [AndroLLMTheme] (which follows the active Jarvis theme) when
+ * Maya is not the selected theme, so other skins keep their own colours.
+ */
+@Composable
+fun MayaTheme(
+    forceMaya: Boolean = false,
+    content: @Composable () -> Unit
+) {
+    val isMaya = forceMaya || JarvisThemeBridge.currentKey() == com.jarvis.assistant.util.ThemeManager.THEME_MAYA
+    if (!isMaya) {
+        AndroLLMTheme(content = content)
+        return
+    }
+    CompositionLocalProvider(LocalLedgerColors provides MayaLedger) {
+        CompositionLocalProvider(LocalContentColor provides MayaColorScheme.onBackground) {
+            MaterialTheme(
+                colorScheme = MayaColorScheme,
+                typography = MayaTypography,
+                shapes = AndroLLMShapes,
+                content = content
+            )
+        }
+    }
+}

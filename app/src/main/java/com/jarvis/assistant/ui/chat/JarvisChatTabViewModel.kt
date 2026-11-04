@@ -4,7 +4,6 @@ import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.jarvis.assistant.JarvisApp
 import com.jarvis.assistant.androllm.AndroLlmFlags
 import com.jarvis.assistant.androllm.attachments.AttachmentCache
 import com.jarvis.assistant.androllm.attachments.AttachmentProcessor
@@ -334,15 +333,6 @@ internal class JarvisChatTabViewModel(application: Application) : AndroidViewMod
         viewModelScope.launch {
             conversationRepo.deleteById(conversationId)
             withContext(Dispatchers.IO) { runCatching { AttachmentCache.clearConversation(app, conversationId) } }
-        }
-    }
-
-    /** Copies the CURRENT Jarvis ChatRepository history (read-only) into a new conversation. */
-    fun importJarvisHistorySnapshot() {
-        viewModelScope.launch {
-            val turns = (app as? JarvisApp ?: JarvisApp.instance).chatRepository.turns.value
-            val id = runCatching { AndroLlmChatStore.importJarvisHistorySnapshot(app, turns) }.getOrNull()
-            if (id == null) JarvisChatBridge.notice("No Jarvis history to copy") else selectConversation(id)
         }
     }
 

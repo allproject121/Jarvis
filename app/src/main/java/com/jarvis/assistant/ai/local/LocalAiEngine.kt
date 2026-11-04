@@ -140,7 +140,7 @@ class LocalAiEngine private constructor(
 
         // 3. Fallback when weights have not been downloaded yet
         _engineState.value = LocalEngineState.Ready
-        emit("Sir, the local AI neural core is not installed yet. You can download the Qwen 2.5 (1.5B) model in Settings under Voice Engine to enable full offline conversations and device actions.")
+        emit("Sir, the local AI neural core is not installed yet. You can download the Qwen3 4B Offline Brain model in Settings under Voice Engine to enable full offline conversations and device actions.")
     }.flowOn(Dispatchers.IO)
 
     /**

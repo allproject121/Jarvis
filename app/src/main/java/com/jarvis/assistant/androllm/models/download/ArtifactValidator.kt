@@ -1,5 +1,9 @@
 package com.jarvis.assistant.androllm.models.download
 
+import com.jarvis.assistant.androllm.engine.support.ValidationFailure
+import com.jarvis.assistant.androllm.engine.support.RepairAction
+import com.jarvis.assistant.androllm.engine.support.FileCheck
+import com.jarvis.assistant.androllm.engine.support.FailureReason
 import java.io.File
 import java.io.FileInputStream
 import java.security.MessageDigest

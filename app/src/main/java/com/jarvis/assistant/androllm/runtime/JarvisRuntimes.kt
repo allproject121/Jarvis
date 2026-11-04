@@ -133,7 +133,7 @@ object JarvisRuntimes {
             val app = jarvisApp(context) ?: return RuntimeStatus(false, "App not initialised")
             val indexed = runCatching { app.vectorMemoryEngine.indexedMemoryCount() }.getOrDefault(0)
             val signature = runCatching { TextEmbeddingEngine.getInstance(context).embedderSignature() }.getOrDefault("?")
-            val extraction = AndroLlmFlags.isEnabled(context, AndroLlmFlags.MEMORY_EXTRACTION)
+            val extraction = AndroLlmFlags.isMemoryExtractionEnabled(context)
             val pinned = MemoryMetaRegistry.snapshot().values.count { it.isPinned }
             return RuntimeStatus(
                 available = true,

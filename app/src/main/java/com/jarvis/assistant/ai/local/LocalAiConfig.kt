@@ -19,10 +19,24 @@ data class LocalAiConfig(
         const val MODEL_SMOLLM_1_7B = "smollm2-1.7b-instruct"
         const val MODEL_LLAMA_3_2_1B = "llama-3.2-1b-instruct"
         const val MODEL_DEEPSEEK_R1_1_5B = "deepseek-r1-distill-qwen-1.5b"
+        const val MODEL_QWEN3_4B = "qwen3-4b-instruct-2507"
 
-        const val DEFAULT_MODEL_ID = MODEL_QWEN_1_5B
+        // Qwen3 4B is the offline "brain": strong enough for reliable tool calls when Gemini is unavailable.
+        const val DEFAULT_MODEL_ID = MODEL_QWEN3_4B
 
         val AVAILABLE_MODELS = listOf(
+            LocalModelDescriptor(
+                id = MODEL_QWEN3_4B,
+                name = "Qwen3 4B (Jarvis Offline Brain)",
+                provider = "Alibaba / Open-Source",
+                parameters = "4 Billion",
+                quantization = "GGUF Q4_K_M",
+                downloadSizeBytes = 2_497_281_120L, // ~2.33 GB
+                downloadUrl = "https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+                recommendedMinRamGb = 6,
+                description = "Recommended offline brain. Reliable tool calling (apps, WhatsApp, torch, settings) and good Hindi/Hinglish when Gemini is off or its API fails. Non-thinking 2507 Instruct build for fast replies.",
+                sha256 = "3605803b982cb64aead44f6c1b2ae36e3acdb41d8e46c8a94c6533bc4c67e597"
+            ),
             LocalModelDescriptor(
                 id = MODEL_QWEN_0_5B,
                 name = "Qwen 2.5 (0.5B Micro-Edge)",

@@ -233,8 +233,6 @@ private fun McpPageContent() {
     McpSection(
         servers = state.mcpServers,
         toolCount = toolCount,
-        bridgeEnabled = state.mcpBridgeEnabled,
-        onBridgeToggle = { viewModel.setMcpBridge(it) },
         onAdd = { name, url, token -> viewModel.addMcpServer(name, url, token) },
         onRemove = { viewModel.removeMcpServer(it) },
         onToggle = { server, enabled -> viewModel.setMcpServerEnabled(server, enabled) }

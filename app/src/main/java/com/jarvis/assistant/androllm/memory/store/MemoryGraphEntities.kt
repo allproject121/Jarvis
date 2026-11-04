@@ -13,7 +13,7 @@ import androidx.room.PrimaryKey
  * They live in androllm_memory_meta.db (schema v2, added by
  * [AndroMemoryDatabase.MIGRATION_1_2]) and are keyed by Jarvis `memories.id`
  * (Long). Jarvis' memory rows live in a DIFFERENT database file, so there is no
- * SQL foreign key to them; [AndroMemoryStore.deleteMeta] removes dependent rows.
+ * SQL foreign key to them; [com.jarvis.assistant.data.memory.MemoryRepository.deleteMeta] removes dependent rows.
  */
 
 const val EMBEDDING_TABLE = "memory_embeddings"

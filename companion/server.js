@@ -1072,3 +1072,370 @@ module.exports = {
     analyzeIntegrationCompatibility,
     redactSecrets
 };
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// JARVIS PC ⇄ PHONE HUB (additive, WP8) — zero-dependency WebSocket relay at /jarvis
+//
+//  • Loopback: attached to the main companion server (127.0.0.1:8765, reachable from the
+//    phone through `adb reverse tcp:8765 tcp:8765`).
+//  • LAN: a second listener on 0.0.0.0:${JARVIS_HUB_PORT:-8766} (disable with JARVIS_HUB_LAN=0).
+//  • Pairing: a 6-digit join code is printed on this console; the phone sends it once
+//    (type "pair") and receives a session token for silent reconnects. Unpaired sockets may
+//    only send hello / pair / ping. 5 wrong codes close the socket.
+//  • Envelope: {"v":1,"type","id","ts","reply_to?","payload":{}} — mirrors PcHubProtocol.kt.
+//  • ask / call_chunk run through the PC's own LLM (Ollama at JARVIS_HUB_OLLAMA_URL, model
+//    JARVIS_HUB_MODEL) when reachable, else reply "PC agent not configured".
+//  • control runs only an allow-list of PC actions (status, lock, pc_sleep, shutdown, restart,
+//    cancel_shutdown, mute, unmute, open_url <url>); raw shell needs JARVIS_HUB_ALLOW_SHELL=1.
+// ════════════════════════════════════════════════════════════════════════════
+
+const HUB_PATH = '/jarvis';
+const HUB_LAN_PORT = parseInt(process.env.JARVIS_HUB_PORT || '8766', 10);
+const HUB_STATE_FILE = path.join(__dirname, '.hub_state.json');
+const HUB_MEMORY_FILE = path.join(__dirname, '.hub_memory.json');
+const HUB_OLLAMA_URL = process.env.JARVIS_HUB_OLLAMA_URL || 'http://127.0.0.1:11434';
+const HUB_MODEL = process.env.JARVIS_HUB_MODEL || '';
+const HUB_PC_NAME = process.env.JARVIS_HUB_PC_NAME || require('os').hostname();
+
+function hubLoadState() {
+    try { return JSON.parse(fs.readFileSync(HUB_STATE_FILE, 'utf8')); } catch (_) { return { tokens: [] }; }
+}
+function hubSaveState(st) {
+    try { fs.writeFileSync(HUB_STATE_FILE, JSON.stringify(st, null, 2), { mode: 0o600 }); } catch (_) {}
+}
+const hubState = hubLoadState();
+if (!Array.isArray(hubState.tokens)) hubState.tokens = [];
+let hubJoinCode = process.env.JARVIS_HUB_CODE || String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+
+function hubNewId(prefix) {
+    return `${prefix || 'pc'}_${Date.now().toString(36)}_${crypto.randomBytes(3).toString('hex')}`;
+}
+
+function hubEnvelope(type, payload, replyTo) {
+    const m = { v: 1, type, id: hubNewId('pc'), ts: Date.now(), payload: payload || {} };
+    if (replyTo) m.reply_to = replyTo;
+    return m;
+}
+
+function hubDecode(raw) {
+    try {
+        const o = JSON.parse(raw);
+        if (!o || typeof o.type !== 'string' || !o.type) return null;
+        return { v: o.v || 1, type: o.type, id: o.id || hubNewId('x'), ts: o.ts || Date.now(), reply_to: o.reply_to || null, payload: (o.payload && typeof o.payload === 'object') ? o.payload : {} };
+    } catch (_) { return null; }
+}
+
+// ── Minimal RFC 6455 framing ────────────────────────────────────────────────
+function wsEncodeFrame(opcode, data) {
+    const payload = Buffer.isBuffer(data) ? data : Buffer.from(String(data), 'utf8');
+    const len = payload.length;
+    let header;
+    if (len < 126) {
+        header = Buffer.alloc(2); header[1] = len;
+    } else if (len < 65536) {
+        header = Buffer.alloc(4); header[1] = 126; header.writeUInt16BE(len, 2);
+    } else {
+        header = Buffer.alloc(10); header[1] = 127; header.writeBigUInt64BE(BigInt(len), 2);
+    }
+    header[0] = 0x80 | opcode;
+    return Buffer.concat([header, payload]);
+}
+
+/** Parses as many complete frames as possible; returns { frames, rest }. */
+function wsDecodeFrames(buf) {
+    const frames = [];
+    let off = 0;
+    while (buf.length - off >= 2) {
+        const b0 = buf[off], b1 = buf[off + 1];
+        const fin = (b0 & 0x80) !== 0;
+        const opcode = b0 & 0x0f;
+        const masked = (b1 & 0x80) !== 0;
+        let len = b1 & 0x7f;
+        let p = off + 2;
+        if (len === 126) { if (buf.length - p < 2) break; len = buf.readUInt16BE(p); p += 2; }
+        else if (len === 127) { if (buf.length - p < 8) break; len = Number(buf.readBigUInt64BE(p)); p += 8; }
+        if (len > 16 * 1024 * 1024) throw new Error('frame too large');
+        let mask = null;
+        if (masked) { if (buf.length - p < 4) break; mask = buf.slice(p, p + 4); p += 4; }
+        if (buf.length - p < len) break;
+        const data = Buffer.from(buf.slice(p, p + len));
+        if (mask) for (let i = 0; i < data.length; i++) data[i] ^= mask[i & 3];
+        frames.push({ fin, opcode, data });
+        off = p + len;
+    }
+    return { frames, rest: buf.slice(off) };
+}
+
+// ── PC-side capabilities ────────────────────────────────────────────────────
+function hubHttpJson(urlStr, body, timeoutMs) {
+    return new Promise((resolve, reject) => {
+        let u;
+        try { u = new URL(urlStr); } catch (e) { return reject(e); }
+        const data = body ? Buffer.from(JSON.stringify(body)) : null;
+        const req = http.request({
+            hostname: u.hostname, port: u.port || 80, path: u.pathname + u.search,
+            method: data ? 'POST' : 'GET',
+            headers: data ? { 'Content-Type': 'application/json', 'Content-Length': data.length } : {},
+            timeout: timeoutMs || 60000
+        }, res => {
+            let text = '';
+            res.on('data', c => { text += c; });
+            res.on('end', () => {
+                if (res.statusCode >= 400) return reject(new Error(`HTTP ${res.statusCode}`));
+                try { resolve(JSON.parse(text)); } catch (e) { reject(e); }
+            });
+        });
+        req.on('timeout', () => req.destroy(new Error('timeout')));
+        req.on('error', reject);
+        if (data) req.write(data);
+        req.end();
+    });
+}
+
+let hubResolvedModel = HUB_MODEL;
+async function hubPickModel() {
+    if (hubResolvedModel) return hubResolvedModel;
+    const tags = await hubHttpJson(`${HUB_OLLAMA_URL}/api/tags`, null, 4000);
+    const first = tags && Array.isArray(tags.models) && tags.models[0] && tags.models[0].name;
+    if (!first) throw new Error('no local models');
+    hubResolvedModel = first;
+    return first;
+}
+
+async function hubAskLlm(messages) {
+    try {
+        const model = await hubPickModel();
+        const sys = { role: 'system', content: `You are the PC-side Jarvis agent on "${HUB_PC_NAME}". The user is talking to you from their phone through the Jarvis hub. Be concise.` };
+        const out = await hubHttpJson(`${HUB_OLLAMA_URL}/api/chat`, { model, stream: false, messages: [sys, ...messages] }, 110000);
+        const text = out && out.message && out.message.content;
+        return (text && String(text).trim()) || '(PC agent returned an empty answer)';
+    } catch (e) {
+        const last = messages.length ? messages[messages.length - 1].content : '';
+        return `PC agent not configured (no local LLM reachable at ${HUB_OLLAMA_URL}: ${e.message}). Echo: ${last}`;
+    }
+}
+
+function hubRun(cmd) {
+    return new Promise(resolve => {
+        exec(cmd, { timeout: 20000 }, (err, stdout, stderr) => {
+            resolve({ ok: !err, exitCode: err ? (err.code || 1) : 0, output: redactSecrets(String(stdout || '') + String(stderr || '')).slice(-4000) });
+        });
+    });
+}
+
+function hubControlCommand(action, arg) {
+    const win = process.platform === 'win32', mac = process.platform === 'darwin';
+    switch (action) {
+        case 'lock': return win ? 'rundll32.exe user32.dll,LockWorkStation' : mac ? 'pmset displaysleepnow' : 'loginctl lock-session';
+        case 'pc_sleep': case 'sleep': return win ? 'rundll32.exe powrprof.dll,SetSuspendState 0,1,0' : mac ? 'pmset sleepnow' : 'systemctl suspend';
+        case 'shutdown': return win ? 'shutdown /s /t 60' : mac ? 'sudo -n shutdown -h +1' : 'shutdown -h +1';
+        case 'restart': return win ? 'shutdown /r /t 60' : mac ? 'sudo -n shutdown -r +1' : 'shutdown -r +1';
+        case 'cancel_shutdown': return win ? 'shutdown /a' : 'shutdown -c';
+        case 'mute': case 'unmute':
+            if (win) return 'powershell -NoProfile -Command "(New-Object -ComObject WScript.Shell).SendKeys([char]173)"';
+            if (mac) return `osascript -e "set volume output muted ${action === 'mute' ? 'true' : 'false'}"`;
+            return `amixer -q set Master ${action === 'mute' ? 'mute' : 'unmute'}`;
+        case 'open_url': {
+            if (!/^https?:\/\/[^\s"'`]+$/i.test(arg || '')) return null;
+            return win ? `start "" "${arg}"` : mac ? `open "${arg}"` : `xdg-open "${arg}"`;
+        }
+        default: return null;
+    }
+}
+
+async function hubControl(command) {
+    const raw = String(command || '').trim();
+    const [first, ...restParts] = raw.split(/\s+/);
+    const action = (first || '').toLowerCase();
+    const arg = restParts.join(' ');
+    if (action === 'status' || action === 'battery' || action === '') {
+        const os = require('os');
+        return {
+            ok: true,
+            text: `${HUB_PC_NAME}: ${os.platform()} ${os.release()}, up ${Math.round(os.uptime() / 60)} min, load ${os.loadavg()[0].toFixed(2)}, free RAM ${Math.round(os.freemem() / 1048576)} MB of ${Math.round(os.totalmem() / 1048576)} MB.`
+        };
+    }
+    if (action === 'shell') {
+        if (process.env.JARVIS_HUB_ALLOW_SHELL !== '1') return { ok: false, text: 'Raw shell from the phone is disabled on this PC (set JARVIS_HUB_ALLOW_SHELL=1 to allow).' };
+        const r = await hubRun(arg);
+        return { ok: r.ok, text: r.output || `exit ${r.exitCode}`, exitCode: r.exitCode };
+    }
+    const cmd = hubControlCommand(action, arg);
+    if (!cmd) return { ok: false, text: `Unknown or disallowed PC action '${action}'. Allowed: status, lock, pc_sleep, shutdown, restart, cancel_shutdown, mute, unmute, open_url <url>${process.env.JARVIS_HUB_ALLOW_SHELL === '1' ? ', shell <cmd>' : ''}.` };
+    const r = await hubRun(cmd);
+    return { ok: r.ok, text: r.ok ? `PC: ${action} done.${(action === 'shutdown' || action === 'restart') && process.platform === 'win32' ? ' (in 60 s — send cancel_shutdown to abort)' : ''}` : `PC: ${action} failed: ${r.output || 'exit ' + r.exitCode}`, exitCode: r.exitCode };
+}
+
+// ── Connection handling ─────────────────────────────────────────────────────
+const hubClients = new Set();
+
+function hubHandleUpgrade(req, socket, head, origin) {
+    let pathname = '';
+    let query;
+    try { const u = new URL(req.url, 'http://x'); pathname = u.pathname; query = u.searchParams; } catch (_) { socket.destroy(); return; }
+    if (pathname !== HUB_PATH) { socket.destroy(); return; }
+    const key = req.headers['sec-websocket-key'];
+    if (!key || String(req.headers.upgrade || '').toLowerCase() !== 'websocket') {
+        socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+        return;
+    }
+    const accept = crypto.createHash('sha1').update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64');
+    socket.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n' + `Sec-WebSocket-Accept: ${accept}\r\n\r\n`);
+
+    const token = query.get('token') || '';
+    const client = {
+        socket, origin,
+        paired: !!token && hubState.tokens.includes(token),
+        failedPairs: 0,
+        device: '',
+        call: null, // { history: [] }
+        send(msg) { try { socket.write(wsEncodeFrame(0x1, JSON.stringify(msg))); } catch (_) {} }
+    };
+    hubClients.add(client);
+    let buffer = head && head.length ? Buffer.from(head) : Buffer.alloc(0);
+    let fragments = [];
+
+    socket.on('data', chunk => {
+        buffer = Buffer.concat([buffer, chunk]);
+        let parsed;
+        try { parsed = wsDecodeFrames(buffer); } catch (e) { socket.destroy(); return; }
+        buffer = parsed.rest;
+        for (const f of parsed.frames) {
+            if (f.opcode === 0x8) { try { socket.end(wsEncodeFrame(0x8, Buffer.alloc(0))); } catch (_) {} return; }
+            if (f.opcode === 0x9) { try { socket.write(wsEncodeFrame(0xA, f.data)); } catch (_) {} continue; }
+            if (f.opcode === 0xA) continue;
+            if (f.opcode === 0x1 || f.opcode === 0x0) {
+                fragments.push(f.data);
+                if (f.fin) {
+                    const text = Buffer.concat(fragments).toString('utf8');
+                    fragments = [];
+                    hubOnMessage(client, text).catch(err => client.send(hubEnvelope('error', { message: err.message })));
+                }
+            }
+        }
+    });
+    socket.on('close', () => hubClients.delete(client));
+    socket.on('error', () => hubClients.delete(client));
+}
+
+async function hubOnMessage(client, raw) {
+    const msg = hubDecode(raw);
+    if (!msg) return;
+    const reply = (type, payload) => client.send(hubEnvelope(type, payload, msg.id));
+
+    switch (msg.type) {
+        case 'ping': return reply('pong', { t: Date.now() });
+        case 'hello':
+            client.device = String(msg.payload.device || 'phone');
+            if (msg.payload.token && hubState.tokens.includes(msg.payload.token)) client.paired = true;
+            console.log(`[Jarvis Hub] hello from ${client.device} (${client.origin}, paired=${client.paired})${msg.payload.phone_code ? ' phone code ' + msg.payload.phone_code : ''}`);
+            return reply('welcome', { pc_name: HUB_PC_NAME, paired: client.paired, needs_code: !client.paired, version: 1 });
+        case 'pair': {
+            const code = String(msg.payload.code || '').replace(/\D/g, '');
+            if (code.length === 6 && code === hubJoinCode) {
+                const token = crypto.randomBytes(24).toString('hex');
+                hubState.tokens.push(token);
+                if (hubState.tokens.length > 10) hubState.tokens.splice(0, hubState.tokens.length - 10);
+                hubSaveState(hubState);
+                client.paired = true;
+                hubJoinCode = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+                console.log(`[Jarvis Hub] paired with ${client.device || 'phone'}. Next join code: ${hubJoinCode}`);
+                return reply('paired', { token, pc_name: HUB_PC_NAME });
+            }
+            client.failedPairs++;
+            reply('pair_failed', { reason: 'Wrong join code — check the code shown on the PC console.' });
+            if (client.failedPairs >= 5) { try { client.socket.end(wsEncodeFrame(0x8, Buffer.alloc(0))); } catch (_) {} }
+            return;
+        }
+    }
+
+    if (!client.paired) return reply('error', { message: 'Not paired: send the 6-digit join code shown on the PC first.' });
+
+    switch (msg.type) {
+        case 'ask': {
+            const text = await hubAskLlm([{ role: 'user', content: String(msg.payload.text || '') }]);
+            return reply('reply', { text });
+        }
+        case 'control': {
+            const r = await hubControl(msg.payload.command);
+            return reply('result', { ok: r.ok, text: r.text, exit_code: r.exitCode === undefined ? null : r.exitCode });
+        }
+        case 'call_start':
+            client.call = { history: [] };
+            console.log(`[Jarvis Hub] call started with ${client.device}`);
+            return reply('call_started', { text: `Call relay open with ${HUB_PC_NAME}.` });
+        case 'call_chunk': {
+            if (!client.call) client.call = { history: [] };
+            const userText = String(msg.payload.text || '');
+            console.log(`[Jarvis Hub] [phone] ${userText}`);
+            client.call.history.push({ role: 'user', content: userText });
+            const answer = await hubAskLlm(client.call.history.slice(-20));
+            client.call.history.push({ role: 'assistant', content: answer });
+            return reply('call_reply', { text: answer });
+        }
+        case 'call_end':
+            client.call = null;
+            return reply('call_ended', { text: 'Call ended.' });
+        case 'memory_push': {
+            const data = String(msg.payload.data || '');
+            try { JSON.parse(data); } catch (_) { return reply('error', { message: 'memory_push: data is not valid JSON' }); }
+            fs.writeFileSync(HUB_MEMORY_FILE, data, { mode: 0o600 });
+            let count = 0;
+            try { const o = JSON.parse(data); count = Array.isArray(o.memories) ? o.memories.length : 0; } catch (_) {}
+            return reply('memory_ack', { summary: `PC stored ${count} memories`, count });
+        }
+        case 'memory_pull': {
+            let data = '';
+            try { data = fs.readFileSync(HUB_MEMORY_FILE, 'utf8'); } catch (_) {}
+            return reply('memory_data', { data, format: 'jarvis-memory-export' });
+        }
+        default:
+            return reply('error', { message: `Unknown hub message type '${msg.type}'` });
+    }
+}
+
+/** Attaches the hub WebSocket endpoint to an http.Server. */
+function attachJarvisHub(httpServer, opts) {
+    const loopbackOnly = !!(opts && opts.loopbackOnly);
+    httpServer.on('upgrade', (req, socket, head) => {
+        const ip = req.socket.remoteAddress || '';
+        if (loopbackOnly && ip !== '127.0.0.1' && ip !== '::1' && ip !== '::ffff:127.0.0.1') { socket.destroy(); return; }
+        hubHandleUpgrade(req, socket, head, ip);
+    });
+    return httpServer;
+}
+
+attachJarvisHub(server, { loopbackOnly: true });
+
+let hubLanServer = null;
+function startHubLan() {
+    if (process.env.JARVIS_HUB_LAN === '0' || hubLanServer) return hubLanServer;
+    hubLanServer = http.createServer((req, res) => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ service: 'JarvisHub', path: HUB_PATH, pc_name: HUB_PC_NAME }));
+    });
+    attachJarvisHub(hubLanServer, { loopbackOnly: false });
+    hubLanServer.on('error', e => console.log(`[Jarvis Hub] LAN listener disabled: ${e.message}`));
+    hubLanServer.listen(HUB_LAN_PORT, '0.0.0.0', () => {
+        const nets = require('os').networkInterfaces();
+        const ips = [];
+        Object.values(nets).forEach(list => (list || []).forEach(n => { if (n.family === 'IPv4' && !n.internal) ips.push(n.address); }));
+        console.log(`[Jarvis Hub] LAN hub: ws://${ips[0] || '<pc-ip>'}:${HUB_LAN_PORT}${HUB_PATH}  (USB: ws://127.0.0.1:${PORT}${HUB_PATH} via adb reverse)`);
+    });
+    return hubLanServer;
+}
+
+if (require.main === module) {
+    console.log(`[Jarvis Hub] Join code: ${hubJoinCode.slice(0, 3)} ${hubJoinCode.slice(3)}  (enter it in Jarvis → HUB → PC ⇄ Phone)`);
+    startHubLan();
+}
+
+module.exports.attachJarvisHub = attachJarvisHub;
+module.exports.startHubLan = startHubLan;
+module.exports.hubDecode = hubDecode;
+module.exports.hubEnvelope = hubEnvelope;
+module.exports.wsEncodeFrame = wsEncodeFrame;
+module.exports.wsDecodeFrames = wsDecodeFrames;
+module.exports.hubControl = hubControl;
+module.exports.getHubJoinCode = () => hubJoinCode;

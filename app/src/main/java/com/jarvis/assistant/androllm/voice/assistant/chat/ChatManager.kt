@@ -6,7 +6,6 @@ import com.jarvis.assistant.JarvisApp
 import com.jarvis.assistant.ai.local.ToolCallParser
 import com.jarvis.assistant.ai.router.ModelRouter
 import com.jarvis.assistant.androllm.chat.AndroLlmChatStore
-import com.jarvis.assistant.androllm.chat.ChatPrefs
 import com.jarvis.assistant.androllm.chat.model.Conversation
 import com.jarvis.assistant.androllm.chat.model.Message
 import com.jarvis.assistant.androllm.chat.model.MessageOrigin
@@ -33,8 +32,8 @@ import kotlinx.coroutines.withContext
  * Shared state, like upstream:
  *  - conversation persistence in the AndroLLM chat database ([AndroLlmChatStore]),
  *    messages tagged [MessageOrigin.VOICE] so the Compose chat shows them;
- *  - each exchange is mirrored into Jarvis's ChatRepository (when [ChatPrefs.mirrorToJarvis]
- *    is on), which feeds Jarvis's own memory pipeline;
+ *  - Jarvis's ChatRepository reads its history window from this same store, so each
+ *    exchange feeds Jarvis's own memory pipeline without a separate mirror;
  *  - ModelRouter injects Jarvis's vector memory (RAG) into every request.
  *
  * AndroLLM's in-ChatManager tool loop (ToolRunCoordinator / cloud tool_calls) is not
@@ -151,9 +150,6 @@ class ChatManager private constructor(private val context: Context) {
                     )
                 )
                 conversations.touch(convId)
-                if (ChatPrefs.mirrorToJarvis(context)) {
-                    runCatching { app.chatRepository.addTurn(userText = trimmed, jarvisText = finalAnswer) }
-                }
             }
         }
     }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Base for character monograms; colours are set in code per character. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient android:angle="315" android:startColor="#FF1E90FF" android:endColor="#FF6C5CE7" />
+</shape>

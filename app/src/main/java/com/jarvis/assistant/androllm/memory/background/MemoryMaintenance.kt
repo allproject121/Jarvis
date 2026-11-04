@@ -5,7 +5,6 @@ import android.util.Log
 import com.jarvis.assistant.JarvisApp
 import com.jarvis.assistant.ai.memory.TextEmbeddingEngine
 import com.jarvis.assistant.androllm.memory.MemorySettingsStore
-import com.jarvis.assistant.androllm.memory.store.AndroMemoryStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -57,11 +56,10 @@ object MemoryMaintenance {
             val app = (appContext as? JarvisApp) ?: JarvisApp.instance
             val repository = app.memoryRepository
             val vectorEngine = app.vectorMemoryEngine
-            val store = AndroMemoryStore.getInstance(appContext)
             val settings = MemorySettingsStore(appContext)
 
             // Make sure the registry reflects the database before ranking/archiving.
-            store.loadRegistry()
+            repository.loadRegistry()
             // Keep Jarvis' embedder in sync with the chosen embedding source.
             val embeddingIndex = com.jarvis.assistant.androllm.memory.embedding.MemoryEmbeddingIndex.getInstance(appContext)
             runCatching { embeddingIndex.applyToJarvis() }
@@ -81,14 +79,14 @@ object MemoryMaintenance {
             val pruned = vectorEngine.pruneMissing(ids)
             val newlyIndexed = if (reembed) all.size else (vectorEngine.indexedMemoryCount() + pruned - before).coerceAtLeast(0)
 
-            val orphans = store.getAllMeta().map { it.memoryId }.filter { it !in ids }
-            store.deleteMeta(orphans)
+            val orphans = repository.getAllMeta().map { it.memoryId }.filter { it !in ids }
+            repository.deleteMeta(orphans)
 
             val now = System.currentTimeMillis()
             var archived = 0
-            for (meta in store.getExpired(now)) {
+            for (meta in repository.getExpired(now)) {
                 if (meta.memoryId !in ids) continue
-                store.upsertMeta(meta.copy(isArchived = true, updatedAt = now))
+                repository.upsertMeta(meta.copy(isArchived = true, updatedAt = now))
                 archived++
             }
 
@@ -97,7 +95,7 @@ object MemoryMaintenance {
                 if (reembed) embeddingIndex.reindexAll(all) else embeddingIndex.embedPending(all)
             }.onFailure { Log.w(TAG, "Neural embedding pass failed: ${it.message}") }.getOrDefault(0)
             // Mirror metadata tags/projects into the graph tables (schema v2).
-            runCatching { store.rebuildGraph() }.onFailure { Log.w(TAG, "Graph rebuild failed: ${it.message}") }
+            runCatching { repository.rebuildGraph() }.onFailure { Log.w(TAG, "Graph rebuild failed: ${it.message}") }
 
             val report = Report(
                 total = all.size,

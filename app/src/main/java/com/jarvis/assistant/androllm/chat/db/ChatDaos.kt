@@ -251,6 +251,10 @@ interface MessageDao {
     @Query("SELECT * FROM messages ORDER BY timestamp DESC")
     fun observeAll(): Flow<List<MessageEntity>>
 
+    /** Newest [limit] messages across every conversation (Jarvis' ChatRepository window). */
+    @Query("SELECT * FROM messages ORDER BY timestamp DESC LIMIT :limit")
+    fun observeRecent(limit: Int): Flow<List<MessageEntity>>
+
     @Query("SELECT COUNT(*) FROM messages WHERE conversation_id = :conversationId")
     suspend fun countByConversationId(conversationId: String): Int
 

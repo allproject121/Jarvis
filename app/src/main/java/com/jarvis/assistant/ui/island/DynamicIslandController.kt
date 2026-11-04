@@ -55,8 +55,11 @@ object DynamicIslandController {
         val ticker = flow {
             while (true) {
                 emit(Unit)
-                // Fast polling only while the island is enabled (task-overlay / permission checks).
-                delay(if (JarvisExtraPrefs.dynamicIslandEnabledFlow.value) 1_000L else 10_000L)
+                // Fast polling only while the island is enabled (task-overlay / permission checks);
+                // Battery saver slows the enabled poll to every 3 s.
+                val enabled = JarvisExtraPrefs.dynamicIslandEnabledFlow.value
+                val saver = runCatching { JarvisApp.instance.preferences.isBatterySaverEnabled }.getOrDefault(false)
+                delay(if (!enabled) 10_000L else if (saver) 3_000L else 1_000L)
             }
         }
         val stateJob = scope.launch {

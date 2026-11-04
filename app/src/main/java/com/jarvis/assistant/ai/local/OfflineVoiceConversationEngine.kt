@@ -19,6 +19,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -677,12 +679,29 @@ class OfflineVoiceConversationEngine private constructor(
             val responseAccumulator = StringBuilder()
             val assembler = com.jarvis.assistant.voice.SentenceAssembler()
 
-            modelRouter.routeConversationalQuery(
-                userPrompt = clean,
-                systemPrompt = combinedSystemPrompt,
-                openAiApiKey = (context.applicationContext as? JarvisApp)?.preferences?.openAiApiKey.orEmpty(),
-                chatHistory = recentTurns
-            ).collect { token ->
+            // Optional Maya "Advanced Agentic" cloud brain (default OFF): when enabled and
+            // configured it replaces the local SLM with a tool-calling cloud LLM. Otherwise the
+            // original offline ModelRouter path runs unchanged.
+            val agenticProvider = com.jarvis.assistant.maya.brain.AdvancedAgenticMode.offlineLoopProvider(context)
+            val tokenFlow: Flow<String> = if (agenticProvider != null) {
+                val memoryCtx = runCatching {
+                    com.jarvis.assistant.data.memory.MemoryManager.getInstance(context).getSystemPromptContext()
+                }.getOrDefault("")
+                agenticProvider.streamResponse(
+                    prompt = clean,
+                    systemPrompt = com.jarvis.assistant.maya.brain.BrainPrompts.defaultSystemPrompt(context),
+                    memoryContext = listOf(memoryCtx, ragContext, correctionContext).filter { it.isNotBlank() }.joinToString("\n"),
+                    chatHistory = synchronized(recentTurns) { recentTurns.toList() }
+                ).map { it.token }
+            } else {
+                modelRouter.routeConversationalQuery(
+                    userPrompt = clean,
+                    systemPrompt = combinedSystemPrompt,
+                    openAiApiKey = (context.applicationContext as? JarvisApp)?.preferences?.openAiApiKey.orEmpty(),
+                    chatHistory = recentTurns
+                )
+            }
+            tokenFlow.collect { token ->
                 responseAccumulator.append(token)
                 val chunks = assembler.feed(token)
                 for (chunk in chunks) {

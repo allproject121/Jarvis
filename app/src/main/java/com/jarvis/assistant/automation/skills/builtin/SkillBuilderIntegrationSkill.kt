@@ -448,10 +448,10 @@ class SkillBuilderIntegrationSkill : JarvisSkill {
             put("status", "WAITING_FOR_USER_APPROVAL")
         }
 
-        val userMsg = "Generated integration proposal '$proposalId' for '$featureName'.\n" +
+        val userMsg = "Generated a local draft proposal '$proposalId' for '$featureName' (laptop companion not available — this is a template stub, not generated from the repository).\n" +
                 "• Target file: $targetPath\n" +
                 "• Approval Token: $approvalToken\n" +
-                "• Mandatory Gate: Code modifications will NOT be applied until you approve with this approval token."
+                "• Applying it offline only saves the draft on this phone; it is not compiled or installed without the laptop companion."
 
         return SkillExecutionResult(
             status = SkillExecutionStatus.WAITING_FOR_USER,
@@ -760,7 +760,8 @@ class SkillBuilderIntegrationSkill : JarvisSkill {
 
         targetFile.parentFile?.mkdirs()
         targetFile.writeText(prop.proposedContent)
-        prop.status = "APPLIED"
+        // Local apply only writes a draft into app storage — nothing is compiled or installed.
+        prop.status = "DRAFT_SAVED"
 
         val checkpoint = LocalCheckpoint(
             checkpointId = checkpointId,
@@ -772,17 +773,21 @@ class SkillBuilderIntegrationSkill : JarvisSkill {
         localCheckpoints[checkpointId] = checkpoint
 
         val data = JSONObject().apply {
-            put("status", "SUCCESS")
             put("proposal_id", proposalId)
             put("checkpoint_id", checkpointId)
-            put("applied_file", targetFile.absolutePath)
+            put("draft_file", targetFile.absolutePath)
+            put("compiled", false)
+            put("installed", false)
         }
 
         return SkillExecutionResult(
-            status = SkillExecutionStatus.SUCCESS,
+            status = SkillExecutionStatus.FAILED,
             data = data,
-            userFacingMessage = "Successfully applied proposal '$proposalId'. Checkpoint '$checkpointId' created for rollback safety.",
-            isVerified = true
+            userFacingMessage = "Draft saved to ${targetFile.absolutePath} — not compiled or installed; needs the laptop companion to build. " +
+                    "Roll back checkpoint '$checkpointId' to remove the draft.",
+            isVerified = false,
+            errorMessage = "Not compiled or installed: laptop companion required to build",
+            requiredAction = "Start the laptop companion and generate a new proposal through it to build and install the feature."
         )
     }
 

@@ -121,13 +121,24 @@ object PromptGenerator {
             com.jarvis.assistant.core.JarvisDrivingModeManager.getInstance(com.jarvis.assistant.JarvisApp.instance).isDrivingMode.value
         } catch (_: Throwable) { false }
 
+        // In auto-reject mode calls are declined with an SMS before Jarvis could ask, so don't promise an announcement.
+        val drivingCallLine = try {
+            if (com.jarvis.assistant.core.JarvisDrivingModeManager.getInstance(com.jarvis.assistant.JarvisApp.instance).isAutoRejectSmsEnabled) {
+                "- Incoming calls are auto-rejected with an SMS reply while driving; if asked, tell the driver who called."
+            } else {
+                "- Announce incoming callers clearly: \"Sir, call from [Caller]. Answer or decline?\""
+            }
+        } catch (_: Throwable) {
+            "- Announce incoming callers clearly: \"Sir, call from [Caller]. Answer or decline?\""
+        }
+
         val drivingModeInstruction = if (isDriving) {
             """
 [TACTICAL VEHICLE COPILOT / DRIVING MODE ENGAGED - HIGHWAY SAFETY DIRECTIVE]:
 - The operator is actively driving.
 - SAFETY FIRST: Keep all spoken replies strictly under 15 words.
 - Never ask the driver to look at their phone or touch any on-screen button.
-- Announce incoming callers clearly: "Sir, call from [Caller]. Answer or decline?"
+$drivingCallLine
 - Execute music, navigation, messaging, and system tasks immediately with zero friction.
 """.trimIndent()
         } else {

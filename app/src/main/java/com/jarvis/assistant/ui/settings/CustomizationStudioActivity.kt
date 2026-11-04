@@ -316,7 +316,6 @@ class CustomizationStudioActivity : AppCompatActivity() {
         binding.switchUpdatesWidget.isChecked = preferences.showUpdatesWidget
         binding.switchStatusIndicatorWidget.isChecked = preferences.showStatusIndicatorWidget
         binding.switchBlurEffectStudio.isChecked = preferences.isBlurEffectEnabled
-        binding.switchHoloScanlines.isChecked = preferences.isHoloScanlinesEnabled
 
         // 5. Audio & Vosk
         binding.switchHudSounds.isChecked = preferences.isHudSoundEnabled
@@ -944,7 +943,8 @@ class CustomizationStudioActivity : AppCompatActivity() {
             binding.cardThemeAmethyst to "amethyst",
             binding.cardThemeLight to "light",
             binding.cardThemeAndroNight to ThemeManager.THEME_ANDROLLM_NIGHT,
-            binding.cardThemeAndroParchment to ThemeManager.THEME_ANDROLLM_PARCHMENT
+            binding.cardThemeAndroParchment to ThemeManager.THEME_ANDROLLM_PARCHMENT,
+            binding.cardThemeMaya to ThemeManager.THEME_MAYA
         )
 
         themeCards.forEach { (card, themeKey) ->
@@ -957,7 +957,10 @@ class CustomizationStudioActivity : AppCompatActivity() {
                     "dark" -> "cyan"
                     else -> themeKey
                 }
-                customColorHex = if (themeKey == "red") "#FF4D5E" else if (themeKey == "light") "#FFFFFF" else ""
+                customColorHex = if (themeKey == "red") "#FF4D5E" else if (themeKey == "light") "#FFFFFF" else if (themeKey == ThemeManager.THEME_MAYA) ThemeManager.MAYA_ACCENT_HEX else ""
+                if (themeKey == ThemeManager.THEME_MAYA) {
+                    Toast.makeText(this, "Maya look selected • after Save, Home shows the character stage", Toast.LENGTH_SHORT).show()
+                }
                 updateThemeUI(themeKey)
                 updatePresetUI(selectedPreset)
                 applyPreviewOrbParams()
@@ -974,7 +977,8 @@ class CustomizationStudioActivity : AppCompatActivity() {
             binding.cardThemeAmethyst to listOf("amethyst", "violet", "purple"),
             binding.cardThemeLight to listOf("light", "pearl_white", "white"),
             binding.cardThemeAndroNight to listOf(ThemeManager.THEME_ANDROLLM_NIGHT),
-            binding.cardThemeAndroParchment to listOf(ThemeManager.THEME_ANDROLLM_PARCHMENT)
+            binding.cardThemeAndroParchment to listOf(ThemeManager.THEME_ANDROLLM_PARCHMENT),
+            binding.cardThemeMaya to listOf(ThemeManager.THEME_MAYA)
         )
 
         cards.forEach { (card, keys) ->
@@ -1017,10 +1021,6 @@ class CustomizationStudioActivity : AppCompatActivity() {
         }
         binding.switchBlurEffectStudio.setOnCheckedChangeListener { _, isChecked ->
             preferences.isBlurEffectEnabled = isChecked
-            HudSoundManager.playTapSound()
-        }
-        binding.switchHoloScanlines.setOnCheckedChangeListener { _, isChecked ->
-            preferences.isHoloScanlinesEnabled = isChecked
             HudSoundManager.playTapSound()
         }
     }
@@ -1279,7 +1279,6 @@ class CustomizationStudioActivity : AppCompatActivity() {
             binding.switchWeatherWidget.isChecked = true
             binding.switchUpdatesWidget.isChecked = true
             binding.switchBlurEffectStudio.isChecked = true
-            binding.switchHoloScanlines.isChecked = true
             binding.switchAudioReactiveOrb.isChecked = true
             binding.switchHudSounds.isChecked = true
             binding.switchHapticFeedback.isChecked = true
@@ -1341,6 +1340,10 @@ class CustomizationStudioActivity : AppCompatActivity() {
 
                 // Save Theme
                 preferences.appTheme = selectedTheme
+                if (selectedTheme == ThemeManager.THEME_MAYA) {
+                    // Maya is the companion look: the character stage becomes the default Home.
+                    preferences.experienceMode = com.jarvis.assistant.data.preferences.AppPreferences.MODE_JARVIS_COMPANION
+                }
                 // Save Widgets & HUD Overlays
                 preferences.hideAllHomeCards = binding.switchHideAllCards.isChecked
                 preferences.showTelemetryWidget = binding.switchTelemetryWidget.isChecked
@@ -1350,7 +1353,6 @@ class CustomizationStudioActivity : AppCompatActivity() {
                 preferences.showUpdatesWidget = binding.switchUpdatesWidget.isChecked
                 preferences.showStatusIndicatorWidget = binding.switchStatusIndicatorWidget.isChecked
                 preferences.isBlurEffectEnabled = binding.switchBlurEffectStudio.isChecked
-                preferences.isHoloScanlinesEnabled = binding.switchHoloScanlines.isChecked
 
                 // Save Audio & Vosk
                 preferences.isHudSoundEnabled = binding.switchHudSounds.isChecked

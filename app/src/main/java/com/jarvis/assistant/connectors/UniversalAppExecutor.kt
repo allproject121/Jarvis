@@ -131,7 +131,7 @@ class UniversalAppExecutor private constructor(private val context: Context) {
             }
 
             cleanAction.contains("upload") || cleanAction.contains("save") || cleanAction.contains("create") || cleanAction.contains("add") || cleanAction.contains("banao") -> {
-                executeUploadOrCreateAction(service, resolvedAppName, cleanQuery)
+                executeUploadOrCreateAction(service, resolvedAppName, cleanAction, cleanQuery)
             }
 
             cleanAction.contains("read") || cleanAction.contains("inspect") || cleanAction.contains("kya hai") || cleanAction.contains("check") -> {
@@ -250,6 +250,13 @@ class UniversalAppExecutor private constructor(private val context: Context) {
             }
             val injected = inputField.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
             Log.i(TAG, "Injected search query '$query' into $appName: $injected")
+            if (!injected) {
+                return UniversalExecutionResult(
+                    success = false,
+                    message = "Found the search field in $appName but couldn't type '$query' into it.",
+                    actionTaken = "SEARCH_TEXT_NOT_SET"
+                )
+            }
 
             delay(300L)
 
@@ -306,6 +313,15 @@ class UniversalAppExecutor private constructor(private val context: Context) {
             null
         }
 
+        // A named item that isn't on screen must not fall through to a generic "delete" tap.
+        if (targetItem.isNotBlank() && itemNode == null) {
+            return UniversalExecutionResult(
+                success = false,
+                message = "Couldn't find '$targetItem' on the current $appName screen, so nothing was deleted. Try searching for it first.",
+                actionTaken = "DELETE_TARGET_NOT_FOUND"
+            )
+        }
+
         // 2. Trigger options menu (3-dots or long-press)
         var menuOpened = false
         if (itemNode != null) {
@@ -336,6 +352,13 @@ class UniversalAppExecutor private constructor(private val context: Context) {
         if (deleteNode != null) {
             val clickedDelete = deleteNode.performAction(AccessibilityNodeInfo.ACTION_CLICK) || clickNodeCoordinates(service, deleteNode)
             Log.i(TAG, "Clicked Delete action: $clickedDelete")
+            if (!clickedDelete) {
+                return UniversalExecutionResult(
+                    success = false,
+                    message = "Found '${nodeLabel(deleteNode)}' in $appName but tapping it failed, so nothing was deleted.",
+                    actionTaken = "DELETE_CLICK_FAILED"
+                )
+            }
             delay(500L)
 
             // 4. Confirm Dialog ("Delete", "Move to trash", "OK", "Confirm")
@@ -362,41 +385,122 @@ class UniversalAppExecutor private constructor(private val context: Context) {
 
     /**
      * Executes an autonomous upload or create operation:
-     * Locates FAB (+), clicks New/Upload, and opens file selection.
+     * Taps the app's create / upload entry point (FAB, "New", "+"), then uses [targetQuery]
+     * (matched case-insensitively against text / content description) to pick the option or
+     * file. Every tapped element is reported; a missing match or failed tap is a failure.
      */
     private suspend fun executeUploadOrCreateAction(
         service: JarvisAccessibilityService,
         appName: String,
+        actionType: String,
         targetQuery: String
     ): UniversalExecutionResult {
         val root = service.getActiveRootNode() ?: return UniversalExecutionResult(false, "Could not acquire screen root.", actionTaken = "UPLOAD_NO_ROOT")
+        val isUpload = actionType.contains("upload")
+        val tapped = mutableListOf<String>()
 
-        // 1. Locate Floating Action Button (+, New, Create, Add, Upload)
-        val fabNode = findNodeByKeywords(root, listOf("+", "new", "create", "add", "upload", "fab", "compose"))
-        if (fabNode != null) {
-            val clicked = fabNode.performAction(AccessibilityNodeInfo.ACTION_CLICK) || clickNodeCoordinates(service, fabNode)
-            Log.i(TAG, "Clicked FAB / New button in $appName: $clicked")
-            delay(500L)
-
-            // Look for "Upload" or specific sub-option
-            val sheetRoot = service.getActiveRootNode() ?: root
-            val uploadOption = findNodeByKeywords(sheetRoot, listOf("upload", "file", "document", "folder", "photo"))
-            if (uploadOption != null) {
-                uploadOption.performAction(AccessibilityNodeInfo.ACTION_CLICK) || clickNodeCoordinates(service, uploadOption)
+        // 1. Locate the create / upload entry point (+, New, Create, Add, Upload, Compose)
+        val createNode = findCreateButton(root)
+        if (createNode == null) {
+            // Some screens show the wanted option directly (e.g. a "New folder" button).
+            if (targetQuery.isNotBlank()) {
+                val direct = findNodeMatchingText(root, targetQuery)
+                if (direct != null) {
+                    val label = nodeLabel(direct)
+                    return if (clickNode(service, direct)) {
+                        UniversalExecutionResult(
+                            success = true,
+                            message = "Tapped '$label' in $appName.",
+                            actionTaken = "CREATE_TARGET_CLICKED"
+                        )
+                    } else {
+                        UniversalExecutionResult(
+                            success = false,
+                            message = "Found '$label' in $appName but tapping it failed.",
+                            actionTaken = "CREATE_TARGET_CLICK_FAILED"
+                        )
+                    }
+                }
             }
-
             return UniversalExecutionResult(
-                success = true,
-                message = "Opened upload/creation workflow in $appName.",
-                actionTaken = "UPLOAD_WORKFLOW_INITIATED"
+                success = false,
+                message = "Could not locate an upload/create button in $appName" +
+                    (if (targetQuery.isNotBlank()) " or anything matching '$targetQuery'." else "."),
+                actionTaken = "FAB_NOT_FOUND"
             )
         }
 
-        return UniversalExecutionResult(
-            success = false,
-            message = "Could not locate upload/creation button in $appName.",
-            actionTaken = "FAB_NOT_FOUND"
-        )
+        val createLabel = nodeLabel(createNode)
+        if (!clickNode(service, createNode)) {
+            return UniversalExecutionResult(
+                success = false,
+                message = "Found '$createLabel' in $appName but tapping it failed.",
+                actionTaken = "CREATE_CLICK_FAILED"
+            )
+        }
+        tapped += createLabel
+        Log.i(TAG, "Tapped create entry '$createLabel' in $appName")
+        delay(500L)
+
+        var sheetRoot = service.getActiveRootNode() ?: root
+
+        // 2. Upload: choose the "Upload" entry of the create sheet when the button itself wasn't it.
+        if (isUpload && !createLabel.contains("upload", ignoreCase = true)) {
+            val uploadOption = findNodeByKeywords(sheetRoot, listOf("upload"))
+            if (uploadOption != null && clickNode(service, uploadOption)) {
+                tapped += nodeLabel(uploadOption)
+                delay(700L)
+                sheetRoot = service.getActiveRootNode() ?: sheetRoot
+            }
+        }
+        val path = tapped.joinToString(" > ") { "'$it'" }
+
+        // 3. target_query picks the specific option / file.
+        if (targetQuery.isNotBlank()) {
+            val target = findNodeMatchingText(sheetRoot, targetQuery)
+            if (target == null) {
+                val options = extractVisibleText(sheetRoot).take(8).joinToString(", ")
+                return UniversalExecutionResult(
+                    success = false,
+                    message = "In $appName I tapped $path, but nothing matching '$targetQuery' appeared. Visible options: $options.",
+                    screenSummary = "Visible options: $options",
+                    actionTaken = "CREATE_TARGET_NOT_FOUND"
+                )
+            }
+            val targetLabel = nodeLabel(target)
+            if (!clickNode(service, target)) {
+                return UniversalExecutionResult(
+                    success = false,
+                    message = "In $appName I tapped $path and found '$targetLabel', but tapping it failed.",
+                    actionTaken = "CREATE_TARGET_CLICK_FAILED"
+                )
+            }
+            tapped += targetLabel
+            return UniversalExecutionResult(
+                success = true,
+                message = "In $appName I tapped ${tapped.joinToString(" > ") { "'$it'" }}.",
+                actionTaken = if (isUpload) "UPLOAD_TARGET_CLICKED" else "CREATE_TARGET_CLICKED"
+            )
+        }
+
+        // 4. No target given: report exactly what is open instead of claiming the goal is done.
+        val options = extractVisibleText(sheetRoot).take(8).joinToString(", ")
+        val uploadPickerOpen = isUpload && tapped.any { it.contains("upload", ignoreCase = true) }
+        return if (uploadPickerOpen) {
+            UniversalExecutionResult(
+                success = true,
+                message = "Opened the upload picker in $appName (tapped $path). Choose the file to upload.",
+                screenSummary = "Visible options: $options",
+                actionTaken = "UPLOAD_PICKER_OPENED"
+            )
+        } else {
+            UniversalExecutionResult(
+                success = false,
+                message = "Tapped $path in $appName and the menu is open, but no item was specified. Visible options: $options. Tell me which one to pick.",
+                screenSummary = "Visible options: $options",
+                actionTaken = "CREATE_MENU_OPENED_NO_TARGET"
+            )
+        }
     }
 
     /**
@@ -430,11 +534,19 @@ class UniversalAppExecutor private constructor(private val context: Context) {
 
         val targetNode = findNodeByKeywords(root, keywords)
         if (targetNode != null) {
-            val clicked = targetNode.performAction(AccessibilityNodeInfo.ACTION_CLICK) || clickNodeCoordinates(service, targetNode)
+            val label = nodeLabel(targetNode)
+            val clicked = clickNode(service, targetNode)
+            if (!clicked) {
+                return UniversalExecutionResult(
+                    success = false,
+                    message = "Found '$label' in $appName for '$goal' but tapping it failed.",
+                    actionTaken = "CUSTOM_ACTION_CLICK_FAILED"
+                )
+            }
             delay(500L)
             return UniversalExecutionResult(
                 success = true,
-                message = "Executed action matching '$goal' in $appName.",
+                message = "Tapped '$label' in $appName for '$goal'.",
                 actionTaken = "CUSTOM_ACTION_CLICKED"
             )
         }
@@ -521,6 +633,55 @@ class UniversalAppExecutor private constructor(private val context: Context) {
             return null
         }
         return search(parent)
+    }
+
+    /**
+     * Finds the app's create / upload entry point. Stricter than [findNodeByKeywords]: the label
+     * must BE "+" / "New" / "Create ..." etc. (not merely contain "add" like "Address"), or the
+     * view id must look like a FAB / create button. Editable fields are skipped.
+     */
+    private fun findCreateButton(root: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+        val words = listOf("new", "create", "add", "upload", "compose")
+        val idHints = listOf("fab", "create", "compose", "upload", "new_", "add_")
+        fun isCreateLabel(label: String): Boolean =
+            label == "+" || words.any { w -> label == w || label.startsWith("$w ") || label.startsWith("$w+") }
+
+        fun search(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+            if (!node.isEditable) {
+                val text = node.text?.toString()?.lowercase(Locale.ROOT)?.trim() ?: ""
+                val desc = node.contentDescription?.toString()?.lowercase(Locale.ROOT)?.trim() ?: ""
+                val id = node.viewIdResourceName?.lowercase(Locale.ROOT)?.substringAfter(":id/")?.trim() ?: ""
+                if (isCreateLabel(text) || isCreateLabel(desc) || idHints.any { id.contains(it) }) return node
+            }
+            for (i in 0 until node.childCount) {
+                val child = node.getChild(i) ?: continue
+                val res = search(child)
+                if (res != null) return res
+            }
+            return null
+        }
+        return search(root)
+    }
+
+    /** Clicks [node] or its nearest clickable ancestor; falls back to a coordinate tap. */
+    private fun clickNode(service: JarvisAccessibilityService, node: AccessibilityNodeInfo): Boolean {
+        var current: AccessibilityNodeInfo? = node
+        var depth = 0
+        while (current != null && depth < 6) {
+            if (current.isClickable && current.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return true
+            current = current.parent
+            depth++
+        }
+        return clickNodeCoordinates(service, node)
+    }
+
+    /** Human-readable label of a node for result messages. */
+    private fun nodeLabel(node: AccessibilityNodeInfo): String {
+        val text = node.text?.toString()?.trim().orEmpty()
+        if (text.isNotEmpty()) return text
+        val desc = node.contentDescription?.toString()?.trim().orEmpty()
+        if (desc.isNotEmpty()) return desc
+        return node.viewIdResourceName?.substringAfter(":id/")?.takeIf { it.isNotBlank() } ?: "unlabelled element"
     }
 
     private fun clickNodeCoordinates(service: JarvisAccessibilityService, node: AccessibilityNodeInfo): Boolean {

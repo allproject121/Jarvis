@@ -1,5 +1,7 @@
 package com.jarvis.assistant.androllm.models.catalog
 
+import com.jarvis.assistant.androllm.engine.support.ModelMetadataRegistry
+
 /**
  * Automatic catalog repair (req §1).
  *

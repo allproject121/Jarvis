@@ -63,6 +63,13 @@ class JarvisAccessibilityService : AccessibilityService() {
             instance?.armYouTubeFullscreen()
         }
 
+        /** Deletes the chat bubble containing [text] (scrolling up to older messages to find it). */
+        fun triggerWhatsAppDeleteMatching(text: String, forEveryone: Boolean): Boolean {
+            val svc = instance ?: return false
+            svc.armWhatsAppDelete(forEveryone, text)
+            return true
+        }
+
         fun triggerWhatsAppDelete(forEveryone: Boolean) {
             instance?.armWhatsAppDelete(forEveryone)
         }
@@ -200,6 +207,13 @@ class JarvisAccessibilityService : AccessibilityService() {
     private var deleteForEveryone = false
     private var whatsAppDeleteArmTime = 0L
     private var deleteStage = 0
+    private var deleteLongPressTries = 0
+    /** When set, delete the bubble containing this text (scrolling up to find it) instead of the last one. */
+    private var deleteTargetText: String? = null
+    private var deleteScrolls = 0
+    private var deleteOptionTries = 0
+    /** Stage 0 waits until this time so a new gesture never cancels a long-press/scroll in flight. */
+    private var deleteGestureCooldownUntil = 0L
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -230,6 +244,18 @@ class JarvisAccessibilityService : AccessibilityService() {
             com.jarvis.assistant.androllm.accessibility.state.WindowMonitor.onEvent(event)
             com.jarvis.assistant.androllm.accessibility.state.UIStateTracker.onEvent(event)
         } catch (_: Exception) {}
+        // Maya screen pack: macro recorder / watches / screen awareness (additive, never throws).
+        try {
+            com.jarvis.assistant.maya.screen.ScreenEventBus.onEvent(event)
+        } catch (_: Throwable) {}
+        // Protocol 7 App Lock: guard locked apps when they come to the foreground.
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            try {
+                com.jarvis.assistant.ui.facelock.AppLockEnforcer.onWindowStateChanged(this, event.packageName?.toString())
+            } catch (e: Exception) {
+                Log.w(TAG, "App lock check failed: ${e.message}")
+            }
+        }
         val pkg = event.packageName?.toString().orEmpty()
         if (event.eventType in setOf(
                 AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,
@@ -303,8 +329,13 @@ class JarvisAccessibilityService : AccessibilityService() {
         }
 
         if (isWaitingForWhatsAppDelete && (pkg == "com.whatsapp" || pkg == "com.whatsapp.w4b")) {
-            if (System.currentTimeMillis() - whatsAppDeleteArmTime < 15000) {
-                attemptWhatsAppDeleteAction()
+            // Searching back through older messages takes longer than deleting the last one.
+            val windowMs = if (deleteTargetText != null) 45000L else 15000L
+            if (System.currentTimeMillis() - whatsAppDeleteArmTime < windowMs) {
+                // Stage 0 (scroll / long-press) is driven only by the timed poll: running it on every
+                // accessibility event caused runaway scrolling and used up the long-press retries in
+                // under a second. Events only speed up the tap steps once the menu is open.
+                if (deleteStage >= 1) attemptWhatsAppDeleteAction()
             } else {
                 isWaitingForWhatsAppDelete = false
             }
@@ -876,17 +907,24 @@ class JarvisAccessibilityService : AccessibilityService() {
     // WhatsApp Delete Message (Delete for Everyone / Delete for Me)
     // -------------------------------------------------------------
 
-    fun armWhatsAppDelete(forEveryone: Boolean) {
+    fun armWhatsAppDelete(forEveryone: Boolean, targetText: String? = null) {
         isWaitingForWhatsAppDelete = true
         deleteForEveryone = forEveryone
         whatsAppDeleteArmTime = System.currentTimeMillis()
         deleteStage = 0
-        Log.i(TAG, "Armed for WhatsApp delete message (forEveryone=$forEveryone)")
+        deleteLongPressTries = 0
+        deleteTargetText = targetText?.trim()?.takeIf { it.isNotEmpty() }
+        deleteScrolls = 0
+        deleteOptionTries = 0
+        deleteGestureCooldownUntil = 0L
+        Log.i(TAG, "Armed for WhatsApp delete message (forEveryone=$forEveryone, target=${deleteTargetText?.take(30)})")
         handler.postDelayed({ pollWhatsAppDelete(1) }, 900)
     }
 
     private fun pollWhatsAppDelete(attempt: Int) {
-        if (!isWaitingForWhatsAppDelete || attempt > 20) {
+        // Finding an older message needs room to scroll up (up to 25 scrolls) before the 3 delete steps.
+        val maxAttempts = if (deleteTargetText != null) 50 else 20
+        if (!isWaitingForWhatsAppDelete || attempt > maxAttempts) {
             isWaitingForWhatsAppDelete = false
             return
         }
@@ -901,6 +939,18 @@ class JarvisAccessibilityService : AccessibilityService() {
 
         return when (deleteStage) {
             0 -> {
+                // If the selection action bar is already up (delete icon or a "selected" count
+                // visible), the long-press already worked — skip straight to tapping delete.
+                val selectionUp = listOf(
+                    "com.whatsapp:id/menuitem_delete", "com.whatsapp.w4b:id/menuitem_delete"
+                ).any { rootNode.findAccessibilityNodeInfosByViewId(it).isNotEmpty() } ||
+                    findByContentDescriptionContains(rootNode, listOf("delete")) != null
+                if (selectionUp) {
+                    deleteStage = 1
+                    return attemptWhatsAppDeleteAction()
+                }
+                // A long-press (700 ms) or scroll is still running or settling: don't start another.
+                if (System.currentTimeMillis() < deleteGestureCooldownUntil) return false
                 // Stage 0: long-press the most recent message bubble to open the selection menu.
                 val messageIds = listOf(
                     "com.whatsapp:id/message_text",
@@ -913,28 +963,57 @@ class JarvisAccessibilityService : AccessibilityService() {
                     "com.whatsapp.w4b:id/row_content"
                 )
                 var target: AccessibilityNodeInfo? = null
-                for (id in messageIds) {
-                    val nodes = rootNode.findAccessibilityNodeInfosByViewId(id)
-                    if (nodes.isNotEmpty()) target = nodes.last()
-                }
-                if (target == null) {
-                    target = findLastMessageBubble(rootNode)
+                val wanted = deleteTargetText
+                if (wanted != null) {
+                    // Find the bubble that contains the message we sent earlier. WhatsApp's text
+                    // search is a case-insensitive substring match; a 40-char prefix is distinctive
+                    // enough and survives emoji/line-break differences at the end.
+                    val snippet = wanted.replace('\n', ' ').take(40).trim()
+                    target = rootNode.findAccessibilityNodeInfosByText(snippet)
+                        .filter { (it.viewIdResourceName ?: "").let { id -> id.contains("message_text") || id.contains("conversation_text") || id.isEmpty() } }
+                        .lastOrNull()
+                    if (target == null) {
+                        // Not on screen yet: scroll toward older messages and look again next poll.
+                        deleteScrolls++
+                        if (deleteScrolls > 25) {
+                            Log.w(TAG, "Could not find the message to delete after $deleteScrolls scrolls")
+                            isWaitingForWhatsAppDelete = false
+                            return true
+                        }
+                        performSmartScroll("up", "large")
+                        deleteGestureCooldownUntil = System.currentTimeMillis() + 900
+                        return false
+                    }
+                } else {
+                    for (id in messageIds) {
+                        val nodes = rootNode.findAccessibilityNodeInfosByViewId(id)
+                        if (nodes.isNotEmpty()) target = nodes.last()
+                    }
+                    if (target == null) {
+                        target = findLastMessageBubble(rootNode)
+                    }
                 }
                 if (target != null) {
-                    var longPressed = target.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK)
-                    if (!longPressed && target.parent != null) {
-                        longPressed = target.parent.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK)
-                    }
+                    // Node-level long click rarely opens WhatsApp's selection bar, so always
+                    // follow it with a real long-press gesture at the bubble centre.
+                    target.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK)
+                    target.parent?.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK)
                     val rect = Rect()
                     target.getBoundsInScreen(rect)
                     if (rect.width() > 0 && rect.height() > 0) {
                         longPressAt(rect.centerX().toFloat(), rect.centerY().toFloat())
-                        longPressed = true
+                        deleteGestureCooldownUntil = System.currentTimeMillis() + 1300
+                        Log.i(TAG, "Long-pressed WhatsApp message bubble at ${rect.centerX()}, ${rect.centerY()}")
                     }
-                    if (longPressed) {
-                        Log.i(TAG, "Long-pressed last WhatsApp message bubble at ${rect.centerX()}, ${rect.centerY()}")
-                        deleteStage = 1
-                    }
+                }
+                // Do NOT advance here: stay on stage 0 and let the next poll confirm the
+                // selection bar actually appeared (the selectionUp check above). Give up on
+                // the long-press after several tries so a frozen screen can't loop forever.
+                deleteLongPressTries++
+                if (deleteLongPressTries >= 6) {
+                    Log.w(TAG, "WhatsApp long-press did not open the selection menu after $deleteLongPressTries tries")
+                    isWaitingForWhatsAppDelete = false
+                    return true
                 }
                 false
             }
@@ -976,6 +1055,16 @@ class JarvisAccessibilityService : AccessibilityService() {
                 }
                 if (!clicked && !deleteForEveryone) {
                     clicked = clickFirstMatchingText(rootNode, "delete for me")
+                }
+                if (!clicked && deleteForEveryone) {
+                    // WhatsApp only offers "Delete for everyone" for ~60 hours after sending.
+                    // After two looks without it, the message is too old: delete it for me.
+                    deleteOptionTries++
+                    if (deleteOptionTries >= 2) {
+                        clicked = clickFirstMatchingText(rootNode, "Delete for me") ||
+                            clickFirstMatchingText(rootNode, "delete for me")
+                        if (clicked) Log.i(TAG, "'Delete for everyone' not offered (too old); deleted for me instead")
+                    }
                 }
                 if (clicked) {
                     Log.i(TAG, "Selected WhatsApp delete option: $optionText")

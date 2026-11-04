@@ -174,9 +174,9 @@ private data class SearchBits(
 
 /**
  * Multi-conversation chat ViewModel (AndroLLM feature/chat, adapted to Jarvis):
- *  - persistence: the separate `androllm_chat.db` via [AndroLlmChatStore]
- *    (Jarvis' ChatRepository history is imported once, read-only, and each
- *    new exchange is optionally mirrored back with ChatRepository.addTurn),
+ *  - persistence: `androllm_chat.db` via [AndroLlmChatStore] — the same store
+ *    Jarvis' ChatRepository reads its history window from, so every exchange
+ *    here reaches Jarvis' memory pipeline without a separate mirror,
  *  - generation:  [com.jarvis.assistant.ai.router.ModelRouter.routeConversationalQuery], streamed,
  *  - attachments: [AttachmentProcessor] → extracted text injected into the system prompt.
  */
@@ -285,18 +285,11 @@ internal class ChatViewModel(application: Application) : AndroidViewModel(applic
 
     init {
         viewModelScope.launch {
-            val imported = try {
-                AndroLlmChatStore.importJarvisHistoryOnce(app, jarvisHistory.turns.value)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Log.w(TAG, "Jarvis history import failed: ${e.message}", e)
-                null
-            }
+            // Legacy Jarvis history is migrated into this store once by ChatRepository at startup.
+            jarvisHistory.awaitLoaded()
             val last = ChatPrefs.lastConversationId(app)
             val target = when {
                 last.isNotBlank() && conversationRepository.findById(last) != null -> last
-                imported != null -> imported
                 else -> conversationRepository.observeActive().first().firstOrNull()?.id.orEmpty()
             }
             conversationId.value = target
@@ -485,10 +478,6 @@ internal class ChatViewModel(application: Application) : AndroidViewModel(applic
                     )
                     messageRepository.upsert(assistant)
                     conversationRepository.touch(convId)
-                    if (ChatPrefs.mirrorToJarvis(app)) {
-                        // Keeps Jarvis' classic chat + memory pipeline aware of this exchange.
-                        runCatching { jarvisHistory.addTurn(userText = prompt, jarvisText = reply) }
-                    }
                 }
             }
             val end = System.currentTimeMillis()

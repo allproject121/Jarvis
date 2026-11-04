@@ -57,6 +57,13 @@ object MultiModelAiRouter {
     const val PROVIDER_GROK = "grok"
     const val PROVIDER_OPENROUTER = "openrouter"
     const val PROVIDER_LOCAL = "ollama"
+    // Maya "Voice engine" presets (keys/models from maya_brain_secure / maya_brain_prefs).
+    const val PROVIDER_GROQ = "groq"
+    const val PROVIDER_MISTRAL = "mistral"
+    const val PROVIDER_TOGETHER = "together"
+    const val PROVIDER_DEEPINFRA = "deepinfra"
+    const val PROVIDER_NVIDIA = "nvidia"
+    const val PROVIDER_CUSTOM = "custom"
 
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -111,6 +118,8 @@ object MultiModelAiRouter {
             PROVIDER_GROK -> callGrok(prefs.grokApiKey, prefs.grokModel.ifBlank { "grok-2" }, systemPrompt, userPrompt, temperature, maxTokens)
             PROVIDER_OPENROUTER -> callOpenRouter(prefs.openRouterApiKey, prefs.openRouterModel.ifBlank { "auto" }, systemPrompt, userPrompt, temperature, maxTokens)
             PROVIDER_LOCAL -> callLocalOllama(prefs.customEndpoint, prefs.localHostModel, systemPrompt, userPrompt)
+            PROVIDER_GROQ, PROVIDER_MISTRAL, PROVIDER_TOGETHER, PROVIDER_DEEPINFRA, PROVIDER_NVIDIA, PROVIDER_CUSTOM ->
+                callBrainPreset(context, chosenProvider, systemPrompt, userPrompt, temperature, maxTokens)
             else -> callGemini(prefs.apiKey, prefs.aiModel.ifBlank { "gemini-2.0-flash" }, systemPrompt, userPrompt, temperature, maxTokens)
         }
 
@@ -551,6 +560,38 @@ object MultiModelAiRouter {
         }
     }
 
+    /**
+     * Calls one of the extra OpenAI-compatible presets (Groq, Mistral, Together, DeepInfra,
+     * NVIDIA NIM, custom base URL) using the key/model saved in Settings → Voice engine.
+     */
+    private fun callBrainPreset(
+        context: Context,
+        providerId: String,
+        systemPrompt: String,
+        userPrompt: String,
+        temperature: Double,
+        maxTokens: Int
+    ): String? {
+        val preset = com.jarvis.assistant.maya.brain.BrainProviders.byId(providerId) ?: return null
+        val brain = com.jarvis.assistant.maya.brain.BrainSettings.get(context)
+        val key = brain.providerKey(preset.id)
+        val main = brain.mainBrain()
+        val sameAsMain = main.provider.id == preset.id
+        val baseUrl = if (sameAsMain) main.baseUrl else preset.baseUrl
+        val model = (if (sameAsMain) main.model else "").ifBlank { preset.defaultModel }
+        if (model.isBlank() || (key.isBlank() && !preset.customBaseUrl)) return null
+        return callOpenAiCompatible(
+            url = preset.chatUrl(baseUrl),
+            apiKey = key,
+            model = model,
+            systemPrompt = systemPrompt,
+            userPrompt = userPrompt,
+            temperature = temperature,
+            maxTokens = maxTokens,
+            extraHeaders = preset.extraHeaders
+        )
+    }
+
     fun getProviderDisplayName(providerKey: String): String = when (providerKey) {
         PROVIDER_GEMINI -> "Google Gemini"
         PROVIDER_OPENAI -> "OpenAI ChatGPT"
@@ -559,6 +600,12 @@ object MultiModelAiRouter {
         PROVIDER_GROK -> "xAI Grok"
         PROVIDER_OPENROUTER -> "OpenRouter"
         PROVIDER_LOCAL -> "Local Ollama"
+        PROVIDER_GROQ -> "Groq"
+        PROVIDER_MISTRAL -> "Mistral"
+        PROVIDER_TOGETHER -> "Together AI"
+        PROVIDER_DEEPINFRA -> "DeepInfra"
+        PROVIDER_NVIDIA -> "NVIDIA NIM"
+        PROVIDER_CUSTOM -> "Custom (OpenAI-compatible)"
         else -> providerKey.replaceFirstChar { it.uppercase() }
     }
 }

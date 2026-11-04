@@ -85,6 +85,27 @@ class SubAgentsBottomSheet : BottomSheetDialogFragment() {
             }
         }
 
+        // 5. Maya sub-agent brains: per-role provider / model / key (coding, research, mission, eyes).
+        (binding.root as? android.widget.LinearLayout)?.let { root ->
+            val btn = android.widget.Button(requireContext()).apply {
+                text = "Sub-agent brains & Voice engine…"
+                isAllCaps = false
+                setOnClickListener {
+                    HudSoundManager.playTapSound()
+                    dismiss()
+                    startActivity(com.jarvis.assistant.maya.brain.VoiceEngineActivity.intent(requireContext()))
+                }
+            }
+            val lp = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                val m = (16 * resources.displayMetrics.density).toInt()
+                setMargins(m, m / 2, m, m)
+            }
+            root.addView(btn, lp)
+        }
+
         // 4. Open Macro Workflow Console
         binding.btnOpenMacroConsole.setOnClickListener {
             HudSoundManager.playTapSound()

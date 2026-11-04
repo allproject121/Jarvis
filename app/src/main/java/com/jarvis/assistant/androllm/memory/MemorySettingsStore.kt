@@ -7,12 +7,12 @@ import com.jarvis.assistant.androllm.memory.intelligence.MemoryIntelligenceRoute
 
 /**
  * User-configurable AndroLLM memory settings (port of AndroLLM MemorySettings).
- * On/off switches live in [AndroLlmFlags] (default OFF); tuning values live
+ * On/off switches live in [AndroLlmFlags] (extraction ON, background indexing OFF by default); tuning values live
  * in their own SharedPreferences file. Nothing here leaves the device.
  */
 data class MemorySettings(
-    /** LLM extraction after each exchange ([AndroLlmFlags.MEMORY_EXTRACTION]). */
-    val extractionEnabled: Boolean = false,
+    /** LLM extraction after each exchange ([AndroLlmFlags.MEMORY_EXTRACTION], default ON). */
+    val extractionEnabled: Boolean = true,
     /** Periodic WorkManager indexing ([AndroLlmFlags.MEMORY_BACKGROUND_INDEXING]). */
     val backgroundIndexingEnabled: Boolean = false,
     /** Minimum similarity before an extracted memory updates an existing one. */
@@ -63,7 +63,7 @@ class MemorySettingsStore(context: Context) {
     private val prefs = appContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     fun current(): MemorySettings = MemorySettings(
-        extractionEnabled = AndroLlmFlags.isEnabled(appContext, AndroLlmFlags.MEMORY_EXTRACTION),
+        extractionEnabled = AndroLlmFlags.isMemoryExtractionEnabled(appContext),
         backgroundIndexingEnabled = AndroLlmFlags.isEnabled(appContext, AndroLlmFlags.MEMORY_BACKGROUND_INDEXING),
         similarityThreshold = prefs.getFloat(KEY_THRESHOLD, MemorySettings.DEFAULT_THRESHOLD)
             .coerceIn(MemorySettings.THRESHOLD_MIN, MemorySettings.THRESHOLD_MAX),

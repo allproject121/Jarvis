@@ -28,6 +28,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.jarvis.assistant.JarvisApp
 import com.jarvis.assistant.R
+import com.jarvis.assistant.ai.router.AiModelMode
 import com.jarvis.assistant.androllm.attachments.model.ChatAttachment
 import com.jarvis.assistant.androllm.chat.export.ConversationExporter
 import com.jarvis.assistant.androllm.chat.export.ExportFormat
@@ -36,6 +37,8 @@ import com.jarvis.assistant.androllm.chat.model.Message
 import com.jarvis.assistant.androllm.chat.model.MessageOrigin
 import com.jarvis.assistant.androllm.chat.model.MessageRole
 import com.jarvis.assistant.background.JarvisConversationService
+import com.jarvis.assistant.data.model.GeminiConstants
+import com.jarvis.assistant.data.model.MariaPersona
 import com.jarvis.assistant.databinding.FragmentChatBinding
 import com.jarvis.assistant.ui.compose.feature.chat.ConversationSharer
 import com.jarvis.assistant.ui.compose.feature.prompts.PendingPrompt
@@ -232,14 +235,12 @@ class ChatFragment : Fragment() {
         // Header: actions for the current conversation
         binding.layoutChatHeader.setOnClickListener { showCurrentConversationMenu(it) }
 
-        // Mode Chips
-        binding.chipPersona.setOnClickListener {
-            Toast.makeText(requireContext(), "Persona: Jarvis Active", Toast.LENGTH_SHORT).show()
-        }
+        // Persona chip: pick one of Jarvis' personalities (the same preference Settings sets)
+        binding.chipPersona.setOnClickListener { showPersonaPicker() }
 
-        binding.chipMode.setOnClickListener {
-            Toast.makeText(requireContext(), "Mode: Code & Assistant", Toast.LENGTH_SHORT).show()
-        }
+        // Mode chip: pick Jarvis' AI engine (the same selector as Settings > AI engine)
+        binding.chipMode.setOnClickListener { showAiModePicker() }
+        refreshChipLabels()
         // Long-press the Code chip: open Code Studio (AI coding IDE)
         binding.chipMode.setOnLongClickListener {
             com.jarvis.assistant.codestudio.CodeStudioActivity.open(requireContext())
@@ -731,15 +732,11 @@ class ChatFragment : Fragment() {
             closeDrawer()
             (activity as? MainActivity)?.selectTab(MainActivity.TAB_HOME)
         }
-        binding.btnDrawerImportHistory.setOnClickListener {
-            chatVm.importJarvisHistorySnapshot()
-            closeDrawer()
-        }
         binding.btnDrawerClearJarvisHistory.setOnClickListener {
-            // The original "New Chat" action: clears Jarvis' own stored turns (chats here are kept).
+            // The original "New Chat" action: clears Jarvis' own history (the Jarvis chat + imported history); other chats are kept.
             confirm(
                 "Clear Jarvis history",
-                "Clear Jarvis' stored voice/chat history? Conversations in this list are kept.",
+                "Clear Jarvis' stored voice history (the Jarvis chat and the imported history)? Your other chats are kept.",
                 "Clear"
             ) { JarvisApp.instance.chatRepository.clearHistory() }
         }
@@ -973,6 +970,68 @@ class ChatFragment : Fragment() {
         toast("Copied to clipboard")
     }
 
+    // Persona / AI engine chips
+
+    private fun refreshChipLabels() {
+        val b = _binding ?: return
+        val prefs = JarvisApp.instance.preferences
+        b.tvChipPersona.text = personaLabel(prefs.personality)
+        b.tvChipMode.text = AiModelMode.fromString(prefs.aiModelMode).displayName.substringBefore(" (")
+    }
+
+    private fun personaLabel(personality: String): String =
+        personality.removeSuffix(" Mode").trim()
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+            .ifBlank { "Jarvis" }
+
+    private fun showPersonaPicker() {
+        val prefs = JarvisApp.instance.preferences
+        val current = prefs.personality
+        val options = GeminiConstants.SUPPORTED_PERSONALITIES.let { list ->
+            if (list.any { it.equals(current, ignoreCase = true) }) list else list + current
+        }
+        val checked = options.indexOfFirst { it.equals(current, ignoreCase = true) }
+        AlertDialog.Builder(requireContext())
+            .setTitle("Personality")
+            .setSingleChoiceItems(options.toTypedArray(), checked) { dialog, which ->
+                dialog.dismiss()
+                val picked = options[which]
+                if (MariaPersona.isActive(picked)) {
+                    MariaPersona.activate(requireContext(), prefs)
+                } else {
+                    // Leaving Maria: drop her name so Jarvis doesn't keep calling itself MARIA.
+                    if (MariaPersona.isActive(prefs.personality) && prefs.assistantName == MariaPersona.NAME) {
+                        prefs.assistantName = "JARVIS"
+                    }
+                    prefs.personality = picked
+                }
+                refreshChipLabels()
+                toast("Personality: ${personaLabel(picked)} (applies to the next Jarvis session)")
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showAiModePicker() {
+        val app = JarvisApp.instance
+        val prefs = app.preferences
+        val modes = AiModelMode.entries
+        val current = AiModelMode.fromString(prefs.aiModelMode)
+        AlertDialog.Builder(requireContext())
+            .setTitle("AI engine")
+            .setSingleChoiceItems(modes.map { it.displayName }.toTypedArray(), modes.indexOf(current)) { dialog, which ->
+                dialog.dismiss()
+                val mode = modes[which]
+                app.modelRouter.setMode(mode)
+                prefs.aiModelMode = mode.name
+                prefs.voiceEngineType = mode.name
+                refreshChipLabels()
+                toast("AI engine: ${mode.displayName}")
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun confirm(title: String, message: String, action: String, onConfirm: () -> Unit) {
         AlertDialog.Builder(requireContext())
             .setTitle(title)
@@ -992,6 +1051,7 @@ class ChatFragment : Fragment() {
         if (_binding != null) {
             com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
             consumePendingPrompt()
+            refreshChipLabels()
 
         // Automatically scroll chat up when user types or focuses input
         binding.etMessageInput.addTextChangedListener(object : android.text.TextWatcher {

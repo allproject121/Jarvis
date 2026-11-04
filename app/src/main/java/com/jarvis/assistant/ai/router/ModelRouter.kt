@@ -46,6 +46,12 @@ class ModelRouter private constructor(
         /** Default local model tag (must exist in the user's Ollama install). */
         const val DEFAULT_LOCAL_MODEL = "qwen3:8b"
 
+        /** How long Gemini is skipped after it fails, before it is tried again. */
+        private const val GEMINI_COOLDOWN_MS = 5 * 60_000L
+
+        /** Returned by the AiTextSynthesizer fallback lambda so a Gemini failure is not shown as an answer. */
+        private const val GEMINI_FAILED_SENTINEL = "\u0000JARVIS_GEMINI_FAILED\u0000"
+
         @Volatile
         private var instance: ModelRouter? = null
 
@@ -65,6 +71,9 @@ class ModelRouter private constructor(
     private val chatGptClient = ChatGptClient()
     private val localHostClient = com.jarvis.assistant.network.LocalHostLlmClient()
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+
+    @Volatile
+    private var geminiCooldownUntil = 0L
 
     private val _currentMode = MutableStateFlow(AiModelMode.AUTO_HYBRID)
     val currentMode: StateFlow<AiModelMode> = _currentMode.asStateFlow()
@@ -169,24 +178,16 @@ class ModelRouter private constructor(
             AiModelMode.GEMINI_LIVE -> {
                 if (hasNet && geminiKey.isNotBlank()) {
                     Log.i(TAG, "Routing text chat to Gemini REST Core")
-                    _lastActiveProviderName.value = "Gemini Flash (Online)"
-                    _isOfflineFallbackActive.value = false
-                    try {
-                        val fullSysPrompt = (systemPrompt.ifBlank { "You are JARVIS, Tony Stark's sophisticated AI operating system." }) +
-                            (if (memoryContext.isNotBlank()) "\n\n$memoryContext" else "")
-                        val responseText = com.jarvis.assistant.ai.AiTextSynthesizer.synthesizeText(
-                            context = context,
-                            systemInstruction = fullSysPrompt,
-                            prompt = clean
-                        ) {
-                            "Sir, external Gemini telemetry returned empty. Falling back to local neural core."
-                        }
-                        emit(responseText)
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Gemini online text error: ${e.message} -> Falling back")
-                        tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
-                    }
+                    geminiTextOrLocal(
+                        providerName = "Gemini Flash (Online)",
+                        legacyFallbackText = "Sir, external Gemini telemetry returned empty. Falling back to local neural core.",
+                        endpoint = endpoint, localModel = localModel, clean = clean, systemPrompt = systemPrompt,
+                        memoryContext = memoryContext, chatHistory = chatHistory
+                    ) { emit(it) }
                 } else if (!hasNet) {
+                    tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
+                } else if (isOfflineBrainFailoverEnabled()) {
+                    Log.i(TAG, "Gemini API key is blank -> Offline Brain failover")
                     tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
                 } else {
                     _lastActiveProviderName.value = "Gemini Live"
@@ -259,23 +260,12 @@ class ModelRouter private constructor(
                         .collect { emit(it) }
                 } else if (hasNet && geminiKey.isNotBlank()) {
                     Log.i(TAG, "AUTO_HYBRID: Online network active -> Routing to Gemini Online")
-                    _lastActiveProviderName.value = "Gemini Flash (Online)"
-                    _isOfflineFallbackActive.value = false
-                    try {
-                        val fullSysPrompt = (systemPrompt.ifBlank { "You are JARVIS, Tony Stark's sophisticated AI operating system." }) +
-                            (if (memoryContext.isNotBlank()) "\n\n$memoryContext" else "")
-                        val responseText = com.jarvis.assistant.ai.AiTextSynthesizer.synthesizeText(
-                            context = context,
-                            systemInstruction = fullSysPrompt,
-                            prompt = clean
-                        ) {
-                            "Sir, external telemetry offline."
-                        }
-                        emit(responseText)
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Gemini synthesis failed: ${e.message} -> Falling back")
-                        tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
-                    }
+                    geminiTextOrLocal(
+                        providerName = "Gemini Flash (Online)",
+                        legacyFallbackText = "Sir, external telemetry offline.",
+                        endpoint = endpoint, localModel = localModel, clean = clean, systemPrompt = systemPrompt,
+                        memoryContext = memoryContext, chatHistory = chatHistory
+                    ) { emit(it) }
                 } else {
                     Log.i(TAG, "AUTO_HYBRID: Offline or no cloud key -> Engaging Local Host or Offline AI")
                     tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
@@ -283,6 +273,68 @@ class ModelRouter private constructor(
             }
         }
     }.flowOn(Dispatchers.IO)
+
+    /** Offline Brain failover switch (Settings → Engines), ON by default. */
+    private fun isOfflineBrainFailoverEnabled(): Boolean =
+        com.jarvis.assistant.androllm.AndroLlmFlags.isEnabled(
+            context, com.jarvis.assistant.androllm.AndroLlmFlags.OFFLINE_BRAIN_FAILOVER, default = true
+        )
+
+    /** Skips Gemini for [GEMINI_COOLDOWN_MS] so every question doesn't wait on a key/quota that just failed. */
+    fun markGeminiFailed() {
+        geminiCooldownUntil = System.currentTimeMillis() + GEMINI_COOLDOWN_MS
+        Log.w(TAG, "Gemini marked as failing; Offline Brain handles text for the next ${GEMINI_COOLDOWN_MS / 60_000} min")
+    }
+
+    /**
+     * Asks Gemini (via [com.jarvis.assistant.ai.AiTextSynthesizer]) and, when the failover switch is on,
+     * hands the question to the local brain if Gemini produced nothing. AiTextSynthesizer never throws for
+     * provider errors; it returns its fallback text, so a sentinel tells "failed" apart from a real answer.
+     */
+    private suspend fun geminiTextOrLocal(
+        providerName: String,
+        legacyFallbackText: String,
+        endpoint: String,
+        localModel: String,
+        clean: String,
+        systemPrompt: String,
+        memoryContext: String,
+        chatHistory: List<ChatTurn>,
+        emitBlock: suspend (String) -> Unit
+    ) {
+        val failover = isOfflineBrainFailoverEnabled()
+        if (failover && System.currentTimeMillis() < geminiCooldownUntil) {
+            Log.i(TAG, "Gemini in cooldown -> Offline Brain")
+            tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory, emitBlock)
+            return
+        }
+        _lastActiveProviderName.value = providerName
+        _isOfflineFallbackActive.value = false
+        try {
+            val fullSysPrompt = (systemPrompt.ifBlank { "You are JARVIS, Tony Stark's sophisticated AI operating system." }) +
+                (if (memoryContext.isNotBlank()) "\n\n$memoryContext" else "")
+            val responseText = com.jarvis.assistant.ai.AiTextSynthesizer.synthesizeText(
+                context = context,
+                systemInstruction = fullSysPrompt,
+                prompt = clean
+            ) {
+                if (failover) GEMINI_FAILED_SENTINEL else legacyFallbackText
+            }
+            if (failover && (responseText == GEMINI_FAILED_SENTINEL || responseText.isBlank())) {
+                Log.w(TAG, "Gemini returned nothing -> Offline Brain failover")
+                markGeminiFailed()
+                tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory, emitBlock)
+            } else {
+                emitBlock(responseText)
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "Gemini text error: ${e.message} -> Falling back")
+            if (failover) markGeminiFailed()
+            tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory, emitBlock)
+        }
+    }
 
     private suspend fun tryLocalHostOrOffline(
         endpoint: String,

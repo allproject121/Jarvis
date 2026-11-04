@@ -13,7 +13,8 @@ import com.jarvis.assistant.androllm.agent.registry.ToolRegistry
  * search_places, control_music, send_email, send_sms, vibrate and
  * read_notifications run Jarvis' androllm.tools.AndroLlmTools;
  * set_flashlight / set_volume(media) / set_brightness run Jarvis'
- * PhoneControlManager; launch_app / list_apps use Jarvis' AppIndex;
+ * PhoneControlManager; list_apps uses Jarvis' AppIndex (launch_app is not
+ * registered — Jarvis' own open_app covers it);
  * find_contacts uses ContactCaller; note_* use Jarvis' memory notes;
  * variable_* use Jarvis' AgentVariableStore; take_screenshot uses Jarvis'
  * accessibility service.
@@ -40,7 +41,6 @@ object AndroLlmToolCatalog {
             BluetoothTool(app),
             WifiTool(app),
             MusicTool(app),
-            AppLauncherTool(app),
             ContactTool(app),
             CameraTool(app),
             ScreenshotTool(app),

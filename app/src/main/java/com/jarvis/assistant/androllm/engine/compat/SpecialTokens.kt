@@ -1,5 +1,7 @@
 package com.jarvis.assistant.androllm.engine.compat
 
+import com.jarvis.assistant.ai.compat.ModelFamily
+
 /**
  * The special tokens of one model family, matching the official tokenizer
  * configuration of that family (tokenizer_config.json / special_tokens_map.json

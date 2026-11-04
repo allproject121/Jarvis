@@ -23,7 +23,6 @@
 
 # ── Roshan Security Module — keep rules ───────────────────────────────────
 -keep class com.jarvis.assistant.security.SecurityManager { *; }
--keep class com.jarvis.assistant.security.DeveloperInfo { *; }
 -keep class com.jarvis.assistant.security.AppIdentityVerifier { *; }
 
 # Obfuscate everything else aggressively

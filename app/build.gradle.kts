@@ -151,6 +151,8 @@ dependencies {
     implementation("com.github.k2-fsa:sherpa-onnx:1.13.4")
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
     implementation("com.google.mlkit:text-recognition:16.0.1")
+    // Maya integration: Faces / Face Lock / Watchman face presence (on-device)
+    implementation("com.google.mlkit:face-detection:16.1.7")
     implementation("androidx.work:work-runtime-ktx:2.9.1")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")

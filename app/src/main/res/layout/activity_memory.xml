@@ -150,6 +150,19 @@
                     android:paddingVertical="0dp"
                     android:layout_marginStart="6dp" />
             </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnOpenMayaWiki"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:layout_marginTop="6dp"
+                android:text="Wiki, rules &amp; episodes"
+                android:textSize="11sp"
+                android:textColor="?attr/themeAccent"
+                app:strokeColor="?attr/themeAccent"
+                app:cornerRadius="8dp"
+                android:paddingVertical="0dp" />
         </LinearLayout>
 
         <!-- Search Input -->

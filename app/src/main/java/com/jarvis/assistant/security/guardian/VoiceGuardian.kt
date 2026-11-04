@@ -36,6 +36,25 @@ class VoiceGuardian(private val context: Context) {
         private const val KEY_PROFILES = "voice_profiles"
         private const val KEY_IS_ARMED = "is_armed"
         private const val KEY_TOUCH_GUARD = "is_touch_guard_active"
+
+        /** Honest suffix for the enroll reply: only a name + role is stored. */
+        const val ENROLL_REPLY_NOTE =
+            "Note: this only saves the name and role — no voice sample was recorded, so I can't recognise their voice yet."
+
+        /** Last speaker identified by any voice/face check (maya.guardian.ListenModeController.onSpeakerIdentified). */
+        @Volatile var lastIdentifiedSpeaker: String? = null
+            private set
+        @Volatile var lastIdentifiedRole: GuardianRole? = null
+            private set
+        @Volatile var lastIdentifiedAtMs: Long = 0L
+            private set
+
+        /** [name] null = an unknown (non-enrolled) voice was heard. */
+        fun noteSpeakerIdentified(name: String?, role: GuardianRole?, nowMs: Long = System.currentTimeMillis()) {
+            lastIdentifiedSpeaker = name
+            lastIdentifiedRole = role
+            lastIdentifiedAtMs = nowMs
+        }
     }
 
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -78,25 +97,43 @@ class VoiceGuardian(private val context: Context) {
 
     fun listVoices(): List<VoiceProfile> = profiles.values.toList()
 
+    /**
+     * Saves a name + role entry. NOTE: no voice sample is recorded here — this does not let
+     * Jarvis recognise that person's voice. Owner voice verification lives in OwnerVoiceManager
+     * (Settings → voice enrollment); [ENROLL_REPLY_NOTE] is appended to the spoken reply.
+     */
     fun enrollVoice(name: String, role: GuardianRole = GuardianRole.FAMILY): Boolean {
         profiles[name] = VoiceProfile(name, role)
         saveProfiles()
-        Log.i(TAG, "Enrolled voice for $name with role $role")
+        Log.i(TAG, "Saved Voice Guardian profile (name + role only, no voice sample) for $name with role $role")
         return true
     }
 
+    /**
+     * True when Voice Guard is armed and [toolName] is a risky tool (see [VoiceGuardPolicy]),
+     * i.e. JarvisToolDispatcher must confirm the speaker is the owner before running it.
+     */
+    fun requiresOwnerFor(toolName: String, args: org.json.JSONObject?): Boolean =
+        isArmed && VoiceGuardPolicy.isRiskyTool(toolName, args)
+
+    /** Voice phrases arrive lower-cased ("remove voice rahul"), so match stored names ignoring case. */
+    private fun resolveKey(name: String): String? =
+        if (profiles.containsKey(name)) name else profiles.keys.firstOrNull { it.equals(name.trim(), ignoreCase = true) }
+
     fun removeVoice(name: String): Boolean {
-        if (profiles.remove(name) != null) {
+        val key = resolveKey(name) ?: return false
+        if (profiles.remove(key) != null) {
             saveProfiles()
-            Log.i(TAG, "Removed voice profile $name")
+            Log.i(TAG, "Removed voice profile $key")
             return true
         }
         return false
     }
 
     fun setVoiceRole(name: String, role: GuardianRole): Boolean {
-        val existing = profiles[name] ?: return false
-        profiles[name] = existing.copy(role = role)
+        val key = resolveKey(name) ?: return false
+        val existing = profiles[key] ?: return false
+        profiles[key] = existing.copy(role = role)
         saveProfiles()
         Log.i(TAG, "Updated role for $name to $role")
         return true

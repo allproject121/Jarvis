@@ -1,5 +1,6 @@
 package com.jarvis.assistant.androllm.engine.compat
 
+import com.jarvis.assistant.ai.compat.ModelFamily
 import com.jarvis.assistant.androllm.engine.support.ModelMetadataRegistry
 
 /**

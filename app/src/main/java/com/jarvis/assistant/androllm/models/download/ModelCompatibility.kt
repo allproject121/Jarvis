@@ -1,7 +1,7 @@
 package com.jarvis.assistant.androllm.models.download
 
 import com.jarvis.assistant.androllm.models.catalog.CatalogModel
-import com.jarvis.assistant.androllm.models.catalog.ModelMetadataRegistry
+import com.jarvis.assistant.androllm.engine.support.ModelMetadataRegistry
 import com.jarvis.assistant.androllm.models.catalog.SupportedArchitectures
 
 /**

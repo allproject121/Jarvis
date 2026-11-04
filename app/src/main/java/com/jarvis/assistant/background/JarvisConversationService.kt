@@ -96,6 +96,17 @@ class JarvisConversationService : Service() {
         private const val NOTIFICATION_ID = 41
         private const val INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000L // 30 minutes before standby
         private const val STANDBY_COOLDOWN_MS = 2500L
+        /** Offline Brain failover: wait this long before the watcher tries Gemini again after a fatal error. */
+        private const val GEMINI_RETRY_BACKOFF_MS = 5 * 60 * 1000L
+
+        /**
+         * Risky Live tools handled by this service's own branches (not delegated to
+         * JarvisToolDispatcher), so they need their own Voice Guard check.
+         */
+        private val LIVE_LOCAL_GUARDED_TOOLS = setOf(
+            "call_contact", "whatsapp_call", "handle_phone_call", "reply_to_message",
+            "delete_memory", "send_webhook"
+        )
 
         @Volatile private var activeInstance: JarvisConversationService? = null
 
@@ -971,6 +982,10 @@ class JarvisConversationService : Service() {
         val now = System.currentTimeMillis()
         lastUserSpeechDetectedTime = now
         lastOwnerVerifiedTimestamp = now
+        // Only an owner-voice setup gives this session-start lease meaning; without one, Voice Guard keeps prompting.
+        if (preferences.isOwnerVoiceEnabled && preferences.hasOwnerVoiceProfile()) {
+            com.jarvis.assistant.security.guardian.VoiceGuardPolicy.markOwnerVerified(now)
+        }
         isCurrentTurnOwnerVoiceVerified = !preferences.isOwnerVoiceEnabled || !preferences.hasOwnerVoiceProfile()
         pendingToolCalls.clear()
         hasSpeechInCurrentUtterance = false
@@ -1479,6 +1494,30 @@ class JarvisConversationService : Service() {
                                 Log.i("JarvisService",
                                     "Network/Quota issue detected (isNetworkDown=$isNetworkDown, isQuota=$isQuotaError) " +
                                     "→ Silently switching to Local AI offline mode (no error banner).")
+                                if (isQuotaError && isOfflineBrainFailoverEnabled()) {
+                                    // Quota won't come back in seconds: back off instead of reconnecting every 2.5 s.
+                                    geminiRetryNotBefore = System.currentTimeMillis() + GEMINI_RETRY_BACKOFF_MS
+                                    (application as? JarvisApp)?.modelRouter?.markGeminiFailed()
+                                } else {
+                                    geminiRetryNotBefore = 0L
+                                }
+                                geminiBlockedApiKey = null
+                                engageOfflineLocalAiMode()
+                                return
+                            }
+
+                            // Offline Brain failover: a bad/expired key or any other fatal Gemini error
+                            // also switches to the on-device brain instead of leaving Jarvis silent.
+                            // Non-fatal drops are left to GeminiLiveWebSocket's own reconnect.
+                            if (isOfflineBrainFailoverEnabled() && (isApiKeyError || isFatal)) {
+                                Log.i("JarvisService", "Gemini failed (code=$errorCode) → Offline Brain failover")
+                                // A rejected key fails again on every retry: wait until the user changes it.
+                                geminiBlockedApiKey = if (isApiKeyError) preferences.apiKey else null
+                                geminiRetryNotBefore = System.currentTimeMillis() + GEMINI_RETRY_BACKOFF_MS
+                                (application as? JarvisApp)?.modelRouter?.markGeminiFailed()
+                                serviceScope.launch {
+                                    _events.emit("Gemini unavailable (${errorCode ?: "error"}). Offline Brain is now active.")
+                                }
                                 engageOfflineLocalAiMode()
                                 return
                             }
@@ -1702,6 +1741,7 @@ class JarvisConversationService : Service() {
                                     val match = com.jarvis.assistant.audio.OwnerVoiceManager.verifySpeakerAudio(audioSnapshot, preferences)
                                     if (match.isMatch || match.distance < match.threshold * 1.35f) {
                                         lastOwnerVerifiedTimestamp = System.currentTimeMillis()
+                                        com.jarvis.assistant.security.guardian.VoiceGuardPolicy.markOwnerVerified(lastOwnerVerifiedTimestamp)
                                         isCurrentTurnOwnerVoiceVerified = true
                                         Log.i("JarvisService", "EARLY voice verification PASSED: Owner confirmed during speech (dist=${match.distance}, sim=${match.similarityPercent}%)")
                                         processPendingToolCalls(verified = true)
@@ -1746,6 +1786,7 @@ class JarvisConversationService : Service() {
                                 if (isLeaseActive) {
                                     // Ultra-low latency: Active owner lease immediately confirms turn with 0ms delay
                                     lastOwnerVerifiedTimestamp = now
+                                    com.jarvis.assistant.security.guardian.VoiceGuardPolicy.markOwnerVerified(now)
                                     isCurrentTurnOwnerVoiceVerified = true
                                     processPendingToolCalls(verified = true)
                                 } else if (!isCurrentTurnOwnerVoiceVerified) {
@@ -1756,6 +1797,7 @@ class JarvisConversationService : Service() {
                                         val match = com.jarvis.assistant.audio.OwnerVoiceManager.verifySpeakerAudio(audioBytes, preferences)
                                         if (match.isMatch || match.distance < match.threshold * 1.35f) {
                                             lastOwnerVerifiedTimestamp = now
+                                            com.jarvis.assistant.security.guardian.VoiceGuardPolicy.markOwnerVerified(now)
                                             isCurrentTurnOwnerVoiceVerified = true
                                             Log.i("JarvisService", "Speech verification passed: Owner confirmed (dist: ${match.distance}, sim: ${match.similarityPercent}%)")
                                             processPendingToolCalls(verified = true)
@@ -1891,6 +1933,12 @@ class JarvisConversationService : Service() {
                         withTimeout(automationToolTimeoutMs()) {
                             val app = application as? JarvisApp ?: return@withTimeout
 
+                if (!hasExecutedCommandInCurrentTurn) {
+                    // First tool of a new user turn: the shared dispatcher's loop guard and
+                    // duplicate-send cache are per turn, so open a fresh turn for Live too.
+                    com.jarvis.assistant.automation.dispatcher.JarvisToolDispatcher.getInstance(this@JarvisConversationService)
+                        .startNewTurn("live-$callId", liveSession = true)
+                }
                 hasExecutedCommandInCurrentTurn = true
                 lastCommandExecutionTime = System.currentTimeMillis()
                 suppressAudioUntilTurnComplete = false
@@ -1963,6 +2011,22 @@ class JarvisConversationService : Service() {
                 }
 
                 Log.i("JarvisService", "Handling native toolCall: $name with args: $args")
+
+                // Voice Guard for the risky tools this service still runs itself
+                // (delegated tools are checked once, inside JarvisToolDispatcher).
+                if (name in LIVE_LOCAL_GUARDED_TOOLS) {
+                    val guardBlock = com.jarvis.assistant.security.guardian.VoiceGuardGate.check(this@JarvisConversationService, name, args)
+                    if (guardBlock != null) {
+                        Log.w("JarvisService", "Voice Guard blocked Live tool '$name'")
+                        liveWebSocket?.sendToolResponse(callId, name, JSONObject().apply {
+                            put("success", false)
+                            put("blocked_by_voice_guard", true)
+                            put("message", guardBlock)
+                        })
+                        return@withTimeout
+                    }
+                }
+
                 val result = JSONObject()
 
                 when (name) {
@@ -2196,9 +2260,7 @@ class JarvisConversationService : Service() {
                             result.put("success", playResult.success)
                             result.put("message", playResult.message ?: if (playResult.success) "Playing $resolvedSong on YouTube." else "Could not play on YouTube.")
                         } else {
-                            val searchResult = com.jarvis.assistant.automation.youtube.YouTubeController.searchYouTube(this@JarvisConversationService, query)
-                            result.put("success", searchResult.success)
-                            result.put("message", searchResult.message ?: "Opened YouTube search results.")
+                            delegateToDispatcher(callId, name, args, result)
                         }
                     }
 
@@ -2231,52 +2293,9 @@ class JarvisConversationService : Service() {
                     }
 
                     "send_whatsapp_message" -> {
-                        val recipient = args.optString("recipient_name", "")
-                            .ifBlank { args.optString("recipient", "") }
-                            .ifBlank { args.optString("contact", "") }.trim()
-                        val message = args.optString("message", "").trim()
-                        val appNumber = if (args.has("app_number")) args.optInt("app_number", 1) else null
-                        val confirmed = args.optBoolean("confirmed", false)
                         audioPlayer?.flush()
-                        val waResult = com.jarvis.assistant.util.WhatsAppMessenger.sendMessage(this@JarvisConversationService, recipient, message, appNumber, confirmed)
-                        when (waResult) {
-                            is com.jarvis.assistant.util.WhatsAppMessenger.SendResult.Success -> {
-                                result.put("success", true)
-                                result.put("sent", true)
-                                result.put("send_attempted", waResult.sendAttempted)
-                                result.put("delivery_verified", waResult.deliveryVerified)
-                                result.put("message", "WhatsApp send initiated for ${waResult.contactName} (${waResult.phoneNumber}) via ${waResult.appName}. Note: Message delivery is unverified; check WhatsApp to confirm.")
-                            }
-                            is com.jarvis.assistant.util.WhatsAppMessenger.SendResult.RequiresConfirmation -> {
-                                result.put("success", false)
-                                result.put("requires_confirmation", true)
-                                result.put("draft_prepared", true)
-                                result.put("recipient", waResult.contactName)
-                                result.put("message", "Draft ready for ${waResult.contactName} (${waResult.phoneNumber}): \"${waResult.message}\". Please confirm before sending.")
-                            }
-                            is com.jarvis.assistant.util.WhatsAppMessenger.SendResult.MultipleAppsFound -> {
-                                result.put("success", false)
-                                result.put("message", "Multiple WhatsApp installations found (${waResult.count} apps). Please specify WhatsApp 1 or 2.")
-                            }
-                            is com.jarvis.assistant.util.WhatsAppMessenger.SendResult.ContactNotFound -> {
-                                result.put("success", false)
-                                result.put("message", "Could not find contact '${waResult.name}' in phone contacts. Please verify the contact name or provide a phone number.")
-                            }
-                            is com.jarvis.assistant.util.WhatsAppMessenger.SendResult.MultipleContactsFound -> {
-                                result.put("success", false)
-                                result.put("multiple_contacts", true)
-                                result.put("message", "Multiple contacts matched '${waResult.name}': ${waResult.matches.joinToString()}. Which contact would you like to message?")
-                            }
-                            is com.jarvis.assistant.util.WhatsAppMessenger.SendResult.MissingPermission -> {
-                                result.put("success", false)
-                                result.put("permission_denied", true)
-                                result.put("message", "Contacts permission is required to find contacts. Please grant Contacts permission in Settings.")
-                            }
-                            is com.jarvis.assistant.util.WhatsAppMessenger.SendResult.Error -> {
-                                result.put("success", false)
-                                result.put("message", waResult.reason)
-                            }
-                        }
+                        // Same WhatsAppMessenger flow, plus Voice Guard and the per-turn duplicate-send guard.
+                        delegateToDispatcher(callId, name, args, result)
                     }
 
                     "get_contact_count" -> {
@@ -2358,7 +2377,11 @@ class JarvisConversationService : Service() {
                         val callResult = com.jarvis.assistant.util.WhatsAppMessenger.placeCall(this@JarvisConversationService, recipient, callType, appNumber, confirmed)
                         val (ok, msg) = when (callResult) {
                             is com.jarvis.assistant.util.WhatsAppMessenger.CallResult.Success -> Pair(true, "Calling ${callResult.contactName} on WhatsApp.")
-                            is com.jarvis.assistant.util.WhatsAppMessenger.CallResult.RequiresConfirmation -> Pair(true, "Please confirm WhatsApp call to ${callResult.contactName}.")
+                            is com.jarvis.assistant.util.WhatsAppMessenger.CallResult.RequiresConfirmation -> {
+                                // Nothing was dialled yet - the call still waits on the user's confirmation.
+                                result.put("requires_confirmation", true)
+                                Pair(false, "WhatsApp call to ${callResult.contactName} NOT placed yet: please confirm first.")
+                            }
                             is com.jarvis.assistant.util.WhatsAppMessenger.CallResult.MultipleAppsFound -> Pair(false, "Multiple WhatsApp apps found. Please specify WhatsApp 1 or 2.")
                             is com.jarvis.assistant.util.WhatsAppMessenger.CallResult.ContactNotFound -> Pair(false, "Could not find contact ${callResult.name}.")
                             is com.jarvis.assistant.util.WhatsAppMessenger.CallResult.MultipleContactsFound -> Pair(false, "Multiple contacts found for ${callResult.name}.")
@@ -2433,39 +2456,8 @@ class JarvisConversationService : Service() {
                     }
 
                     "find_contacts" -> {
-                        val query = args.optString("query", "").trim()
-                        val limit = if (args.has("limit")) args.optInt("limit", 8).coerceIn(1, 20) else 8
-                        Log.i("JarvisService", "TOOL find_contacts query='$query' limit=$limit")
-                        val candidates = com.jarvis.assistant.util.ContactCaller.searchContacts(
-                            this@JarvisConversationService,
-                            query,
-                            limit
-                        )
-                        Log.i(
-                            "JarvisService",
-                            "TOOL find_contacts -> ${candidates.size} hits [" +
-                                candidates.joinToString(", ") { "${it.contact.name}/${it.contact.last4}" } + "]"
-                        )
-                        val arr = org.json.JSONArray()
-                        candidates.forEach { cand ->
-                            arr.put(org.json.JSONObject().apply {
-                                put("name", cand.contact.name)
-                                put("number", cand.contact.number)
-                                put("last4", cand.contact.last4)
-                                put("label", cand.contact.label)
-                                put("times_called", cand.affinityCount)
-                                put("why", cand.reason)
-                            })
-                        }
-                        result.put("success", candidates.isNotEmpty())
-                        result.put("count", candidates.size)
-                        result.put("contacts", arr)
-                        result.put(
-                            "message",
-                            if (candidates.isEmpty()) "No saved contact matched '$query'."
-                            else "Found ${candidates.size} contact(s) matching '$query': " +
-                                candidates.joinToString("; ") { "${it.contact.name} (${it.contact.label.ifBlank { "saved" }}, ends ${it.contact.last4}" + (if (it.affinityCount > 0) ", called ${it.affinityCount}x" else "") + ")" }
-                        )
+                        // Dispatcher version also reports a missing Contacts permission instead of "no match".
+                        delegateToDispatcher(callId, name, args, result)
                     }
 
                     "list_available_models" -> {
@@ -2566,10 +2558,8 @@ class JarvisConversationService : Service() {
                     }
 
                     "set_flashlight" -> {
-                        val enabled = args.optBoolean("enabled", true)
-                        val msg = app.phoneControlManager.setFlashlight(enabled)
-                        result.put("success", true)
-                        result.put("message", msg)
+                        // setFlashlight reports failures as a sentence; the dispatcher turns that into success=false.
+                        delegateToDispatcher(callId, name, args, result)
                     }
 
                     "click_ui_element" -> {
@@ -2704,10 +2694,24 @@ class JarvisConversationService : Service() {
 
                     "press_key" -> {
                         val key = args.optString("key", "back")
-                        val orchestrator = com.jarvis.assistant.vision.VisualTaskOrchestrator.getInstance()
-                        val actionRes = orchestrator.handleKey(key)
-                        result.put("success", actionRes.success)
-                        result.put("message", actionRes.message)
+                        val normalizedKey = key.trim().lowercase(Locale.ROOT)
+                        if (normalizedKey in setOf("back", "home", "recents", "notifications")) {
+                            val orchestrator = com.jarvis.assistant.vision.VisualTaskOrchestrator.getInstance()
+                            val actionRes = orchestrator.handleKey(normalizedKey)
+                            result.put("success", actionRes.success)
+                            // handleKey says "Pressed system key ..." even when the press failed.
+                            result.put(
+                                "message",
+                                when {
+                                    actionRes.success -> actionRes.message
+                                    actionRes.message.startsWith("Pressed") -> "Android refused the '$normalizedKey' key press."
+                                    else -> "Could not press '$normalizedKey': ${actionRes.message}"
+                                }
+                            )
+                        } else {
+                            // Keys the orchestrator can't press (quick_settings, lock_screen, recent_apps...).
+                            delegateToDispatcher(callId, name, args, result)
+                        }
                     }
 
                     "task_completed" -> {
@@ -2813,13 +2817,15 @@ class JarvisConversationService : Service() {
                     "gods_eye_select_camera" -> {
                         Log.i("JarvisService", "Executing God's Eye View MCP tool: $name with args: $args")
                         val mcpResult = com.jarvis.assistant.ui.godseye.GodsEyeMcpClient.executeTool(name, args)
+                        val ok = mcpResult.optBoolean("success", false)
                         val viewUrl = mcpResult.optString("view_url", "")
                         val actionJson = mcpResult.optString("action_json", "")
-                        val shouldShowGlobe = args.optBoolean("show_on_globe", false) ||
+                        // Only put a view on the globe when the tool actually produced one.
+                        val shouldShowGlobe = ok && (args.optBoolean("show_on_globe", false) ||
                                               name == "open_gods_eye_view" ||
                                               name == "gods_eye_show_view" ||
                                               name == "gods_eye_select_camera" ||
-                                              (name != "gods_eye_inspect_globe" && (viewUrl.isNotBlank() || actionJson.isNotBlank()))
+                                              (name != "gods_eye_inspect_globe" && (viewUrl.isNotBlank() || actionJson.isNotBlank())))
 
                         if (shouldShowGlobe) {
                             com.jarvis.assistant.ui.godseye.GodsEyeMcpClient.launchOrUpdateGodsEye(
@@ -2833,6 +2839,15 @@ class JarvisConversationService : Service() {
                         while (keys.hasNext()) {
                             val k = keys.next()
                             result.put(k, mcpResult.get(k))
+                        }
+                        result.put("success", ok)
+                        if (!result.has("message")) {
+                            result.put(
+                                "message",
+                                mcpResult.optString("summary", "").ifBlank {
+                                    if (ok) "God's Eye tool '$name' finished." else "God's Eye tool '$name' failed."
+                                }
+                            )
                         }
                     }
 
@@ -2864,13 +2879,23 @@ class JarvisConversationService : Service() {
                     "reply_to_message" -> {
                         val sender = args.optString("sender", "")
                         val text = args.optString("text", "")
-                        val sent = com.jarvis.assistant.automation.notification.JarvisNotificationListener.sendDirectReply(
+                        val outcome = com.jarvis.assistant.automation.notification.JarvisNotificationListener.sendDirectReplyDetailed(
                             this@JarvisConversationService,
                             sender,
                             text
                         )
+                        val sent = outcome == com.jarvis.assistant.automation.notification.JarvisNotificationListener.Companion.ReplyOutcome.SENT
                         result.put("success", sent)
-                        result.put("message", if (sent) "Reply sent successfully to $sender: '$text'" else "Could not find an active notification to reply to for '$sender'.")
+                        result.put("message", when (outcome) {
+                            com.jarvis.assistant.automation.notification.JarvisNotificationListener.Companion.ReplyOutcome.SENT ->
+                                "Reply sent successfully to $sender: '$text'"
+                            com.jarvis.assistant.automation.notification.JarvisNotificationListener.Companion.ReplyOutcome.NO_NOTIFICATION ->
+                                "Could not find an active notification to reply to for '$sender'."
+                            com.jarvis.assistant.automation.notification.JarvisNotificationListener.Companion.ReplyOutcome.DECLINED ->
+                                "Reply not sent (you declined or didn't confirm in time)."
+                            com.jarvis.assistant.automation.notification.JarvisNotificationListener.Companion.ReplyOutcome.FAILED ->
+                                "Reply to '$sender' could not be sent: the messaging app rejected it (the notification may have been dismissed)."
+                        })
                     }
 
                     "handle_phone_call" -> {
@@ -3128,20 +3153,12 @@ class JarvisConversationService : Service() {
                     }
 
                     "execute_connected_app_action" -> {
-                        val appName = args.optString("app_name", "").ifBlank { args.optString("app", "") }
-                        val actionType = args.optString("action_type", "search")
-                        val targetQuery = args.optString("target_query", "").ifBlank { args.optString("query", "") }
-                        val userGoal = args.optString("user_goal", "").ifBlank { autonomousTaskGoal }
-
-                        val executor = com.jarvis.assistant.connectors.UniversalAppExecutor.getInstance(this@JarvisConversationService)
-                        val execResult = executor.executeAppGoal(appName, actionType, targetQuery, userGoal)
-
-                        result.put("success", execResult.success)
-                        result.put("message", execResult.message)
-                        result.put("action_taken", execResult.actionTaken)
-                        if (execResult.screenSummary != null) {
-                            result.put("screen_summary", execResult.screenSummary)
+                        // Same UniversalAppExecutor call, plus Voice Guard; keep the Live task goal as the default user_goal.
+                        val delegatedArgs = JSONObject(args.toString())
+                        if (delegatedArgs.optString("user_goal", "").isBlank() && autonomousTaskGoal.isNotBlank()) {
+                            delegatedArgs.put("user_goal", autonomousTaskGoal)
                         }
+                        delegateToDispatcher(callId, name, delegatedArgs, result)
                     }
 
                     "get_task_status" -> {
@@ -3216,41 +3233,33 @@ class JarvisConversationService : Service() {
                         val skillRegistry = com.jarvis.assistant.automation.skills.SkillRegistry.getInstance(this@JarvisConversationService)
                         val skill = skillRegistry.findSkillForTool(name)
                         if (skill != null) {
-                            Log.i("JarvisService", "Dispatching tool '$name' to modular skill '${skill.metadata.name}' (${skill.metadata.id})")
-                            val skillCtx = com.jarvis.assistant.automation.skills.SkillExecutionContext(
-                                context = this@JarvisConversationService,
-                                toolCallId = callId,
-                                toolName = name,
-                                arguments = args,
-                                isForeground = true
-                            )
-                            val skillRes = skillRegistry.executeTool(skillCtx)
-                            val resJson = skillRes.toResultJsonObject()
-                            val keys = resJson.keys()
-                            while (keys.hasNext()) {
-                                val k = keys.next()
-                                result.put(k, resJson.get(k))
-                            }
-                        } else {
-                            // Forward all unhandled tools to unified JarvisToolDispatcher!
-                            try {
-                                val dispatcher = com.jarvis.assistant.automation.dispatcher.JarvisToolDispatcher.getInstance(this@JarvisConversationService)
-                                val aiRes = dispatcher.dispatchTool(com.jarvis.assistant.ai.provider.AiToolCall(callId, name, args))
-                                val resJson = aiRes.resultJson
+                            // Skills run here, outside the dispatcher, so they need their own Voice Guard check.
+                            val guardBlock = com.jarvis.assistant.security.guardian.VoiceGuardGate.check(this@JarvisConversationService, name, args)
+                            if (guardBlock != null) {
+                                Log.w("JarvisService", "Voice Guard blocked skill tool '$name'")
+                                result.put("success", false)
+                                result.put("blocked_by_voice_guard", true)
+                                result.put("message", guardBlock)
+                            } else {
+                                Log.i("JarvisService", "Dispatching tool '$name' to modular skill '${skill.metadata.name}' (${skill.metadata.id})")
+                                val skillCtx = com.jarvis.assistant.automation.skills.SkillExecutionContext(
+                                    context = this@JarvisConversationService,
+                                    toolCallId = callId,
+                                    toolName = name,
+                                    arguments = args,
+                                    isForeground = true
+                                )
+                                val skillRes = skillRegistry.executeTool(skillCtx)
+                                val resJson = skillRes.toResultJsonObject()
                                 val keys = resJson.keys()
                                 while (keys.hasNext()) {
                                     val k = keys.next()
                                     result.put(k, resJson.get(k))
                                 }
-                                result.put("success", aiRes.isSuccess)
-                                if (aiRes.errorMessage != null && !result.has("message")) {
-                                    result.put("message", aiRes.errorMessage)
-                                }
-                            } catch (e: Exception) {
-                                Log.e("JarvisService", "Dispatcher error for '$name': ${e.message}")
-                                result.put("success", false)
-                                result.put("message", "Tool execution error: ${e.message}")
                             }
+                        } else {
+                            // Forward all unhandled tools to unified JarvisToolDispatcher!
+                            delegateToDispatcher(callId, name, args, result)
                         }
                     }
                 }
@@ -3336,6 +3345,33 @@ class JarvisConversationService : Service() {
             }
         }
         activeToolJob = job
+    }
+
+    /**
+     * Runs [name] through the shared JarvisToolDispatcher (honest results + Voice Guard) and
+     * copies its result into the Live tool response [result] in the usual success/message shape.
+     */
+    private suspend fun delegateToDispatcher(callId: String, name: String, args: JSONObject, result: JSONObject) {
+        try {
+            val dispatcher = com.jarvis.assistant.automation.dispatcher.JarvisToolDispatcher.getInstance(this@JarvisConversationService)
+            val aiRes = dispatcher.dispatchTool(com.jarvis.assistant.ai.provider.AiToolCall(callId, name, args))
+            val resJson = aiRes.resultJson
+            val keys = resJson.keys()
+            while (keys.hasNext()) {
+                val k = keys.next()
+                result.put(k, resJson.get(k))
+            }
+            result.put("success", aiRes.isSuccess)
+            if (aiRes.errorMessage != null && !result.has("message")) {
+                result.put("message", aiRes.errorMessage)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e("JarvisService", "Dispatcher error for '$name': ${e.message}")
+            result.put("success", false)
+            result.put("message", "Tool execution error: ${e.message}")
+        }
     }
 
 
@@ -4134,22 +4170,29 @@ class JarvisConversationService : Service() {
 
             // 4. Acoustic Verification:
             // 4. Acoustic Verification:
-            // "jarvis" must be specifically recognized with confidence
+            // "jarvis" must be specifically recognized with confidence.
+            // Thresholds follow the wake-word sensitivity slider (default position = 0.70 / 0.75 / 0.65).
+            val wakeSensitivity = try {
+                com.jarvis.assistant.androllm.voice.VoiceSettingsStore.get(this@JarvisConversationService).state.value.sensitivity
+            } catch (e: Exception) {
+                preferences.voskWakeWordSensitivity
+            }
+            val thresholds = com.jarvis.assistant.voice.WakeWordThresholds.forSensitivity(wakeSensitivity)
             val jarvisConf = wordConfMap["jarvis"] ?: 0.0
-            if (jarvisConf < 0.70) {
-                Log.w("JarvisService", "WAKE REJECTED: 'jarvis' word confidence too low ($jarvisConf < 0.70). Ignored.")
+            if (jarvisConf < thresholds.jarvisWord) {
+                Log.w("JarvisService", "WAKE REJECTED: 'jarvis' word confidence too low ($jarvisConf < ${thresholds.jarvisWord}, sensitivity=$wakeSensitivity). Ignored.")
                 return
             }
 
             if (wordList.size == 1 && wordList[0] == "jarvis") {
                 // Standalone single-word "jarvis"
-                if (avgConf < 0.75) {
+                if (avgConf < thresholds.standalone) {
                     Log.w("JarvisService", "WAKE REJECTED: Standalone 'jarvis' failed checks (conf=$avgConf). Ignored.")
                     return
                 }
             } else {
                 // Multi-word phrases like "hey jarvis", "hello jarvis", "ok jarvis"
-                if (avgConf < 0.65) {
+                if (avgConf < thresholds.phrase) {
                     Log.w("JarvisService", "WAKE REJECTED: Wake phrase failed checks (conf=$avgConf). Ignored.")
                     return
                 }
@@ -4166,6 +4209,7 @@ class JarvisConversationService : Service() {
                         return
                     } else {
                         lastOwnerVerifiedTimestamp = System.currentTimeMillis()
+                        com.jarvis.assistant.security.guardian.VoiceGuardPolicy.markOwnerVerified(lastOwnerVerifiedTimestamp)
                         isCurrentTurnOwnerVoiceVerified = true
                         Log.i("JarvisService", "WAKE VERIFIED: Owner voice confirmed for '$cleanPhrase'! (Distance: ${match.distance}, Similarity: ${match.similarityPercent}%)")
                     }
@@ -4315,6 +4359,17 @@ class JarvisConversationService : Service() {
      */
     @Volatile private var networkRestorationWatcherJob: kotlinx.coroutines.Job? = null
 
+    /** Earliest time the restoration watcher may reconnect Gemini after a quota/fatal failover. */
+    @Volatile private var geminiRetryNotBefore = 0L
+
+    /** API key Gemini rejected; the watcher won't reconnect until the user saves a different key. */
+    @Volatile private var geminiBlockedApiKey: String? = null
+
+    private fun isOfflineBrainFailoverEnabled(): Boolean =
+        com.jarvis.assistant.androllm.AndroLlmFlags.isEnabled(
+            this, com.jarvis.assistant.androllm.AndroLlmFlags.OFFLINE_BRAIN_FAILOVER, default = true
+        )
+
     private fun startNetworkRestorationWatcher() {
         networkRestorationWatcherJob?.cancel()
         networkRestorationWatcherJob = serviceScope.launch(kotlinx.coroutines.Dispatchers.IO) {
@@ -4323,7 +4378,10 @@ class JarvisConversationService : Service() {
             val prefs = app.preferences
             while (isActive) {  // isActive is a CoroutineScope extension — no qualification needed
                 kotlinx.coroutines.delay(2_500) // check every 2.5 seconds
-                if (app.modelRouter.isNetworkAvailable() && prefs.apiKey.isNotBlank() && prefs.aiModelMode != "LOCAL_OFFLINE") {
+                // Offline Brain failover: wait out the backoff, and never retry a key Gemini already rejected.
+                val retryAllowed = System.currentTimeMillis() >= geminiRetryNotBefore &&
+                    (geminiBlockedApiKey == null || prefs.apiKey != geminiBlockedApiKey)
+                if (retryAllowed && app.modelRouter.isNetworkAvailable() && prefs.apiKey.isNotBlank() && prefs.aiModelMode != "LOCAL_OFFLINE") {
                     Log.i("JarvisService", "NetworkRestorationWatcher: internet restored! Reconnecting Gemini Live…")
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                         _connectionStatus.value = "RECONNECTING…"

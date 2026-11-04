@@ -37,7 +37,6 @@ data class AppConnector(
     val category: String = "Application",
     val isInstalled: Boolean,
     val isExternal: Boolean = false,
-    val bridgeEndpoint: String = "",
     var isConnected: Boolean = false,
     var lastSyncTimestamp: Long = 0L,
     var itemsIndexedCount: Int = 0,
@@ -57,6 +56,13 @@ class AppConnectorsManager private constructor(private val context: Context) {
         private const val KEY_EXTERNAL_CONNECTORS = "external_connectors_json"
         private const val KEY_CONNECTED_PACKAGES = "connected_packages_set"
 
+        /** packageName/id prefix of the token-based service connector rows (see serviceConnectors()). */
+        const val MAYA_SERVICE_PREFIX = "maya:"
+
+        /** Honest description of what a generic app connection actually allows. */
+        const val ACCESSIBILITY_CAPABILITY =
+            "Jarvis can open this app and tap/type on its screen via Accessibility; app-specific actions depend on the app's layout."
+
         @Volatile
         private var instance: AppConnectorsManager? = null
 
@@ -68,6 +74,16 @@ class AppConnectorsManager private constructor(private val context: Context) {
     }
 
     fun computeConnectorStatus(conn: AppConnector): ConnectorStatus {
+        if (conn.packageName.startsWith(MAYA_SERVICE_PREFIX)) {
+            val s = com.jarvis.assistant.maya.connectors.ConnectorService.fromId(conn.packageName.removePrefix(MAYA_SERVICE_PREFIX))
+            val linked = s != null && com.jarvis.assistant.maya.connectors.ConnectorSecrets.isLinked(context, s)
+            val err = s != null && com.jarvis.assistant.maya.connectors.ConnectorSecrets.lastStatus(context, s)?.startsWith("error:") == true
+            return when {
+                linked && !err -> ConnectorStatus.AUTHENTICATED
+                linked -> ConnectorStatus.CONNECTED
+                else -> ConnectorStatus.AVAILABLE
+            }
+        }
         if (!conn.isInstalled && conn.isExternal) return ConnectorStatus.AVAILABLE
         if (!conn.isConnected) return if (conn.isInstalled) ConnectorStatus.INSTALLED else ConnectorStatus.DISCONNECTED
         val hasPermission = when (conn.packageName) {
@@ -193,11 +209,48 @@ class AppConnectorsManager private constructor(private val context: Context) {
             }
         }
 
+        // 4. Maya-style cloud service connectors (token-linked; managed in ConnectorsActivity)
+        list.addAll(serviceConnectors())
+
         // Sort: Connected apps first, then alphabetically by name
         list.sortWith(compareByDescending<AppConnector> { it.isConnected }.thenBy { it.name.lowercase(Locale.ROOT) })
 
         _connectorsFlow.value = list
     }
+
+    /**
+     * Rows for the token-based service connectors (Notion, Linear, Todoist, GitLab, Drive, Vercel,
+     * Telegram, GitHub). Their packageName is "maya:<id>"; tapping one opens
+     * [com.jarvis.assistant.maya.connectors.ConnectorsActivity] instead of toggling.
+     */
+    private fun serviceConnectors(): List<AppConnector> {
+        return try {
+            com.jarvis.assistant.maya.connectors.ConnectorService.entries.map { s ->
+                val linked = com.jarvis.assistant.maya.connectors.ConnectorSecrets.isLinked(context, s)
+                val lastError = com.jarvis.assistant.maya.connectors.ConnectorSecrets.lastStatus(context, s)?.startsWith("error:") == true
+                AppConnector(
+                    id = MAYA_SERVICE_PREFIX + s.id,
+                    name = s.label,
+                    packageName = MAYA_SERVICE_PREFIX + s.id,
+                    description = s.description + if (linked) "" else " Tap to link a token.",
+                    category = "Cloud Service",
+                    isInstalled = true,
+                    isExternal = false,
+                    isConnected = linked,
+                    status = when {
+                        linked && !lastError -> ConnectorStatus.AUTHENTICATED
+                        linked -> ConnectorStatus.CONNECTED
+                        else -> ConnectorStatus.AVAILABLE
+                    }
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Service connectors unavailable: ${e.message}")
+            emptyList()
+        }
+    }
+
+    fun isServiceConnector(conn: AppConnector): Boolean = conn.packageName.startsWith(MAYA_SERVICE_PREFIX)
 
     private fun isPackageInstalled(pkg: String): Boolean {
         if (pkg == "phone" || pkg == "contacts") return true
@@ -210,56 +263,57 @@ class AppConnectorsManager private constructor(private val context: Context) {
     }
 
     /**
-     * Infers category and autonomous capability description from package and app name.
+     * Infers the app category from package and app name; the capability text is the same honest
+     * Accessibility-based description for every generic app.
      */
     private fun getAppCategoryAndCapability(packageName: String, appName: String): Pair<String, String> {
         val lowerPkg = packageName.lowercase(Locale.ROOT)
         val lowerName = appName.lowercase(Locale.ROOT)
         return when {
             lowerPkg.contains("docs") || lowerPkg.contains("drive") || lowerName.contains("drive") || lowerName.contains("cloud") || lowerPkg.contains("dropbox") || lowerPkg.contains("onedrive") -> {
-                Pair("Cloud & Documents", "Full autonomous cloud access: search files/folders, open documents, upload new files, delete/trash items, inspect metadata.")
+                Pair("Cloud & Documents", ACCESSIBILITY_CAPABILITY)
             }
             lowerPkg.contains("nbu.files") || lowerPkg.contains("filemanager") || lowerPkg.contains("files") || lowerName.contains("files") || lowerName.contains("file manager") -> {
-                Pair("File System", "Direct storage access: browse folders, search local files, delete/move documents, APK installation, storage inspection.")
+                Pair("File System", ACCESSIBILITY_CAPABILITY)
             }
             lowerPkg.contains("whatsapp") || lowerPkg.contains("telegram") || lowerPkg.contains("signal") || lowerPkg.contains("messages") || lowerName.contains("whatsapp") || lowerName.contains("telegram") || lowerName.contains("chat") -> {
-                Pair("Communication", "Real-time communication: direct message dispatch, contact chat search, voice/video calls, media attachment sharing, delete chats.")
+                Pair("Communication", ACCESSIBILITY_CAPABILITY)
             }
             lowerPkg.contains("gm") || lowerPkg.contains("mail") || lowerPkg.contains("outlook") || lowerName.contains("gmail") || lowerName.contains("mail") || lowerName.contains("email") -> {
-                Pair("Email & Mail", "Full email access: compose emails, search inbox, read unread messages, archive/delete emails, send attachments.")
+                Pair("Email & Mail", ACCESSIBILITY_CAPABILITY)
             }
             lowerPkg.contains("photos") || lowerPkg.contains("gallery") || lowerName.contains("photos") || lowerName.contains("gallery") -> {
-                Pair("Media & Gallery", "Visual media access: browse albums, search photos/videos by date/name, delete images, share media, inspect metadata.")
+                Pair("Media & Gallery", ACCESSIBILITY_CAPABILITY)
             }
             lowerPkg.contains("youtube") || lowerPkg.contains("spotify") || lowerPkg.contains("music") || lowerPkg.contains("netflix") || lowerPkg.contains("primevideo") || lowerName.contains("youtube") || lowerName.contains("spotify") || lowerName.contains("music") -> {
-                Pair("Streaming & Media", "Entertainment control: search videos/songs, autoplay, fullscreen toggle, volume/playback controls, like/subscribe.")
+                Pair("Streaming & Media", ACCESSIBILITY_CAPABILITY)
             }
             lowerPkg.contains("chrome") || lowerPkg.contains("browser") || lowerPkg.contains("firefox") || lowerPkg.contains("brave") || lowerName.contains("chrome") || lowerName.contains("browser") -> {
-                Pair("Web Browser", "Autonomous web exploration: open URLs in tabs, search queries, read web page text, form submission, download files.")
+                Pair("Web Browser", ACCESSIBILITY_CAPABILITY)
             }
             lowerPkg.contains("dialer") || lowerPkg.contains("phone") || lowerName.contains("phone") || lowerName.contains("call") -> {
-                Pair("Telephony", "Direct dialer control: call log analysis, contact frequency ranking, autonomous dialing, call answer/hangup.")
+                Pair("Telephony", ACCESSIBILITY_CAPABILITY)
             }
             lowerPkg.contains("contacts") || lowerName.contains("contacts") || lowerName.contains("people") -> {
-                Pair("Address Book", "Contact directory: search contact details, retrieve phone numbers/emails, update contact info, habit profiling.")
+                Pair("Address Book", ACCESSIBILITY_CAPABILITY)
             }
             lowerPkg.contains("settings") || lowerName.contains("settings") -> {
-                Pair("System Settings", "Device controls: Wi-Fi, Bluetooth, volume, display brightness, battery stats, system toggles.")
+                Pair("System Settings", ACCESSIBILITY_CAPABILITY)
             }
             lowerPkg.contains("camera") || lowerName.contains("camera") -> {
-                Pair("Camera & Vision", "Optical capture: trigger photo/video capture, barcode scanning, front/rear camera switching.")
+                Pair("Camera & Vision", ACCESSIBILITY_CAPABILITY)
             }
             lowerPkg.contains("instagram") || lowerPkg.contains("facebook") || lowerPkg.contains("twitter") || lowerPkg.contains("tiktok") || lowerName.contains("instagram") || lowerName.contains("facebook") || lowerName.contains("twitter") || lowerName.contains("reddit") -> {
-                Pair("Social Network", "Social feed automation: search profiles, view reels, like/unlike posts, send direct messages, read posts.")
+                Pair("Social Network", ACCESSIBILITY_CAPABILITY)
             }
             lowerPkg.contains("maps") || lowerName.contains("maps") || lowerName.contains("navigation") -> {
-                Pair("Navigation & Maps", "Geospatial navigation: search locations, start GPS navigation, check live traffic, find nearby places.")
+                Pair("Navigation & Maps", ACCESSIBILITY_CAPABILITY)
             }
             lowerPkg.contains("pay") || lowerPkg.contains("wallet") || lowerPkg.contains("bank") || lowerName.contains("pay") || lowerName.contains("upi") -> {
-                Pair("Finance & Payments", "Payment utility: launch payment screens, view transactions, scan UPI QR codes.")
+                Pair("Finance & Payments", ACCESSIBILITY_CAPABILITY)
             }
             else -> {
-                Pair("Application", "Autonomous UI navigation: in-app search, item selection, data inspection, button execution, screen text extraction.")
+                Pair("Application", ACCESSIBILITY_CAPABILITY)
             }
         }
     }
@@ -355,8 +409,7 @@ class AppConnectorsManager private constructor(private val context: Context) {
     fun addExternalConnector(
         name: String,
         packageNameOrEndpoint: String,
-        description: String,
-        bridgeEndpoint: String = ""
+        description: String
     ) {
         val newExt = AppConnector(
             id = "ext_${System.currentTimeMillis()}",
@@ -366,7 +419,6 @@ class AppConnectorsManager private constructor(private val context: Context) {
             category = "External Plugin",
             isInstalled = isPackageInstalled(packageNameOrEndpoint.trim()),
             isExternal = true,
-            bridgeEndpoint = bridgeEndpoint.trim(),
             isConnected = true
         )
 
@@ -454,11 +506,11 @@ class AppConnectorsManager private constructor(private val context: Context) {
 
             else -> {
                 val appLabel = connector?.name ?: connectorId
-                val appDesc = connector?.description ?: "Full autonomous access granted"
+                val appDesc = connector?.description ?: ACCESSIBILITY_CAPABILITY
                 habitProfiler.recordAction("app_connected_$connectorId")
                 memoryEngine.indexMemory(
                     id = System.currentTimeMillis(),
-                    text = "[CONNECTED APP CAPABILITY]: App '$appLabel' (package: $connectorId) is FULLY CONNECTED. Capabilities: $appDesc. Jarvis has full autonomous permission to inspect data, search files, read contents, delete items, upload/save documents, and trigger in-app actions without rejection.",
+                    text = "[CONNECTED APP CAPABILITY]: App '$appLabel' (package: $connectorId) is connected. $appDesc",
                     category = "app_connector_capability"
                 )
             }

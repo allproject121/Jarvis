@@ -1,5 +1,6 @@
 package com.jarvis.assistant.androllm.models.download
 
+import com.jarvis.assistant.androllm.engine.support.PreflightInfo
 import java.io.File
 import java.security.MessageDigest
 

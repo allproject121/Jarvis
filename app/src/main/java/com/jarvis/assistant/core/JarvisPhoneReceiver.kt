@@ -5,11 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.telephony.TelephonyManager
 import android.util.Log
-import com.jarvis.assistant.voice.PocketTtsEngine
 
 /**
  * JARVIS Phone Call Sentinel.
- * Detects incoming calls and performs voice caller announcement via Pocket-TTS.
+ * Detects incoming calls and hands them to JarvisDrivingModeManager, which decides whether to
+ * announce the caller (voice session or standalone TTS) or, in driving mode, auto-reject + SMS.
  */
 class JarvisPhoneReceiver : BroadcastReceiver() {
 
@@ -20,17 +20,19 @@ class JarvisPhoneReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == TelephonyManager.ACTION_PHONE_STATE_CHANGED) {
             val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE) ?: return
+            @Suppress("DEPRECATION")
             val number = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
 
             if (state == TelephonyManager.EXTRA_STATE_RINGING && lastState != TelephonyManager.EXTRA_STATE_RINGING) {
                 Log.d("JarvisPhoneReceiver", "Incoming call from: $number")
-                val callerText = if (!number.isNullOrBlank()) "Incoming call from $number, Sir." else "Incoming call, Sir."
+                // The announcement itself lives in the manager so a call that is auto-rejected
+                // while driving is not spoken first, and the caller-ID toggle is respected.
                 try {
-                    PocketTtsEngine.getInstance(context).speak(callerText)
+                    JarvisDrivingModeManager.getInstance(context)
+                        .onIncomingCall(if (number.isNullOrBlank()) "Unknown Caller" else number)
                 } catch (e: Exception) {
-                    Log.w("JarvisPhoneReceiver", "TTS caller announcement notice: ${e.message}")
+                    Log.w("JarvisPhoneReceiver", "Incoming call handling notice: ${e.message}")
                 }
-                JarvisDrivingModeManager.getInstance(context).onIncomingCall(number ?: "Unknown Caller")
             }
             lastState = state
         }

@@ -29,6 +29,7 @@ sealed class JarvisCommand {
     object RecallFavoriteSong : JarvisCommand()
     object RecallRoutine : JarvisCommand()
     object GoToBackground : JarvisCommand()
+    data class SetDrivingMode(val enabled: Boolean) : JarvisCommand()
 
     // --- JARVIS INTEGRATED PROTOCOL COMMANDS ---
 

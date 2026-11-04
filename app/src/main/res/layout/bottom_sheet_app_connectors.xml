@@ -156,7 +156,7 @@
                 android:id="@+id/chipFilterConnected"
                 android:layout_width="wrap_content"
                 android:layout_height="28dp"
-                android:text="CONNECTED (FULL ACCESS)"
+                android:text="CONNECTED"
                 android:textSize="11sp"
                 android:gravity="center"
                 android:textColor="?attr/themeTextMuted"
@@ -210,6 +210,18 @@
             android:textColor="?attr/themeTextPrimary"
             android:layout_marginStart="6dp" />
     </LinearLayout>
+
+    <!-- Token-based cloud services (Notion, Linear, Todoist, GitLab, Drive, Vercel, Telegram, GitHub) -->
+    <Button
+        android:id="@+id/btnServiceConnectors"
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:text="🔗 SERVICE CONNECTORS (NOTION, DRIVE, TELEGRAM…)"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:background="@drawable/bg_jarvis_card"
+        android:textColor="?attr/themeTextPrimary"
+        android:layout_marginBottom="12dp" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"

@@ -221,22 +221,6 @@ fun ProfileRoute(navigate: (String) -> Unit, back: () -> Unit) {
                                 accent = MaterialTheme.ledger.lampGlow,
                                 onClick = { navigate(ComposeRoutes.SETTINGS) }
                             )
-                            ActionRow(
-                                icon = Icons.AutoMirrored.Filled.Logout,
-                                title = "Sign Out",
-                                subtitle = "Accounts are not available in Jarvis",
-                                accent = MaterialTheme.ledger.lampDeep,
-                                enabled = false,
-                                onClick = {}
-                            )
-                            ActionRow(
-                                icon = Icons.Filled.Delete,
-                                title = "Delete Account",
-                                subtitle = "Accounts are not available in Jarvis",
-                                accent = MaterialTheme.ledger.emberRed,
-                                enabled = false,
-                                onClick = {}
-                            )
                         }
                     }
                 }

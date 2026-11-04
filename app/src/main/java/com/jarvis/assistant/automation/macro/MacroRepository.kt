@@ -82,6 +82,32 @@ class MacroRepository(private val context: Context) {
         }
     }
 
+    /** True when [name] is one of the bundled (asset) macros, which cannot be deleted. */
+    fun isBuiltinMacro(name: String): Boolean =
+        getBuiltinMacros().any { it.name.equals(name.trim(), ignoreCase = true) }
+
+    /**
+     * Deletes a learned (custom) macro by exact name (case-insensitive). Built-in macros are
+     * never deleted. Returns true when a custom macro was removed. (Maya screen pack, additive.)
+     */
+    @Synchronized
+    fun deleteCustomMacro(name: String): Boolean {
+        val target = name.trim()
+        if (target.isEmpty() || isBuiltinMacro(target)) return false
+        val removed = cachedMacros.removeAll { it.name.equals(target, ignoreCase = true) }
+        if (!removed) return false
+        try {
+            val customFile = File(context.filesDir, CUSTOM_MACROS_FILE)
+            val builtins = getBuiltinMacros()
+            val customOnly = cachedMacros.filter { it !in builtins }
+            customFile.writeText(gson.toJson(MacroCatalog(version = 1, macros = customOnly)))
+            Log.i(TAG, "Deleted custom macro '$target'")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to delete custom macro: ${e.message}", e)
+        }
+        return true
+    }
+
     private fun getBuiltinMacros(): List<Macro> {
         return try {
             context.assets.open(BUILTIN_PATH).bufferedReader().use { reader ->

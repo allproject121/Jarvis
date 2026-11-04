@@ -1,5 +1,6 @@
 package com.jarvis.assistant.androllm.models.download
 
+import com.jarvis.assistant.androllm.engine.support.formatBytes
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns

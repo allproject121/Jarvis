@@ -1,5 +1,7 @@
 package com.jarvis.assistant.androllm.engine.compat
 
+import com.jarvis.assistant.ai.compat.ModelFamily
+
 /**
  * Per-family generation defaults (sampler parameters and limits), mirroring the
  * reference values the family ships with. These are the starting point for the

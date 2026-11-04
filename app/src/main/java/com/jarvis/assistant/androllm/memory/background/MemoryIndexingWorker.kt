@@ -12,7 +12,7 @@ import com.jarvis.assistant.androllm.AndroLlmFlags
  * is off, so a stale schedule can never do work the user disabled.
  *
  * Extraction/summarization are NOT run here — they run after each exchange
- * through [com.jarvis.assistant.androllm.memory.AndroMemoryPipeline].
+ * through [com.jarvis.assistant.data.memory.MemoryManager].
  */
 class MemoryIndexingWorker(
     appContext: Context,

@@ -5,7 +5,7 @@ import com.jarvis.assistant.androllm.AndroLlmFlags
 import com.jarvis.assistant.androllm.agent.bridge.JarvisDispatcherTool
 import com.jarvis.assistant.androllm.agent.bridge.JarvisToolBridge
 import com.jarvis.assistant.androllm.agent.cloud.CloudToolRouter
-import com.jarvis.assistant.androllm.agent.confirmation.ToolConfirmationManager
+import com.jarvis.assistant.automation.agent.ToolConfirmationManager
 import com.jarvis.assistant.androllm.agent.context.AgentContextBuilder
 import com.jarvis.assistant.androllm.agent.context.AgentPlanner
 import com.jarvis.assistant.androllm.agent.context.DeviceContextProvider
@@ -35,8 +35,8 @@ import com.jarvis.assistant.automation.agent.ClarificationEngine
 
 /**
  * Feature flags owned by the agent/tool framework (stored in the shared
- * [AndroLlmFlags] preferences file). Everything that changes how Jarvis'
- * non-Gemini engines call tools is OFF by default.
+ * [AndroLlmFlags] preferences file). The agent pipeline is ON by default;
+ * Settings → Agent tools can switch it off.
  */
 object AgentFlags {
     /**
@@ -44,12 +44,12 @@ object AgentFlags {
      * Hermes agent, Cloud Gateway) through the AndroLLM agent pipeline:
      * routed tool advertisement, plan → execute → re-plan, validation,
      * confirmations, retries, result cache and the Tool Debug trace.
-     * Default OFF: the providers keep their existing behaviour.
+     * Default ON; switched off, the providers keep their legacy tool path.
      */
     const val AGENT_PIPELINE = "agent_pipeline_enabled"
 
     fun isPipelineEnabled(context: Context): Boolean =
-        AndroLlmFlags.isEnabled(context, AGENT_PIPELINE, default = false)
+        AndroLlmFlags.isEnabled(context, AGENT_PIPELINE, default = true)
 
     fun setPipelineEnabled(context: Context, enabled: Boolean) =
         AndroLlmFlags.setEnabled(context, AGENT_PIPELINE, enabled)
@@ -78,7 +78,7 @@ class AgentToolGraph private constructor(context: Context) {
     val resultCache = ToolResultCache()
     val validator = ToolCallValidator(registry)
     val outputValidator = ToolOutputValidator()
-    val confirmationManager = ToolConfirmationManager()
+    val confirmationManager = ToolConfirmationManager
     val deviceContext = DeviceContextProvider(appContext)
     val agentContext = AgentContextBuilder(deviceContext, AgentVariableStore)
     val agentPlanner = AgentPlanner(logger, AgentVariableStore)

@@ -20,6 +20,10 @@ object ToolCallParser {
         "(?s)<tool_call>\\s*(\\{.*?\\})\\s*</tool_call>"
     )
 
+    private const val TOOL_CALL_OPEN = "<tool_call>"
+
+    private val THINK_BLOCK_REGEX = Regex("(?s)<think>.*?</think>")
+
     private val MARKDOWN_JSON_REGEX = Regex(
         "(?s)```(?:json)?\\s*(\\{\\s*\"name\"\\s*:\\s*\".*?\\}\\s*)```"
     )
@@ -28,7 +32,8 @@ object ToolCallParser {
      * Attempts to find and extract an AiToolCall from an accumulated text buffer.
      */
     fun parseToolCall(accumulatedText: String): AiToolCall? {
-        val trimmed = accumulatedText.trim()
+        // A call written while the model is still "thinking" is not a decision; never run it.
+        val trimmed = stripThinking(accumulatedText).trim()
         if (!trimmed.contains("name") && !trimmed.contains("arguments")) {
             return null
         }
@@ -39,6 +44,17 @@ object ToolCallParser {
             val jsonPayload = xmlMatch.groupValues[1]
             val parsed = parseJsonToToolCall(jsonPayload)
             if (parsed != null) return parsed
+        }
+
+        // 1b. <tool_call>{...} without the closing tag. Qwen lists "</tool_call>" as a stop word,
+        //     so llama.cpp cuts it off and only the opening tag plus the JSON object arrive.
+        val openIdx = trimmed.indexOf(TOOL_CALL_OPEN)
+        if (openIdx >= 0) {
+            val jsonPayload = extractBalancedJson(trimmed, openIdx + TOOL_CALL_OPEN.length)
+            if (jsonPayload != null) {
+                val parsed = parseJsonToToolCall(jsonPayload)
+                if (parsed != null) return parsed
+            }
         }
 
         // 2. Check for markdown json block ```json ... ```
@@ -62,9 +78,48 @@ object ToolCallParser {
      * Removes <tool_call> tags and their contents from display text so the user only sees conversational speech.
      */
     fun cleanConversationalText(rawText: String): String {
-        var clean = XML_TOOL_CALL_REGEX.replace(rawText, "").trim()
+        var clean = XML_TOOL_CALL_REGEX.replace(stripThinking(rawText), "").trim()
         clean = MARKDOWN_JSON_REGEX.replace(clean, "").trim()
-        return clean
+        // An unclosed <tool_call> (stop word cut the closing tag): drop it and everything after it.
+        val openIdx = clean.indexOf(TOOL_CALL_OPEN)
+        if (openIdx >= 0) clean = clean.substring(0, openIdx).trim()
+        return clean.replace("</tool_call>", "").trim()
+    }
+
+    /** Removes `<think>…</think>` blocks, and an unfinished `<think>` up to the end of the text. */
+    fun stripThinking(text: String): String {
+        val closed = THINK_BLOCK_REGEX.replace(text, "")
+        val openIdx = closed.indexOf("<think>")
+        return if (openIdx >= 0) closed.substring(0, openIdx) else closed
+    }
+
+    /** Returns the first complete `{...}` object starting at or after [from], or null if it is not finished yet. */
+    private fun extractBalancedJson(text: String, from: Int): String? {
+        val start = text.indexOf('{', from)
+        if (start < 0) return null
+        var depth = 0
+        var inString = false
+        var escaped = false
+        for (i in start until text.length) {
+            val c = text[i]
+            if (inString) {
+                when {
+                    escaped -> escaped = false
+                    c == '\\' -> escaped = true
+                    c == '"' -> inString = false
+                }
+                continue
+            }
+            when (c) {
+                '"' -> inString = true
+                '{' -> depth++
+                '}' -> {
+                    depth--
+                    if (depth == 0) return text.substring(start, i + 1)
+                }
+            }
+        }
+        return null
     }
 
     private fun parseJsonToToolCall(jsonString: String): AiToolCall? {

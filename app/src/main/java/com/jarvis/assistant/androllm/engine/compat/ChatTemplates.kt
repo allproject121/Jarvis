@@ -1,5 +1,8 @@
 package com.jarvis.assistant.androllm.engine.compat
 
+import com.jarvis.assistant.ai.compat.ChatTemplateRenderer
+import com.jarvis.assistant.ai.compat.ModelFamily
+
 /**
  * The official chat templates of each supported model family, transcribed from
  * the reference `tokenizer_config.json` on Hugging Face. These are the exact

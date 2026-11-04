@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Jarvis Chat tab. The original header / message list / composer are unchanged in look;
+  AndroLLM chat features are merged in: conversation drawer (opened from the hamburger),
+  multi-select bar, attachment chips in the composer and an empty-state hint.
+-->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/chatRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/themeBg">
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/chatContent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="100dp">
+
+    <!-- Top Navigation Header -->
+    <ImageButton
+        android:id="@+id/btnChatMenu"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="@drawable/bg_jarvis_icon_square"
+        android:src="@drawable/ic_menu"
+        app:tint="?attr/themeTextPrimary"
+        android:contentDescription="Conversations"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/layoutChatHeader"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?android:attr/selectableItemBackground"
+        app:layout_constraintTop_toTopOf="@id/btnChatMenu"
+        app:layout_constraintBottom_toBottomOf="@id/btnChatMenu"
+        app:layout_constraintStart_toEndOf="@id/btnChatMenu"
+        app:layout_constraintEnd_toStartOf="@id/btnChatNew">
+
+        <TextView
+            android:id="@+id/tvChatTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="JARVIS NEURAL CHAT"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="?attr/themeTextPrimary"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.04"
+            android:fontFamily="sans-serif-medium" />
+
+        <TextView
+            android:id="@+id/tvChatSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="● ONLINE • GEMINI 3.8 LIVE • ACTIVE"
+            android:textColor="?attr/themeAccent"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif"
+            android:layout_marginTop="1dp" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/btnChatNew"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="@drawable/bg_jarvis_icon_square"
+        android:src="@drawable/ic_plus"
+        app:tint="?attr/themeTextPrimary"
+        android:contentDescription="New Chat"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Multi-select action bar (replaces the header while messages are selected) -->
+    <LinearLayout
+        android:id="@+id/layoutSelectionBar"
+        android:layout_width="0dp"
+        android:layout_height="44dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_jarvis_card"
+        android:paddingStart="12dp"
+        android:paddingEnd="6dp"
+        android:visibility="gone"
+        android:elevation="2dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnSelectionClose"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@null"
+            android:src="@drawable/ic_close"
+            app:tint="?attr/themeTextPrimary"
+            android:contentDescription="Cancel selection" />
+
+        <TextView
+            android:id="@+id/tvSelectionCount"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="0 selected"
+            android:textColor="?attr/themeTextPrimary"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-medium" />
+
+        <ImageButton
+            android:id="@+id/btnSelectionCopy"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@null"
+            android:src="@drawable/ic_copy"
+            app:tint="?attr/themeTextSecondary"
+            android:contentDescription="Copy selected" />
+
+        <ImageButton
+            android:id="@+id/btnSelectionShare"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@null"
+            android:src="@drawable/ic_jchat_share"
+            app:tint="?attr/themeTextSecondary"
+            android:contentDescription="Share selected" />
+
+        <ImageButton
+            android:id="@+id/btnSelectionBookmark"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@null"
+            android:src="@drawable/ic_jchat_bookmark"
+            app:tint="?attr/themeTextSecondary"
+            android:contentDescription="Bookmark selected" />
+
+        <ImageButton
+            android:id="@+id/btnSelectionDelete"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@null"
+            android:src="@drawable/ic_delete"
+            app:tint="?attr/themeTextSecondary"
+            android:contentDescription="Delete selected" />
+    </LinearLayout>
+
+    <!-- Chat Messages List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvChatMessages"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="12dp"
+        app:layout_constraintTop_toBottomOf="@id/layoutChatHeader"
+        app:layout_constraintBottom_toTopOf="@id/cardInputContainer" />
+
+    <TextView
+        android:id="@+id/tvChatEmpty"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:gravity="center"
+        android:padding="24dp"
+        android:background="@drawable/bg_jarvis_action_card"
+        android:text="⚡ JARVIS NEURAL INTERFACE ONLINE&#10;&#10;Ask questions, inspect telemetry, generate code, or analyze files.&#10;Tap + to attach documents or hold the Mic for bidirectional voice."
+        android:textColor="?attr/themeTextSecondary"
+        android:textSize="13sp"
+        android:lineSpacingExtra="4dp"
+        android:letterSpacing="0.03"
+        android:elevation="4dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/rvChatMessages"
+        app:layout_constraintBottom_toBottomOf="@id/rvChatMessages"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Rich Bottom Message Input Container (Matching Image 3) -->
+    <LinearLayout
+        android:id="@+id/cardInputContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_jarvis_card"
+        android:padding="14dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- Edit-and-resend banner -->
+        <LinearLayout
+            android:id="@+id/layoutEditingBanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="8dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Editing message — send replaces it and asks Jarvis again"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="11sp" />
+
+            <ImageButton
+                android:id="@+id/btnCancelEditing"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:background="@null"
+                android:src="@drawable/ic_close"
+                app:tint="?attr/themeTextMuted"
+                android:contentDescription="Cancel editing" />
+        </LinearLayout>
+
+        <!-- Pending attachments (PDF / image OCR / Office / text) -->
+        <HorizontalScrollView
+            android:id="@+id/scrollAttachmentChips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:paddingBottom="8dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/layoutAttachmentChips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
+        <TextView
+            android:id="@+id/tvAttachmentProgress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="8dp"
+            android:textColor="?attr/themeTextMuted"
+            android:textSize="11sp"
+            android:visibility="gone" />
+
+        <EditText
+            android:id="@+id/etMessageInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Ask Jarvis anything or execute command..."
+            android:textColorHint="?attr/themeTextMuted"
+            android:textColor="?attr/themeTextPrimary"
+            android:textSize="15sp"
+            android:fontFamily="sans-serif"
+            android:background="@null"
+            android:minLines="1"
+            android:maxLines="4"
+            android:inputType="textCapSentences|textMultiLine"
+            android:paddingBottom="12dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Chip 1: Jarvis Persona -->
+            <LinearLayout
+                android:id="@+id/chipPersona"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="@drawable/bg_jarvis_chip"
+                android:paddingStart="12dp"
+                android:paddingEnd="14dp"
+                android:layout_marginEnd="8dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_nav_chat"
+                    app:tint="?attr/themeTextSecondary"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Jarvis"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Chip 2: Mode / Code -->
+            <LinearLayout
+                android:id="@+id/chipMode"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="@drawable/bg_jarvis_chip"
+                android:paddingStart="12dp"
+                android:paddingEnd="14dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_code_chip"
+                    app:tint="?attr/themeTextSecondary"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Code"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <!-- Plus attachment button -->
+            <ImageButton
+                android:id="@+id/btnAttach"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@null"
+                android:src="@drawable/ic_plus"
+                app:tint="?attr/themeTextSecondary"
+                android:layout_marginEnd="8dp"
+                android:contentDescription="Attach" />
+
+            <!-- Send Button -->
+            <ImageButton
+                android:id="@+id/btnSendMessage"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_jarvis_pill_button"
+                android:src="@drawable/ic_send_up"
+                app:tint="#FFFFFF"
+                android:contentDescription="Send" />
+        </LinearLayout>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Conversation drawer (Jarvis-styled side panel opened from the hamburger) -->
+    <FrameLayout
+        android:id="@+id/layoutDrawerOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="16dp"
+        android:visibility="gone">
+
+        <View
+            android:id="@+id/viewDrawerScrim"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#99000000"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <LinearLayout
+            android:id="@+id/panelDrawer"
+            android:layout_width="310dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:orientation="vertical"
+            android:background="?attr/themeBg"
+            android:clickable="true"
+            android:focusable="true"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="100dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tvDrawerTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Conversations"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium" />
+
+                <ImageButton
+                    android:id="@+id/btnDrawerClose"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_jarvis_icon_square"
+                    android:src="@drawable/ic_close"
+                    app:tint="?attr/themeTextPrimary"
+                    android:contentDescription="Close" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:paddingStart="12dp"
+                android:paddingEnd="8dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_search"
+                    app:tint="?attr/themeTextMuted" />
+
+                <EditText
+                    android:id="@+id/etDrawerSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:background="@null"
+                    android:hint="Search chats and messages"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textColorHint="?attr/themeTextMuted"
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/btnDrawerSearchClear"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:background="@null"
+                    android:src="@drawable/ic_close"
+                    app:tint="?attr/themeTextMuted"
+                    android:visibility="gone"
+                    android:contentDescription="Clear search" />
+            </LinearLayout>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/chipDrawerNewChat"
+                        style="@style/JarvisChatDrawerChip"
+                        android:text="+ New chat" />
+
+                    <TextView
+                        android:id="@+id/chipDrawerChats"
+                        style="@style/JarvisChatDrawerChip"
+                        android:text="Chats" />
+
+                    <TextView
+                        android:id="@+id/chipDrawerBookmarks"
+                        style="@style/JarvisChatDrawerChip"
+                        android:text="Bookmarks" />
+
+                    <TextView
+                        android:id="@+id/chipDrawerArchived"
+                        style="@style/JarvisChatDrawerChip"
+                        android:text="Archived" />
+
+                    <TextView
+                        android:id="@+id/chipDrawerHome"
+                        style="@style/JarvisChatDrawerChip"
+                        android:text="Home" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvDrawer"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_marginTop="8dp"
+                android:clipToPadding="false" />
+
+            <TextView
+                android:id="@+id/tvDrawerEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="16dp"
+                android:text="Nothing here yet"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/btnDrawerImportHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="10dp"
+                android:paddingBottom="6dp"
+                android:text="Copy latest Jarvis voice history into a chat"
+                android:textColor="?attr/themeTextSecondary"
+                android:textSize="12sp"
+                android:background="?android:attr/selectableItemBackground" />
+
+            <TextView
+                android:id="@+id/btnDrawerClearJarvisHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:text="Clear Jarvis voice history"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="12sp"
+                android:background="?android:attr/selectableItemBackground" />
+        </LinearLayout>
+    </FrameLayout>
+
+</FrameLayout>

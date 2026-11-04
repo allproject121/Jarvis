@@ -30,6 +30,12 @@ import java.util.Locale
 
 class VoiceEnrollmentActivity : AppCompatActivity() {
 
+    companion object {
+        private val voskInitScope = kotlinx.coroutines.CoroutineScope(
+            kotlinx.coroutines.SupervisorJob() + Dispatchers.IO
+        )
+    }
+
     private lateinit var binding: ActivityVoiceEnrollmentBinding
     private val preferences by lazy { JarvisApp.instance.preferences }
 
@@ -74,8 +80,9 @@ class VoiceEnrollmentActivity : AppCompatActivity() {
 
         binding.btnBack.setOnClickListener { finish() }
 
-        // Trigger Vosk initialization in background if not already started
-        VoskModelManager.init(applicationContext, lifecycleScope)
+        // Trigger Vosk initialization in background if not already started. Uses a process-wide
+        // scope: with lifecycleScope, leaving this screen mid-unpack cancelled the speaker-model load.
+        VoskModelManager.init(applicationContext, voskInitScope)
 
         setupUI()
         setupListeners()
@@ -89,24 +96,29 @@ class VoiceEnrollmentActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        val hasProfile = preferences.hasOwnerVoiceProfile()
-        val isEnabled = preferences.isOwnerVoiceEnabled && hasProfile
+        val hasProfile = OwnerVoiceManager.isEnrolled(preferences)
+        val isEnabled = OwnerVoiceManager.isVoiceLockActive(preferences)
+        val statusLine = OwnerVoiceManager.voiceLockStatusLine(preferences)
 
         binding.switchOwnerOnly.isChecked = isEnabled
         binding.switchOwnerOnly.isEnabled = hasProfile
 
         if (hasProfile) {
-            binding.tvEnrollmentStatus.text = if (isEnabled) "OWNER VOICE: ACTIVE" else "OWNER VOICE: PAUSED"
+            binding.tvEnrollmentStatus.text = if (isEnabled) "VOICE LOCK: ENROLLED" else "VOICE LOCK: ENROLLED (PAUSED)"
             binding.tvEnrollmentStatus.setTextColor(
                 if (isEnabled) ThemeManager.attrColor(this, R.attr.themeAccent, getColor(R.color.primary_cyan))
                 else ThemeManager.attrColor(this, R.attr.themeTextSecondary, getColor(R.color.text_secondary))
             )
-            binding.tvStatusDescription.text = "Jarvis is calibrated to your voice. Any speech or commands from other people are automatically blocked."
-            binding.viewStatusDot.setBackgroundResource(if (isEnabled) R.drawable.circle_cyan else R.drawable.circle_cyan)
+            binding.tvStatusDescription.text = if (isEnabled) {
+                "$statusLine.\nJarvis is calibrated to your voice (${preferences.ownerVoiceSampleCount} samples). Speech from other people is blocked."
+            } else {
+                "$statusLine.\nTurn on the owner-only switch to block other voices again."
+            }
+            binding.viewStatusDot.setBackgroundResource(R.drawable.circle_cyan)
         } else {
-            binding.tvEnrollmentStatus.text = "OWNER VOICE: NOT ENROLLED"
+            binding.tvEnrollmentStatus.text = "VOICE LOCK: NOT ENROLLED"
             binding.tvEnrollmentStatus.setTextColor(getColor(R.color.status_amber))
-            binding.tvStatusDescription.text = "Enroll 3 voice samples below. Once saved, Jarvis will respond ONLY to you and ignore anyone else."
+            binding.tvStatusDescription.text = "$statusLine.\nEnroll 3 voice samples below. Once saved, Jarvis will respond ONLY to you and ignore anyone else."
         }
 
         // Sensitivity
@@ -208,6 +220,10 @@ class VoiceEnrollmentActivity : AppCompatActivity() {
             checkPermissions()
             return
         }
+        if (!ensureSpeakerModelReady()) {
+            binding.tvRecordFeedback.text = "Voice model is still loading - wait a few seconds and tap again."
+            return
+        }
 
         isRecording = true
         binding.btnRecordSample.text = "STOP & PROCESS"
@@ -271,15 +287,29 @@ class VoiceEnrollmentActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * The speaker (x-vector) model is unpacked/loaded asynchronously. Without it every sample
+     * "fails" with a misleading "could not detect clear speech", so wait for it explicitly.
+     */
+    private fun ensureSpeakerModelReady(): Boolean {
+        if (VoskModelManager.model != null && VoskModelManager.speakerModel != null) return true
+        VoskModelManager.init(applicationContext, voskInitScope)
+        return false
+    }
+
     @SuppressLint("MissingPermission")
     private fun startTestingVoice() {
-        if (!preferences.hasOwnerVoiceProfile()) {
+        if (!OwnerVoiceManager.isEnrolled(preferences)) {
             Toast.makeText(this, "Please enroll your voice samples first!", Toast.LENGTH_SHORT).show()
             return
         }
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             checkPermissions()
+            return
+        }
+        if (!ensureSpeakerModelReady()) {
+            Toast.makeText(this, "Voice model is still loading - try again in a few seconds.", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -320,7 +350,20 @@ class VoiceEnrollmentActivity : AppCompatActivity() {
         binding.btnTestVoice.isEnabled = false
 
         lifecycleScope.launch(Dispatchers.Default) {
-            val result = OwnerVoiceManager.verifySpeakerAudio(pcmAudio, preferences)
+            // Compare against the profile directly so the test is real even while the lock is paused
+            // (verifySpeakerAudio accepts every voice when the lock is off).
+            val vector = OwnerVoiceManager.extractSpeakerVector(pcmAudio)
+            val result = if (vector == null) {
+                com.jarvis.assistant.audio.VoiceMatchResult(
+                    isMatch = false,
+                    distance = 1.0f,
+                    similarityPercent = 0,
+                    threshold = preferences.ownerVoiceThreshold,
+                    hasExtractedVector = false
+                )
+            } else {
+                OwnerVoiceManager.verifySpeakerVector(vector, preferences)
+            }
 
             withContext(Dispatchers.Main) {
                 binding.btnTestVoice.isEnabled = true

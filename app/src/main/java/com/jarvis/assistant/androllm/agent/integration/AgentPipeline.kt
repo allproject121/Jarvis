@@ -7,7 +7,7 @@ import com.jarvis.assistant.androllm.agent.AgentFlags
 import com.jarvis.assistant.androllm.agent.AgentToolGraph
 import com.jarvis.assistant.androllm.agent.bridge.JarvisToolBridge
 import com.jarvis.assistant.androllm.agent.coordinator.ToolExecutionRecord
-import com.jarvis.assistant.androllm.agent.coordinator.ToolLoopGuard
+import com.jarvis.assistant.automation.guard.ToolLoopGuard
 import com.jarvis.assistant.androllm.agent.core.ToolCall
 import com.jarvis.assistant.androllm.agent.core.ToolEvent
 import com.jarvis.assistant.androllm.agent.core.ToolResult

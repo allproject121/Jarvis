@@ -33,6 +33,12 @@ class SelfHealingAgent private constructor(private val context: Context) {
     private val memoryDb by lazy { MemoryDatabase.getInstance(context) }
     private val logFile by lazy { File(context.filesDir, "dynamic_tools/healing_history.log") }
 
+    /** Per-session (in-memory only) failure counter, keyed by tool name. */
+    private val failureCounts = java.util.concurrent.ConcurrentHashMap<String, Int>()
+
+    /** Failures recorded for [toolName] since the app process started. */
+    fun sessionFailureCount(toolName: String): Int = failureCounts[toolName] ?: 0
+
     data class HealingIncident(
         val toolName: String,
         val arguments: JSONObject,
@@ -65,17 +71,11 @@ class SelfHealingAgent private constructor(private val context: Context) {
                 }
             }
 
-            // 3. Persist diagnostic memory in Room so Gemini Live has context in future turns
-            val memoryText = "Self-Healing diagnostic: Tool '$toolName' failed with error: '$errorMessage'. Arguments: $arguments"
-            memoryDb.memoryDao().insertMemory(
-                MemoryEntity(
-                    category = MemoryEntity.CATEGORY_NOTES,
-                    key = "self_healing_$toolName",
-                    value = errorMessage,
-                    rawText = memoryText
-                )
-            )
-            Log.i(TAG, "Saved self-healing diagnostic to Memory Core for tool '$toolName'")
+            // 3. Count the failure in memory only. Tool failures are NOT written to the
+            //    user's Notes memory any more (it polluted their notes); the healing log
+            //    file above keeps the diagnostic history.
+            val count = failureCounts.merge(toolName, 1) { a, b -> a + b } ?: 1
+            Log.i(TAG, "Self-healing diagnostic logged for tool '$toolName' (failures this session: $count)")
             true
         } catch (e: Exception) {
             Log.e(TAG, "Error in self-healing interception: ${e.message}", e)

@@ -1,5 +1,7 @@
 package com.jarvis.assistant.androllm.models.catalog
 
+import com.jarvis.assistant.androllm.engine.support.ModelMetadataRegistry
+
 /**
  * Validates catalog metadata without touching the network. Rules:
  * - ids must be unique

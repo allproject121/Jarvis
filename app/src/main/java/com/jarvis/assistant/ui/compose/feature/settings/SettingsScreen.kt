@@ -337,39 +337,6 @@ private fun SettingsScreen(
                             )
                         }
                     }
-                    CloudGlassCard(modifier = Modifier.fillMaxWidth()) {
-                        Column {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Account & Sync",
-                                        style = MaterialTheme.typography.titleSmall.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.ledger.deskPaper
-                                        )
-                                    )
-                                    Text(
-                                        text = "Cloud sign-in, sync and the web dashboard aren't available in Jarvis — your profile stays on this device.",
-                                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.ledger.deskInk)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                CloudChip(text = "Unavailable", accentColor = MaterialTheme.ledger.deskInk)
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            CloudCapsuleButton(
-                                text = "Sign in (not available)",
-                                onClick = {},
-                                enabled = false,
-                                icon = Icons.Filled.AccountCircle,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
                 }
 
                 // ── AI Engine & API keys ────────────────────────────────────
@@ -607,7 +574,7 @@ private fun SettingsScreen(
                             ToggleRow(
                                 icon = Icons.Filled.Memory,
                                 title = "Long-term Memory",
-                                subtitle = "Jarvis remembers facts from your conversations (stored on this device)",
+                                subtitle = "Jarvis remembers facts from your conversations (stored on this device). Off: the memory tools neither save nor recall.",
                                 checked = state.memoryEnabled,
                                 onCheckedChange = { viewModel.setMemoryEnabled(it) }
                             )
@@ -729,12 +696,6 @@ private fun SettingsScreen(
                                 value = state.language,
                                 onClick = { dialog = SettingsDialog.LANGUAGE }
                             )
-                            SliderSetting(
-                                label = { "Wake word sensitivity  ${(it * 100).toInt()}%" },
-                                value = state.wakeSensitivity.coerceIn(0.3f, 0.95f),
-                                valueRange = 0.3f..0.95f,
-                                onCommit = { viewModel.setWakeSensitivity(it) }
-                            )
                             ToggleRow(
                                 icon = Icons.Filled.GraphicEq,
                                 title = "Silent execution",
@@ -760,7 +721,7 @@ private fun SettingsScreen(
                             ToggleRow(
                                 icon = Icons.Filled.Timer,
                                 title = "Battery saver",
-                                subtitle = "Throttle background polling",
+                                subtitle = "Telemetry every 5 s instead of 1 s, slower Dynamic Island polling",
                                 checked = state.batterySaver,
                                 onCheckedChange = { viewModel.setBatterySaver(it) }
                             )
@@ -817,7 +778,7 @@ private fun SettingsScreen(
                                 icon = Icons.Filled.Mic,
                                 title = "Wake word engine",
                                 value = "Vosk (offline)",
-                                onClick = {}
+                                onClick = null
                             )
                             Text(
                                 text = "Wake word / STT / TTS engine choice and whisper.cpp model downloads are in AndroLLM features → Voice, below.",
@@ -922,13 +883,6 @@ private fun SettingsScreen(
                                 checked = state.autoScroll,
                                 onCheckedChange = { viewModel.setAutoScroll(it) }
                             )
-                            ToggleRow(
-                                icon = Icons.Filled.TouchApp,
-                                title = "Assistant screen capture",
-                                subtitle = "Let the default-assistant session read the screen",
-                                checked = state.screenCapture,
-                                onCheckedChange = { viewModel.setScreenCapture(it) }
-                            )
                         }
                     }
                 }
@@ -968,8 +922,6 @@ private fun SettingsScreen(
                     McpSection(
                         servers = state.mcpServers,
                         toolCount = mcpToolCount,
-                        bridgeEnabled = state.mcpBridgeEnabled,
-                        onBridgeToggle = { viewModel.setMcpBridge(it) },
                         onAdd = { name, url, token -> viewModel.addMcpServer(name, url, token) },
                         onRemove = { viewModel.removeMcpServer(it) },
                         onToggle = { server, enabled -> viewModel.setMcpServerEnabled(server, enabled) }

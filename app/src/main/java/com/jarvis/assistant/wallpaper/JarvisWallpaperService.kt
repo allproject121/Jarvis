@@ -19,6 +19,10 @@ import com.jarvis.assistant.JarvisApp
 import com.jarvis.assistant.background.JarvisConversationService
 import com.jarvis.assistant.data.model.ConversationState
 import com.jarvis.assistant.util.CustomAvatarHelper
+import com.jarvis.assistant.maya.ui.MayaCharacters
+import com.jarvis.assistant.maya.ui.MayaOrbRenderer
+import com.jarvis.assistant.maya.ui.MayaPalette
+import com.jarvis.assistant.maya.ui.MayaUiPrefs
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -32,7 +36,11 @@ import kotlin.math.sin
  * 2. "arc_reactor": Stark Arc Reactor holographic HUD with rotating concentric energy rings and
  *    breathing pulse reactor core.
  *
- * Both modes are 100% battery-efficient: rendering pauses completely whenever the home screen is
+ * 3. "maya_character" (MayaUiPrefs.WALLPAPER_MODE_MAYA): the Maya stage - electric-blue radial
+ *    glow, circuit traces, rotating neon rings, audio-reactive core, particles and the live
+ *    conversation state (drawn natively with MayaOrbRenderer, no WebGL).
+ *
+ * All modes are 100% battery-efficient: rendering pauses completely whenever the home screen is
  * hidden, phone is locked, or another app is opened.
  */
 class JarvisWallpaperService : WallpaperService() {
@@ -189,11 +197,24 @@ class JarvisWallpaperService : WallpaperService() {
             isAntiAlias = true
         }
 
+        // Maya stage mode (lazy: only allocated when that mode is selected)
+        private var mayaRenderer: MayaOrbRenderer? = null
+        private var mayaStartNs = 0L
+        private var mayaLastNs = 0L
+
+        private fun isMayaMode(): Boolean = try {
+            JarvisApp.instance.preferences.wallpaperMode.equals(MayaUiPrefs.WALLPAPER_MODE_MAYA, ignoreCase = true)
+        } catch (_: Throwable) {
+            false
+        }
+
         private val drawRunnable = object : Runnable {
             override fun run() {
                 drawFrame()
                 if (isVisible) {
-                    handler.postDelayed(this, 16) // ~60 FPS
+                    // ~60 FPS; the Maya stage drops to ~30 FPS while battery saver is on
+                    val delay = if (isMayaMode() && MayaUiPrefs.isBatterySaverOn()) 33L else 16L
+                    handler.postDelayed(this, delay)
                 }
             }
         }
@@ -220,6 +241,7 @@ class JarvisWallpaperService : WallpaperService() {
             currentLookX = targetLookX
             currentLookY = targetLookY
             cachedAvatarBitmap = CustomAvatarHelper.getAvatarBitmap(this@JarvisWallpaperService)
+            mayaRenderer?.setSize(w, h)
         }
 
         override fun onSurfaceDestroyed(holder: SurfaceHolder?) {
@@ -236,6 +258,7 @@ class JarvisWallpaperService : WallpaperService() {
                     targetLookX = event.x
                     targetLookY = event.y
                     if (event.action == MotionEvent.ACTION_DOWN) {
+                        mayaRenderer?.touch(event.x, event.y)
                         shockwaveX = event.x
                         shockwaveY = event.y
                         shockwaveRadius = 15f
@@ -257,7 +280,9 @@ class JarvisWallpaperService : WallpaperService() {
                 if (canvas != null) {
                     val prefs = JarvisApp.instance.preferences
                     val mode = prefs.wallpaperMode
-                    if (mode.equals("arc_reactor", ignoreCase = true)) {
+                    if (mode.equals(MayaUiPrefs.WALLPAPER_MODE_MAYA, ignoreCase = true)) {
+                        renderMayaStage(canvas)
+                    } else if (mode.equals("arc_reactor", ignoreCase = true)) {
                         renderJarvisHud(canvas)
                     } else {
                         renderCharacterMode(canvas)
@@ -271,6 +296,49 @@ class JarvisWallpaperService : WallpaperService() {
                     } catch (ignored: Exception) {}
                 }
             }
+        }
+
+        /**
+         * Maya stage mode: the same neon stage as the in-app character background, with the
+         * orb standing in for the character, coloured by the active character and driven by
+         * the live conversation state + audio level.
+         */
+        private fun renderMayaStage(canvas: Canvas) {
+            val renderer = mayaRenderer ?: MayaOrbRenderer(this@JarvisWallpaperService).also {
+                mayaRenderer = it
+                it.setSize(width, height)
+                it.centerYFraction = 0.44f
+            }
+            val prefs = JarvisApp.instance.preferences
+            val character = MayaCharacters.byPrefName(prefs.jarvisActiveCharacter)
+            renderer.accent = MayaPalette.monogramColor(character.id)
+            renderer.lowPower = prefs.isBatterySaverEnabled
+            val now = System.nanoTime()
+            if (mayaStartNs == 0L) mayaStartNs = now
+            val dt = if (mayaLastNs == 0L) 0.016f else ((now - mayaLastNs) / 1_000_000_000f).coerceIn(0f, 0.1f)
+            mayaLastNs = now
+            val t = (now - mayaStartNs) / 1_000_000_000f
+
+            val convState = try {
+                JarvisConversationService.conversationState.value
+            } catch (_: Throwable) {
+                ConversationState.IDLE
+            }
+            val level = try {
+                JarvisConversationService.audioLevel.value
+            } catch (_: Throwable) {
+                0f
+            }
+            val sessionOn = try { JarvisConversationService.isSessionOn.value } catch (_: Throwable) { false }
+            val name = prefs.assistantName.ifBlank { "JARVIS" }
+            val title = when (convState) {
+                ConversationState.LISTENING -> "Listening…"
+                ConversationState.THINKING -> "Thinking…"
+                ConversationState.SPEAKING -> "Speaking…"
+                else -> character.title
+            }
+            val subtitle = if (sessionOn) "$name • Live" else "$name • Offline"
+            renderer.draw(canvas, t, dt, convState.orbKey, level, true, title, subtitle)
         }
 
         /**

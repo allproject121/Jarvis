@@ -126,8 +126,9 @@ object YouTubeController {
                 val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/results?search_query=$encoded&gl=IN&hl=en")).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
-                ActivityLauncherHelper.startActivitySafely(context, webIntent)
-                PlayResult(true, null, "Showing YouTube search results for \"$cleanQ\".")
+                val webOk = ActivityLauncherHelper.startActivitySafely(context, webIntent)
+                if (webOk) PlayResult(true, null, "Showing YouTube search results for \"$cleanQ\".")
+                else PlayResult(false, null, "Couldn't open YouTube search for \"$cleanQ\".")
             }
         } catch (e: Exception) {
             android.util.Log.e("YouTubeController", "YouTube search intent failed", e)

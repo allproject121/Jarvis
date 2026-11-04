@@ -26,6 +26,9 @@ class Mem0ToolBridge private constructor(
 ) {
     companion object {
         private const val TAG = "Mem0ToolBridge"
+        private const val DISABLED_MESSAGE =
+            "Mem0 memory is turned off in Settings, so nothing was saved or recalled. " +
+                "Turn on \"Mem0 Persistent User Memory\" to use long-term memory."
 
         @Volatile
         private var instance: Mem0ToolBridge? = null
@@ -101,10 +104,15 @@ class Mem0ToolBridge private constructor(
         }
     }
 
+    /** Settings › "Mem0 Persistent User Memory" switch (AppPreferences.isMem0MemoryEnabled). */
+    private fun isEnabled(): Boolean =
+        (context as? JarvisApp)?.preferences?.isMem0MemoryEnabled ?: true
+
     /**
      * Stores a new memory fact and immediately indexes it in the vector engine.
      */
     suspend fun addMemory(fact: String, category: String = MemoryEntity.CATEGORY_NOTES): String = withContext(Dispatchers.IO) {
+        if (!isEnabled()) return@withContext DISABLED_MESSAGE
         val cleanFact = fact.trim()
         if (cleanFact.isBlank()) return@withContext "Empty fact cannot be stored."
 
@@ -128,6 +136,7 @@ class Mem0ToolBridge private constructor(
      * Retrieves top semantic memories matching the query.
      */
     suspend fun searchMemories(query: String, limit: Int = 4): String = withContext(Dispatchers.IO) {
+        if (!isEnabled()) return@withContext DISABLED_MESSAGE
         val matches = vectorEngine.searchSimilarMemories(query, topK = limit, minScore = 0.35f)
         if (matches.isEmpty()) {
             val kwMatches = repository.searchMemories(query)
@@ -141,16 +150,27 @@ class Mem0ToolBridge private constructor(
     }
 
     /**
-     * Deletes memories matching the specified keyword.
+     * Deletes memories matching the specified keyword. Looks up the real
+     * matching memory ids first, then removes each one from Room and from the
+     * vector index so it can no longer be recalled.
      */
     suspend fun deleteMemory(keyword: String): String = withContext(Dispatchers.IO) {
-        val deletedCount = repository.deleteMemoriesByKeyword(keyword)
-        vectorEngine.removeMemory(keyword.hashCode().toLong())
-        Log.i(TAG, "Mem0: Removed $deletedCount memories matching '$keyword'")
+        val cleanKeyword = keyword.trim()
+        if (cleanKeyword.isBlank()) return@withContext "Sir, please tell me which fact to forget."
+        val matchedIds = repository.searchMemories(cleanKeyword).map { it.id }.distinct()
+        var deletedCount = 0
+        matchedIds.forEach { id ->
+            runCatching {
+                repository.deleteMemoryById(id)
+                vectorEngine.removeMemory(id)
+                deletedCount++
+            }.onFailure { Log.w(TAG, "Mem0: failed to delete memory #$id", it) }
+        }
+        Log.i(TAG, "Mem0: Removed $deletedCount memories matching '$cleanKeyword' (ids=$matchedIds)")
         if (deletedCount > 0) {
             "Sir, I have deleted $deletedCount related record(s) from my memory."
         } else {
-            "Sir, no records matched '$keyword'."
+            "Sir, no records matched '$cleanKeyword'."
         }
     }
 

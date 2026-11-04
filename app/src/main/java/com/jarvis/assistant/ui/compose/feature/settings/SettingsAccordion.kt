@@ -103,7 +103,7 @@ internal val SettingsGroup.title: String
 internal val SettingsGroup.keywords: List<String>
     get() = when (this) {
         SettingsGroup.Account -> listOf(
-            "sign in", "sync", "profile", "name", "account", "assistant name", "persona", "personality"
+            "profile", "name", "account", "assistant name", "persona", "personality"
         )
         SettingsGroup.AiEngine -> listOf(
             "api key", "gemini", "openai", "chatgpt", "ollama", "endpoint", "model", "local",
@@ -124,11 +124,11 @@ internal val SettingsGroup.keywords: List<String>
             "tool calling", "confirmations", "autonomous", "direct", "permissions",
             "sms", "phone", "calendar", "contacts", "tools", "auto reply"
         )
-        SettingsGroup.UiAutomation -> listOf("accessibility", "ui control", "service", "scroll", "screen capture")
+        SettingsGroup.UiAutomation -> listOf("accessibility", "ui control", "service", "scroll")
         SettingsGroup.DevicePermissions -> listOf(
             "sms", "phone", "calendar", "contacts", "location", "microphone", "notifications", "permissions"
         )
-        SettingsGroup.Mcp -> listOf("mcp", "server", "remote tools", "token", "bridge")
+        SettingsGroup.Mcp -> listOf("mcp", "server", "remote tools", "token")
         SettingsGroup.Safety -> listOf("privacy", "safety", "shield")
         SettingsGroup.Developer -> listOf("developer", "logs", "diagnostics", "telemetry", "links")
         SettingsGroup.About -> listOf("version", "privacy", "about", "classic", "jarvis settings")

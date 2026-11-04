@@ -150,8 +150,8 @@ class DeveloperViewModel(application: Application) : AndroidViewModel(applicatio
     private val _liteRtMessage = MutableStateFlow<String?>(null)
     val liteRtMessage: StateFlow<String?> = _liteRtMessage.asStateFlow()
 
-    fun liteRtCrashes(): List<com.jarvis.assistant.androllm.engine.diagnostics.EngineCrashGuard.CrashEvent> =
-        runCatching { com.jarvis.assistant.androllm.engine.diagnostics.EngineCrashGuard.getRecentEvents() }.getOrDefault(emptyList())
+    fun liteRtCrashes(): List<EngineCrashGuard.CrashEvent> =
+        runCatching { EngineCrashGuard.getRecentEvents() }.getOrDefault(emptyList())
 
     fun refreshLiteRt() {
         viewModelScope.launch {

@@ -138,3 +138,30 @@ val DeskLedger = TextStyle(
     lineHeight = 18.sp,
     letterSpacing = 0.sp
 )
+
+/** Inter — the Maya typeface (Regular / Medium / SemiBold / Bold, bundled in res/font). */
+val MayaInter = FontFamily(
+    Font(R.font.inter_regular, FontWeight.Normal),
+    Font(R.font.inter_medium, FontWeight.Medium),
+    Font(R.font.inter_semibold, FontWeight.SemiBold),
+    Font(R.font.inter_bold, FontWeight.Bold)
+)
+
+/** The AndroLLM type scale re-voiced in Inter for the Maya theme. */
+val MayaTypography: Typography = Typography(
+    displayLarge = AndroLLMTypography.displayLarge.copy(fontFamily = MayaInter),
+    displayMedium = AndroLLMTypography.displayMedium.copy(fontFamily = MayaInter),
+    displaySmall = AndroLLMTypography.displaySmall.copy(fontFamily = MayaInter),
+    headlineLarge = AndroLLMTypography.headlineLarge.copy(fontFamily = MayaInter),
+    headlineMedium = AndroLLMTypography.headlineMedium.copy(fontFamily = MayaInter),
+    headlineSmall = AndroLLMTypography.headlineSmall.copy(fontFamily = MayaInter),
+    titleLarge = AndroLLMTypography.titleLarge.copy(fontFamily = MayaInter),
+    titleMedium = AndroLLMTypography.titleMedium.copy(fontFamily = MayaInter),
+    titleSmall = AndroLLMTypography.titleSmall.copy(fontFamily = MayaInter),
+    bodyLarge = AndroLLMTypography.bodyLarge.copy(fontFamily = MayaInter),
+    bodyMedium = AndroLLMTypography.bodyMedium.copy(fontFamily = MayaInter),
+    bodySmall = AndroLLMTypography.bodySmall.copy(fontFamily = MayaInter),
+    labelLarge = AndroLLMTypography.labelLarge.copy(fontFamily = MayaInter),
+    labelMedium = AndroLLMTypography.labelMedium.copy(fontFamily = MayaInter),
+    labelSmall = AndroLLMTypography.labelSmall.copy(fontFamily = MayaInter)
+)

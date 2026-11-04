@@ -59,7 +59,7 @@ private data class AgentToolRow(
 /**
  * "Agent tools" settings (AndroLLM Settings → Automation, ported):
  *
- * - Agent pipeline switch ([AgentFlags.AGENT_PIPELINE], default OFF) — routes
+ * - Agent pipeline switch ([AgentFlags.AGENT_PIPELINE], default ON) — routes
  *   the non-Gemini engines (LiteRT-LM, local core, Hermes, Cloud Gateway)
  *   through the AndroLLM planner / executor. Gemini Live is never affected.
  * - Tool-calling master switch, confirmation mode and the planner round cap

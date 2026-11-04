@@ -1978,6 +1978,59 @@
                                 android:textSize="11sp" />
                         </LinearLayout>
                     </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/cardThemeMaya"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:layout_marginTop="8dp">
+
+                        <FrameLayout
+                            android:layout_width="20dp"
+                            android:layout_height="20dp">
+
+                            <View
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:background="@drawable/bg_jarvis_mic_center"
+                                android:backgroundTint="@color/maya_bg" />
+
+                            <View
+                                android:layout_width="8dp"
+                                android:layout_height="8dp"
+                                android:layout_gravity="center"
+                                android:background="@drawable/bg_jarvis_mic_center"
+                                android:backgroundTint="@color/maya_primary" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="12dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Maya"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14sp"
+                                android:fontFamily="@font/inter"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Charcoal-navy + electric-blue neon, Inter type, character stage on Home"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 
@@ -2341,47 +2394,6 @@
                             android:layout_height="wrap_content" />
                     </LinearLayout>
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="?attr/themeCardBorder"
-                        android:layout_marginVertical="14dp" />
-
-                    <!-- Switch 5: Holographic HUD Scanlines -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Holographic HUD Scanlines"
-                                android:textColor="?attr/themeTextPrimary"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Futuristic Stark holographic CRT scanline overlay"
-                                android:textColor="?attr/themeTextMuted"
-                                android:textSize="11sp"
-                                android:layout_marginTop="2dp" />
-                        </LinearLayout>
-
-                        <androidx.appcompat.widget.SwitchCompat
-                            android:id="@+id/switchHoloScanlines"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
-                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 

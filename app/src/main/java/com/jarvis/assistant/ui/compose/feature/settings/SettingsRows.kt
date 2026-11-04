@@ -64,13 +64,14 @@ internal fun SettingRow(
     title: String,
     value: String? = null,
     enabled: Boolean = true,
-    onClick: () -> Unit
+    /** null = plain information row (not clickable, no ripple). */
+    onClick: (() -> Unit)?
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .alpha(if (enabled) 1f else 0.45f)
-            .clickable(enabled = enabled, onClick = onClick)
+            .then(if (onClick != null) Modifier.clickable(enabled = enabled, onClick = onClick) else Modifier)
             .padding(horizontal = 12.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)

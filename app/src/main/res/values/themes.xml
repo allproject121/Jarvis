@@ -671,6 +671,76 @@
         <item name="themeAccentLight">#F6E3DA</item>
     </style>
 
+    <!-- 16. MAYA - the Maya companion look: deep charcoal-navy ground, electric-blue neon, Inter type -->
+    <style name="Widget.Maya.TextView" parent="android:Widget.Material.TextView">
+        <item name="android:fontFamily">@font/inter</item>
+    </style>
+
+    <style name="Widget.Maya.Button" parent="Widget.Material3.Button">
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="fontFamily">@font/inter</item>
+    </style>
+
+    <style name="Widget.Maya.EditText" parent="Widget.AppCompat.EditText">
+        <item name="android:fontFamily">@font/inter</item>
+    </style>
+
+    <style name="Theme.JarvisAssistant.Maya" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:statusBarColor">@color/maya_bg_edge</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/maya_bg_edge</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowBackground">@color/maya_bg</item>
+        <item name="colorPrimary">@color/maya_primary</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#1A2A44</item>
+        <item name="colorOnPrimaryContainer">@color/maya_tint_soft</item>
+        <item name="colorSecondary">@color/maya_accent</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorTertiary">@color/maya_cyan_glow</item>
+        <item name="colorSurface">@color/maya_surface</item>
+        <item name="colorOnSurface">@color/maya_text</item>
+        <item name="colorSurfaceVariant">@color/maya_surface_raised</item>
+        <item name="colorOnSurfaceVariant">@color/maya_text_secondary</item>
+        <item name="colorOutline">@color/maya_hairline</item>
+        <item name="colorError">@color/maya_danger</item>
+        <item name="android:colorBackground">@color/maya_bg</item>
+
+        <!-- Inter everywhere -->
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="fontFamily">@font/inter</item>
+        <item name="android:textViewStyle">@style/Widget.Maya.TextView</item>
+        <item name="android:buttonStyle">@style/Widget.Maya.Button</item>
+        <item name="materialButtonStyle">@style/Widget.Maya.Button</item>
+        <item name="android:editTextStyle">@style/Widget.Maya.EditText</item>
+
+        <item name="themeBg">@color/maya_bg</item>
+        <item name="themeSurface">@color/maya_surface</item>
+        <item name="themeCardBg">@color/maya_surface</item>
+        <item name="themeCardBorder">@color/maya_hairline</item>
+        <item name="themeCardGlassStart">#F21F2330</item>
+        <item name="themeCardGlassEnd">#F21A1D26</item>
+        <item name="themeDockBg">#F50E1016</item>
+        <item name="themeDockGlassStart">#F51F2330</item>
+        <item name="themeDockGlassEnd">#F50B0C10</item>
+        <item name="themeDockBorder">#4D1E90FF</item>
+        <item name="themeGlassSpecular">#801E90FF</item>
+        <item name="themeChipBg">@color/maya_surface_raised</item>
+        <item name="themeInputBg">@color/maya_surface</item>
+        <item name="themeGlowBlob1">@drawable/bg_liquid_glow_dark_1</item>
+        <item name="themeGlowBlob2">@drawable/bg_liquid_glow_dark_2</item>
+        <item name="themeGlowBlob3">@drawable/bg_liquid_glow_dark_3</item>
+
+        <item name="themeTextPrimary">@color/maya_text</item>
+        <item name="themeTextSecondary">@color/maya_text_secondary</item>
+        <item name="themeTextMuted">@color/maya_text_muted</item>
+        <item name="themeAccent1">@color/maya_primary</item>
+        <item name="themeAccent2">@color/maya_light_blue</item>
+        <item name="themeAccent3">@color/maya_violet_light</item>
+        <item name="themeAccent">@color/maya_primary</item>
+        <item name="themeAccentLight">@color/maya_primary_glow</item>
+    </style>
+
     <style name="Theme.JarvisAssistant.MidnightOnyx" parent="Theme.JarvisAssistant.Dark" />
     <style name="Theme.JarvisAssistant.CyberpunkNeon" parent="Theme.JarvisAssistant.Amethyst" />
     <style name="Theme.JarvisAssistant.EmeraldObsidian" parent="Theme.JarvisAssistant.Emerald" />

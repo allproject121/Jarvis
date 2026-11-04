@@ -1,5 +1,7 @@
 package com.jarvis.assistant.androllm.engine.compat
 
+import com.jarvis.assistant.ai.compat.TokenizerKind
+
 /**
  * The parsed `litert.lm.proto.LlmMetadata` from a `.litertlm` container —
  * the metadata LiteRT-LM itself reads when it loads the model. Fields the

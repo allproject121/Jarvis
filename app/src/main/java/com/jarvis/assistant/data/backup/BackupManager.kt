@@ -49,6 +49,16 @@ object BackupManager {
             val chatHistory = prefs.loadChatHistory()
             root.add("chat_history", gson.toJsonTree(chatHistory))
 
+            // Maya parity (WP6): rules, episodes, wiki, notices, chats, SOS contacts.
+            // Memories are already exported above, so they are stripped here to avoid a double import.
+            try {
+                val maya = com.jarvis.assistant.maya.memory.MayaBackup.buildExportJson(context)
+                maya.remove("memories")
+                root.add("maya", JsonParser.parseString(maya.toString()))
+            } catch (e: Exception) {
+                Log.w(TAG, "Maya backup section skipped: ${e.message}")
+            }
+
             // Output File
             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             if (!downloadsDir.exists()) downloadsDir.mkdirs()
@@ -86,6 +96,15 @@ object BackupManager {
                         category = category
                     )
                     count++
+                }
+            }
+
+            // Maya parity (WP6): merge the rules/episodes/wiki/notices/chats section when present.
+            if (root.has("maya") && root.get("maya").isJsonObject) {
+                try {
+                    com.jarvis.assistant.maya.memory.MayaBackup.restoreFromJson(context, root.get("maya").toString())
+                } catch (e: Exception) {
+                    Log.w(TAG, "Maya section restore failed: ${e.message}")
                 }
             }
 

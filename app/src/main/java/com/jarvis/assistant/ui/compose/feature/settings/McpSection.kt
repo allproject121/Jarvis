@@ -55,8 +55,6 @@ import com.jarvis.assistant.ui.compose.theme.ledger
 internal fun McpSection(
     servers: List<McpServer>,
     toolCount: Int,
-    bridgeEnabled: Boolean,
-    onBridgeToggle: (Boolean) -> Unit,
     onAdd: (name: String, url: String, token: String) -> Unit,
     onRemove: (id: String) -> Unit,
     onToggle: (server: McpServer, enabled: Boolean) -> Unit
@@ -103,16 +101,6 @@ internal fun McpSection(
                     }
                 }
             }
-
-            HorizontalDivider(color = MaterialTheme.ledger.deskHairline)
-
-            ToggleRow(
-                icon = Icons.Filled.Link,
-                title = "Local MCP Bridge",
-                subtitle = "Expose Jarvis tools on the on-device bridge (port 3000)",
-                checked = bridgeEnabled,
-                onCheckedChange = onBridgeToggle
-            )
 
             HorizontalDivider(color = MaterialTheme.ledger.deskHairline)
 

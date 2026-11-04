@@ -92,7 +92,6 @@ data class SettingsUiState(
     // Voice
     val voice: String = "",
     val language: String = "",
-    val wakeSensitivity: Float = 0.65f,
     val hudSoundEnabled: Boolean = true,
     val hudSoundVolume: Float = 0.8f,
     val silentExecution: Boolean = false,
@@ -111,10 +110,8 @@ data class SettingsUiState(
     // UI automation
     val accessibilityRunning: Boolean = false,
     val autoScroll: Boolean = false,
-    val screenCapture: Boolean = true,
     // MCP
     val mcpServers: List<McpServer> = emptyList(),
-    val mcpBridgeEnabled: Boolean = true,
     // Safety / developer
     val privacyMode: Boolean = false,
     val developerLinks: Boolean = true
@@ -195,7 +192,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 memoryEnabled = p.isMem0MemoryEnabled,
                 voice = p.voice,
                 language = p.language,
-                wakeSensitivity = p.voskWakeWordSensitivity,
                 hudSoundEnabled = p.isHudSoundEnabled,
                 hudSoundVolume = p.hudSoundVolume,
                 silentExecution = p.isSilentExecutionMode,
@@ -211,9 +207,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 autoReplyConfirm = p.isMessageAutoReplyConfirmEnabled,
                 accessibilityRunning = runCatching { JarvisAccessibilityService.isRunning() }.getOrDefault(false),
                 autoScroll = _state.value.autoScroll,
-                screenCapture = p.isDefaultAssistantScreenCaptureEnabled,
                 mcpServers = mcpManager.registeredServers().sortedBy { it.name.lowercase() },
-                mcpBridgeEnabled = p.isMcpBridgeEnabled,
                 privacyMode = p.isPrivacyModeEnabled,
                 developerLinks = p.showDeveloperLinks
             )
@@ -429,7 +423,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun setMemoryEnabled(enabled: Boolean) {
         edit { isMem0MemoryEnabled = enabled }
-        say(if (enabled) "Memory enabled" else "Memory disabled")
+        say(if (enabled) "Memory enabled" else "Memory off: Jarvis won't save or recall long-term facts")
     }
 
     fun refreshMemoryStats() = refreshMemory()
@@ -471,11 +465,16 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun setVoice(value: String) = edit { voice = value }
     fun setLanguage(value: String) = edit { language = value }
-    fun setWakeSensitivity(value: Float) = edit { voskWakeWordSensitivity = value }
     fun setHudSound(enabled: Boolean) = edit { isHudSoundEnabled = enabled }
     fun setHudVolume(value: Float) = edit { hudSoundVolume = value }
     fun setSilentExecution(enabled: Boolean) = edit { isSilentExecutionMode = enabled }
-    fun setBatterySaver(enabled: Boolean) = edit { isBatterySaverEnabled = enabled }
+    fun setBatterySaver(enabled: Boolean) {
+        edit { isBatterySaverEnabled = enabled }
+        say(
+            if (enabled) "Battery saver on: telemetry samples every 5 s, slower Dynamic Island polling"
+            else "Battery saver off: telemetry back to 1 s sampling"
+        )
+    }
     fun setOwnerVoice(enabled: Boolean) = edit { isOwnerVoiceEnabled = enabled }
     fun setTaskOverlay(enabled: Boolean) = edit { isTaskOverlayEnabled = enabled }
 
@@ -518,7 +517,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             _state.update { it.copy(autoScroll = enabled) }
         }
     }
-    fun setScreenCapture(enabled: Boolean) = edit { isDefaultAssistantScreenCaptureEnabled = enabled }
 
     // ── MCP ──────────────────────────────────────────────────────────────────
 
@@ -548,8 +546,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         }
         reloadPrefs()
     }
-
-    fun setMcpBridge(enabled: Boolean) = edit { isMcpBridgeEnabled = enabled }
 
     // ── Safety / developer ───────────────────────────────────────────────────
 

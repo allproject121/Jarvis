@@ -15,6 +15,7 @@ import com.jarvis.assistant.automation.notification.JarvisNotificationListener
 import com.jarvis.assistant.core.JarvisDrivingModeManager
 import com.jarvis.assistant.databinding.ActivitySuperCoreBinding
 import com.jarvis.assistant.ui.settings.ApiConnectionActivity
+import com.jarvis.assistant.ui.settings.DrivingCallSettings
 import com.jarvis.assistant.util.HudSoundManager
 import com.jarvis.assistant.util.ThemeManager
 
@@ -22,9 +23,9 @@ import com.jarvis.assistant.util.ThemeManager
  * Jarvis SuperCore & System Control Activity.
  * Provides unified, organized control over:
  *  1. Android Default Digital Assistant (VoiceInteraction)
- *  2. WhatsApp & Telegram Voice Reader / Direct Reply
+ *  2. Messaging notification reader / Direct Reply
  *  3. Driving Mode & Call Sentinel
- *  4. Local Host AI (Ollama), Mem0, and MUSE Self-Learning
+ *  4. Local Host AI (Ollama) and Mem0 memory
  */
 class SuperCoreActivity : AppCompatActivity() {
 
@@ -32,6 +33,15 @@ class SuperCoreActivity : AppCompatActivity() {
     private val preferences by lazy { JarvisApp.instance.preferences }
     private var appliedThemeKey: String = ""
     private var appliedCustomHex: String = ""
+    private var isBindingDrivingSwitch = false
+
+    private val drivingCallPermissionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
+    ) {
+        // Enables auto-reject only when call control + SMS were granted; otherwise reverts to Announce.
+        Toast.makeText(this, DrivingCallSettings.applyAfterPermissionResult(this), Toast.LENGTH_LONG).show()
+        bindDrivingCallMode()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeManager.applyTheme(this)
@@ -109,14 +119,23 @@ class SuperCoreActivity : AppCompatActivity() {
         binding.tvDrivingModeBadge.setTextColor(if (isDriving) Color.parseColor("#10B981") else Color.parseColor("#F59E0B"))
 
         // Switches
-        binding.switchScreenIntelligence.isChecked = preferences.isDefaultAssistantScreenCaptureEnabled
         binding.switchWhatsAppReader.isChecked = preferences.isWhatsAppReaderEnabled
-        binding.switchTelegramReader.isChecked = preferences.isTelegramReaderEnabled
         binding.switchAutoReplyConfirm.isChecked = preferences.isMessageAutoReplyConfirmEnabled
         binding.switchAutoCarAudio.isChecked = preferences.isDrivingModeAutoCarEnabled
         binding.switchCallerIdAnnouncement.isChecked = preferences.isCallerIdAnnouncementEnabled
         binding.switchMem0Memory.isChecked = preferences.isMem0MemoryEnabled
-        binding.switchMuseExperience.isChecked = preferences.isMuseExperienceEnabled
+        bindDrivingCallMode()
+    }
+
+    /** Driving call option: switch = Auto-reject + SMS (off = Announce caller); SMS text row only for auto-reject. */
+    private fun bindDrivingCallMode() {
+        val autoReject = DrivingCallSettings.isAutoReject(this)
+        isBindingDrivingSwitch = true
+        binding.switchDrivingAutoRejectSms.isChecked = autoReject
+        isBindingDrivingSwitch = false
+        binding.tvDrivingAutoReplyText.visibility = if (autoReject) android.view.View.VISIBLE else android.view.View.GONE
+        binding.tvDrivingAutoReplyText.text =
+            "Auto-reply SMS text: \"${JarvisDrivingModeManager.getInstance(this).autoReplyText}\"  (tap to edit)"
     }
 
     private fun setupClickListeners() {
@@ -141,18 +160,8 @@ class SuperCoreActivity : AppCompatActivity() {
         }
 
         // Switch listeners
-        binding.switchScreenIntelligence.setOnCheckedChangeListener { _, isChecked ->
-            preferences.isDefaultAssistantScreenCaptureEnabled = isChecked
-            HudSoundManager.playTapSound()
-        }
-
         binding.switchWhatsAppReader.setOnCheckedChangeListener { _, isChecked ->
             preferences.isWhatsAppReaderEnabled = isChecked
-            HudSoundManager.playTapSound()
-        }
-
-        binding.switchTelegramReader.setOnCheckedChangeListener { _, isChecked ->
-            preferences.isTelegramReaderEnabled = isChecked
             HudSoundManager.playTapSound()
         }
 
@@ -171,13 +180,30 @@ class SuperCoreActivity : AppCompatActivity() {
             HudSoundManager.playTapSound()
         }
 
-        binding.switchMem0Memory.setOnCheckedChangeListener { _, isChecked ->
-            preferences.isMem0MemoryEnabled = isChecked
+        binding.switchDrivingAutoRejectSms.setOnCheckedChangeListener { _, isChecked ->
+            if (isBindingDrivingSwitch) return@setOnCheckedChangeListener
             HudSoundManager.playTapSound()
+            if (!isChecked) {
+                DrivingCallSettings.setAnnounce(this)
+                bindDrivingCallMode()
+                return@setOnCheckedChangeListener
+            }
+            val missing = DrivingCallSettings.missingPermissions(this)
+            if (missing.isEmpty()) {
+                Toast.makeText(this, DrivingCallSettings.applyAfterPermissionResult(this), Toast.LENGTH_SHORT).show()
+                bindDrivingCallMode()
+            } else {
+                drivingCallPermissionLauncher.launch(missing)
+            }
         }
 
-        binding.switchMuseExperience.setOnCheckedChangeListener { _, isChecked ->
-            preferences.isMuseExperienceEnabled = isChecked
+        binding.tvDrivingAutoReplyText.setOnClickListener {
+            HudSoundManager.playTapSound()
+            DrivingCallSettings.showAutoReplyTextDialog(this) { bindDrivingCallMode() }
+        }
+
+        binding.switchMem0Memory.setOnCheckedChangeListener { _, isChecked ->
+            preferences.isMem0MemoryEnabled = isChecked
             HudSoundManager.playTapSound()
         }
     }

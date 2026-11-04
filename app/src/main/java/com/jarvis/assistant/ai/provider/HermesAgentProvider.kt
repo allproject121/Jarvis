@@ -74,10 +74,10 @@ class HermesAgentProvider private constructor(
         toolDispatcher.startNewTurn(java.util.UUID.randomUUID().toString())
         val agentPipelineOn = com.jarvis.assistant.androllm.agent.integration.AgentPipeline.isEnabled(context)
         if (agentPipelineOn) com.jarvis.assistant.androllm.agent.integration.AgentPipeline.beginTurn(context, cleanGoal)
+        // Hermes runs on the ~2K-context on-device model: full tool lists overflow it.
         val tools = when {
             availableTools.isNotEmpty() -> availableTools
-            agentPipelineOn -> com.jarvis.assistant.androllm.agent.integration.AgentPipeline.routedSchemas(context, cleanGoal).ifEmpty { toolDispatcher.getAvailableToolSchemas() }
-            else -> toolDispatcher.getAvailableToolSchemas()
+            else -> toolDispatcher.getOfflineToolSchemas()
         }
         val hermesSystemPrompt = buildHermesSystemPrompt(systemPrompt, memoryContext, tools)
 

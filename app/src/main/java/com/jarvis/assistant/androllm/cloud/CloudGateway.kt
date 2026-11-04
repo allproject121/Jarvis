@@ -16,7 +16,7 @@ import com.jarvis.assistant.androllm.cloud.pipeline.CloudTurnResult
 import com.jarvis.assistant.androllm.cloud.pipeline.PlannedCloudRequest
 import com.jarvis.assistant.androllm.cloud.usage.CloudErrorKind
 import com.jarvis.assistant.androllm.cloud.usage.CloudRequestKind
-import com.jarvis.assistant.androllm.cloud.usage.CloudUsageMeter
+import com.jarvis.assistant.ai.cloud.CloudUsageMeter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 

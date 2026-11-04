@@ -9,6 +9,8 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import com.jarvis.assistant.JarvisApp
+import com.jarvis.assistant.automation.agent.PendingAction
+import com.jarvis.assistant.automation.agent.ToolConfirmationManager
 import com.jarvis.assistant.background.JarvisConversationService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -80,7 +82,30 @@ class JarvisNotificationListener : NotificationListenerService() {
             return flat != null && flat.contains(context.packageName)
         }
 
-        fun sendDirectReply(context: Context, targetKeyOrSender: String, replyText: String): Boolean {
+        /** What happened to a [sendDirectReplyDetailed] attempt. */
+        enum class ReplyOutcome {
+            /** The reply was handed to the app's RemoteInput action. */
+            SENT,
+            /** No active notification with a reply action matched the sender/key. */
+            NO_NOTIFICATION,
+            /** The confirmation was denied or not answered in time; nothing was sent. */
+            DECLINED,
+            /** Sending through the RemoteInput action threw (e.g. notification cancelled). */
+            FAILED
+        }
+
+        /**
+         * Replies to a messaging notification through its RemoteInput action.
+         *
+         * When Settings › "Auto-reply confirmation" is ON, the user is asked
+         * first (confirmation card / voice yes-no). Deny or timeout → nothing
+         * is sent and this returns false.
+         */
+        suspend fun sendDirectReply(context: Context, targetKeyOrSender: String, replyText: String): Boolean =
+            sendDirectReplyDetailed(context, targetKeyOrSender, replyText) == ReplyOutcome.SENT
+
+        /** Same as [sendDirectReply], but says why nothing was sent. */
+        suspend fun sendDirectReplyDetailed(context: Context, targetKeyOrSender: String, replyText: String): ReplyOutcome {
             val key = if (notificationActionStore.containsKey(targetKeyOrSender)) {
                 targetKeyOrSender
             } else {
@@ -89,10 +114,27 @@ class JarvisNotificationListener : NotificationListenerService() {
                     it.sender.contains(targetKeyOrSender, ignoreCase = true) ||
                             targetKeyOrSender.contains(it.sender, ignoreCase = true)
                 }?.key
-            } ?: return false
+            } ?: return ReplyOutcome.NO_NOTIFICATION
 
-            val action = notificationActionStore[key] ?: return false
-            val input = remoteInputStore[key] ?: return false
+            val action = notificationActionStore[key] ?: return ReplyOutcome.NO_NOTIFICATION
+            val input = remoteInputStore[key] ?: return ReplyOutcome.NO_NOTIFICATION
+
+            if (JarvisApp.instance.preferences.isMessageAutoReplyConfirmEnabled) {
+                val sender = _recentNotifications.value.firstOrNull { it.key == key }
+                val who = sender?.let { "${it.sender} (${it.appLabel})" } ?: targetKeyOrSender
+                val approved = ToolConfirmationManager.awaitApproval(
+                    PendingAction(
+                        id = "reply_to_message_${System.currentTimeMillis()}",
+                        toolName = "reply_to_message",
+                        description = "Reply to $who: \"$replyText\"",
+                        speakableQuestion = "Should I send \"$replyText\" to ${sender?.sender ?: targetKeyOrSender}?"
+                    )
+                )
+                if (!approved) {
+                    Log.i(TAG, "Direct reply to $key cancelled: not approved by the user.")
+                    return ReplyOutcome.DECLINED
+                }
+            }
 
             return try {
                 val intent = Intent()
@@ -102,10 +144,10 @@ class JarvisNotificationListener : NotificationListenerService() {
                 RemoteInput.addResultsToIntent(arrayOf(input), intent, bundle)
                 action.actionIntent.send(context, 0, intent)
                 Log.i(TAG, "Direct reply sent successfully to $key: '$replyText'")
-                true
+                ReplyOutcome.SENT
             } catch (e: Exception) {
                 Log.e(TAG, "Failed sending direct reply: ${e.message}")
-                false
+                ReplyOutcome.FAILED
             }
         }
     }
@@ -186,6 +228,14 @@ class JarvisNotificationListener : NotificationListenerService() {
         _recentNotifications.value = currentList
 
         Log.i(TAG, "[$appLabel] from $title: $text (hasReply=${directReplyAction != null})")
+
+        // Maya media pack (WP9): WhatsApp auto-reply / support mode / per-contact handling.
+        // Additive hook — the engine is a no-op unless the user enabled auto-reply or a contact rule.
+        try {
+            com.jarvis.assistant.maya.media.WhatsAppAutoReplyEngine.onNotification(applicationContext, item)
+        } catch (e: Throwable) {
+            Log.w(TAG, "Maya auto-reply hook failed: ${e.message}")
+        }
 
         // If Jarvis is active in live conversation and reading is enabled, inject notification event
         val prefs = JarvisApp.instance.preferences

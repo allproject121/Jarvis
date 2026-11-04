@@ -1,9 +1,18 @@
 package com.jarvis.assistant.ui.compose.feature.chat
 
+import android.Manifest
+import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Bundle
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -100,11 +109,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -124,6 +135,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.jarvis.assistant.androllm.attachments.model.AttachmentType
 import com.jarvis.assistant.androllm.attachments.model.ChatAttachment
 import com.jarvis.assistant.androllm.chat.model.Conversation
@@ -139,16 +151,25 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private const val NOT_AVAILABLE = "Not available in Jarvis"
-
 internal fun copyToClipboard(context: Context, text: String, toast: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clipboard.setPrimaryClip(ClipData.newPlainText("Message", text))
     Toast.makeText(context, toast, Toast.LENGTH_SHORT).show()
 }
 
-internal fun showNotAvailable(context: Context, feature: String) {
-    Toast.makeText(context, "$feature: not available in Jarvis", Toast.LENGTH_SHORT).show()
+/** Appends dictated speech to whatever was already typed. */
+private fun mergeDictation(base: String, spoken: String, limit: Int): String {
+    val merged = if (base.isBlank()) spoken.trim() else base.trimEnd() + " " + spoken.trim()
+    return merged.take(limit)
+}
+
+private fun speechErrorMessage(error: Int): String = when (error) {
+    SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Didn't catch that — tap the mic and try again"
+    SpeechRecognizer.ERROR_AUDIO, SpeechRecognizer.ERROR_RECOGNIZER_BUSY ->
+        "Microphone is busy (Jarvis voice may be listening) — try again"
+    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Microphone permission is needed for dictation"
+    SpeechRecognizer.ERROR_NETWORK, SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Speech recognition needs a network connection"
+    else -> "Dictation stopped (error $error)"
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -473,7 +494,9 @@ private val ATTACHMENT_MIME_TYPES = arrayOf(
  * The writing slip — the composer. The paperclip opens AndroLLM's attach menu
  * (Files / Images / Gallery) when chat attachments are enabled. AndroLLM's
  * "Camera" entry is omitted: it needs a FileProvider, which Jarvis' manifest
- * does not declare. Voice conversation lives on the dedicated Voice screen.
+ * does not declare. The mic dictates into the text field (Android speech
+ * recognition; falls back to the system speech dialog); full voice
+ * conversation lives on the dedicated Voice screen.
  */
 @Composable
 internal fun ComposeInputArea(
@@ -504,6 +527,100 @@ internal fun ComposeInputArea(
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia(maxItems = 10)
     ) { uris -> if (uris.isNotEmpty()) onAttachFiles(uris) }
+
+    // ── Dictation (mic) ──────────────────────────────────────────────────────
+    val latestText by rememberUpdatedState(text)
+    val latestOnTextChanged by rememberUpdatedState(onTextChanged)
+    var listening by remember { mutableStateOf(false) }
+    var dictationBase by remember { mutableStateOf("") }
+    val recognizer = remember {
+        if (SpeechRecognizer.isRecognitionAvailable(context)) SpeechRecognizer.createSpeechRecognizer(context) else null
+    }
+    DisposableEffect(recognizer) {
+        onDispose { recognizer?.destroy() }
+    }
+
+    // Fallback when no on-device recognition service is bound: the system speech dialog.
+    val speechDialogLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val spoken = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+        if (result.resultCode == Activity.RESULT_OK && !spoken.isNullOrBlank()) {
+            latestOnTextChanged(mergeDictation(latestText, spoken, maxCharacterLimit))
+        }
+    }
+
+    fun startDictation() {
+        val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to Jarvis")
+        }
+        val rec = recognizer
+        if (rec == null) {
+            try {
+                speechDialogLauncher.launch(speechIntent)
+            } catch (_: ActivityNotFoundException) {
+                Toast.makeText(context, "Speech recognition isn't available on this device", Toast.LENGTH_SHORT).show()
+            }
+            return
+        }
+        dictationBase = latestText
+        rec.setRecognitionListener(object : RecognitionListener {
+            override fun onReadyForSpeech(params: Bundle?) = Unit
+            override fun onBeginningOfSpeech() = Unit
+            override fun onRmsChanged(rmsdB: Float) = Unit
+            override fun onBufferReceived(buffer: ByteArray?) = Unit
+            override fun onEndOfSpeech() = Unit
+            override fun onEvent(eventType: Int, params: Bundle?) = Unit
+
+            override fun onPartialResults(partialResults: Bundle?) {
+                val partial = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
+                if (!partial.isNullOrBlank()) {
+                    latestOnTextChanged(mergeDictation(dictationBase, partial, maxCharacterLimit))
+                }
+            }
+
+            override fun onResults(results: Bundle?) {
+                listening = false
+                val spoken = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
+                if (!spoken.isNullOrBlank()) {
+                    latestOnTextChanged(mergeDictation(dictationBase, spoken, maxCharacterLimit))
+                }
+            }
+
+            override fun onError(error: Int) {
+                listening = false
+                Toast.makeText(context, speechErrorMessage(error), Toast.LENGTH_SHORT).show()
+            }
+        })
+        try {
+            rec.startListening(speechIntent)
+            listening = true
+        } catch (e: Exception) {
+            listening = false
+            Toast.makeText(context, "Couldn't start dictation: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val micPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) startDictation()
+        else Toast.makeText(context, "Microphone permission is needed for dictation", Toast.LENGTH_SHORT).show()
+    }
+
+    val onMicClick: () -> Unit = {
+        when {
+            listening -> {
+                recognizer?.stopListening()
+                listening = false
+            }
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+                PackageManager.PERMISSION_GRANTED -> startDictation()
+            else -> micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
 
     val canSend = !attachmentsProcessing && (text.isNotBlank() || hasPendingAttachments)
 
@@ -620,15 +737,16 @@ internal fun ComposeInputArea(
                     )
                 )
 
-                if (text.isEmpty() && !isGenerating && !hasPendingAttachments) {
+                if ((text.isEmpty() || listening) && !isGenerating && !hasPendingAttachments) {
                     IconButton(
-                        onClick = { showNotAvailable(context, "Voice input in text chat") },
+                        onClick = onMicClick,
+                        enabled = enabled,
                         modifier = Modifier.size(40.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Mic,
-                            contentDescription = "Voice input ($NOT_AVAILABLE)",
-                            tint = MaterialTheme.ledger.deskInkFaint.copy(alpha = 0.45f)
+                            contentDescription = if (listening) "Stop dictation" else "Dictate a message",
+                            tint = if (listening) MaterialTheme.ledger.lampAmber else MaterialTheme.ledger.deskInk
                         )
                     }
                 }

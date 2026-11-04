@@ -1,5 +1,6 @@
 package com.jarvis.assistant.ui.bypasside
 
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -18,19 +19,25 @@ import com.jarvis.assistant.JarvisApp
 import com.jarvis.assistant.R
 import com.jarvis.assistant.ai.MultiModelAiRouter
 import com.jarvis.assistant.automation.accessibility.JarvisAccessibilityService
+import com.jarvis.assistant.automation.accessibility.MainThread
+import com.jarvis.assistant.automation.accessibility.UiTreeBuilder
 import com.jarvis.assistant.databinding.ActivityBypassIdeBinding
+import com.jarvis.assistant.security.guardian.TouchGuardManager
+import com.jarvis.assistant.util.DeviceTelemetryHelper
 import com.jarvis.assistant.util.HudSoundManager
 import com.jarvis.assistant.util.ThemeManager
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 /**
  * JARVIS Bypass IDE — Tactical Mobile Agentic Cockpit.
- * Provides live logcat streaming, interactive bypass commands, code diff inspection,
- * and autonomous neural sub-agent controls tailored for mobile screens.
+ * A command terminal plus an agent status panel. Every number shown here is read
+ * live from the device (battery, RAM, accessibility, root, Touch Guard, AI router).
  */
 class BypassIdeActivity : AppCompatActivity() {
 
@@ -40,15 +47,10 @@ class BypassIdeActivity : AppCompatActivity() {
     private var appliedCustomHex: String = ""
 
     private var currentSubTab = SUBTAB_SHELL
-    private var isDiffApplied = false
     private var islandStateIndex = 0
 
-    private val islandStates = arrayOf(
-        "SU: ACTIVE",
-        "LLAMA 3.2: 12ms",
-        "ACCESSIBILITY: 60FPS",
-        "SENTRY: ARMED"
-    )
+    /** Path of the `su` binary if one was found, "" if none; null until checked. */
+    private var suBinaryPath: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,11 +73,9 @@ class BypassIdeActivity : AppCompatActivity() {
 
         setupHeader()
         setupAiEngineSelector()
-        setupTelemetry()
         setupSubTabs()
         setupShellTerminal()
-        setupCodeDiffView()
-        updateAgentStatuses()
+        refreshTelemetry()
     }
 
     override fun onResume() {
@@ -88,7 +88,7 @@ class BypassIdeActivity : AppCompatActivity() {
             return
         }
         updateAiEngineButtonState()
-        updateAgentStatuses()
+        refreshTelemetry()
     }
 
     private fun setupHeader() {
@@ -99,12 +99,21 @@ class BypassIdeActivity : AppCompatActivity() {
 
         binding.pillDynamicIsland.setOnClickListener {
             HudSoundManager.playTapSound()
-            islandStateIndex = (islandStateIndex + 1) % islandStates.size
-            val state = islandStates[islandStateIndex]
+            val states = islandStates()
+            islandStateIndex = (islandStateIndex + 1) % states.size
+            val state = states[islandStateIndex]
             binding.tvIslandStatus.text = state
-            appendLog("[DYNAMIC_ISLAND] Telemetry state cycled to: $state")
+            appendLog("[DYNAMIC_ISLAND] $state")
         }
     }
+
+    /** Live states the header pill cycles through. */
+    private fun islandStates(): List<String> = listOf(
+        "SU: ${rootLabel()}",
+        "AI: ${activeProviderName().uppercase(Locale.ROOT)}",
+        "A11Y: ${if (JarvisAccessibilityService.isEnabled()) "ON" else "OFF"}",
+        "SENTRY: ${if (TouchGuardManager.isArmed()) "ARMED" else "OFF"}"
+    )
 
     private fun setupAiEngineSelector() {
         updateAiEngineButtonState()
@@ -190,17 +199,41 @@ class BypassIdeActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun setupTelemetry() {
-        val batteryPct = com.jarvis.assistant.util.DeviceTelemetryHelper.getTelemetry(this).batteryPercent
-        binding.tvTeleArcCore.text = "$batteryPct%"
+    // ── Live telemetry ──────────────────────────────────────────────────────
 
+    /** Refreshes the telemetry card, the security tag and the agent panel from live state. */
+    private fun refreshTelemetry() {
+        val tele = DeviceTelemetryHelper.getTelemetry(this)
+        binding.tvTeleArcCore.text = "${tele.batteryPercent}%"
+        binding.tvTeleEdgeRam.text = "${freeRamMb()} MB"
+        binding.tvTeleProvider.text = activeProviderName()
+        binding.tvIslandStatus.text = islandStates()[islandStateIndex % 4]
+        updateSecurityTag()
+        updateAgentStatuses()
+
+        if (suBinaryPath == null) {
+            lifecycleScope.launch {
+                suBinaryPath = withContext(Dispatchers.IO) { findSuBinary() }
+                updateSecurityTag()
+                binding.tvIslandStatus.text = islandStates()[islandStateIndex % 4]
+            }
+        }
+    }
+
+    private fun updateSecurityTag() {
         val isAccessEnabled = JarvisAccessibilityService.isEnabled()
+        val tag = "ROOT: ${rootLabel()} · A11Y: ${if (isAccessEnabled) "ON" else "OFF (TAP)"}"
+        binding.tvBypassSecurityTag.text = tag
+        binding.tvBypassSecurityTag.setTextColor(
+            ContextCompat.getColor(
+                this,
+                if (isAccessEnabled) android.R.color.holo_green_light else android.R.color.holo_orange_light
+            )
+        )
         if (isAccessEnabled) {
-            binding.tvBypassSecurityTag.text = "ROOT & ACCESSIBILITY: ACTIVE"
-            binding.tvBypassSecurityTag.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
+            binding.tvBypassSecurityTag.setOnClickListener(null)
+            binding.tvBypassSecurityTag.isClickable = false
         } else {
-            binding.tvBypassSecurityTag.text = "ACCESSIBILITY: OFF (TAP TO ARM)"
-            binding.tvBypassSecurityTag.setTextColor(ContextCompat.getColor(this, android.R.color.holo_orange_light))
             binding.tvBypassSecurityTag.setOnClickListener {
                 HudSoundManager.playTapSound()
                 try {
@@ -212,9 +245,48 @@ class BypassIdeActivity : AppCompatActivity() {
         }
     }
 
+    private fun rootLabel(): String = when (suBinaryPath) {
+        null -> "CHECKING"
+        "" -> "NO"
+        else -> "SU FOUND"
+    }
+
+    /**
+     * Looks for an `su` binary on the usual paths and on $PATH without executing it
+     * (running `su` would pop a root-grant prompt). Returns its path, or "" if none.
+     */
+    private fun findSuBinary(): String {
+        val candidates = mutableListOf(
+            "/system/bin/su", "/system/xbin/su", "/sbin/su", "/su/bin/su",
+            "/system/sd/xbin/su", "/system/bin/failsafe/su",
+            "/data/local/xbin/su", "/data/local/bin/su", "/data/local/su",
+            "/debug_ramdisk/su"
+        )
+        System.getenv("PATH")?.split(':')?.filter { it.isNotBlank() }?.forEach {
+            candidates.add("$it/su")
+        }
+        return candidates.distinct().firstOrNull { path ->
+            try { File(path).exists() } catch (_: Exception) { false }
+        } ?: ""
+    }
+
+    private fun freeRamMb(): Long {
+        val am = getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return 0L
+        val info = ActivityManager.MemoryInfo()
+        am.getMemoryInfo(info)
+        return info.availMem / (1024L * 1024L)
+    }
+
+    /** The provider Jarvis' model router actually used last ("Auto" = nothing routed yet). */
+    private fun activeProviderName(): String {
+        val name = runCatching { app.modelRouter.lastActiveProviderName.value }.getOrNull()
+        return if (name.isNullOrBlank() || name == "Auto") {
+            "Auto (${app.preferences.selectedAiProvider})"
+        } else name
+    }
+
     private fun setupSubTabs() {
         binding.tabShell.setOnClickListener { switchSubTab(SUBTAB_SHELL) }
-        binding.tabCodeDiff.setOnClickListener { switchSubTab(SUBTAB_CODE_DIFF) }
         binding.tabAgents.setOnClickListener { switchSubTab(SUBTAB_AGENTS) }
     }
 
@@ -232,32 +304,25 @@ class BypassIdeActivity : AppCompatActivity() {
         binding.tabShell.setBackgroundResource(if (tab == SUBTAB_SHELL) activeBg else inactiveBg)
         binding.tabShell.setTextColor(if (tab == SUBTAB_SHELL) activeColor else inactiveColor)
 
-        binding.tabCodeDiff.setBackgroundResource(if (tab == SUBTAB_CODE_DIFF) activeBg else inactiveBg)
-        binding.tabCodeDiff.setTextColor(if (tab == SUBTAB_CODE_DIFF) activeColor else inactiveColor)
-
         binding.tabAgents.setBackgroundResource(if (tab == SUBTAB_AGENTS) activeBg else inactiveBg)
         binding.tabAgents.setTextColor(if (tab == SUBTAB_AGENTS) activeColor else inactiveColor)
 
         // Show corresponding panel
         binding.panelShellView.visibility = if (tab == SUBTAB_SHELL) View.VISIBLE else View.GONE
-        binding.panelCodeDiffView.visibility = if (tab == SUBTAB_CODE_DIFF) View.VISIBLE else View.GONE
         binding.panelAgentsView.visibility = if (tab == SUBTAB_AGENTS) View.VISIBLE else View.GONE
 
-        appendLog("[WORKSPACE] Active View: ${when(tab) {
-            SUBTAB_SHELL -> "BYPASS SHELL & LOGCAT"
-            SUBTAB_CODE_DIFF -> "CODE DIFF INSPECTOR"
-            else -> "AGENT MATRIX"
-        }}")
+        if (tab == SUBTAB_AGENTS) updateAgentStatuses()
+        appendLog("[WORKSPACE] Active View: ${if (tab == SUBTAB_SHELL) "COMMAND TERMINAL" else "AGENT MATRIX"}")
     }
 
     private fun setupShellTerminal() {
         // Initial Logs
         binding.tvTerminalOutput.text = ""
         appendLog("JARVIS Mobile SuperCore v5.2 initialized.")
-        appendLog("Bypass IntentFilter registered on package: $packageName")
         appendLog("Multi-Model Router standby: Gemini, OpenAI, Claude, DeepSeek, Grok, Ollama.")
         val mode = if (app.preferences.aiExecutionMode == MultiModelAiRouter.MODE_ALL_TOGETHER) "ALL MODELS TOGETHER" else "SINGLE (${app.preferences.selectedAiProvider.uppercase(Locale.ROOT)})"
         appendLog("Active AI Engine: $mode")
+        appendLog("Accessibility service: ${if (JarvisAccessibilityService.isEnabled()) "ON" else "OFF"}")
 
         binding.btnClearLogs.setOnClickListener {
             HudSoundManager.playTapSound()
@@ -265,25 +330,20 @@ class BypassIdeActivity : AppCompatActivity() {
             appendLog("[TERMINAL BUFFER RESET]")
         }
 
-        binding.btnRunBypassSequence.setOnClickListener {
-            HudSoundManager.playTapSound()
-            runAutomatedBypassSequence()
-        }
-
         // Quick action chips
         binding.chipMacroWhatsapp.setOnClickListener {
             HudSoundManager.playTapSound()
-            executeCommand("jarvis macro whatsapp")
+            executeCommand("whatsapp")
         }
 
         binding.chipMacroSentry.setOnClickListener {
             HudSoundManager.playTapSound()
-            executeCommand("jarvis sentry alarm test")
+            executeCommand("sentry")
         }
 
         binding.chipMacroRoot.setOnClickListener {
             HudSoundManager.playTapSound()
-            executeCommand("jarvis bypass attest root")
+            executeCommand("root")
         }
 
         binding.chipMacroDualBrain.setOnClickListener {
@@ -331,12 +391,11 @@ class BypassIdeActivity : AppCompatActivity() {
                 appendLog("  • mode all     - Switch to All Models Together Mode")
                 appendLog("  • model <name> - Switch active model (gemini, openai, claude, deepseek, grok, openrouter, ollama)")
                 appendLog("  • ask <prompt> - Query AI engine directly from terminal")
-                appendLog("  • bypass       - Trigger full IPC reflection bypass")
-                appendLog("  • status       - Print hardware telemetry & agent state")
-                appendLog("  • scan         - Scan accessible Android app nodes")
-                appendLog("  • diff         - Open code refactor inspector")
-                appendLog("  • sentry       - Arm Guardian security sensors")
-                appendLog("  • whatsapp     - Run automated WhatsApp dispatch")
+                appendLog("  • status       - Live battery, RAM, root, accessibility & AI provider")
+                appendLog("  • scan         - Count interactive accessibility nodes on screen")
+                appendLog("  • root         - Check whether an su binary is present")
+                appendLog("  • sentry       - Arm Touch Guard (sentry off = disarm)")
+                appendLog("  • whatsapp     - Open WhatsApp")
                 appendLog("  • clear        - Wipe terminal log buffer")
             }
             lower == "models" || lower == "ai" -> {
@@ -345,6 +404,7 @@ class BypassIdeActivity : AppCompatActivity() {
                 appendLog("=== JARVIS MULTI-MODEL AI STATUS ===")
                 appendLog("Execution Mode : ${if (mode == MultiModelAiRouter.MODE_ALL_TOGETHER) "🌐 ALL MODELS TOGETHER (Ensemble)" else "🎯 SINGLE MODEL"}")
                 appendLog("Active Provider: $provider")
+                appendLog("Last used by router: ${activeProviderName()}")
                 val p = app.preferences
                 appendLog("  • Gemini      : ${if (p.apiKey.isNotBlank()) "CONFIGURED" else "NO KEY"}")
                 appendLog("  • OpenAI      : ${if (p.openAiApiKey.isNotBlank()) "CONFIGURED" else "NO KEY"}")
@@ -394,34 +454,39 @@ class BypassIdeActivity : AppCompatActivity() {
                     }
                 }
             }
-            lower.contains("bypass") -> {
-                runAutomatedBypassSequence()
+            lower.contains("status") || lower.contains("dualbrain") -> {
+                refreshTelemetry()
+                printLiveStatus()
             }
-            lower.contains("status") -> {
-                val access = if (JarvisAccessibilityService.isEnabled()) "ONLINE (60FPS)" else "DISABLED"
-                appendLog("[STATUS] Battery: ${binding.tvTeleArcCore.text} | Access: $access | IPC: 12ms | RAM: 342MB")
-            }
-            lower.contains("scan") -> {
+            lower == "root" || lower.contains("su check") -> {
                 lifecycleScope.launch {
-                    appendLog("[SCAN] Enumerating active Android accessibility nodes...")
-                    delay(300)
-                    appendLog("[SCAN] Found 48 interactive nodes in foreground viewport.")
-                    appendLog("[SCAN] Interception latency: 8ms. Zero permission hurdles detected.")
+                    val path = withContext(Dispatchers.IO) { findSuBinary() }
+                    suBinaryPath = path
+                    updateSecurityTag()
+                    if (path.isEmpty()) {
+                        appendLog("[ROOT] No su binary found — this device is not rooted (or root is hidden).")
+                    } else {
+                        appendLog("[ROOT] su binary found at $path. Jarvis has not been granted root by this check.")
+                    }
                 }
             }
+            lower.contains("scan") -> {
+                runAccessibilityScan()
+            }
+            lower == "sentry off" || lower == "sentry disarm" -> {
+                if (TouchGuardManager.isArmed()) {
+                    TouchGuardManager.disarm(this)
+                    appendLog("[SENTRY] Touch Guard disarmed.")
+                } else {
+                    appendLog("[SENTRY] Touch Guard was not armed.")
+                }
+                updateAgentStatuses()
+            }
             lower.contains("sentry") -> {
-                appendLog("[SENTRY] Guardian sensor armed. Motion detector active.")
-                Toast.makeText(this, "🛡️ Guardian Sentry Armed", Toast.LENGTH_SHORT).show()
+                armSentry()
             }
             lower.contains("whatsapp") -> {
-                appendLog("[MACRO] WhatsApp automated dispatch initialized via Accessibility.")
-                Toast.makeText(this, "📱 WhatsApp Macro Triggered", Toast.LENGTH_SHORT).show()
-            }
-            lower.contains("dualbrain") -> {
-                appendLog("[DUAL_BRAIN] Ping: Cloud Gemini Live (124ms) | Edge LLaMA (14ms)")
-            }
-            lower.contains("diff") -> {
-                switchSubTab(SUBTAB_CODE_DIFF)
+                openWhatsApp()
             }
             else -> {
                 appendLog("Unknown instruction '$cmd'. Type 'help' for tactical commands.")
@@ -429,80 +494,94 @@ class BypassIdeActivity : AppCompatActivity() {
         }
     }
 
-    private fun runAutomatedBypassSequence() {
+    private fun printLiveStatus() {
+        val tele = DeviceTelemetryHelper.getTelemetry(this)
+        val runtime = Runtime.getRuntime()
+        val appHeapMb = (runtime.totalMemory() - runtime.freeMemory()) / (1024L * 1024L)
+        val access = if (JarvisAccessibilityService.isEnabled()) "ON" else "OFF"
+        appendLog("[STATUS] Battery: ${tele.batteryPercent}%${if (tele.isCharging) " (charging)" else ""}")
+        appendLog("[STATUS] RAM: ${freeRamMb()} MB free · device ${tele.ramUsedGb}/${tele.ramTotalGb} GB used · Jarvis heap $appHeapMb MB")
+        appendLog("[STATUS] Accessibility: $access · Root: ${rootLabel()} · Sentry: ${if (TouchGuardManager.isArmed()) "ARMED" else "OFF"}")
+        appendLog("[STATUS] AI provider (last used): ${activeProviderName()}")
+        appendLog("[STATUS] Network: ${if (tele.isOnline) tele.networkType else "OFFLINE"}")
+    }
+
+    /** Counts interactive nodes in the current foreground window via the accessibility service. */
+    private fun runAccessibilityScan() {
+        val service = JarvisAccessibilityService.instance
+        if (service == null) {
+            appendLog("[SCAN] Accessibility service is not running — enable Jarvis in Accessibility settings to scan.")
+            return
+        }
+        appendLog("[SCAN] Reading the active window's accessibility tree...")
         lifecycleScope.launch {
-            appendLog("⚡ Initiating Android IPC Bypass sequence...")
-            delay(200)
-            appendLog("1. Shizuku bridge handshaking on localhost:5555... (OK)")
-            delay(250)
-            appendLog("2. Injecting reflection-based gesture matrix node... (OK)")
-            delay(300)
-            appendLog("3. StarkSecurityVault attestation signed with Keystore... (OK)")
-            delay(200)
-            appendLog("✅ Bypass execution SUCCESS. All security sandboxes synchronized.")
-            Toast.makeText(this@BypassIdeActivity, "⚡ Bypass Sequence Complete", Toast.LENGTH_SHORT).show()
+            val result = MainThread.node {
+                val root = service.getActiveRootNode() ?: return@node null
+                val pkg = root.packageName?.toString().orEmpty()
+                val nodes = UiTreeBuilder.build(root)?.flatten()?.toList().orEmpty()
+                val interactive = nodes.count { n ->
+                    n.enabled && (n.clickable || n.longClickable || n.editable || n.scrollable || n.checkable)
+                }
+                Triple(pkg, nodes.size, interactive)
+            }
+            if (result == null) {
+                appendLog("[SCAN] No active window could be read right now.")
+            } else {
+                val (pkg, total, interactive) = result
+                appendLog("[SCAN] Window: ${pkg.ifBlank { "unknown" }}")
+                appendLog("[SCAN] $interactive interactive nodes out of $total total nodes.")
+                if (pkg == packageName) {
+                    appendLog("[SCAN] Note: the foreground window is Jarvis itself.")
+                }
+            }
         }
     }
 
-    private fun setupCodeDiffView() {
-        updateCodeCanvasText()
-
-        binding.btnToggleDiff.setOnClickListener {
-            HudSoundManager.playTapSound()
-            isDiffApplied = !isDiffApplied
-            updateCodeCanvasText()
-            val status = if (isDiffApplied) "Optimized Zero-Latency Patch Active" else "Legacy Frame Restored"
-            appendLog("[AI_DIFF] $status")
-            Toast.makeText(this, status, Toast.LENGTH_SHORT).show()
+    private fun armSentry() {
+        if (TouchGuardManager.isArmed()) {
+            appendLog("[SENTRY] Touch Guard is already ARMED. Type 'sentry off' to disarm.")
+            updateAgentStatuses()
+            return
         }
-
-        binding.btnApplyDiff.setOnClickListener {
-            HudSoundManager.playTapSound()
-            isDiffApplied = true
-            updateCodeCanvasText()
-            appendLog("[HOT_RELOAD] Merged and deployed BypassEngine.kt to device runtime.")
-            Toast.makeText(this, "⚡ Patch Hot-Reloaded to Runtime", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun updateCodeCanvasText() {
-        val codeText = StringBuilder()
-        codeText.append("// JARVIS Autonomous System Hook Dispatcher\n")
-        codeText.append("package com.jarvis.assistant.automation.bypass\n\n")
-        codeText.append("class BypassEngine(val context: Context) {\n")
-        codeText.append("    suspend fun executeBypass() = withContext(Dispatchers.IO) {\n")
-
-        if (isDiffApplied) {
-            codeText.append("        // [AI OPTIMIZED]: Zero-latency IPC burst channel\n")
-            codeText.append("+       val token = StarkSecurityVault.attestHardware()\n")
-            codeText.append("+       val fastChannel = EdgeAsyncChannel.connectDirect()\n")
-            codeText.append("+       fastChannel.dispatchBurstActions(token, zeroLatency = true)\n")
-            codeText.append("        return@withContext BypassResult.SUCCESS\n")
-            binding.tvDiffBadge.text = "PATCH MERGED (+4.8x)"
-            binding.tvDiffBadge.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
-            binding.btnToggleDiff.text = "REVERT LEGACY"
+        TouchGuardManager.arm(this, app.preferences.isTouchGuardStealth)
+        if (TouchGuardManager.isArmed()) {
+            appendLog("[SENTRY] Touch Guard ARMED — moving the phone will sound the alarm and capture the intruder.")
         } else {
-            codeText.append("        // [ORIGINAL]: Legacy polling frame\n")
-            codeText.append("-       val node = acquireVirtualAccessibilityFrame()\n")
-            codeText.append("-       performMicroGestureInjection(node, delayMs = 42L)\n")
-            codeText.append("        return@withContext BypassResult.SUCCESS\n")
-            binding.tvDiffBadge.text = "DIFF READY"
-            binding.tvDiffBadge.setTextColor(ContextCompat.getColor(this, android.R.color.holo_orange_light))
-            binding.btnToggleDiff.text = "🔍 SHOW AI DIFF"
+            appendLog("❌ [SENTRY] Could not arm Touch Guard (no accelerometer on this device).")
         }
+        updateAgentStatuses()
+    }
 
-        codeText.append("    }\n")
-        codeText.append("}\n")
-
-        binding.tvCodeCanvas.text = codeText.toString()
+    private fun openWhatsApp() {
+        val intent = packageManager.getLaunchIntentForPackage("com.whatsapp")
+            ?: packageManager.getLaunchIntentForPackage("com.whatsapp.w4b")
+        if (intent == null) {
+            appendLog("❌ [WHATSAPP] WhatsApp is not installed on this device.")
+            return
+        }
+        try {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            appendLog("[WHATSAPP] Opened WhatsApp.")
+        } catch (e: Exception) {
+            appendLog("❌ [WHATSAPP] Could not open WhatsApp: ${e.message}")
+        }
     }
 
     private fun updateAgentStatuses() {
         val isAccess = JarvisAccessibilityService.isEnabled()
-        binding.tvAccessAgentStatus.text = if (isAccess) "ACTIVE 60FPS" else "STANDBY"
+        binding.tvAccessAgentStatus.text = if (isAccess) "ON" else "OFF"
         binding.tvAccessAgentStatus.setTextColor(
             ContextCompat.getColor(this, if (isAccess) android.R.color.holo_green_light else android.R.color.holo_orange_light)
         )
+
+        val armed = TouchGuardManager.isArmed()
+        binding.tvSentryAgentStatus.text = if (armed) "ARMED" else "OFF"
+        binding.tvSentryAgentStatus.setTextColor(
+            ContextCompat.getColor(this, if (armed) android.R.color.holo_green_light else android.R.color.holo_orange_light)
+        )
+
+        binding.tvRouterAgentDetail.text = "Last provider used: ${activeProviderName()}"
     }
 
     private fun appendLog(msg: String) {
@@ -513,8 +592,8 @@ class BypassIdeActivity : AppCompatActivity() {
         val spannable = SpannableString(line)
         val color = when {
             msg.contains("ERROR") || msg.contains("warn") || msg.contains("❌") -> ContextCompat.getColor(this, android.R.color.holo_red_light)
-            msg.contains("SUCCESS") || msg.contains("ACTIVE") || msg.contains("OK") || msg.contains("✅") -> ContextCompat.getColor(this, android.R.color.holo_green_light)
-            msg.contains("jarvis@mobile") || msg.contains("BYPASS") || msg.contains("💡") -> ThemeManager.attrColor(this, R.attr.themeAccent, ContextCompat.getColor(this, android.R.color.holo_blue_light))
+            msg.contains("SUCCESS") || msg.contains("ACTIVE") || msg.contains("ARMED") || msg.contains("✅") -> ContextCompat.getColor(this, android.R.color.holo_green_light)
+            msg.contains("jarvis@mobile") || msg.contains("💡") -> ThemeManager.attrColor(this, R.attr.themeAccent, ContextCompat.getColor(this, android.R.color.holo_blue_light))
             else -> ContextCompat.getColor(this, R.color.text_muted)
         }
 
@@ -528,7 +607,6 @@ class BypassIdeActivity : AppCompatActivity() {
 
     companion object {
         const val SUBTAB_SHELL = 0
-        const val SUBTAB_CODE_DIFF = 1
         const val SUBTAB_AGENTS = 2
 
         fun open(context: Context) {

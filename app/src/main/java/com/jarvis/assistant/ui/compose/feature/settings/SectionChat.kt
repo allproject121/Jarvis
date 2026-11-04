@@ -9,8 +9,6 @@ import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,7 +30,6 @@ import com.jarvis.assistant.androllm.attachments.AttachmentCache
 import com.jarvis.assistant.androllm.attachments.AttachmentSettingsStore
 import com.jarvis.assistant.androllm.attachments.model.AttachmentSettings
 import com.jarvis.assistant.androllm.chat.AndroLlmChatStore
-import com.jarvis.assistant.androllm.chat.ChatPrefs
 import com.jarvis.assistant.ui.compose.components.CloudGlassCard
 import com.jarvis.assistant.ui.compose.theme.ledger
 import kotlinx.coroutines.Dispatchers
@@ -41,7 +38,7 @@ import kotlinx.coroutines.withContext
 
 /**
  * "Chat" settings for the Compose (AndroLLM) chat: attachments, attachment
- * processing limits/cache, Jarvis-history mirroring/import and chat storage.
+ * processing limits/cache and chat storage (shared with Jarvis' voice history).
  *
  * Chat attachments default to ON ([AndroLlmFlags.CHAT_ATTACHMENTS]) because
  * they are purely user-initiated (nothing runs until a file is picked), use
@@ -57,7 +54,6 @@ fun ChatSettingsSection() {
     var attachmentsEnabled by remember {
         mutableStateOf(AndroLlmFlags.isEnabled(context, AndroLlmFlags.CHAT_ATTACHMENTS, default = true))
     }
-    var mirrorToJarvis by remember { mutableStateOf(ChatPrefs.mirrorToJarvis(context)) }
     var cacheBytes by remember { mutableLongStateOf(0L) }
     var cacheRevision by remember { mutableStateOf(0) }
     var confirmClearCache by remember { mutableStateOf(false) }
@@ -117,41 +113,14 @@ fun ChatSettingsSection() {
 
             HorizontalDivider(color = MaterialTheme.ledger.deskHairline, modifier = Modifier.padding(vertical = 4.dp))
 
-            ToggleRow(
-                icon = Icons.Filled.Sync,
-                title = "Mirror chats to Jarvis history",
-                subtitle = "Also save each chat exchange to Jarvis' classic chat history and memory",
-                checked = mirrorToJarvis,
-                onCheckedChange = {
-                    mirrorToJarvis = it
-                    ChatPrefs.setMirrorToJarvis(context, it)
-                }
-            )
-            SettingRow(
-                icon = Icons.Filled.History,
-                title = "Import Jarvis history as a new chat",
-                value = "${JarvisApp.instance.chatRepository.turns.value.size} turns",
-                onClick = {
-                    scope.launch {
-                        val turns = JarvisApp.instance.chatRepository.turns.value
-                        val result = runCatching { AndroLlmChatStore.importJarvisHistorySnapshot(context, turns) }
-                        val message = when {
-                            result.isFailure -> "Import failed: ${result.exceptionOrNull()?.message}"
-                            result.getOrNull() == null -> "Jarvis history is empty"
-                            else -> "Imported ${turns.size} turns into a new chat"
-                        }
-                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                    }
-                }
-            )
             SettingRow(
                 icon = Icons.Filled.DeleteForever,
                 title = "Delete all chats",
-                value = "Jarvis history is kept",
+                value = "Includes Jarvis' voice history",
                 onClick = { confirmDeleteChats = true }
             )
             Text(
-                text = "Chats are stored in a separate database on this device. The classic Jarvis chat history is never modified by deleting chats here.",
+                text = "Chats and Jarvis' voice history live in one database on this device. Voice turns are added to the open chat automatically, and everything here feeds Jarvis' memory.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.ledger.deskInk,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
@@ -178,13 +147,15 @@ fun ChatSettingsSection() {
     if (confirmDeleteChats) {
         ConfirmDialog(
             title = "Delete all chats?",
-            message = "Permanently deletes every conversation in the chat screen. Jarvis' classic chat history is not affected.",
+            message = "Permanently deletes every conversation, including Jarvis' voice history.",
             confirmLabel = "Delete all",
             onDismiss = { confirmDeleteChats = false },
             onConfirm = {
                 confirmDeleteChats = false
                 scope.launch {
                     val result = AndroLlmChatStore.conversationRepository(context).deleteAll()
+                    // The history window is a view over this database: reset it as well.
+                    runCatching { JarvisApp.instance.chatRepository.clearHistory() }
                     withContext(Dispatchers.IO) { AttachmentCache.clearAll(context) }
                     cacheRevision++
                     Toast.makeText(

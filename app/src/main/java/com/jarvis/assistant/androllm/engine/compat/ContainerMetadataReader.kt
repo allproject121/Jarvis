@@ -1,5 +1,6 @@
 package com.jarvis.assistant.androllm.engine.compat
 
+import com.jarvis.assistant.ai.compat.TokenizerKind
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile

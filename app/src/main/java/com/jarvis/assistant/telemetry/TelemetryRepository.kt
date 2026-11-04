@@ -9,7 +9,8 @@ import kotlinx.coroutines.flow.update
 
 /**
  * 1-second rolling telemetry sampler keeping a 300-sample history (~5 minutes)
- * for CPU, RAM, and inference metrics.
+ * for CPU, RAM, and inference metrics. With Battery saver ON it samples every
+ * 5 seconds instead.
  */
 class TelemetryRepository(private val context: Context) {
 
@@ -17,6 +18,16 @@ class TelemetryRepository(private val context: Context) {
         const val MAX_HISTORY_SAMPLES = 300
         const val MAX_GENERATION_STATS = 60
         const val SAMPLE_INTERVAL_MS = 1_000L
+        /** Sampling interval while Settings › Battery saver is ON. */
+        const val BATTERY_SAVER_SAMPLE_INTERVAL_MS = 5_000L
+
+        /** Settings › Battery saver (AppPreferences.isBatterySaverEnabled). Read live each tick. */
+        fun isBatterySaverOn(): Boolean =
+            runCatching { com.jarvis.assistant.JarvisApp.instance.preferences.isBatterySaverEnabled }
+                .getOrDefault(false)
+
+        fun currentSampleIntervalMs(): Long =
+            if (isBatterySaverOn()) BATTERY_SAVER_SAMPLE_INTERVAL_MS else SAMPLE_INTERVAL_MS
 
         @Volatile
         private var instance: TelemetryRepository? = null
@@ -62,7 +73,7 @@ class TelemetryRepository(private val context: Context) {
         samplerJob = scope.launch {
             while (isActive) {
                 sample()
-                delay(SAMPLE_INTERVAL_MS)
+                delay(currentSampleIntervalMs())
             }
         }
     }

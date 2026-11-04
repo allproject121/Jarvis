@@ -19,6 +19,7 @@ import com.jarvis.assistant.androllm.agent.planner.ToolPlanner
 import com.jarvis.assistant.androllm.agent.registry.ToolRegistry
 import com.jarvis.assistant.androllm.agent.settings.AutomationSettingsStore
 import com.jarvis.assistant.automation.guard.PromptInjectionDetector
+import com.jarvis.assistant.automation.guard.ToolLoopGuard
 import com.jarvis.assistant.androllm.agent.validation.ToolCallValidator
 import com.jarvis.assistant.androllm.agent.validation.ToolExecutionLogger
 import com.jarvis.assistant.androllm.agent.validation.ToolExecutionPipeline

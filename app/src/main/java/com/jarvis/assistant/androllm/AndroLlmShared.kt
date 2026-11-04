@@ -36,9 +36,15 @@ object AndroLlmFlags {
     const val SHERPA_TTS = "sherpa_tts_enabled"
     const val LLM_UI_PLANNER = "llm_ui_planner_enabled"
     const val CHAT_ATTACHMENTS = "chat_attachments_enabled"
+    /** ON by default: any Gemini failure (bad key, quota, server, network) switches to the offline brain. */
+    const val OFFLINE_BRAIN_FAILOVER = "offline_brain_failover_enabled"
 
     fun isEnabled(context: Context, key: String, default: Boolean = false): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(key, default)
+
+    /** LLM memory extraction after each Jarvis turn is ON unless the user switched it off. */
+    fun isMemoryExtractionEnabled(context: Context): Boolean =
+        isEnabled(context, MEMORY_EXTRACTION, default = true)
 
     fun setEnabled(context: Context, key: String, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(key, enabled).apply()

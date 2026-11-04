@@ -40,10 +40,6 @@ class PrivacyShieldActivity : AppCompatActivity() {
                 openUrl("mailto:tiwariroshan2601@gmail.com")
             }
         }
-
-        binding.btnJoinYoutube.setOnClickListener {
-            android.widget.Toast.makeText(this, "YouTube channel is coming soon and will be updated here!", android.widget.Toast.LENGTH_SHORT).show()
-        }
     }
 
     private fun openUrl(url: String) {

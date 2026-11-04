@@ -39,7 +39,10 @@ class TermuxResultReceiver : BroadcastReceiver() {
         val resultBundle = intent.getBundleExtra("result")
 
         val stdout = resultBundle?.getString("stdout").orEmpty()
-        val stderr = resultBundle?.getString("stderr").orEmpty()
+        // Termux reports launch failures (bad path, no permission, external apps off) through
+        // "err"/"errmsg" instead of stderr; surface them so callers see why nothing ran.
+        val errMsg = resultBundle?.getString("errmsg").orEmpty()
+        val stderr = resultBundle?.getString("stderr").orEmpty().ifBlank { errMsg }
         val exitCode = resultBundle?.getInt("exitCode", -1) ?: -1
 
         Log.i(TAG, "Termux execution finished: id=$execId, exitCode=$exitCode, stdout=${stdout.take(80)}")

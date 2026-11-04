@@ -40,14 +40,14 @@ class ReminderTool(
 
     override val spec = ToolSpec(
         name = "create_reminder",
-        description = "Schedule a reminder that notifies at a specific time. Provide the text and when ('in 20 minutes', 'tomorrow 09:00', an ISO time or epoch millis).",
+        description = "Schedule a wall-clock reminder notification for a specific date/time, e.g. 'tomorrow 9am', 'on Friday at 6pm', an ISO time or epoch millis. NOT for relative countdowns like 'in N minutes' — use set_reminder for those.",
         parameters = buildJsonObject {
             put("type", "object")
             putJsonObject("properties") {
                 putJsonObject("text") { put("type", "string") }
                 putJsonObject("when") {
                     put("type", "string")
-                    put("description", "When to fire, e.g. 'in 20 minutes', 'tomorrow 09:00' or an ISO time")
+                    put("description", "Date/time to fire, e.g. 'tomorrow 9am', 'Friday 18:00' or an ISO time (not 'in N minutes' — that is set_reminder)")
                 }
             }
             putJsonArray("required") { add("text"); add("when") }

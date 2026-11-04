@@ -28,6 +28,16 @@ class DirectAiImageGenerator(private val context: Context) {
         .build()
 
     suspend fun generateImage(prompt: String): Bitmap? = withContext(Dispatchers.IO) {
+        // Maya media pack: when the user picked another provider (Gemini image / Imagen / OpenAI)
+        // or set a Pollinations token in Media Studio, delegate to ImageGen (it saves to the gallery itself).
+        try {
+            val mediaPrefs = com.jarvis.assistant.maya.media.MediaPrefs.get(context)
+            if (com.jarvis.assistant.maya.media.ImageGen.isCustomProviderConfigured(context) || mediaPrefs.pollinationsToken.isNotBlank()) {
+                return@withContext com.jarvis.assistant.maya.media.ImageGen.generate(context, prompt).bitmap
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "ImageGen delegation failed, using built-in Pollinations path: ${e.message}")
+        }
         try {
             val encodedPrompt = URLEncoder.encode(prompt.trim(), "UTF-8")
             val url = "https://image.pollinations.ai/prompt/$encodedPrompt?width=1024&height=1024&nologo=true&model=flux"

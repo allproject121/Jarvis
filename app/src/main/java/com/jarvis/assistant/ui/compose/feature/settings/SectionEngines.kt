@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jarvis.assistant.JarvisApp
 import com.jarvis.assistant.ai.router.AiModelMode
+import com.jarvis.assistant.androllm.AndroLlmFlags
 import com.jarvis.assistant.androllm.engine.AndroLlmEngines
 import com.jarvis.assistant.androllm.engine.LocalLiteRtModel
 import com.jarvis.assistant.androllm.engine.api.EngineState
@@ -88,6 +89,24 @@ fun EnginesSettingsSection() {
         runCatching { JarvisApp.instance.preferences.aiModelMode = mode.name }
         status = "Chat brain: ${mode.displayName}"
     }
+
+    var offlineBrainFailover by remember {
+        mutableStateOf(AndroLlmFlags.isEnabled(context, AndroLlmFlags.OFFLINE_BRAIN_FAILOVER, default = true))
+    }
+    CloudGlassCard(modifier = Modifier.fillMaxWidth()) {
+        ToggleRow(
+            icon = Icons.Filled.Route,
+            title = "Offline Brain when Gemini fails",
+            subtitle = "If Gemini stops working for any reason (bad or expired API key, quota, server or network error), " +
+                "Jarvis keeps talking and doing phone tasks with the on-device model (Qwen3 4B recommended).",
+            checked = offlineBrainFailover,
+            onCheckedChange = {
+                offlineBrainFailover = it
+                AndroLlmFlags.setEnabled(context, AndroLlmFlags.OFFLINE_BRAIN_FAILOVER, it)
+            }
+        )
+    }
+    Spacer(Modifier.height(12.dp))
 
     CloudGlassCard(modifier = Modifier.fillMaxWidth()) {
         Column {

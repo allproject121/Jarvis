@@ -1,5 +1,7 @@
 package com.jarvis.assistant.androllm.engine.compat
 
+import com.jarvis.assistant.ai.compat.ModelFamily
+
 /**
  * The registry that binds each [ModelFamily] to its official configuration.
  * This is the single extension point for supporting a new model family: add

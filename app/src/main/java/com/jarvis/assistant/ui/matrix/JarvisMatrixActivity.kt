@@ -831,26 +831,85 @@ class JarvisMatrixActivity : AppCompatActivity() {
 
         binding.btnCreateDynamicToolDemo.setOnClickListener {
             HudSoundManager.playTapSound()
-            lifecycleScope.launch {
-                registry.createTool(
-                    name = "network_latency_benchmark",
-                    description = "Self-synthesized runtime ping diagnostic tool measuring network hops.",
-                    parametersSchemaJson = """{"type":"object","properties":{"target":{"type":"string","description":"Host IP"}}}""",
-                    scriptType = DynamicTool.ScriptType.SHELL,
-                    scriptCode = "ping -c 1 8.8.8.8",
-                    author = "Jarvis Autonomous Synthesizer"
-                )
-                withContext(Dispatchers.Main) {
-                    renderDynamicTools()
-                    Toast.makeText(this@JarvisMatrixActivity, "✨ New Dynamic Runtime Tool Synthesized & Registered!", Toast.LENGTH_SHORT).show()
-                }
-            }
+            showCreateDynamicToolDialog(registry) { renderDynamicTools() }
         }
 
         binding.btnOpenIdeForSelfHealing.setOnClickListener {
             HudSoundManager.playTapSound()
-            com.jarvis.assistant.ui.bypasside.BypassIdeActivity.open(this)
+            com.jarvis.assistant.codestudio.CodeStudioActivity.open(this)
         }
+    }
+
+    /**
+     * Asks for a tool name, description and shell command, then registers it as a
+     * SHELL dynamic tool through [DynamicToolRegistry.createTool].
+     */
+    private fun showCreateDynamicToolDialog(registry: DynamicToolRegistry, onCreated: () -> Unit) {
+        val pad = (16 * resources.displayMetrics.density).toInt()
+        val container = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(pad, pad / 2, pad, 0)
+        }
+        fun field(hint: String, multiLine: Boolean = false) = android.widget.EditText(this).apply {
+            this.hint = hint
+            textSize = 13f
+            if (multiLine) {
+                inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+                minLines = 2
+                typeface = android.graphics.Typeface.MONOSPACE
+            } else {
+                inputType = android.text.InputType.TYPE_CLASS_TEXT
+                maxLines = 1
+            }
+        }
+        val nameInput = field("Tool name (e.g. check_storage)")
+        val descInput = field("What the tool does")
+        val commandInput = field("Shell command (e.g. df -h)", multiLine = true)
+        container.addView(nameInput)
+        container.addView(descInput)
+        container.addView(commandInput)
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Create Dynamic Tool")
+            .setMessage("Jarvis will be able to run this shell command as a tool.")
+            .setView(container)
+            .setPositiveButton("Create", null)
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val name = nameInput.text.toString().trim().lowercase().replace(Regex("[\\s-]+"), "_")
+                val description = descInput.text.toString().trim()
+                val command = commandInput.text.toString().trim()
+                when {
+                    name.isBlank() -> { nameInput.error = "Enter a tool name"; return@setOnClickListener }
+                    description.isBlank() -> { descInput.error = "Enter a description"; return@setOnClickListener }
+                    command.isBlank() -> { commandInput.error = "Enter a shell command"; return@setOnClickListener }
+                }
+                HudSoundManager.playTapSound()
+                lifecycleScope.launch {
+                    val result = registry.createTool(
+                        name = name,
+                        description = description,
+                        parametersSchemaJson = """{"type":"object","properties":{}}""",
+                        scriptType = DynamicTool.ScriptType.SHELL,
+                        scriptCode = command,
+                        author = "User"
+                    )
+                    withContext(Dispatchers.Main) {
+                        result.onSuccess { tool ->
+                            dialog.dismiss()
+                            onCreated()
+                            Toast.makeText(this@JarvisMatrixActivity, "Tool '${tool.name}' registered.", Toast.LENGTH_SHORT).show()
+                        }.onFailure { e ->
+                            Toast.makeText(this@JarvisMatrixActivity, "Could not create tool: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
+        }
+        dialog.show()
     }
 
     private fun setupAppConnectorsSection() {

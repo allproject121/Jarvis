@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Maya WP4: files shared with social apps (story posters, gallery media) via BusinessFileProvider. -->
+<paths>
+    <files-path name="maya_posts" path="maya_posts/" />
+    <cache-path name="cache" path="." />
+    <external-path name="external" path="." />
+</paths>

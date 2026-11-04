@@ -3,8 +3,8 @@ package com.jarvis.assistant.androllm.agent.executor
 import com.jarvis.assistant.androllm.agent.core.ToolCall
 import com.jarvis.assistant.androllm.agent.core.ToolResult
 import com.jarvis.assistant.automation.agent.ClarificationEngine
-import com.jarvis.assistant.androllm.agent.confirmation.ToolConfirmationManager
-import com.jarvis.assistant.androllm.agent.confirmation.buildConfirmation
+import com.jarvis.assistant.automation.agent.ToolConfirmationManager
+import com.jarvis.assistant.automation.agent.buildConfirmation
 import com.jarvis.assistant.androllm.agent.monitoring.ToolHealthMonitor
 import com.jarvis.assistant.androllm.agent.registry.ToolRegistry
 import com.jarvis.assistant.androllm.agent.settings.AutomationSettingsStore
