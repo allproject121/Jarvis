@@ -12,6 +12,23 @@
                 android:endColor="?attr/themeCardGlassEnd" />
         </shape>
     </item>
+    <!-- top light-catch sheen (white 8% -> 0; invisible on white light-theme cards) -->
+    <item
+        android:gravity="top"
+        android:height="64dp">
+        <shape android:shape="rectangle">
+            <corners
+                android:topLeftRadius="24dp"
+                android:topRightRadius="24dp"
+                android:bottomLeftRadius="0dp"
+                android:bottomRightRadius="0dp" />
+            <gradient
+                android:type="linear"
+                android:angle="270"
+                android:startColor="#14FFFFFF"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
     <!-- soft corner glow (very faint on light themes) -->
     <item>
         <shape android:shape="rectangle">
@@ -20,7 +37,7 @@
                 android:type="radial"
                 android:centerX="1.0"
                 android:centerY="0.0"
-                android:gradientRadius="95%"
+                android:gradientRadius="120%"
                 android:startColor="?attr/themeGlow1"
                 android:endColor="@android:color/transparent" />
         </shape>

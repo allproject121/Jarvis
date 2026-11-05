@@ -45,8 +45,8 @@
         <item name="themeAccentFill">#2563EB</item>
         <item name="themeOnAccent">#FFFFFF</item>
         <item name="themePlateBorder">#DCE2EC</item>
-        <item name="themeGlow1">#1A2F6BFF</item>
-        <item name="themeGlow2">#128B5CF6</item>
+        <item name="themeGlow1">#262F6BFF</item>
+        <item name="themeGlow2">#1A8B5CF6</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#116A33</item>
@@ -86,10 +86,10 @@
 
         <item name="themeTextPrimary">#F8FAFC</item>
         <item name="themeTextSecondary">#B4C0D0</item>
-        <item name="themeTextMuted">#9AA9BC</item>
+        <item name="themeTextMuted">#A2AFC1</item>
         <item name="themeAccent1">#00F0FF</item>
         <item name="themeAccent2">#38BDF8</item>
-        <item name="themeAccent3">#C68FFA</item>
+        <item name="themeAccent3">#CB99FA</item>
         <item name="themeAccent">#00F0FF</item>
         <item name="themeAccentLight">#2600F0FF</item>
 
@@ -97,13 +97,13 @@
         <item name="themeAccentFill">#00F0FF</item>
         <item name="themeOnAccent">#060812</item>
         <item name="themePlateBorder">#2400F0FF</item>
-        <item name="themeGlow1">#3300F0FF</item>
-        <item name="themeGlow2">#26A855F7</item>
+        <item name="themeGlow1">#4D00F0FF</item>
+        <item name="themeGlow2">#40A855F7</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#4ADE80</item>
         <item name="themeWarning">#FBBF24</item>
-        <item name="themeDanger">#F98585</item>
+        <item name="themeDanger">#FA9090</item>
         <item name="themeInfo">#38BDF8</item>
     </style>
 
@@ -142,24 +142,24 @@
 
         <item name="themeTextPrimary">#F9F9FA</item>
         <item name="themeTextSecondary">#BDBBCB</item>
-        <item name="themeTextMuted">#9391A2</item>
+        <item name="themeTextMuted">#A1A0AE</item>
         <item name="themeAccent1">#9A8CFF</item>
-        <item name="themeAccent2">#818CF8</item>
+        <item name="themeAccent2">#909AF9</item>
         <item name="themeAccent3">#3FD0C9</item>
-        <item name="themeAccent">#9A8CFF</item>
+        <item name="themeAccent">#A194FF</item>
         <item name="themeAccentLight">#2E6D5DFC</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeAccentFill">#6352F5</item>
         <item name="themeOnAccent">#FFFFFF</item>
         <item name="themePlateBorder">#1FFFFFFF</item>
-        <item name="themeGlow1">#407F7CF3</item>
-        <item name="themeGlow2">#2EBC694A</item>
+        <item name="themeGlow1">#737F7CF3</item>
+        <item name="themeGlow2">#59BC694A</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#4ADE80</item>
         <item name="themeWarning">#FBBF24</item>
-        <item name="themeDanger">#F87171</item>
+        <item name="themeDanger">#F97C7C</item>
         <item name="themeInfo">#38BDF8</item>
     </style>
 
@@ -196,22 +196,22 @@
         <item name="themeTextSecondary">#FDA4AF</item>
         <item name="themeTextMuted">#D49AA4</item>
         <item name="themeAccent1">#FF4D5E</item>
-        <item name="themeAccent2">#FB7185</item>
-        <item name="themeAccent3">#F9761B</item>
-        <item name="themeAccent">#FF6B79</item>
+        <item name="themeAccent2">#FB8192</item>
+        <item name="themeAccent3">#FA8839</item>
+        <item name="themeAccent">#FF7F8B</item>
         <item name="themeAccentLight">#33FF4D5E</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeAccentFill">#E11D48</item>
         <item name="themeOnAccent">#FFFFFF</item>
         <item name="themePlateBorder">#33FF4D5E</item>
-        <item name="themeGlow1">#38FF4D5E</item>
-        <item name="themeGlow2">#26F97316</item>
+        <item name="themeGlow1">#73FF4D5E</item>
+        <item name="themeGlow2">#59F97316</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#4ADE80</item>
         <item name="themeWarning">#FBBF24</item>
-        <item name="themeDanger">#F87A7A</item>
+        <item name="themeDanger">#F98585</item>
         <item name="themeInfo">#38BDF8</item>
     </style>
 
@@ -257,8 +257,8 @@
         <item name="themeAccentFill">#D63200</item>
         <item name="themeOnAccent">#FFFFFF</item>
         <item name="themePlateBorder">#ECCCBF</item>
-        <item name="themeGlow1">#24FF6A3D</item>
-        <item name="themeGlow2">#148B5CF6</item>
+        <item name="themeGlow1">#2EFF6A3D</item>
+        <item name="themeGlow2">#1A8B5CF6</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#126C33</item>
@@ -310,8 +310,8 @@
         <item name="themeAccentFill">#2563EB</item>
         <item name="themeOnAccent">#FFFFFF</item>
         <item name="themePlateBorder">#DCE2EC</item>
-        <item name="themeGlow1">#1A2F6BFF</item>
-        <item name="themeGlow2">#128B5CF6</item>
+        <item name="themeGlow1">#262F6BFF</item>
+        <item name="themeGlow2">#1A8B5CF6</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#116A33</item>
@@ -352,24 +352,24 @@
 
         <item name="themeTextPrimary">#F8FAFC</item>
         <item name="themeTextSecondary">#B4C0D0</item>
-        <item name="themeTextMuted">#A0AEC2</item>
+        <item name="themeTextMuted">#A2B0C3</item>
         <item name="themeAccent1">#5B8CFF</item>
-        <item name="themeAccent2">#B097FA</item>
+        <item name="themeAccent2">#B8A1FB</item>
         <item name="themeAccent3">#22D3EE</item>
-        <item name="themeAccent">#7FA6FF</item>
+        <item name="themeAccent">#89ADFF</item>
         <item name="themeAccentLight">#335B8CFF</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeAccentFill">#396BE9</item>
         <item name="themeOnAccent">#FFFFFF</item>
         <item name="themePlateBorder">#335B8CFF</item>
-        <item name="themeGlow1">#335B8CFF</item>
-        <item name="themeGlow2">#26A78BFA</item>
+        <item name="themeGlow1">#735B8CFF</item>
+        <item name="themeGlow2">#59A78BFA</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#4ADE80</item>
         <item name="themeWarning">#FBBF24</item>
-        <item name="themeDanger">#F98383</item>
+        <item name="themeDanger">#FA9090</item>
         <item name="themeInfo">#38BDF8</item>
     </style>
 
@@ -415,8 +415,8 @@
         <item name="themeAccentFill">#FFFFFF</item>
         <item name="themeOnAccent">#000000</item>
         <item name="themePlateBorder">#26FFFFFF</item>
-        <item name="themeGlow1">#1AFFFFFF</item>
-        <item name="themeGlow2">#12A1A1AA</item>
+        <item name="themeGlow1">#33FFFFFF</item>
+        <item name="themeGlow2">#24A1A1AA</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#4ADE80</item>
@@ -458,22 +458,22 @@
         <item name="themeTextSecondary">#D8B4FE</item>
         <item name="themeTextMuted">#B8A6CC</item>
         <item name="themeAccent1">#C084FC</item>
-        <item name="themeAccent2">#E879F9</item>
+        <item name="themeAccent2">#EA84F9</item>
         <item name="themeAccent3">#38BDF8</item>
-        <item name="themeAccent">#C084FC</item>
+        <item name="themeAccent">#C894FC</item>
         <item name="themeAccentLight">#29C084FC</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeAccentFill">#9333EA</item>
         <item name="themeOnAccent">#FFFFFF</item>
         <item name="themePlateBorder">#33C084FC</item>
-        <item name="themeGlow1">#40C084FC</item>
-        <item name="themeGlow2">#26E879F9</item>
+        <item name="themeGlow1">#73C084FC</item>
+        <item name="themeGlow2">#59E879F9</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#4ADE80</item>
         <item name="themeWarning">#FBBF24</item>
-        <item name="themeDanger">#F87272</item>
+        <item name="themeDanger">#F98B8B</item>
         <item name="themeInfo">#38BDF8</item>
     </style>
 
@@ -517,22 +517,22 @@
         <item name="themeTextMuted">#D9B45A</item>
         <item name="themeAccent1">#F59E0B</item>
         <item name="themeAccent2">#FBBF24</item>
-        <item name="themeAccent3">#F59E0B</item>
-        <item name="themeAccent">#F59E0B</item>
+        <item name="themeAccent3">#F6A51C</item>
+        <item name="themeAccent">#F6A51C</item>
         <item name="themeAccentLight">#29F59E0B</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeAccentFill">#F59E0B</item>
         <item name="themeOnAccent">#0A0802</item>
         <item name="themePlateBorder">#33F59E0B</item>
-        <item name="themeGlow1">#38F59E0B</item>
-        <item name="themeGlow2">#26FBBF24</item>
+        <item name="themeGlow1">#73F59E0B</item>
+        <item name="themeGlow2">#59FBBF24</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#4ADE80</item>
         <item name="themeWarning">#FBBF24</item>
-        <item name="themeDanger">#F97C7C</item>
-        <item name="themeInfo">#38BDF8</item>
+        <item name="themeDanger">#FA9D9D</item>
+        <item name="themeInfo">#46C2F8</item>
     </style>
 
     <style name="Theme.JarvisAssistant.Emerald" parent="Theme.Material3.Dark.NoActionBar">
@@ -565,25 +565,25 @@
 
         <item name="themeTextPrimary">#D1FAE5</item>
         <item name="themeTextSecondary">#A7F3D0</item>
-        <item name="themeTextMuted">#8FBFA8</item>
+        <item name="themeTextMuted">#90C0A9</item>
         <item name="themeAccent1">#10B981</item>
         <item name="themeAccent2">#34D399</item>
-        <item name="themeAccent3">#21BE8A</item>
-        <item name="themeAccent">#21BE8A</item>
+        <item name="themeAccent3">#4CCAA0</item>
+        <item name="themeAccent">#4CCAA0</item>
         <item name="themeAccentLight">#2910B981</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeAccentFill">#10B981</item>
         <item name="themeOnAccent">#020A06</item>
         <item name="themePlateBorder">#3310B981</item>
-        <item name="themeGlow1">#3810B981</item>
-        <item name="themeGlow2">#2634D399</item>
+        <item name="themeGlow1">#7310B981</item>
+        <item name="themeGlow2">#5934D399</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#4ADE80</item>
         <item name="themeWarning">#FBBF24</item>
-        <item name="themeDanger">#F98585</item>
-        <item name="themeInfo">#38BDF8</item>
+        <item name="themeDanger">#FA9C9C</item>
+        <item name="themeInfo">#46C2F8</item>
     </style>
 
     <style name="Theme.JarvisAssistant.Pink" parent="Theme.Material3.Dark.NoActionBar">
@@ -618,22 +618,22 @@
         <item name="themeTextSecondary">#FBCFE8</item>
         <item name="themeTextMuted">#C9A0B6</item>
         <item name="themeAccent1">#EC4899</item>
-        <item name="themeAccent2">#F472B6</item>
-        <item name="themeAccent3">#EF65A9</item>
-        <item name="themeAccent">#F472B6</item>
+        <item name="themeAccent2">#F579BA</item>
+        <item name="themeAccent3">#F27DB7</item>
+        <item name="themeAccent">#F579BA</item>
         <item name="themeAccentLight">#29EC4899</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeAccentFill">#C81E6E</item>
         <item name="themeOnAccent">#FFFFFF</item>
         <item name="themePlateBorder">#33EC4899</item>
-        <item name="themeGlow1">#38EC4899</item>
-        <item name="themeGlow2">#26F472B6</item>
+        <item name="themeGlow1">#73EC4899</item>
+        <item name="themeGlow2">#59F472B6</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#4ADE80</item>
         <item name="themeWarning">#FBBF24</item>
-        <item name="themeDanger">#F87777</item>
+        <item name="themeDanger">#F97F7F</item>
         <item name="themeInfo">#38BDF8</item>
     </style>
 
@@ -669,22 +669,22 @@
         <item name="themeTextSecondary">#FED7AA</item>
         <item name="themeTextMuted">#D9A57A</item>
         <item name="themeAccent1">#FF7700</item>
-        <item name="themeAccent2">#FB923C</item>
-        <item name="themeAccent3">#FF7700</item>
-        <item name="themeAccent">#FF8A1F</item>
+        <item name="themeAccent2">#FB9440</item>
+        <item name="themeAccent3">#FF9233</item>
+        <item name="themeAccent">#FF922F</item>
         <item name="themeAccentLight">#29FF7700</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeAccentFill">#FF7700</item>
         <item name="themeOnAccent">#0E0602</item>
         <item name="themePlateBorder">#33FF7700</item>
-        <item name="themeGlow1">#38FF7700</item>
-        <item name="themeGlow2">#26FB923C</item>
+        <item name="themeGlow1">#73FF7700</item>
+        <item name="themeGlow2">#59FB923C</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#4ADE80</item>
         <item name="themeWarning">#FBBF24</item>
-        <item name="themeDanger">#F87B7B</item>
+        <item name="themeDanger">#FA9090</item>
         <item name="themeInfo">#38BDF8</item>
     </style>
 
@@ -720,22 +720,22 @@
         <item name="themeTextSecondary">#C7D2FE</item>
         <item name="themeTextMuted">#A5ADCC</item>
         <item name="themeAccent1">#6366F1</item>
-        <item name="themeAccent2">#8993F8</item>
-        <item name="themeAccent3">#9092F5</item>
-        <item name="themeAccent">#9092F7</item>
+        <item name="themeAccent2">#8E98F9</item>
+        <item name="themeAccent3">#9597F5</item>
+        <item name="themeAccent">#9597F8</item>
         <item name="themeAccentLight">#336366F1</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeAccentFill">#5558E8</item>
         <item name="themeOnAccent">#FFFFFF</item>
         <item name="themePlateBorder">#336366F1</item>
-        <item name="themeGlow1">#406366F1</item>
-        <item name="themeGlow2">#26818CF8</item>
+        <item name="themeGlow1">#736366F1</item>
+        <item name="themeGlow2">#59818CF8</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#4ADE80</item>
         <item name="themeWarning">#FBBF24</item>
-        <item name="themeDanger">#F87474</item>
+        <item name="themeDanger">#F87A7A</item>
         <item name="themeInfo">#38BDF8</item>
     </style>
 
@@ -781,8 +781,8 @@
         <item name="themeAccentFill">#0F172A</item>
         <item name="themeOnAccent">#FFFFFF</item>
         <item name="themePlateBorder">#E0E3EA</item>
-        <item name="themeGlow1">#146D5DFC</item>
-        <item name="themeGlow2">#0FBC694A</item>
+        <item name="themeGlow1">#1F6D5DFC</item>
+        <item name="themeGlow2">#17BC694A</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#126C33</item>
@@ -833,8 +833,8 @@
         <item name="themeAccentFill">#FFFFFF</item>
         <item name="themeOnAccent">#07070A</item>
         <item name="themePlateBorder">#2EFFFFFF</item>
-        <item name="themeGlow1">#1FFFFFFF</item>
-        <item name="themeGlow2">#14CBD5E1</item>
+        <item name="themeGlow1">#33FFFFFF</item>
+        <item name="themeGlow2">#24CBD5E1</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#4ADE80</item>
@@ -875,24 +875,24 @@
 
         <item name="themeTextPrimary">#FFFFFF</item>
         <item name="themeTextSecondary">#B3B3B3</item>
-        <item name="themeTextMuted">#9A9A9A</item>
+        <item name="themeTextMuted">#A9A9A9</item>
         <item name="themeAccent1">#7A5CFF</item>
         <item name="themeAccent2">#CFC2FF</item>
-        <item name="themeAccent3">#9D85FF</item>
-        <item name="themeAccent">#9D85FF</item>
+        <item name="themeAccent3">#AF9BFF</item>
+        <item name="themeAccent">#AF9BFF</item>
         <item name="themeAccentLight">#337A5CFF</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeAccentFill">#7050F5</item>
         <item name="themeOnAccent">#FFFFFF</item>
         <item name="themePlateBorder">#333333</item>
-        <item name="themeGlow1">#337A5CFF</item>
-        <item name="themeGlow2">#1FCFC2FF</item>
+        <item name="themeGlow1">#737A5CFF</item>
+        <item name="themeGlow2">#59CFC2FF</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#4ADE80</item>
         <item name="themeWarning">#FBBF24</item>
-        <item name="themeDanger">#F87171</item>
+        <item name="themeDanger">#F98989</item>
         <item name="themeInfo">#38BDF8</item>
     </style>
 
@@ -938,8 +938,8 @@
         <item name="themeAccentFill">#BE4F2B</item>
         <item name="themeOnAccent">#FFFFFF</item>
         <item name="themePlateBorder">#DEDACD</item>
-        <item name="themeGlow1">#1FD97757</item>
-        <item name="themeGlow2">#14B3573E</item>
+        <item name="themeGlow1">#29D97757</item>
+        <item name="themeGlow2">#1AB3573E</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#126C33</item>
@@ -1010,24 +1010,24 @@
 
         <item name="themeTextPrimary">#F8FAFC</item>
         <item name="themeTextSecondary">#AEB8C8</item>
-        <item name="themeTextMuted">#9DA7B7</item>
+        <item name="themeTextMuted">#A7B0BF</item>
         <item name="themeAccent1">#1E90FF</item>
         <item name="themeAccent2">#5FC8FF</item>
-        <item name="themeAccent3">#B495F9</item>
-        <item name="themeAccent">#54ABFF</item>
+        <item name="themeAccent3">#BCA0FA</item>
+        <item name="themeAccent">#68B4FF</item>
         <item name="themeAccentLight">#331E90FF</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeAccentFill">#1970E1</item>
         <item name="themeOnAccent">#FFFFFF</item>
         <item name="themePlateBorder">#353C4C</item>
-        <item name="themeGlow1">#331E90FF</item>
-        <item name="themeGlow2">#268B5CF6</item>
+        <item name="themeGlow1">#731E90FF</item>
+        <item name="themeGlow2">#598B5CF6</item>
 
         <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
         <item name="themeSuccess">#4ADE80</item>
         <item name="themeWarning">#FBBF24</item>
-        <item name="themeDanger">#F98686</item>
+        <item name="themeDanger">#FA9292</item>
         <item name="themeInfo">#38BDF8</item>
     </style>
 

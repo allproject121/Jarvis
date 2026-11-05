@@ -12,6 +12,23 @@
                 android:endColor="?attr/themeCardGlassEnd" />
         </shape>
     </item>
+    <!-- top light-catch sheen (white 8% -> 0; invisible on white light-theme cards) -->
+    <item
+        android:gravity="top"
+        android:height="64dp">
+        <shape android:shape="rectangle">
+            <corners
+                android:topLeftRadius="16dp"
+                android:topRightRadius="16dp"
+                android:bottomLeftRadius="0dp"
+                android:bottomRightRadius="0dp" />
+            <gradient
+                android:type="linear"
+                android:angle="270"
+                android:startColor="#14FFFFFF"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
     <!-- 1dp hairline -->
     <item>
         <shape android:shape="rectangle">
