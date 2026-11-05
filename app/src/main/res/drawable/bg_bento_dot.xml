@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bento status dot (6dp, theme accent) used as drawableStart inside pill badges (2026-11-05 bento layout). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <size
+        android:width="6dp"
+        android:height="6dp" />
+    <solid android:color="?attr/themeAccent" />
+</shape>
