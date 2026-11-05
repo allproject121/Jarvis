@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  One chat message in Jarvis' Chat tab. Same bubbles as item_jarvis_chat_message.xml
+  (bg_jarvis_chat_user / bg_jarvis_chat_assistant) plus the merged AndroLLM actions.
+  Markdown replies render in composeAssistantMarkdown inside the same assistant bubble.
+-->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layoutMessageRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
+
+    <!-- User Message Bubble (Right Aligned) -->
+    <LinearLayout
+        android:id="@+id/layoutUserContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="end"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvUserAttachments"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="280dp"
+            android:layout_marginBottom="4dp"
+            android:background="@drawable/bg_jarvis_chip"
+            android:paddingStart="10dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="4dp"
+            android:drawableStart="@drawable/ic_jchat_attach"
+            android:drawablePadding="4dp"
+            android:drawableTint="?attr/themeTextSecondary"
+            android:textColor="?attr/themeTextSecondary"
+            android:textSize="11sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvUserMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="280dp"
+            android:background="@drawable/bg_jarvis_chat_user"
+            android:paddingStart="16dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="10dp"
+            android:textColor="#FFFFFF"
+            android:fontFamily="sans-serif"
+            android:textIsSelectable="false"
+            android:textSize="15sp" />
+
+        <LinearLayout
+            android:id="@+id/layoutUserActions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="4dp">
+
+            <ImageView
+                android:id="@+id/ivUserBookmarked"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_jchat_bookmark_filled"
+                app:tint="?attr/themeAccent"
+                android:layout_marginEnd="10dp"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/btnUserEdit"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_edit"
+                app:tint="?attr/themeTextMuted"
+                android:contentDescription="Edit"
+                android:layout_marginEnd="10dp" />
+
+            <ImageView
+                android:id="@+id/btnUserCopy"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_copy"
+                app:tint="?attr/themeTextMuted"
+                android:contentDescription="Copy"
+                android:layout_marginEnd="10dp" />
+
+            <ImageView
+                android:id="@+id/btnUserMore"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_jchat_more"
+                app:tint="?attr/themeTextMuted"
+                android:contentDescription="More" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Assistant Message Bubble (Left Aligned) -->
+    <LinearLayout
+        android:id="@+id/layoutAssistantContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="start"
+        android:layout_marginTop="6dp"
+        android:visibility="gone">
+
+        <!-- Plain replies: the original Jarvis bubble -->
+        <TextView
+            android:id="@+id/tvAssistantMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="300dp"
+            android:background="@drawable/bg_jarvis_chat_assistant"
+            android:paddingStart="16dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="12dp"
+            android:textColor="?attr/themeTextPrimary"
+            android:fontFamily="sans-serif"
+            android:textSize="15sp"
+            android:lineSpacingExtra="3dp" />
+
+        <!-- Markdown replies (code blocks with copy, tables, lists, safe links) -->
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/composeAssistantMarkdown"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="24dp"
+            android:background="@drawable/bg_jarvis_chat_assistant"
+            android:paddingStart="14dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="12dp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/layoutAssistantActions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="4dp">
+
+            <ImageView
+                android:id="@+id/btnAssistantCopy"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_copy"
+                app:tint="?attr/themeTextMuted"
+                android:contentDescription="Copy"
+                android:layout_marginEnd="12dp" />
+
+            <ImageView
+                android:id="@+id/btnAssistantPlay"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_tts_play"
+                app:tint="?attr/themeTextMuted"
+                android:contentDescription="Play"
+                android:layout_marginEnd="12dp" />
+
+            <ImageView
+                android:id="@+id/btnAssistantRegenerate"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_jchat_refresh"
+                app:tint="?attr/themeTextMuted"
+                android:contentDescription="Regenerate"
+                android:layout_marginEnd="12dp"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/btnAssistantBookmark"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_jchat_bookmark"
+                app:tint="?attr/themeTextMuted"
+                android:contentDescription="Bookmark"
+                android:layout_marginEnd="12dp" />
+
+            <ImageView
+                android:id="@+id/btnAssistantShare"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_jchat_share"
+                app:tint="?attr/themeTextMuted"
+                android:contentDescription="Share"
+                android:layout_marginEnd="12dp" />
+
+            <ImageView
+                android:id="@+id/btnAssistantMore"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_jchat_more"
+                app:tint="?attr/themeTextMuted"
+                android:contentDescription="More" />
+
+            <TextView
+                android:id="@+id/tvAssistantMeta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="10sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Follow-up suggestion chips (shown under the latest reply) -->
+    <HorizontalScrollView
+        android:id="@+id/scrollFollowUps"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/layoutFollowUps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
+</LinearLayout>

@@ -68,7 +68,9 @@ public final class PocketTtsNative {
         tried = true;
         String strConcat = null;
         try {
-            System.loadLibrary("onnxruntime");
+            // ONNX Runtime 1.20 renamed (SONAME libonnxrt120.so) so it can live next to
+            // sherpa-onnx's own libonnxruntime.so (1.27) in the same process.
+            System.loadLibrary("onnxrt120");
             System.loadLibrary("pockettts_jni");
         } catch (SecurityException e) {
             strConcat = "library: " + e.getClass().getSimpleName();

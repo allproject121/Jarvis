@@ -41,7 +41,7 @@
             android:layout_centerVertical="true"
             android:background="@drawable/bg_jarvis_icon_square"
             android:src="@drawable/ic_delete"
-            app:tint="#EF4444"
+            app:tint="?attr/themeDanger"
             android:contentDescription="Delete model"
             android:visibility="gone"
             tools:visibility="visible" />

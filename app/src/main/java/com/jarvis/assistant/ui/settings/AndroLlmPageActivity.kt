@@ -102,6 +102,9 @@ class AndroLlmPageActivity : AppCompatActivity() {
                         } else {
                             RoutePage(startRoute = route!!)
                         }
+                        // Allow / Deny for tool confirmations raised while this page is open
+                        // (e.g. Tool Debug → Run on a "confirm" tool).
+                        com.jarvis.assistant.ui.compose.feature.settings.ToolConfirmationPrompt()
                     }
                 }
             }

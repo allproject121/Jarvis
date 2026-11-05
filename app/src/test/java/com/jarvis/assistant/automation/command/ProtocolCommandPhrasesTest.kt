@@ -44,24 +44,6 @@ class ProtocolCommandPhrasesTest {
     }
 
     @Test
-    fun removeVoicePhrases() {
-        assertEquals(JarvisCommand.RemoveVoice("rahul"), cmd("remove voice rahul"))
-        assertEquals(JarvisCommand.RemoveVoice("rahul"), cmd("delete voice profile of rahul"))
-        assertEquals(JarvisCommand.RemoveVoice("rahul"), cmd("voice rahul hatao"))
-        assertEquals(JarvisCommand.RemoveVoice("priya"), cmd("priya ki awaaz hata do"))
-    }
-
-    @Test
-    fun setVoiceRolePhrases() {
-        assertEquals(JarvisCommand.SetVoiceRole("rahul", "FRIEND"), cmd("set voice role of rahul to friend"))
-        assertEquals(JarvisCommand.SetVoiceRole("rahul", "GUEST"), cmd("change rahul's role to guest"))
-        assertEquals(JarvisCommand.SetVoiceRole("rahul", "FAMILY"), cmd("rahul ko family banao"))
-        assertEquals(JarvisCommand.SetVoiceRole("mummy", "BOSS"), cmd("mummy ko boss bana do"))
-        assertEquals(JarvisCommand.SetVoiceRole("amit", "BLOCKED"), cmd("amit ka role blocked karo"))
-        assertEquals(JarvisCommand.SetVoiceRole("ravi", "FRIEND"), cmd("ravi ko dost role do"))
-    }
-
-    @Test
     fun removeFromWatchlistPhrases() {
         assertEquals(JarvisCommand.RemoveFromWatchlist("TCS"), cmd("remove tcs from watchlist"))
         assertEquals(JarvisCommand.RemoveFromWatchlist("INFY"), cmd("watchlist se infy hatao"))
@@ -126,9 +108,6 @@ class ProtocolCommandPhrasesTest {
 
     @Test
     fun helperMappings() {
-        assertEquals("BOSS", CommandParser.normalizeGuardianRole("owner"))
-        assertEquals("GUEST", CommandParser.normalizeGuardianRole("mehmaan"))
-        assertEquals(null, CommandParser.normalizeGuardianRole("banana"))
         assertEquals("schedule", CommandParser.inferN8nTrigger("har din subah report bhejo"))
     }
 
@@ -139,7 +118,5 @@ class ProtocolCommandPhrasesTest {
         assertEquals(JarvisCommand.ViewWatchlist, cmd("show watchlist"))
         assertEquals(JarvisCommand.AddToWatchlist("tcs"), cmd("add tcs to watchlist"))
         assertEquals(JarvisCommand.ListGitHubRepos, cmd("list github repos"))
-        assertEquals(JarvisCommand.EnrollVoice("rahul"), cmd("enroll voice rahul"))
-        assertEquals(JarvisCommand.SetDrivingMode(true), cmd("driving mode chalu karo"))
     }
 }

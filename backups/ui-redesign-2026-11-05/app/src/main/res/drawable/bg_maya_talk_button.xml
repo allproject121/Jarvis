@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The big circular talk button: accent gradient core with a bright rim. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#33FFFFFF">
+    <item>
+        <layer-list>
+            <item>
+                <shape android:shape="oval">
+                    <gradient
+                        android:type="linear"
+                        android:angle="315"
+                        android:startColor="?attr/themeAccent1"
+                        android:endColor="?attr/themeAccent2" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="oval">
+                    <stroke android:width="2dp" android:color="#59FFFFFF" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</ripple>

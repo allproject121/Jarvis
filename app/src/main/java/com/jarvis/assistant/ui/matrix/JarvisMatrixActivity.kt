@@ -44,16 +44,6 @@ class JarvisMatrixActivity : AppCompatActivity() {
     private var appliedThemeKey: String = ""
     private var appliedCustomHex: String = ""
 
-    private val cameraPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            triggerIntruderPhotoCapture()
-        } else {
-            Toast.makeText(this, "Camera permission required for intruder detection.", Toast.LENGTH_SHORT).show()
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ThemeManager.applyTheme(this)
@@ -76,7 +66,6 @@ class JarvisMatrixActivity : AppCompatActivity() {
         setupDynamicToolsSection()
         setupAppConnectorsSection()
         setupAgentToolsSection()
-        updateGuardStatusUi()
         checkAccessibilityStatus()
     }
 
@@ -89,7 +78,6 @@ class JarvisMatrixActivity : AppCompatActivity() {
             recreate()
             return
         }
-        updateGuardStatusUi()
         checkAccessibilityStatus()
     }
 
@@ -97,18 +85,16 @@ class JarvisMatrixActivity : AppCompatActivity() {
         val dynamicSections = listOf(binding.secDynamicTools)
         val connectorSections = listOf(binding.secAppConnectors)
         val agentToolSections = listOf(binding.secAgentTools)
-        val securitySections = listOf(binding.secVoiceGuardian, binding.secBiometricAppLock)
         val voiceSections = listOf(binding.secPocketTts, binding.secBarcodeScanner)
         val automationSections = listOf(binding.secAiMacros, binding.secLinuxTermux, binding.secCreatorStudio)
-        val smartHomeSections = listOf(binding.secSmartHome, binding.secLiveWallpaper, binding.secStocks)
-        val allSections = dynamicSections + connectorSections + agentToolSections + securitySections + voiceSections + automationSections + smartHomeSections
+        val smartHomeSections = listOf(binding.secSmartHome, binding.secStocks)
+        val allSections = dynamicSections + connectorSections + agentToolSections + voiceSections + automationSections + smartHomeSections
 
         val chips = listOf(
             binding.chipFilterAll,
             binding.chipFilterDynamicTools,
             binding.chipFilterAppConnectors,
             binding.chipFilterAgentTools,
-            binding.chipFilterSecurity,
             binding.chipFilterVoice,
             binding.chipFilterAutomation,
             binding.chipFilterSmartHome
@@ -121,7 +107,7 @@ class JarvisMatrixActivity : AppCompatActivity() {
                 chip.setTextColor(ThemeManager.attrColor(this, R.attr.themeTextSecondary, ContextCompat.getColor(this, R.color.text_muted)))
             }
             activeChip.setBackgroundResource(com.jarvis.assistant.R.drawable.bg_jarvis_pill_button)
-            activeChip.setTextColor(android.graphics.Color.WHITE)
+            activeChip.setTextColor(ThemeManager.onAccentColor(this))
 
             allSections.forEach { section ->
                 section.visibility = if (visibleSections == null || section in visibleSections) View.VISIBLE else View.GONE
@@ -132,7 +118,6 @@ class JarvisMatrixActivity : AppCompatActivity() {
         binding.chipFilterDynamicTools.setOnClickListener { selectCategory(binding.chipFilterDynamicTools, dynamicSections) }
         binding.chipFilterAppConnectors.setOnClickListener { selectCategory(binding.chipFilterAppConnectors, connectorSections) }
         binding.chipFilterAgentTools.setOnClickListener { selectCategory(binding.chipFilterAgentTools, agentToolSections) }
-        binding.chipFilterSecurity.setOnClickListener { selectCategory(binding.chipFilterSecurity, securitySections) }
         binding.chipFilterVoice.setOnClickListener { selectCategory(binding.chipFilterVoice, voiceSections) }
         binding.chipFilterAutomation.setOnClickListener { selectCategory(binding.chipFilterAutomation, automationSections) }
         binding.chipFilterSmartHome.setOnClickListener { selectCategory(binding.chipFilterSmartHome, smartHomeSections) }
@@ -327,22 +312,6 @@ class JarvisMatrixActivity : AppCompatActivity() {
             }
         }
 
-        // --- 2. Voice Guardian & Watchman ---
-        binding.btnToggleGuard.setOnClickListener {
-            HudSoundManager.playTapSound()
-            app.voiceGuardian.isArmed = !app.voiceGuardian.isArmed
-            updateGuardStatusUi()
-        }
-
-        binding.btnTestWatchmanPhoto.setOnClickListener {
-            HudSoundManager.playTapSound()
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-            } else {
-                triggerIntruderPhotoCapture()
-            }
-        }
-
         // --- 3. Linux Terminal & Native Shell Execution ---
         binding.btnRunNativeShell.setOnClickListener {
             val cmd = binding.etTermuxCommand.text.toString().trim().ifBlank { "uname -a" }
@@ -469,36 +438,6 @@ class JarvisMatrixActivity : AppCompatActivity() {
             HudSoundManager.playTapSound()
             com.jarvis.assistant.voice.PocketTtsEngine.getInstance(this).stop()
             binding.tvPocketTtsStatus.text = "PocketTTS: Playback stopped."
-        }
-
-        // --- 7. Stark Arc Reactor Live Wallpaper ---
-        binding.btnApplyLiveWallpaper.setOnClickListener {
-            HudSoundManager.playTapSound()
-            try {
-                val intent = Intent(android.app.WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).apply {
-                    putExtra(
-                        android.app.WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
-                        android.content.ComponentName(this@JarvisMatrixActivity, com.jarvis.assistant.wallpaper.JarvisWallpaperService::class.java)
-                    )
-                }
-                startActivity(intent)
-            } catch (e: Exception) {
-                try {
-                    startActivity(Intent(android.app.WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER))
-                } catch (e2: Exception) {
-                    Toast.makeText(this, "JARVIS Live Wallpaper is ready in Wallpaper settings", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-
-        // --- 8. Protocol 7 Biometric AppLock ---
-        binding.btnLaunchAppLockTest.setOnClickListener {
-            HudSoundManager.playTapSound()
-            val intent = Intent(this, com.jarvis.assistant.ui.facelock.JarvisAppLockActivity::class.java).apply {
-                putExtra(com.jarvis.assistant.ui.facelock.JarvisAppLockActivity.EXTRA_APP_LABEL, "JARVIS Matrix Hub")
-                putExtra(com.jarvis.assistant.ui.facelock.JarvisAppLockActivity.EXTRA_PACKAGE_NAME, packageName)
-            }
-            startActivity(intent)
         }
 
         // --- 9. On-Device Barcode & QR Scanner ---
@@ -637,26 +576,6 @@ class JarvisMatrixActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    private fun triggerIntruderPhotoCapture() {
-        Toast.makeText(this, "Testing Watchman camera capture...", Toast.LENGTH_SHORT).show()
-        app.watchmanSecurity.captureIntruderPhoto { file ->
-            runOnUiThread {
-                if (file != null) {
-                    Toast.makeText(this, "Watchman: Photo saved to ${file.name}", Toast.LENGTH_LONG).show()
-                } else {
-                    Toast.makeText(this, "Intruder capture completed.", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    private fun updateGuardStatusUi() {
-        val isArmed = app.voiceGuardian.isArmed
-        binding.tvGuardStatus.text = if (isArmed) "Status: Armed (Full Security Active)" else "Status: Disarmed (Normal Mode)"
-        val voices = app.voiceGuardian.listVoices()
-        binding.tvEnrolledVoices.text = if (voices.isEmpty()) "No voice profiles enrolled" else "Enrolled Voices: " + voices.joinToString(", ") { "${it.name} (${it.role})" }
     }
 
     private fun saveImageToAppAndGallery(bitmap: android.graphics.Bitmap) {
@@ -975,13 +894,14 @@ class JarvisMatrixActivity : AppCompatActivity() {
                 textSize = 9.5f
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
                 setPadding(18, 8, 18, 8)
-                setBackgroundResource(R.drawable.bg_jarvis_pill_button)
+                // Neutral bento badge: coloured status ink must not sit on the accent fill.
+                setBackgroundResource(R.drawable.bg_jarvis_status_badge)
                 setTextColor(
                     when (status) {
-                        ConnectorStatus.OPERATIONAL -> android.graphics.Color.parseColor("#4ADE80")
-                        ConnectorStatus.AUTHENTICATED -> android.graphics.Color.parseColor("#22D3EE")
-                        ConnectorStatus.INSTALLED -> android.graphics.Color.parseColor("#FBBF24")
-                        else -> android.graphics.Color.parseColor("#94A3B8")
+                        ConnectorStatus.OPERATIONAL -> ThemeManager.attrColor(context, R.attr.themeSuccess, android.graphics.Color.parseColor("#4ADE80"))
+                        ConnectorStatus.AUTHENTICATED -> ThemeManager.attrColor(context, R.attr.themeInfo, android.graphics.Color.parseColor("#22D3EE"))
+                        ConnectorStatus.INSTALLED -> ThemeManager.attrColor(context, R.attr.themeWarning, android.graphics.Color.parseColor("#FBBF24"))
+                        else -> ThemeManager.attrColor(context, R.attr.themeTextMuted, android.graphics.Color.parseColor("#94A3B8"))
                     }
                 )
             }

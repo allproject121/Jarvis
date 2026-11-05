@@ -373,31 +373,59 @@ private fun BackupTab() {
     var incognito by remember { mutableStateOf(MemoryPrefs.isIncognito(context)) }
     var autoSave by remember { mutableStateOf(MemoryPrefs.isAutoSave(context)) }
 
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+    // Same engine + file format as Settings -> System -> Backup & restore (data/backup/BackupManager).
+    var restartPrompt by remember { mutableStateOf(false) }
+    val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
         if (uri != null) {
             busy = true
+            status = "Creating backup..."
             scope.launch {
-                val r = MayaBackup.restore(context, uri)
-                status = r.fold({ "Restored: ${it.describe()}" }, { "Restore failed: ${it.message}" })
+                val r = com.jarvis.assistant.data.backup.BackupManager.exportToUri(context, uri)
+                status = r.fold({ it.describe() }, { "Export failed: ${it.message}" })
                 busy = false
             }
         }
     }
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) {
+            busy = true
+            status = "Restoring..."
+            scope.launch {
+                val r = com.jarvis.assistant.data.backup.BackupManager.restoreFromUri(context, uri)
+                status = r.fold({ "Restored.\n${it.describe()}" }, { "Restore failed: ${it.message}" })
+                restartPrompt = r.isSuccess
+                busy = false
+            }
+        }
+    }
+    if (restartPrompt) {
+        AlertDialog(
+            onDismissRequest = { restartPrompt = false },
+            title = { Text("Backup restored") },
+            text = { Text("Restart Jarvis now so every screen loads the restored settings and data.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    restartPrompt = false
+                    (context as? android.app.Activity)?.let { com.jarvis.assistant.data.backup.BackupManager.restartApp(it) }
+                }) { Text("Restart now") }
+            },
+            dismissButton = { TextButton(onClick = { restartPrompt = false }) { Text("Later") } }
+        )
+    }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Text("Memory & data", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text("Export & restore your memories and chats. Backups include remembered facts, chat transcripts, rules, episodes, wiki, notices and SOS contacts. API keys and the voice print are never included.", style = MaterialTheme.typography.bodySmall)
+        Text("Same backup as Settings → System → Backup & restore: one file with settings, memories, chats, rules, episodes, wiki, notices and saved macros. You choose where to save it. API keys, tokens and the voice print are never included.", style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(enabled = !busy, onClick = {
-                busy = true
-                scope.launch {
-                    val r = MayaBackup.exportAndShare(context)
-                    status = r.fold({ "Backup ready: ${it.name} (${it.length() / 1024} KB)" }, { "Export failed: ${it.message}" })
-                    busy = false
-                }
+                runCatching { exporter.launch(com.jarvis.assistant.data.backup.BackupManager.suggestedFileName()) }
+                    .onFailure { status = "No file picker available: ${it.message}" }
             }) { Text("Export") }
-            OutlinedButton(enabled = !busy, onClick = { picker.launch(arrayOf("application/json", "text/plain", "*/*")) }) { Text("Restore") }
+            OutlinedButton(enabled = !busy, onClick = {
+                runCatching { picker.launch(arrayOf("application/json", "text/plain", "application/octet-stream", "*/*")) }
+                    .onFailure { status = "No file picker available: ${it.message}" }
+            }) { Text("Restore") }
         }
         if (status.isNotBlank()) Text(status, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
         Spacer(Modifier.height(16.dp))

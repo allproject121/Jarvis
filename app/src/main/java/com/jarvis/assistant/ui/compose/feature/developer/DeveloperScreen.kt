@@ -53,6 +53,8 @@ import com.jarvis.assistant.ui.compose.components.CloudAtmosphericBackground
 import com.jarvis.assistant.ui.compose.components.CloudBarChart
 import com.jarvis.assistant.ui.compose.components.CloudChip
 import com.jarvis.assistant.ui.compose.components.CloudGlassCard
+import androidx.compose.runtime.remember
+import com.jarvis.assistant.ui.compose.components.CloudCapsuleButton
 import com.jarvis.assistant.ui.compose.components.CloudLineChart
 import com.jarvis.assistant.ui.compose.components.CloudUsageBar
 import com.jarvis.assistant.ui.compose.components.DeveloperStatsCard
@@ -129,10 +131,13 @@ private fun DeveloperScreen(
     val crashTotal by viewModel.crashTotal.collectAsStateWithLifecycle()
     val contextLength by viewModel.contextLength.collectAsStateWithLifecycle()
     val threads by viewModel.threads.collectAsStateWithLifecycle()
+    val toolTraces by viewModel.toolTraces.collectAsStateWithLifecycle()
+    val phoneModelReady by viewModel.phoneModelReady.collectAsStateWithLifecycle()
+    val liteRtOn = remember { viewModel.liteRtEnabled() }
 
     val data = DeveloperData(history, generations, device)
     val modelName = viewModel.modelName(activeModelId)
-    val modelLoaded = engineState is LocalEngineState.Ready || engineState is LocalEngineState.Generating
+    val modelLoaded = phoneModelReady || engineState is LocalEngineState.Ready || engineState is LocalEngineState.Generating
 
     // Keep the system-RAM / runtime snapshots fresh while the screen is open.
     LaunchedEffect(viewModel) {
@@ -168,7 +173,7 @@ private fun DeveloperScreen(
                                 )
                             )
                             Text(
-                                text = "Live engine & device telemetry",
+                                text = "Gemini check • tool calls • engine & device telemetry",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.ledger.lampDeep,
                                     fontWeight = FontWeight.SemiBold
@@ -214,14 +219,16 @@ private fun DeveloperScreen(
                     }
                 }
 
-                // Tool execution log — no trace store in Jarvis.
                 item {
                     StaggeredEntrance(index = 2) {
-                        UnavailableCard(
-                            icon = Icons.Filled.Bolt,
-                            title = "Tool Execution Log",
-                            detail = "Per-call tool traces aren't recorded by Jarvis — not available"
-                        )
+                        GeminiCheckCard(viewModel)
+                    }
+                }
+
+                // Every tool call Jarvis made (recorded by JarvisToolDispatcher).
+                item {
+                    StaggeredEntrance(index = 2) {
+                        RecentToolCallsCard(traces = toolTraces, onOpen = { navigate(ComposeRoutes.TOOL_DEBUG) })
                     }
                 }
 
@@ -254,16 +261,6 @@ private fun DeveloperScreen(
                                 height = 110.dp
                             )
                         }
-                    }
-                }
-
-                item {
-                    StaggeredEntrance(index = 5) {
-                        UnavailableCard(
-                            icon = Icons.Filled.Memory,
-                            title = "GPU & KV Cache",
-                            detail = "Jarvis' llama.cpp engine doesn't report GPU memory or KV-cache size — not available"
-                        )
                     }
                 }
 
@@ -371,7 +368,8 @@ private fun DeveloperScreen(
                     }
                 }
 
-                item {
+                // LiteRT-LM is an optional second engine: only shown when switched on in Engines.
+                if (liteRtOn) item {
                     StaggeredEntrance(index = 9) {
                         Column {
                             SectionHeader(
@@ -380,8 +378,6 @@ private fun DeveloperScreen(
                             )
                             Spacer(modifier = Modifier.height(10.dp))
                             LiteRtDiagnosticsCard(viewModel = viewModel)
-                            Spacer(modifier = Modifier.height(12.dp))
-                            RuntimeRegistryCard()
                         }
                     }
                 }
@@ -435,6 +431,128 @@ private fun DeveloperScreen(
                 }
 
                 item { Spacer(modifier = Modifier.height(24.dp)) }
+            }
+        }
+    }
+}
+
+/** Real Gemini checks: a text request through chat's own models and a real Live session. */
+@Composable
+private fun GeminiCheckCard(viewModel: DeveloperViewModel) {
+    val text by viewModel.geminiText.collectAsStateWithLifecycle()
+    val live by viewModel.geminiLive.collectAsStateWithLifecycle()
+    val busy by viewModel.geminiBusy.collectAsStateWithLifecycle()
+    val prefs = remember { com.jarvis.assistant.JarvisApp.instance.preferences }
+    CloudGlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column {
+            Text(
+                text = "Gemini check",
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.ledger.deskPaper)
+            )
+            Text(
+                text = "Sends a real request with your saved key • Live model ${prefs.aiModel.removePrefix("models/")} • voice ${prefs.voice}" +
+                    if (prefs.apiKey.isBlank()) " • NO API KEY SAVED" else "",
+                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.deskInk)
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                CloudCapsuleButton(
+                    text = "Test text",
+                    enabled = busy == null,
+                    onClick = { viewModel.testGeminiText() },
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                CloudCapsuleButton(
+                    text = "Test Live voice",
+                    enabled = busy == null,
+                    onClick = { viewModel.testGeminiLive() },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            busy?.let {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(it, style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.lampGlow))
+            }
+            text?.let { r ->
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = (if (r.ok) "✓ " else "✗ ") + r.summary(),
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        color = if (r.ok) MaterialTheme.ledger.lampGlow else MaterialTheme.ledger.emberRed,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                r.steps.forEach { step ->
+                    Text(
+                        text = (if (step.ok) "✓ " else "✗ ") + step.line(),
+                        style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.deskInk),
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                r.chatReply?.let { reply ->
+                    Text(
+                        text = "Chat path reply (${r.chatMs} ms): ${reply.take(200)}",
+                        style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.deskPaper)
+                    )
+                }
+            }
+            live?.let { r ->
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = (if (r.ok) "✓ " else "✗ ") + r.summary(),
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        color = if (r.ok) MaterialTheme.ledger.lampGlow else MaterialTheme.ledger.emberRed,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                Text(
+                    text = "Setup ${r.setupMs ?: "-"} ms • ${r.audioBytes} audio bytes • turn complete: ${r.turnCompleted}" +
+                        (if (r.toolCalls.isNotEmpty()) " • tool calls: ${r.toolCalls.joinToString()}" else "") +
+                        (r.error?.let { " • error: $it" } ?: "") +
+                        " • states: ${r.states.joinToString(" > ")}",
+                    style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.deskInk),
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+/** The last tool calls Jarvis made (all engines), with a link to the full Tool Debug page. */
+@Composable
+private fun RecentToolCallsCard(traces: List<com.jarvis.assistant.androllm.agent.trace.ToolExecutionTrace>, onOpen: () -> Unit) {
+    CloudGlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Bolt, contentDescription = null, tint = MaterialTheme.ledger.lampGlow, modifier = Modifier.size(22.dp))
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "Tool calls (${traces.size})",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.ledger.deskPaper),
+                    modifier = Modifier.weight(1f)
+                )
+                androidx.compose.material3.TextButton(onClick = onOpen) {
+                    Text("Tool Debug", color = MaterialTheme.ledger.lampGlow)
+                }
+            }
+            if (traces.isEmpty()) {
+                Text(
+                    text = "No tool calls since Jarvis started. Ask \"torch on karo\" or use Tool Debug → Run.",
+                    style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.deskInk)
+                )
+            }
+            traces.take(6).forEach { t ->
+                Text(
+                    text = "${if (t.status == "ok") "✓" else "✗"} ${t.toolName} • ${t.durationMs} ms • ${t.result.take(90)}",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = if (t.status == "ok") MaterialTheme.ledger.deskInk else MaterialTheme.ledger.emberRed
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }

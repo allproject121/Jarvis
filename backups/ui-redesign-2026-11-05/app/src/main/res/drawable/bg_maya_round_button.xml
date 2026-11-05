@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Secondary round control next to the talk button. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/themeAccentLight">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="?attr/themeDockBg" />
+            <stroke android:width="1dp" android:color="?attr/themeCardBorder" />
+        </shape>
+    </item>
+</ripple>

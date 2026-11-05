@@ -51,7 +51,6 @@ class MainActivity : AppCompatActivity() {
 
     private var currentTab = TAB_HOME
     private val homeFragment by lazy { HomeFragment() }
-    private val jarvisCompanionHomeFragment by lazy { com.jarvis.assistant.ui.companion.JarvisCompanionHomeFragment() }
     private val chatFragment by lazy { ChatFragment() }
     private val settingsFragment by lazy { SettingsFragment() }
     private val updatesFragment by lazy { UpdatesFragment() }
@@ -83,13 +82,7 @@ class MainActivity : AppCompatActivity() {
 
     fun getActiveHomeFragment(): Fragment {
         if (isAndroLlmHomeStyle()) return androLlmHomeFragment
-        val prefs = com.jarvis.assistant.JarvisApp.instance.preferences
-        return if (prefs.isJarvisCompanionMode) jarvisCompanionHomeFragment else homeFragment
-    }
-
-    fun getInactiveHomeFragment(): Fragment {
-        val prefs = com.jarvis.assistant.JarvisApp.instance.preferences
-        return if (prefs.isJarvisCompanionMode) homeFragment else jarvisCompanionHomeFragment
+        return homeFragment
     }
 
     private val requestAudioPermissionLauncher = registerForActivityResult(
@@ -241,13 +234,11 @@ class MainActivity : AppCompatActivity() {
         // Add all fragments fresh into container
         val trans = supportFragmentManager.beginTransaction()
             .add(R.id.fragmentContainer, homeFragment, "TAB_HOME_JARVIS")
-            .add(R.id.fragmentContainer, jarvisCompanionHomeFragment, "TAB_HOME_JARVIS_COMPANION")
             .add(R.id.fragmentContainer, chatFragment, "TAB_1")
             .add(R.id.fragmentContainer, settingsFragment, "TAB_2")
             .add(R.id.fragmentContainer, updatesFragment, "TAB_3")
 
         val activeHome = getActiveHomeFragment()
-        val inactiveHome = getInactiveHomeFragment()
 
         val allTabs = listOf(
             TAB_HOME to activeHome,
@@ -263,7 +254,7 @@ class MainActivity : AppCompatActivity() {
                 trans.hide(frag)
             }
         }
-        trans.hide(inactiveHome)
+        if (activeHome !== homeFragment) trans.hide(homeFragment)
         trans.commitNow()
 
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.rootMainLayout) { _, insets ->
@@ -319,17 +310,17 @@ class MainActivity : AppCompatActivity() {
             binding.bottomDock.setRenderEffect(null)
         }
         val prefs = com.jarvis.assistant.JarvisApp.instance.preferences
+        // Floating avatar in "Always on" mode comes back whenever Jarvis is opened.
+        if (prefs.isTaskOverlayEnabled && prefs.taskOverlayMode == "always" &&
+            com.jarvis.assistant.util.PermissionHelper.hasOverlayPermission(this)
+        ) {
+            com.jarvis.assistant.ui.agent.TaskProgressOverlay.showOverlay(this, true)
+        }
         if (appliedThemeKey != prefs.appTheme || appliedCustomHex != prefs.customThemeColor) {
             appliedThemeKey = prefs.appTheme
             appliedCustomHex = prefs.customThemeColor
             recreate()
             return
-        }
-
-        val shouldBeCompanion = prefs.isJarvisCompanionMode
-        val isCompanionActive = jarvisCompanionHomeFragment.isAdded && jarvisCompanionHomeFragment.isVisible
-        if (currentTab == TAB_HOME && ((shouldBeCompanion && !isCompanionActive) || (!shouldBeCompanion && isCompanionActive))) {
-            switchExperienceMode(prefs.experienceMode)
         }
 
         if (isDockExpanded) {
@@ -449,7 +440,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         val activeHome = getActiveHomeFragment()
-        val inactiveHome = getInactiveHomeFragment()
 
         val tabs = listOf(
             TAB_HOME to activeHome,
@@ -460,9 +450,9 @@ class MainActivity : AppCompatActivity() {
         )
 
         val trans = supportFragmentManager.beginTransaction()
-        // Hide every Home/Chat variant that is not the chosen one (Jarvis, Companion, AndroLLM).
+        // Hide every Home/Chat variant that is not the chosen one (Jarvis, AndroLLM).
         val activeVariants = setOf(activeHome, activeChatFragment())
-        listOf(homeFragment, jarvisCompanionHomeFragment, androLlmHomeFragment, chatFragment, androLlmChatFragment)
+        listOf(homeFragment, androLlmHomeFragment, chatFragment, androLlmChatFragment)
             .filter { it.isAdded && it !in activeVariants }
             .forEach { trans.hide(it); it.view?.visibility = View.GONE }
         tabs.forEach { (tabId, frag) ->
@@ -474,11 +464,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        if (inactiveHome.isAdded) {
-            trans.hide(inactiveHome)
-        }
         trans.commitAllowingStateLoss()
-        inactiveHome.view?.visibility = View.GONE
 
         tabs.forEach { (tabId, frag) ->
             val v = frag.view
@@ -510,31 +496,24 @@ class MainActivity : AppCompatActivity() {
         updateDockUI(tab)
     }
 
-    fun switchExperienceMode(newMode: String) {
-        val prefs = com.jarvis.assistant.JarvisApp.instance.preferences
-        prefs.experienceMode = newMode
+    /** Persona changes (Settings) jump back to Home; Jarvis has a single Home now. */
+    fun switchExperienceMode(@Suppress("UNUSED_PARAMETER") newMode: String) {
         binding.root.post {
             if (isFinishing || isDestroyed || supportFragmentManager.isDestroyed) return@post
-            val trans = supportFragmentManager.beginTransaction()
-            if (newMode == com.jarvis.assistant.data.preferences.AppPreferences.MODE_JARVIS_COMPANION) {
-                if (homeFragment.isAdded) trans.hide(homeFragment)
-                if (jarvisCompanionHomeFragment.isAdded) trans.show(jarvisCompanionHomeFragment)
-                homeFragment.view?.visibility = View.GONE
-                jarvisCompanionHomeFragment.view?.visibility = View.VISIBLE
-            } else {
-                if (jarvisCompanionHomeFragment.isAdded) trans.hide(jarvisCompanionHomeFragment)
-                if (homeFragment.isAdded) trans.show(homeFragment)
-                jarvisCompanionHomeFragment.view?.visibility = View.GONE
-                homeFragment.view?.visibility = View.VISIBLE
-            }
-            trans.commitAllowingStateLoss()
             selectTab(TAB_HOME)
         }
     }
 
     private var isDockExpanded = true
 
-    private fun updateDockUI(tab: Int) {
+    /** Last tab the dock was drawn for; re-drawing the same tab (e.g. onResume) skips the pop animation. */
+    private var lastDockTab = -1
+
+    private fun updateDockUI(requestedTab: Int) {
+        // Updates opens from Home's bell, so Home stays the highlighted dock tab.
+        val tab = if (requestedTab == TAB_UPDATES) TAB_HOME else requestedTab
+        val animateSelection = tab != lastDockTab
+        lastDockTab = tab
         val tvAccent = android.util.TypedValue()
         theme.resolveAttribute(R.attr.themeAccent, tvAccent, true)
         val activeColor = if (tvAccent.data != 0) tvAccent.data else ContextCompat.getColor(this, R.color.accent_sapphire)
@@ -552,34 +531,41 @@ class MainActivity : AppCompatActivity() {
             Triple(TAB_CHAT, binding.pillTabChat, Pair(binding.ivTabChat, binding.tvTabChat)),
             Triple(998, binding.pillTabGodsEye, Pair(binding.ivTabGodsEye, binding.tvTabGodsEye)),
             Triple(TAB_SETTINGS, binding.pillTabMenu, Pair(binding.ivTabMenu, binding.tvTabMenu)),
-            Triple(999, binding.pillTabMenu, Pair(binding.ivTabMenu, binding.tvTabMenu)),
             Triple(TAB_ANDROLLM, binding.pillTabAiHub, Pair(binding.ivTabAiHub, binding.tvTabAiHub))
         )
 
         navItems.forEach { (tabId, pill, views) ->
-            val isSelected = tabId == tab
+            val isSelected = tabId == tab || (tab == 999 && tabId == TAB_SETTINGS)
             val (iv, tv) = views
             if (isSelected) {
-                pill.setBackgroundResource(R.drawable.bg_dock_item_active)
-                pill.alpha = 0f
-                pill.scaleX = 0.90f
-                pill.scaleY = 0.90f
-                pill.animate()
-                    .alpha(1f)
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(240L)
-                    .setInterpolator(OvershootInterpolator(1.2f))
-                    .start()
+                pill.setBackgroundResource(R.drawable.bg_nova_dock_active)
+                if (animateSelection) {
+                    pill.alpha = 0f
+                    pill.scaleX = 0.90f
+                    pill.scaleY = 0.90f
+                    pill.animate()
+                        .alpha(1f)
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(240L)
+                        .setInterpolator(OvershootInterpolator(1.2f))
+                        .start()
 
-                // Luma active SVG icon spring bounce (original SVGs preserved)
-                iv.animate().cancel()
-                iv.animate()
-                    .scaleX(1.18f)
-                    .scaleY(1.18f)
-                    .setDuration(240L)
-                    .setInterpolator(OvershootInterpolator(1.4f))
-                    .start()
+                    // Luma active SVG icon spring bounce (original SVGs preserved)
+                    iv.animate().cancel()
+                    iv.animate()
+                        .scaleX(1.18f)
+                        .scaleY(1.18f)
+                        .setDuration(240L)
+                        .setInterpolator(OvershootInterpolator(1.4f))
+                        .start()
+                } else {
+                    pill.alpha = 1f
+                    pill.scaleX = 1f
+                    pill.scaleY = 1f
+                    iv.scaleX = 1.18f
+                    iv.scaleY = 1.18f
+                }
 
                 iv.imageTintList = ColorStateList.valueOf(activeTextColor)
                 tv.setTextColor(activeTextColor)
@@ -601,12 +587,12 @@ class MainActivity : AppCompatActivity() {
 
                 iv.imageTintList = ColorStateList.valueOf(inactiveColor)
                 tv.setTextColor(inactiveColor)
-                tv.alpha = 0.72f
+                tv.alpha = 1f // Nova: full-opacity muted label keeps >= 4.5:1 contrast
             }
         }
 
         // Slide the radiant Luma spotlight to the active tab
-        moveLumaSpotlight(tab, animate = true)
+        moveLumaSpotlight(tab, animate = animateSelection)
     }
 
     private fun moveLumaSpotlight(tab: Int, animate: Boolean = true) {
@@ -714,7 +700,7 @@ class MainActivity : AppCompatActivity() {
 
         val startWidth = binding.bottomDock.width
         val density = resources.displayMetrics.density
-        val targetWidth = (binding.rootMainLayout.width - (28 * density).toInt()).coerceAtLeast((340 * density).toInt())
+        val targetWidth = (binding.rootMainLayout.width - (40 * density).toInt()).coerceAtLeast((340 * density).toInt())
 
         val anim = ValueAnimator.ofInt(startWidth, targetWidth).apply {
             duration = 320L
@@ -749,7 +735,7 @@ class MainActivity : AppCompatActivity() {
             .setStartDelay(80L)
             .start()
 
-        binding.dockCurvedLine.visibility = View.VISIBLE
+        binding.dockCurvedLine.visibility = View.GONE // Nova dock: arch line retired (raised mic has its own glow ring)
         binding.dockCurvedLine.alpha = 0f
         binding.dockCurvedLine.animate().cancel()
         binding.dockCurvedLine.animate()
@@ -847,29 +833,30 @@ class MainActivity : AppCompatActivity() {
                         theme.resolveAttribute(R.attr.themeTextMuted, tvMuted, true)
                         val inactiveColor = if (tvMuted.data != 0) tvMuted.data else ContextCompat.getColor(this@MainActivity, R.color.text_subtle)
 
+                        val onDiscColor = if (androidx.core.graphics.ColorUtils.calculateLuminance(accentColor) > 0.6) android.graphics.Color.BLACK else android.graphics.Color.WHITE
                         if (!isOn) {
                             binding.ivTabMic.setImageResource(R.drawable.ic_mic_jarvis)
-                            binding.ivTabMic.imageTintList = ColorStateList.valueOf(android.graphics.Color.parseColor("#94A3B8"))
-                            binding.tvTabMic.setTextColor(android.graphics.Color.parseColor("#94A3B8"))
-                            binding.pillTabMic.setBackgroundResource(R.drawable.bg_dock_mic_off)
+                            binding.ivTabMic.imageTintList = ColorStateList.valueOf(inactiveColor)
+                            binding.tvTabMic.setTextColor(inactiveColor)
+                            binding.pillTabMic.setBackgroundResource(R.drawable.bg_nova_mic_off)
                             binding.pillTabMic.animate().cancel()
-                            binding.pillTabMic.alpha = 0.85f
+                            binding.pillTabMic.alpha = 1f
                             binding.pillTabMic.scaleX = 1f
                             binding.pillTabMic.scaleY = 1f
                         } else if (isMuted) {
                             binding.ivTabMic.setImageResource(R.drawable.ic_mic_mute_jarvis)
                             binding.ivTabMic.imageTintList = ColorStateList.valueOf(android.graphics.Color.WHITE)
                             binding.tvTabMic.setTextColor(android.graphics.Color.WHITE)
-                            binding.pillTabMic.setBackgroundResource(R.drawable.bg_dock_mic_muted)
+                            binding.pillTabMic.setBackgroundResource(R.drawable.bg_nova_mic_muted)
                             binding.pillTabMic.animate().cancel()
                             binding.pillTabMic.alpha = 1f
                             binding.pillTabMic.scaleX = 1f
                             binding.pillTabMic.scaleY = 1f
                         } else {
                             binding.ivTabMic.setImageResource(R.drawable.ic_mic_jarvis)
-                            binding.ivTabMic.imageTintList = ColorStateList.valueOf(android.graphics.Color.WHITE)
-                            binding.tvTabMic.setTextColor(android.graphics.Color.WHITE)
-                            binding.pillTabMic.setBackgroundResource(R.drawable.bg_dock_mic_highlight)
+                            binding.ivTabMic.imageTintList = ColorStateList.valueOf(onDiscColor)
+                            binding.tvTabMic.setTextColor(onDiscColor)
+                            binding.pillTabMic.setBackgroundResource(R.drawable.bg_nova_mic_on)
                             binding.pillTabMic.alpha = 1f
                             if (state == ConversationState.LISTENING || state == ConversationState.SPEAKING) {
                                 binding.pillTabMic.animate()

@@ -1,0 +1,556 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Companion Home in the Maya layout:
+    full-bleed character stage (3D WebGL character, or the native orb on battery saver / low RAM),
+    top status pill, live status line, big talk button with ripple rings, mute / share-screen buttons,
+    a horizontal chips row, then the companion cards (characters, macros, guardian, voice, WhatsApp, app lock).
+-->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/jarvisScrollView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/themeBg"
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:overScrollMode="never"
+    android:paddingBottom="110dp"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:id="@+id/mayaHomeContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- ============================ 1. CHARACTER STAGE ============================ -->
+        <FrameLayout
+            android:id="@+id/mayaStage"
+            android:layout_width="match_parent"
+            android:layout_height="640dp">
+
+            <FrameLayout
+                android:id="@+id/mayaStageCanvas"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <com.jarvis.assistant.maya.ui.MayaOrbView
+                    android:id="@+id/mayaOrbView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="gone" />
+
+                <WebView
+                    android:id="@+id/mayaStageWebView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    android:visibility="invisible" />
+            </FrameLayout>
+
+            <View
+                android:id="@+id/mayaScrimTop"
+                android:layout_width="match_parent"
+                android:layout_height="140dp"
+                android:layout_gravity="top"
+                android:alpha="0.85"
+                android:background="@drawable/bg_maya_scrim_top" />
+
+            <View
+                android:id="@+id/mayaScrimBottom"
+                android:layout_width="match_parent"
+                android:layout_height="340dp"
+                android:layout_gravity="bottom"
+                android:background="@drawable/bg_maya_scrim_bottom" />
+
+            <!-- Top bar: live status pill · active character · JARVIS mode -->
+            <LinearLayout
+                android:id="@+id/mayaTopBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <LinearLayout
+                    android:id="@+id/mayaStatusPill"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_maya_pill"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="14dp">
+
+                    <View
+                        android:id="@+id/mayaStatusDot"
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:background="@drawable/bg_maya_status_dot" />
+
+                    <TextView
+                        android:id="@+id/tvMayaPillTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:fontFamily="@font/inter_semibold"
+                        android:maxLines="1"
+                        android:text="JARVIS • Offline"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <LinearLayout
+                    android:id="@+id/btnSwitchToJarvisMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_maya_pill"
+                    android:clickable="true"
+                    android:contentDescription="Switch to JARVIS mode"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_sparkle"
+                        app:tint="?attr/themeAccent" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:fontFamily="@font/inter_semibold"
+                        android:text="JARVIS mode"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Active character (tap: Characters sheet) -->
+            <TextView
+                android:id="@+id/tvJarvisActivePersonaLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:layout_gravity="top|start"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="56dp"
+                android:background="@drawable/bg_maya_pill"
+                android:clickable="true"
+                android:focusable="true"
+                android:fontFamily="@font/inter_medium"
+                android:gravity="center"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:text="Maya · Companion"
+                android:textColor="?attr/themeTextSecondary"
+                android:textSize="12sp" />
+
+            <!-- Why the orb is shown instead of the character -->
+            <TextView
+                android:id="@+id/tvMayaFallbackNotice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|center_horizontal"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="98dp"
+                android:layout_marginEnd="24dp"
+                android:background="@drawable/bg_maya_pill"
+                android:fontFamily="@font/inter_medium"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingTop="8dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="8dp"
+                android:text="Battery saver is on, so the orb is shown instead of the character."
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+            <!-- Bottom: status · talk button · chips -->
+            <LinearLayout
+                android:id="@+id/mayaBottomControls"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingBottom="10dp">
+
+                <TextView
+                    android:id="@+id/tvJarvisVoiceStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_semibold"
+                    android:gravity="center"
+                    android:letterSpacing="-0.01"
+                    android:text="Tap to start"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/tvJarvisVoiceSub"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/inter"
+                    android:gravity="center"
+                    android:maxLines="2"
+                    android:minLines="1"
+                    android:paddingStart="36dp"
+                    android:paddingEnd="36dp"
+                    android:text="Ask JARVIS anything…"
+                    android:textColor="?attr/themeTextSecondary"
+                    android:textSize="13.5sp" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:id="@+id/btnMayaMute"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:background="@drawable/bg_maya_round_button"
+                        android:clickable="true"
+                        android:contentDescription="Mute microphone"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:id="@+id/ivMayaMuteIcon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_mic_jarvis"
+                            app:tint="?attr/themeTextPrimary" />
+                    </FrameLayout>
+
+                    <FrameLayout
+                        android:id="@+id/mayaTalkContainer"
+                        android:layout_width="152dp"
+                        android:layout_height="152dp"
+                        android:layout_marginStart="14dp"
+                        android:layout_marginEnd="14dp">
+
+                        <com.jarvis.assistant.maya.ui.MayaTalkRingsView
+                            android:id="@+id/mayaTalkRings"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+
+                        <FrameLayout
+                            android:id="@+id/btnJarvisOrb"
+                            android:layout_width="88dp"
+                            android:layout_height="88dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/bg_maya_talk_button"
+                            android:clickable="true"
+                            android:contentDescription="Talk"
+                            android:elevation="10dp"
+                            android:focusable="true">
+
+                            <ImageView
+                                android:id="@+id/ivJarvisOrbIcon"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_mic_jarvis"
+                                app:tint="#FFFFFF" />
+                        </FrameLayout>
+                    </FrameLayout>
+
+                    <FrameLayout
+                        android:id="@+id/btnMayaShareScreen"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:background="@drawable/bg_maya_round_button"
+                        android:clickable="true"
+                        android:contentDescription="Share screen"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:id="@+id/ivMayaShareIcon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_screen_share"
+                            app:tint="?attr/themeTextPrimary" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvMayaTalkHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter"
+                    android:text="Tap to talk · hold to end"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11.5sp" />
+
+                <HorizontalScrollView
+                    android:id="@+id/mayaChipsScroll"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/mayaChipsRow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- ============================ 2. COMPANION CARDS ============================ -->
+        <LinearLayout
+            android:id="@+id/mayaCardsSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingTop="18dp"
+            android:paddingEnd="16dp">
+
+            <!-- Characters -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/inter_semibold"
+                    android:text="Characters"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="17sp" />
+
+                <TextView
+                    android:id="@+id/tvMayaSeeAllCharacters"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:fontFamily="@font/inter_semibold"
+                    android:padding="6dp"
+                    android:text="See all ›"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="22dp"
+                android:clipToPadding="false"
+                android:overScrollMode="never"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/mayaCharacterCarousel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- Maya -->
+                    <LinearLayout
+                        android:id="@+id/cardCharMaya"
+                        style="@style/MayaCharacterCard">
+
+                        <FrameLayout android:id="@+id/monoCharMaya" style="@style/MayaCharacterMono" />
+
+                        <TextView style="@style/MayaCharacterName" android:text="Maya" />
+
+                        <TextView style="@style/MayaCharacterTagline" android:text="Sweet companion · Hinglish" />
+
+                        <TextView android:id="@+id/btnPreviewMaya" style="@style/MayaCharacterPreview" />
+                    </LinearLayout>
+
+                    <!-- Maya Pro -->
+                    <LinearLayout
+                        android:id="@+id/cardCharMayaPro"
+                        style="@style/MayaCharacterCard">
+
+                        <FrameLayout android:id="@+id/monoCharMayaPro" style="@style/MayaCharacterMono" />
+
+                        <TextView style="@style/MayaCharacterName" android:text="Maya Pro" />
+
+                        <TextView style="@style/MayaCharacterTagline" android:text="Executive agent · fast &amp; crisp" />
+
+                        <TextView android:id="@+id/btnPreviewMayaPro" style="@style/MayaCharacterPreview" />
+                    </LinearLayout>
+
+                    <!-- Maya Intimate (18+) -->
+                    <LinearLayout
+                        android:id="@+id/cardCharMayaIntimate"
+                        style="@style/MayaCharacterCard">
+
+                        <FrameLayout android:id="@+id/monoCharMayaIntimate" style="@style/MayaCharacterMono" />
+
+                        <TextView style="@style/MayaCharacterName" android:text="Intimate · 18+" />
+
+                        <TextView style="@style/MayaCharacterTagline" android:text="Friendly, romantic or intense" />
+
+                        <TextView
+                            android:id="@+id/btnPreviewMayaIntimate"
+                            style="@style/MayaCharacterPreview"
+                            android:text="Configure" />
+                    </LinearLayout>
+
+                    <!-- Friday -->
+                    <LinearLayout
+                        android:id="@+id/cardCharFriday"
+                        style="@style/MayaCharacterCard">
+
+                        <FrameLayout android:id="@+id/monoCharFriday" style="@style/MayaCharacterMono" />
+
+                        <TextView style="@style/MayaCharacterName" android:text="F.R.I.D.A.Y." />
+
+                        <TextView style="@style/MayaCharacterTagline" android:text="Cyber protocol · British tone" />
+
+                        <TextView android:id="@+id/btnPreviewFriday" style="@style/MayaCharacterPreview" />
+                    </LinearLayout>
+
+                    <!-- Venom -->
+                    <LinearLayout
+                        android:id="@+id/cardCharVenom"
+                        style="@style/MayaCharacterCard">
+
+                        <FrameLayout android:id="@+id/monoCharVenom" style="@style/MayaCharacterMono" />
+
+                        <TextView style="@style/MayaCharacterName" android:text="Venom" />
+
+                        <TextView style="@style/MayaCharacterTagline" android:text="Deep, dark symbiote" />
+
+                        <TextView android:id="@+id/btnPreviewVenom" style="@style/MayaCharacterPreview" />
+                    </LinearLayout>
+
+                    <!-- Jarvis -->
+                    <LinearLayout
+                        android:id="@+id/cardCharJarvis"
+                        style="@style/MayaCharacterCard">
+
+                        <FrameLayout android:id="@+id/monoCharJarvis" style="@style/MayaCharacterMono" />
+
+                        <TextView style="@style/MayaCharacterName" android:text="Jarvis" />
+
+                        <TextView style="@style/MayaCharacterTagline" android:text="Stark protocol · calm" />
+
+                        <TextView android:id="@+id/btnPreviewJarvis" style="@style/MayaCharacterPreview" />
+                    </LinearLayout>
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- Autonomous directives & tools -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:fontFamily="@font/inter_semibold"
+                android:text="Autonomous directives"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="17sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/cardMacroChatGptImage"
+                    style="@style/MayaToolCard"
+                    android:layout_marginEnd="6dp">
+
+                    <TextView style="@style/MayaToolTitle" android:text="ChatGPT image" />
+
+                    <TextView style="@style/MayaToolBody" android:text="Prompt → ChatGPT image generation and download, hands-free" />
+
+                    <TextView android:id="@+id/btnRunChatGptImage" style="@style/MayaToolButton" android:text="Run" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/cardMacroGeminiMedia"
+                    style="@style/MayaToolCard"
+                    android:layout_marginStart="6dp">
+
+                    <TextView style="@style/MayaToolTitle" android:text="Gemini video / image" />
+
+                    <TextView style="@style/MayaToolBody" android:text="Veo video and Imagen generation through the Gemini app" />
+
+                    <TextView android:id="@+id/btnRunGeminiMedia" style="@style/MayaToolButton" android:text="Run" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:orientation="horizontal">
+
+
+                <LinearLayout
+                    android:id="@+id/cardPocketTtsTest"
+                    style="@style/MayaToolCard"
+                    android:layout_marginStart="6dp">
+
+                    <TextView style="@style/MayaToolTitle" android:text="PocketTTS voice" />
+
+                    <TextView style="@style/MayaToolBody" android:text="Offline 24 kHz neural speech, no network needed" />
+
+                    <TextView android:id="@+id/btnTestPocketTts" style="@style/MayaToolButton" android:text="Test speech" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:orientation="horizontal">
+
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvMayaStageTips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:fontFamily="@font/inter"
+                android:gravity="center"
+                android:text="Swipe her sideways to turn · pinch to zoom · tap to poke · double-tap to reset"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="11.5sp"
+                tools:ignore="HardcodedText" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

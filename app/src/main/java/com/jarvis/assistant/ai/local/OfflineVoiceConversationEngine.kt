@@ -85,6 +85,10 @@ class OfflineVoiceConversationEngine private constructor(
 
     private val recentTurns = mutableListOf<ChatTurn>()
 
+    /** The reply being generated right now; a newer utterance cancels it instead of piling up. */
+    @Volatile
+    private var currentTurnJob: kotlinx.coroutines.Job? = null
+
     init {
         // Automatically create recognizer as soon as Vosk model finishes loading from assets
         scope.launch(Dispatchers.IO) {
@@ -198,6 +202,12 @@ class OfflineVoiceConversationEngine private constructor(
         if (useNativeRecognizer) {
             nativeAndroidRecognizer?.startContinuousListening()
         }
+        warmUpOfflineBrain()
+    }
+
+    /** Called when Jarvis switches to offline voice: get the model into RAM before the first question. */
+    private fun warmUpOfflineBrain() {
+        com.jarvis.assistant.ai.provider.LocalPhoneProvider.getInstance(context, scope).warmUpAsync()
     }
 
     fun stopListening() {
@@ -346,7 +356,11 @@ class OfflineVoiceConversationEngine private constructor(
                     return false
                 }
                 val words = clean.lowercase(Locale.ROOT).split(Regex("\\s+")).filter { it.isNotBlank() }
-                val noiseWords = setOf("a", "the", "i", "um", "uh", "oh", "to", "so", "is")
+                val noiseWords = setOf(
+            "a", "the", "i", "um", "uh", "oh", "to", "so", "is",
+            // Vosk turns breathing / TV / fan noise into these; they were sent to the brain as questions.
+            "huh", "hmm", "hm", "mm", "mhm", "ah", "eh", "er", "ha", "hey", "and", "it", "of", "in", "but"
+        )
                 if (words.all { noiseWords.contains(it) } || clean.length <= 2) {
                     Log.d(TAG, "Ignoring noise artifact utterance: '$clean'")
                     return false
@@ -393,7 +407,8 @@ class OfflineVoiceConversationEngine private constructor(
             return
         }
 
-        scope.launch(Dispatchers.IO) {
+        currentTurnJob?.cancel()
+        currentTurnJob = scope.launch(Dispatchers.IO) {
             stopSpeaking()
             com.jarvis.assistant.voice.VoiceSounds.playStart()
 

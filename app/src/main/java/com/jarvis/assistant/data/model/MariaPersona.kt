@@ -55,7 +55,7 @@ object MariaPersona {
      * engine itself stays whatever the user picked; Edge remains opt-in).
      */
     fun activate(context: Context, preferences: AppPreferences) {
-        preferences.activateJarvisCompanionMode(false)
+        preferences.resetToJarvisDefaults()
         preferences.personality = GeminiConstants.PERSONALITY_MARIA
         preferences.voice = GEMINI_VOICE
         preferences.assistantName = NAME

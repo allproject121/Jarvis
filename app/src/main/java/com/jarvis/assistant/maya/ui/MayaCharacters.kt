@@ -27,7 +27,7 @@ data class MayaCharacter(
     val monogram: String get() = title.take(1).uppercase()
 }
 
-/** The character catalogue — Maya (free), Maya Pro, Maya Intimate (18+), Friday, Venom, Jarvis. */
+/** The character catalogue — Maya (free), Maya Pro, Friday, Venom, Jarvis. */
 object MayaCharacters {
 
     private val FEMALE_VOICES = listOf(
@@ -45,10 +45,10 @@ object MayaCharacters {
         id = "maya",
         prefName = "Maya",
         title = "Maya",
-        tagline = "Sweet companion • Hindi / Hinglish",
+        tagline = "Warm assistant • Hindi / Hinglish",
         description = "Warm, playful and always on your side. Talks Hinglish, remembers your day.",
         badge = "FREE",
-        personality = GeminiConstants.PERSONALITY_COMPANION,
+        personality = GeminiConstants.PERSONALITY_ASSISTANT,
         previewPrefix = "maya",
         defaultVoice = "Aoede",
         voices = FEMALE_VOICES,
@@ -67,21 +67,6 @@ object MayaCharacters {
         defaultVoice = "Kore",
         voices = FEMALE_VOICES,
         previewLine = "Maya Pro active. Ready for autonomous directives."
-    )
-
-    val MAYA_INTIMATE = MayaCharacter(
-        id = "maya_intimate",
-        prefName = "Maya Intimate",
-        title = "Maya Intimate",
-        tagline = "Girlfriend mode • Romantic • Intense (18+)",
-        description = "How close Maya is: Friendly, Romantic or Intense (18+), behind an age confirmation.",
-        badge = "18+",
-        personality = GeminiConstants.PERSONALITY_COMPANION,
-        previewPrefix = "maya",
-        defaultVoice = "Leda",
-        voices = FEMALE_VOICES,
-        previewLine = "Hey… I missed you.",
-        adultGate = true
     )
 
     val FRIDAY = MayaCharacter(
@@ -126,7 +111,7 @@ object MayaCharacters {
         previewLine = "Good evening. All systems are online, sir."
     )
 
-    val ALL: List<MayaCharacter> = listOf(MAYA, MAYA_PRO, MAYA_INTIMATE, FRIDAY, VENOM, JARVIS)
+    val ALL: List<MayaCharacter> = listOf(MAYA, MAYA_PRO, FRIDAY, VENOM, JARVIS)
 
     fun byPrefName(name: String?): MayaCharacter =
         ALL.firstOrNull { it.prefName.equals(name, ignoreCase = true) } ?: MAYA

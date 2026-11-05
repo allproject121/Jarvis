@@ -75,20 +75,6 @@
             android:focusable="true"
             android:layout_marginEnd="6dp" />
 
-        <TextView
-            android:id="@+id/btnDialogChipJarvisCompanion"
-            android:layout_width="0dp"
-            android:layout_height="38dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="JARVIS"
-            android:textColor="?attr/themeAccent"
-            android:textStyle="bold"
-            android:textSize="11.5sp"
-            android:background="@drawable/bg_jarvis_chip"
-            android:clickable="true"
-            android:focusable="true"
-            android:layout_marginEnd="6dp" />
 
         <TextView
             android:id="@+id/btnDialogChipFriday"
@@ -159,11 +145,11 @@
             android:layout_height="44dp"
             android:layout_weight="1.2"
             android:text="CONFIRM &amp; SAVE"
-            android:textColor="?attr/themeBg"
+            android:textColor="?attr/themeOnAccent"
             android:textSize="12sp"
             android:textStyle="bold"
             android:background="@drawable/bg_jarvis_pill_button"
-            android:backgroundTint="?attr/themeAccent" />
+            android:backgroundTint="?attr/themeAccentFill" />
     </LinearLayout>
 
 </LinearLayout>

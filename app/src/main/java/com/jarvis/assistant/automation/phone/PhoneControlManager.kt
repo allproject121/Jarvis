@@ -291,8 +291,27 @@ class PhoneControlManager(
     // Volume Controls
     // -------------------------------------------------------------
 
+    /** A muted stream ignores setStreamVolume, so a "volume 40" while muted used to change nothing. */
+    private fun unmuteMusicIfMuted() {
+        try {
+            if (audioManager.isStreamMute(AudioManager.STREAM_MUSIC)) {
+                audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE, 0)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not unmute media stream: ${e.message}")
+        }
+    }
+
+    /** The media volume the phone actually has right now, in percent (0 when muted). */
+    fun currentMusicVolumePercent(): Int {
+        val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+        if (runCatching { audioManager.isStreamMute(AudioManager.STREAM_MUSIC) }.getOrDefault(false)) return 0
+        return ((audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) / max.toFloat()) * 100).roundToInt()
+    }
+
     fun setVolumePercent(percent: Int): String {
         val clamped = percent.coerceIn(0, 100)
+        if (clamped > 0) unmuteMusicIfMuted()
         val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         val targetVolume = ((clamped / 100.0) * maxVolume).roundToInt().coerceIn(0, maxVolume)
 
@@ -311,7 +330,7 @@ class PhoneControlManager(
             if (clamped == 0) {
                 "Media volume muted."
             } else {
-                "Volume set to $clamped percent."
+                "Volume set to ${currentMusicVolumePercent()} percent."
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to set volume: ${e.message}", e)
@@ -325,6 +344,7 @@ class PhoneControlManager(
         // Ensure a noticeable jump of at least 15% per step
         val step = max(1, (maxVolume * 0.15).roundToInt())
         val targetVolume = (if (increase) currentVolume + step else currentVolume - step).coerceIn(0, maxVolume)
+        if (increase) unmuteMusicIfMuted()
 
         return try {
             audioManager.setStreamVolume(
@@ -708,6 +728,14 @@ class PhoneControlManager(
             targetPackage = POPULAR_APP_PACKAGES[clean]
                 ?: POPULAR_APP_PACKAGES[clean.replace(" ", "")]
                 ?: POPULAR_APP_PACKAGES[clean.replace("-", "")]
+        }
+
+        // An alias can point at a package this phone does not have (e.g. "calculator" ->
+        // com.google.android.calculator on a vivo phone that ships com.vivo.calculator). Then the
+        // installed-app search below must still run instead of giving up with "not installed".
+        if (targetPackage != null && context.packageManager.getLaunchIntentForPackage(targetPackage) == null) {
+            Log.i(TAG, "Alias package $targetPackage is not launchable here; searching installed apps for '$clean'")
+            targetPackage = null
         }
 
         // Step 2: Search installed launcher activities and applications

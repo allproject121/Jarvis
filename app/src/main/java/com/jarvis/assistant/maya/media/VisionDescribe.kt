@@ -74,7 +74,7 @@ object VisionDescribe {
     }
 
     private fun viaGemini(key: String, jpeg: ByteArray, question: String, systemHint: String?): String {
-        val models = listOf("gemini-2.5-flash", "gemini-2.0-flash")
+        val models = com.jarvis.assistant.ai.GeminiTextModels.candidates(key, null)
         var last: Exception? = null
         for (model in models) {
             try {

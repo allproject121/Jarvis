@@ -33,6 +33,7 @@ class LocalAiEngine private constructor(
 ) {
     companion object {
         private const val TAG = "LocalAiEngine"
+        private const val MAX_DIRECT_COMMAND_CHARS = 160
 
         @Volatile
         private var instance: LocalAiEngine? = null
@@ -99,6 +100,13 @@ class LocalAiEngine private constructor(
         _engineState.value = LocalEngineState.Generating
         val startTime = System.currentTimeMillis()
 
+        // 0. Direct phone command (see [tryDirectCommand]).
+        tryDirectCommand(cleanPrompt)?.let { reply ->
+            emit(reply)
+            _engineState.value = LocalEngineState.Ready
+            return@flow
+        }
+
         // 1. Direct answer from Academic & Physics Knowledge Vault
         val academicFact = com.jarvis.assistant.ai.memory.AcademicKnowledgeVault.findRelevantFact(cleanPrompt)
         if (academicFact != null) {
@@ -110,10 +118,7 @@ class LocalAiEngine private constructor(
         // 2. Stream from native LocalPhoneProvider if ready or weights exist
         // Check the model the user actually selected (activeModelId), not the config default:
         // with e.g. Llama 3.2 downloaded but not Qwen, the default id wrongly reported "not installed".
-        if (localPhoneProvider.isReady() ||
-            modelManager.isModelReady(modelManager.activeModelId.value) ||
-            modelManager.isModelReady(currentConfig.modelId)
-        ) {
+        if (localPhoneProvider.isReady() || modelManager.resolveUsableModelId() != null) {
             var emittedAny = false
             try {
                 localPhoneProvider.streamResponse(
@@ -142,6 +147,30 @@ class LocalAiEngine private constructor(
         _engineState.value = LocalEngineState.Ready
         emit("Sir, the local AI neural core is not installed yet. You can download the Qwen3 4B Offline Brain model in Settings under Voice Engine to enable full offline conversations and device actions.")
     }.flowOn(Dispatchers.IO)
+
+    /**
+     * Direct phone command ("torch on karo", "calculator kholo", "volume 50"): runs it through the same
+     * CommandParser/CommandExecutor the offline voice path uses and returns what to say, or null when
+     * the text is not a command (or the command failed). Instant and exact, and it works even when a
+     * model is too small for a reliable tool call or the cloud model has no tools at all.
+     * Long texts (planner prompts, pasted documents) are never treated as commands.
+     */
+    suspend fun tryDirectCommand(prompt: String): String? {
+        val clean = prompt.trim()
+        if (clean.isBlank() || clean.length > MAX_DIRECT_COMMAND_CHARS) return null
+        val app = context.applicationContext as? com.jarvis.assistant.JarvisApp ?: return null
+        val parsed = runCatching { com.jarvis.assistant.automation.command.CommandParser.parse(clean) }.getOrNull()
+        val command = parsed?.command ?: return null
+        Log.i(TAG, "Direct command: $command (pattern=${parsed.matchedPattern})")
+        return try {
+            app.commandExecutor.execute(command).ifBlank { "Done, Sir." }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Direct command failed: ${e.message}", e)
+            null
+        }
+    }
 
     /**
      * Non-streaming direct text generation.

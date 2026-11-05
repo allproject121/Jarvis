@@ -51,7 +51,11 @@ object AiTextSynthesizer {
                 temperature = temperature,
                 maxTokens = maxTokens
             )
-            if (result.finalText.isNotBlank() && !result.finalText.startsWith("Sir, no AI provider responded")) {
+            // providerUsed "Failed"/"None" = every model failed (ensemble mode returns an error SENTENCE,
+            // e.g. "All configured models failed to respond…"). That must reach [fallback] so callers
+            // such as the offline-brain failover take over, instead of being shown as an answer.
+            val failed = result.providerUsed == "Failed" || result.providerUsed == "None"
+            if (!failed && result.finalText.isNotBlank() && !result.finalText.startsWith("Sir, no AI provider responded")) {
                 Log.i(TAG, "Synthesized via MultiModelAiRouter (${result.providerUsed}, mode=${result.mode})")
                 return@withContext result.finalText.trim()
             }
@@ -98,7 +102,8 @@ object AiTextSynthesizer {
         temperature: Double,
         maxTokens: Int
     ): String? {
-        val models = listOf("gemini-2.0-flash", "gemini-1.5-flash")
+        val saved = runCatching { JarvisApp.instance.preferences.aiModel }.getOrNull()
+        val models = GeminiTextModels.candidates(apiKey, saved)
         for (model in models) {
             try {
                 val url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"
@@ -140,7 +145,10 @@ object AiTextSynthesizer {
                             val parts = content?.optJSONArray("parts")
                             if (parts != null && parts.length() > 0) {
                                 val text = parts.getJSONObject(0).optString("text")
-                                if (text.isNotBlank()) return text
+                                if (text.isNotBlank()) {
+                                    GeminiTextModels.markWorking(apiKey, model)
+                                    return text
+                                }
                             }
                         }
                     } else {

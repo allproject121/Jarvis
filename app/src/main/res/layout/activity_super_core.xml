@@ -48,7 +48,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="OS Assistant • WhatsApp • Driving • Neural Memory"
+                android:text="OS Assistant • WhatsApp • Calls • Neural Memory"
                 android:textColor="?attr/themeTextMuted"
                 android:textSize="12sp"
                 android:fontFamily="sans-serif" />
@@ -133,8 +133,8 @@
                     android:text="SET JARVIS AS DEFAULT ASSISTANT"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    android:textColor="?attr/themeBg"
-                    app:backgroundTint="?attr/themeAccent"
+                    android:textColor="?attr/themeOnAccent"
+                    app:backgroundTint="?attr/themeAccentFill"
                     app:cornerRadius="12dp" />
             </LinearLayout>
 
@@ -158,7 +158,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_chat_bubble"
-                        app:tint="#10B981" />
+                        app:tint="?attr/themeSuccess" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -177,7 +177,7 @@
                         android:text="DISABLED"
                         android:textSize="10sp"
                         android:textStyle="bold"
-                        android:textColor="@color/status_amber"
+                        android:textColor="?attr/themeWarning"
                         android:background="@drawable/bg_jarvis_status_badge"
                         android:paddingStart="8dp"
                         android:paddingEnd="8dp"
@@ -201,7 +201,7 @@
                     android:textSize="13sp"
                     android:textStyle="bold"
                     android:textColor="#FFFFFF"
-                    app:backgroundTint="#10B981"
+                    app:backgroundTint="#047857"
                     app:cornerRadius="12dp"
                     android:layout_marginBottom="14dp" />
 
@@ -222,7 +222,7 @@
                     android:textSize="14sp" />
             </LinearLayout>
 
-            <!-- Card 3: Driving Mode & Call Sentinel -->
+            <!-- Card 3: Call Sentinel -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -242,48 +242,27 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_verified_badge"
-                        app:tint="#F59E0B" />
+                        app:tint="?attr/themeWarning" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="3. Driving &amp; Call Sentinel"
+                        android:text="3. Call Sentinel"
                         android:textColor="?attr/themeTextPrimary"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:layout_marginStart="10dp" />
 
-                    <TextView
-                        android:id="@+id/tvDrivingModeBadge"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="STANDBY"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:textColor="#F59E0B"
-                        android:background="@drawable/bg_jarvis_status_badge"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="4dp"
-                        android:paddingBottom="4dp" />
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Hands-free safety mode for driving. Announces callers and accepts voice commands to Answer or Decline."
+                    android:text="Announces callers and accepts voice commands to Answer or Decline."
                     android:textColor="?attr/themeTextSecondary"
                     android:textSize="13sp"
                     android:layout_marginBottom="14dp" />
-
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/switchAutoCarAudio"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Auto-Activate On Vehicle Bluetooth"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp" />
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/switchCallerIdAnnouncement"
@@ -292,28 +271,6 @@
                     android:text="Voice Caller ID Announcement"
                     android:textColor="?attr/themeTextPrimary"
                     android:textSize="14sp" />
-
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/switchDrivingAutoRejectSms"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Calls While Driving: Auto-Reject + SMS Reply"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/tvDrivingAutoReplyText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:paddingTop="8dp"
-                    android:paddingBottom="8dp"
-                    android:text="Auto-reply SMS text"
-                    android:textColor="?attr/themeTextSecondary"
-                    android:textSize="13sp"
-                    android:visibility="gone" />
             </LinearLayout>
 
             <!-- Card 4: Local Host AI & Neural Memory -->

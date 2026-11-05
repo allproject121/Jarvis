@@ -22,7 +22,6 @@ import com.jarvis.assistant.automation.accessibility.JarvisAccessibilityService
 import com.jarvis.assistant.automation.accessibility.MainThread
 import com.jarvis.assistant.automation.accessibility.UiTreeBuilder
 import com.jarvis.assistant.databinding.ActivityBypassIdeBinding
-import com.jarvis.assistant.security.guardian.TouchGuardManager
 import com.jarvis.assistant.util.DeviceTelemetryHelper
 import com.jarvis.assistant.util.HudSoundManager
 import com.jarvis.assistant.util.ThemeManager
@@ -111,8 +110,7 @@ class BypassIdeActivity : AppCompatActivity() {
     private fun islandStates(): List<String> = listOf(
         "SU: ${rootLabel()}",
         "AI: ${activeProviderName().uppercase(Locale.ROOT)}",
-        "A11Y: ${if (JarvisAccessibilityService.isEnabled()) "ON" else "OFF"}",
-        "SENTRY: ${if (TouchGuardManager.isArmed()) "ARMED" else "OFF"}"
+        "A11Y: ${if (JarvisAccessibilityService.isEnabled()) "ON" else "OFF"}"
     )
 
     private fun setupAiEngineSelector() {
@@ -298,7 +296,7 @@ class BypassIdeActivity : AppCompatActivity() {
         // Update tab styles
         val activeBg = R.drawable.bg_jarvis_pill_button
         val inactiveBg = R.drawable.bg_jarvis_icon_square
-        val activeColor = ContextCompat.getColor(this, android.R.color.white)
+        val activeColor = ThemeManager.onAccentColor(this)
         val inactiveColor = ThemeManager.attrColor(this, R.attr.themeTextSecondary, ContextCompat.getColor(this, R.color.text_muted))
 
         binding.tabShell.setBackgroundResource(if (tab == SUBTAB_SHELL) activeBg else inactiveBg)
@@ -334,11 +332,6 @@ class BypassIdeActivity : AppCompatActivity() {
         binding.chipMacroWhatsapp.setOnClickListener {
             HudSoundManager.playTapSound()
             executeCommand("whatsapp")
-        }
-
-        binding.chipMacroSentry.setOnClickListener {
-            HudSoundManager.playTapSound()
-            executeCommand("sentry")
         }
 
         binding.chipMacroRoot.setOnClickListener {
@@ -394,7 +387,6 @@ class BypassIdeActivity : AppCompatActivity() {
                 appendLog("  • status       - Live battery, RAM, root, accessibility & AI provider")
                 appendLog("  • scan         - Count interactive accessibility nodes on screen")
                 appendLog("  • root         - Check whether an su binary is present")
-                appendLog("  • sentry       - Arm Touch Guard (sentry off = disarm)")
                 appendLog("  • whatsapp     - Open WhatsApp")
                 appendLog("  • clear        - Wipe terminal log buffer")
             }
@@ -473,18 +465,6 @@ class BypassIdeActivity : AppCompatActivity() {
             lower.contains("scan") -> {
                 runAccessibilityScan()
             }
-            lower == "sentry off" || lower == "sentry disarm" -> {
-                if (TouchGuardManager.isArmed()) {
-                    TouchGuardManager.disarm(this)
-                    appendLog("[SENTRY] Touch Guard disarmed.")
-                } else {
-                    appendLog("[SENTRY] Touch Guard was not armed.")
-                }
-                updateAgentStatuses()
-            }
-            lower.contains("sentry") -> {
-                armSentry()
-            }
             lower.contains("whatsapp") -> {
                 openWhatsApp()
             }
@@ -501,7 +481,7 @@ class BypassIdeActivity : AppCompatActivity() {
         val access = if (JarvisAccessibilityService.isEnabled()) "ON" else "OFF"
         appendLog("[STATUS] Battery: ${tele.batteryPercent}%${if (tele.isCharging) " (charging)" else ""}")
         appendLog("[STATUS] RAM: ${freeRamMb()} MB free · device ${tele.ramUsedGb}/${tele.ramTotalGb} GB used · Jarvis heap $appHeapMb MB")
-        appendLog("[STATUS] Accessibility: $access · Root: ${rootLabel()} · Sentry: ${if (TouchGuardManager.isArmed()) "ARMED" else "OFF"}")
+        appendLog("[STATUS] Accessibility: $access · Root: ${rootLabel()}")
         appendLog("[STATUS] AI provider (last used): ${activeProviderName()}")
         appendLog("[STATUS] Network: ${if (tele.isOnline) tele.networkType else "OFFLINE"}")
     }
@@ -537,21 +517,6 @@ class BypassIdeActivity : AppCompatActivity() {
         }
     }
 
-    private fun armSentry() {
-        if (TouchGuardManager.isArmed()) {
-            appendLog("[SENTRY] Touch Guard is already ARMED. Type 'sentry off' to disarm.")
-            updateAgentStatuses()
-            return
-        }
-        TouchGuardManager.arm(this, app.preferences.isTouchGuardStealth)
-        if (TouchGuardManager.isArmed()) {
-            appendLog("[SENTRY] Touch Guard ARMED — moving the phone will sound the alarm and capture the intruder.")
-        } else {
-            appendLog("❌ [SENTRY] Could not arm Touch Guard (no accelerometer on this device).")
-        }
-        updateAgentStatuses()
-    }
-
     private fun openWhatsApp() {
         val intent = packageManager.getLaunchIntentForPackage("com.whatsapp")
             ?: packageManager.getLaunchIntentForPackage("com.whatsapp.w4b")
@@ -573,12 +538,6 @@ class BypassIdeActivity : AppCompatActivity() {
         binding.tvAccessAgentStatus.text = if (isAccess) "ON" else "OFF"
         binding.tvAccessAgentStatus.setTextColor(
             ContextCompat.getColor(this, if (isAccess) android.R.color.holo_green_light else android.R.color.holo_orange_light)
-        )
-
-        val armed = TouchGuardManager.isArmed()
-        binding.tvSentryAgentStatus.text = if (armed) "ARMED" else "OFF"
-        binding.tvSentryAgentStatus.setTextColor(
-            ContextCompat.getColor(this, if (armed) android.R.color.holo_green_light else android.R.color.holo_orange_light)
         )
 
         binding.tvRouterAgentDetail.text = "Last provider used: ${activeProviderName()}"

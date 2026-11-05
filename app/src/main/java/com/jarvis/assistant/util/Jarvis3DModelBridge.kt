@@ -150,6 +150,111 @@ class Jarvis3DModelBridge(private val context: Context) {
         return "ok"
     }
 
+    /**
+     * RedMagic-style touch personality: the 3D page reports where she was touched, her mood
+     * (happy / shy / ticklish / surprised / curious / annoyed / embarrassed / angry / sulk) and
+     * the line shown in her bubble. With Gemini Live on, the live brain answers in its own voice;
+     * otherwise the bubble line is spoken with the on-device voice. Rate-limited so taps can't
+     * flood the conversation.
+     */
+    @JavascriptInterface
+    fun onModelTouched(zone: String?, mood: String?, line: String?): String {
+        try { HudSoundManager.playTapSound() } catch (_: Exception) {}
+        val now = System.currentTimeMillis()
+        if (now - lastTouchVoiceAt < 2_500L) return "throttled"
+        lastTouchVoiceAt = now
+        val z = zone.orEmpty(); val m = mood.orEmpty()
+        val spoken = cleanForSpeech(line)
+        var result = "ok"
+        try {
+            val live = isLive()
+            if (live) {
+                val feeling = when (m) {
+                    "angry", "sulk" -> "Tumhe bilkul achha nahi laga, tum naraz ho — pyaar se par saaf mana karo"
+                    "embarrassed" -> "Tum sharma gayi aur thodi naraz ho — mana karo"
+                    "annoyed" -> "Tum thodi chidh gayi ho"
+                    "shy" -> "Tumhe achha laga, tum sharma rahi ho"
+                    "ticklish" -> "Gudgudi hui, tum hans rahi ho"
+                    else -> "Tum khush ho"
+                }
+                com.jarvis.assistant.background.JarvisConversationService.sendTextMessage(
+                    "[SYSTEM EVENT — Boss ne nahi bola] Boss ne screen pe tumhe '$z' pe chhua. $feeling. " +
+                        "Sirf ek chhoti natural Hinglish line bolo (jaise: \"$spoken\"), koi tool mat chalao."
+                )
+                result = "live"
+            } else if (spoken.isNotBlank()) {
+                com.jarvis.assistant.voice.PocketTtsEngine.speak(spoken, context)
+                result = "local"
+            }
+        } catch (e: Exception) {
+            Log.w("Jarvis3DModelBridge", "touch voice failed: ${e.message}")
+        }
+        return result
+    }
+
+    /**
+     * Speaks a line the character says on her own (greeting when you come back, "maaf kiya"
+     * after a sorry, a grudge reminder). Returns "live" when Gemini says it, "local" when the
+     * on-device voice says it (the page then moves her lips), "throttled" or "skip" otherwise.
+     */
+    @JavascriptInterface
+    fun speakLine(line: String?, mood: String?): String {
+        val spoken = cleanForSpeech(line)
+        if (spoken.isBlank()) return "skip"
+        val now = System.currentTimeMillis()
+        if (now - lastTouchVoiceAt < 2_500L) return "throttled"
+        lastTouchVoiceAt = now
+        return try {
+            if (isLive()) {
+                com.jarvis.assistant.background.JarvisConversationService.sendTextMessage(
+                    "[SYSTEM EVENT — Boss ne nahi bola] Tum (${mood.orEmpty().ifBlank { "normal" }} mood me) " +
+                        "apni awaaz me sirf ye chhoti line bolo, kuch aur nahi, koi tool nahi: \"$spoken\""
+                )
+                "live"
+            } else {
+                com.jarvis.assistant.voice.PocketTtsEngine.speak(spoken, context)
+                "local"
+            }
+        } catch (e: Exception) {
+            Log.w("Jarvis3DModelBridge", "speakLine failed: ${e.message}")
+            "skip"
+        }
+    }
+
+    /**
+     * Battery level and charger state for the character ("Charging shuru!", low-battery nudge).
+     * Uses the sticky ACTION_BATTERY_CHANGED broadcast, so no receiver is registered.
+     * Returns JSON: {"level": 0-100, "plugged": true/false}.
+     */
+    @JavascriptInterface
+    fun getBatteryInfo(): String {
+        return try {
+            val i = context.registerReceiver(null, android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED))
+            val level = i?.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1) ?: -1
+            val scale = i?.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, 100) ?: 100
+            val plugged = (i?.getIntExtra(android.os.BatteryManager.EXTRA_PLUGGED, 0) ?: 0) != 0
+            val pct = if (level >= 0 && scale > 0) level * 100 / scale else -1
+            "{\"level\":$pct,\"plugged\":$plugged}"
+        } catch (_: Exception) {
+            "{\"level\":-1,\"plugged\":false}"
+        }
+    }
+
+    /** True while Gemini Live is connected (the page then lets Gemini do the talking). */
+    @JavascriptInterface
+    fun isVoiceLive(): Boolean = try { isLive() } catch (_: Exception) { false }
+
+    private fun isLive(): Boolean =
+        com.jarvis.assistant.background.JarvisConversationService.isSessionOn.value &&
+            com.jarvis.assistant.background.JarvisConversationService.connectionStatus.value == "LIVE"
+
+    /** Drops emoji / symbols so the voice doesn't read them out. */
+    private fun cleanForSpeech(line: String?): String =
+        line.orEmpty().replace(Regex("[^\\p{L}\\p{M}\\p{N}\\s.,!?'~-]"), "").replace(Regex("\\s+"), " ").trim()
+
+    @Volatile
+    private var lastTouchVoiceAt = 0L
+
     @JavascriptInterface
     fun getModelDescription(): String {
         val active = CustomAvatarHelper.getActiveModel(context)

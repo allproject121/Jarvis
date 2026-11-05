@@ -71,7 +71,7 @@
             android:background="@drawable/bg_godseye_hud_back"
             android:src="@drawable/ic_hero_target"
             android:padding="8dp"
-            app:tint="#FFB300"
+            app:tint="?attr/themeWarning"
             android:contentDescription="Hero Demo Mode (Arizona Pinal Airpark Cockpit Follow)" />
 
         <ImageButton
@@ -194,7 +194,7 @@
             android:layout_width="38dp"
             android:layout_height="38dp"
             android:src="@drawable/ic_warning"
-            app:tint="#FF3B30"
+            app:tint="?attr/themeDanger"
             android:contentDescription="Server Offline" />
 
         <TextView
@@ -241,9 +241,9 @@
                 android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="RETRY"
-                android:textColor="?attr/themeBg"
+                android:textColor="?attr/themeOnAccent"
                 android:background="@drawable/bg_godseye_hud_card"
-                android:backgroundTint="?attr/themeAccent"
+                android:backgroundTint="?attr/themeAccentFill"
                 android:layout_marginStart="6dp" />
         </LinearLayout>
     </LinearLayout>

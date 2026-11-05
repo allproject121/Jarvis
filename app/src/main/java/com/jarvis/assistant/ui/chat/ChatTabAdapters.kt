@@ -81,7 +81,7 @@ internal interface ChatTabMessageActions {
     fun onFollowUp(text: String)
 }
 
-/** Jarvis-styled message list for the Chat tab (bubbles from item_jarvis_chat_message.xml). */
+/** Jarvis-styled message list for the Chat tab (bubbles from item_jarvis_conv_message.xml). */
 internal class ChatTabMessageAdapter(
     private val actions: ChatTabMessageActions
 ) : ListAdapter<ChatTabRow, ChatTabMessageAdapter.Holder>(Diff) {
@@ -217,7 +217,7 @@ internal class ChatTabMessageAdapter(
                     text = suggestion
                     textSize = 12f
                     setTextColor(textColor)
-                    setBackgroundResource(R.drawable.bg_jarvis_chip)
+                    setBackgroundResource(R.drawable.bg_set_chip) // 2026-11-05 redesign: outline pill
                     setPadding((12 * density).toInt(), (7 * density).toInt(), (12 * density).toInt(), (7 * density).toInt())
                     setOnClickListener { actions.onFollowUp(suggestion) }
                 }

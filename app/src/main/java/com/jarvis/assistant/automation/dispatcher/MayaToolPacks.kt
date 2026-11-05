@@ -20,8 +20,6 @@ object MayaToolPacks {
         "brain" to { ctx -> com.jarvis.assistant.maya.brain.BrainToolPack.install(ctx) },
         "hub" to { ctx -> com.jarvis.assistant.maya.hub.HubToolPack.install(ctx) },
         "media" to { ctx -> com.jarvis.assistant.maya.media.MediaToolPack.install(ctx) },
-        "guardian" to { ctx -> com.jarvis.assistant.maya.guardian.GuardianToolPack.install(ctx) },
-        "business" to { ctx -> com.jarvis.assistant.maya.business.BusinessToolPack.install(ctx) },
     )
 
     fun installAll(context: Context) {

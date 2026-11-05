@@ -396,7 +396,7 @@
                             android:layout_height="42dp"
                             android:gravity="center"
                             android:text="CLEAR ALL"
-                            android:textColor="#EF4444"
+                            android:textColor="?attr/themeDanger"
                             android:textStyle="bold"
                             android:textSize="10sp"
                             android:background="@drawable/bg_jarvis_row_item"
@@ -481,7 +481,7 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:text="Cyan Arc"
-                            android:textColor="#22D3EE"
+                            android:textColor="?attr/themeTextPrimary"
                             android:textStyle="bold"
                             android:textSize="11.5sp"
                             android:background="@drawable/bg_jarvis_chip"
@@ -494,7 +494,7 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:text="Crimson"
-                            android:textColor="#FF4D5E"
+                            android:textColor="?attr/themeTextPrimary"
                             android:textStyle="bold"
                             android:textSize="11.5sp"
                             android:background="@drawable/bg_jarvis_row_item"
@@ -507,7 +507,7 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:text="Quantum"
-                            android:textColor="#C084FC"
+                            android:textColor="?attr/themeTextPrimary"
                             android:textStyle="bold"
                             android:textSize="11.5sp"
                             android:background="@drawable/bg_jarvis_row_item" />
@@ -527,7 +527,7 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:text="Emerald"
-                            android:textColor="#10B981"
+                            android:textColor="?attr/themeTextPrimary"
                             android:textStyle="bold"
                             android:textSize="11.5sp"
                             android:background="@drawable/bg_jarvis_row_item"
@@ -540,7 +540,7 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:text="Arc White"
-                            android:textColor="#BAE6FD"
+                            android:textColor="?attr/themeTextPrimary"
                             android:textStyle="bold"
                             android:textSize="11.5sp"
                             android:background="@drawable/bg_jarvis_row_item"
@@ -553,7 +553,7 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:text="Amber"
-                            android:textColor="#FF6A3D"
+                            android:textColor="?attr/themeTextPrimary"
                             android:textStyle="bold"
                             android:textSize="11.5sp"
                             android:background="@drawable/bg_jarvis_row_item" />
@@ -573,7 +573,7 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:text="Stealth Dark"
-                            android:textColor="#38BDF8"
+                            android:textColor="?attr/themeTextPrimary"
                             android:textStyle="bold"
                             android:textSize="11.5sp"
                             android:background="@drawable/bg_jarvis_row_item"
@@ -586,7 +586,7 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:text="Pearl Light"
-                            android:textColor="#2F6BFF"
+                            android:textColor="?attr/themeTextPrimary"
                             android:textStyle="bold"
                             android:textSize="11.5sp"
                             android:background="@drawable/bg_jarvis_row_item" />
@@ -2304,7 +2304,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Arc reactor wallpaper, AppLock, PocketTTS and Matrix"
+                                android:text="AppLock, PocketTTS and Matrix"
                                 android:textColor="?attr/themeTextMuted"
                                 android:textSize="11sp"
                                 android:layout_marginTop="2dp" />
@@ -2665,18 +2665,6 @@
                             android:background="@drawable/bg_jarvis_row_item"
                             android:layout_marginEnd="6dp" />
 
-                        <TextView
-                            android:id="@+id/btnNameChipJarvisCompanion"
-                            android:layout_width="0dp"
-                            android:layout_height="36dp"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:text="JARVIS"
-                            android:textColor="?attr/themeAccent"
-                            android:textStyle="bold"
-                            android:textSize="11sp"
-                            android:background="@drawable/bg_jarvis_chip"
-                            android:layout_marginEnd="6dp" />
 
                         <TextView
                             android:id="@+id/btnNameChipFriday"
@@ -2711,57 +2699,6 @@
                     android:padding="12dp"
                     android:layout_marginBottom="16dp">
 
-                    <!-- Persona: JARVIS -->
-                    <LinearLayout
-                        android:id="@+id/cardPersonaJarvisCompanion"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:padding="12dp"
-                        android:background="@drawable/bg_jarvis_chip"
-                        android:layout_marginBottom="8dp">
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_verified_badge"
-                            app:tint="?attr/themeAccent" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:layout_marginStart="12dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="JARVIS Companion Mode"
-                                android:textColor="?attr/themeTextPrimary"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Loving companion &amp; secretary • Warm sweet voice (Aoede)"
-                                android:textColor="?attr/themeTextMuted"
-                                android:textSize="11sp" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="JARVIS"
-                            android:textColor="?attr/themeAccent"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:background="@drawable/bg_jarvis_status_badge"
-                            android:paddingHorizontal="7dp"
-                            android:paddingVertical="3dp" />
-                    </LinearLayout>
 
                     <LinearLayout
                         android:id="@+id/cardPersonaJarvis"
@@ -3248,131 +3185,6 @@
                             android:paddingVertical="3dp" />
                     </LinearLayout>
                 </LinearLayout>
-
-                <!-- Section: Phone Home Screen Live Wallpaper -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="PHONE HOME SCREEN LIVE WALLPAPER"
-                    android:textColor="?attr/themeTextMuted"
-                    android:textSize="11sp"
-                    android:letterSpacing="0.08"
-                    android:fontFamily="sans-serif-medium"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_jarvis_card"
-                    android:padding="12dp"
-                    android:layout_marginBottom="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Choose how your assistant is rendered directly on your phone's Home Screen &amp; Lock Screen:"
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="11.5sp"
-                        android:layout_marginBottom="12dp" />
-
-                    <!-- Mode 1: Character Mode -->
-                    <LinearLayout
-                        android:id="@+id/cardWallpaperCharacter"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:padding="12dp"
-                        android:background="@drawable/bg_jarvis_chip"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:gravity="center"
-                            android:text="👤"
-                            android:textSize="18sp" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:layout_marginStart="10dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Live 3D Companion Mode (JARVIS / Jett)"
-                                android:textColor="?attr/themeTextPrimary"
-                                android:textSize="13.5sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Holographic character on ground ring stand • Touch gaze tracking"
-                                android:textColor="?attr/themeTextMuted"
-                                android:textSize="11sp" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- Mode 2: Arc Reactor Mode -->
-                    <LinearLayout
-                        android:id="@+id/cardWallpaperArcReactor"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:padding="12dp"
-                        android:background="@drawable/bg_jarvis_row_item"
-                        android:layout_marginBottom="12dp">
-
-                        <TextView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:gravity="center"
-                            android:text="⚡"
-                            android:textSize="18sp" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:layout_marginStart="10dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Stark Arc Reactor HUD Mode"
-                                android:textColor="?attr/themeTextPrimary"
-                                android:textSize="13.5sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Rotating concentric radar rings • Pulsing energy core"
-                                android:textColor="?attr/themeTextMuted"
-                                android:textSize="11sp" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <Button
-                        android:id="@+id/btnStudioApplyLiveWallpaper"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:text="SET AS PHONE LIVE WALLPAPER"
-                        android:textColor="#070914"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.06"
-                        android:background="@drawable/bg_jarvis_pill_button"
-                        android:backgroundTint="?attr/themeAccent" />
-                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
@@ -3392,12 +3204,12 @@
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:text="APPLY &amp; SAVE CONFIGURATION"
-            android:textColor="#070914"
+            android:textColor="?attr/themeOnAccent"
             android:textStyle="bold"
             android:textSize="14sp"
             android:letterSpacing="0.06"
             android:background="@drawable/bg_jarvis_pill_button"
-            android:backgroundTint="?attr/themeAccent" />
+            android:backgroundTint="?attr/themeAccentFill" />
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

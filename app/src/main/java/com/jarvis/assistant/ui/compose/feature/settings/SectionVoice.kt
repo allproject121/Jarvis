@@ -36,6 +36,9 @@ import androidx.compose.material.icons.filled.Spellcheck
 import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -50,6 +53,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -83,12 +87,25 @@ import com.jarvis.assistant.voice.normalize.NormalizationSettingsStore
 import com.jarvis.assistant.voice.normalize.TextNormalizationPipeline
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import com.jarvis.assistant.JarvisApp
+import com.jarvis.assistant.androllm.voice.VoiceSettingsStore
+import com.jarvis.assistant.androllm.voice.model.VoiceSettings
+import com.jarvis.assistant.data.model.GeminiConstants
+import com.jarvis.assistant.data.preferences.JarvisExtraPrefs
+import com.jarvis.assistant.voice.PocketTtsEngine
+import com.jarvis.assistant.voice.edge.EdgeVoiceCatalog
 
 /**
- * Settings → Voice. Jarvis's own voice stack (Gemini Live, Vosk wake word, Android
- * TTS / PocketTTS) stays the default; this section adds the optional AndroLLM
- * sherpa-onnx engines (all OFF by default), user-initiated model downloads, and the
- * live text-normalization stage toggles used by every Jarvis offline TTS path.
+ * Settings → Voice. Every control here changes a voice engine Jarvis really uses:
+ * - Gemini Live voice (AppPreferences.voice, read when a Live session connects),
+ * - "Hey Jarvis" wake-word sensitivity (VoiceSettingsStore.sensitivity, read by the Vosk wake
+ *   word in JarvisConversationService on every detection),
+ * - reply voice for non-Live speech (Jarvis voice / Edge neural, JarvisExtraPrefs) + a test,
+ * - the optional sherpa-onnx "Hey Jarvis" spotter (hands off to Jarvis' voice session),
+ * - speech text normalization (OfflineVoiceConversationEngine runs every offline reply through it).
+ * The separate AndroLLM voice-assistant loop, whisper models and the sherpa dictation / TTS
+ * test toggles were removed from this page: nothing in Jarvis' own voice path used them.
  */
 @Composable
 fun VoiceSettingsSection() {
@@ -101,35 +118,146 @@ fun VoiceSettingsSection() {
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        JarvisVoiceDefaultsCard()
+        JarvisVoiceCard()
         SherpaEnginesCard()
         VoiceModelsCard()
-        AndroVoiceAssistantCard()
-        WhisperModelsCard()
         NormalizationCard()
     }
 }
 
-// ── Jarvis defaults (read-only status) ──────────────────────────────────────
+// ── Jarvis voice (the engines Jarvis really uses) ───────────────────────────
+
+private const val VOICE_TEST_LINE = "Hello, main Jarvis hoon. Replies isi awaaz mein aayenge."
 
 @Composable
-private fun JarvisVoiceDefaultsCard() {
+private fun JarvisVoiceCard() {
+    val context = LocalContext.current
+    val prefs = remember { JarvisApp.instance.preferences }
+    val scope = rememberCoroutineScope()
     val sessionOn by JarvisConversationService.isSessionOn.collectAsStateWithLifecycle()
     val standby by JarvisConversationService.isStandby.collectAsStateWithLifecycle()
     val connection by JarvisConversationService.connectionStatus.collectAsStateWithLifecycle()
+    // Wake-word sensitivity: JarvisConversationService reads VoiceSettingsStore.sensitivity on
+    // every Vosk "jarvis" hit (WakeWordThresholds); AppPreferences is kept in sync as its fallback.
+    val voiceStore = remember { VoiceSettingsStore.get(context) }
+    val voiceSettings by voiceStore.state.collectAsStateWithLifecycle()
 
-    SectionCard(title = "Jarvis voice (default)", subtitle = "Primary pipeline - unchanged by the options below") {
-        InfoRow(Icons.Filled.RecordVoiceOver, "Conversation", "Gemini Live voice (falls back to offline Vosk + Android TTS / PocketTTS)")
-        InfoRow(Icons.Filled.Hearing, "Wake word", "Built-in Vosk \"Hey Jarvis\" in standby")
+    var liveVoice by remember { mutableStateOf(prefs.voice) }
+    var edgeOn by remember { mutableStateOf(JarvisExtraPrefs.isEdgeTtsSelected(context)) }
+    var edgeVoice by remember { mutableStateOf(JarvisExtraPrefs.edgeVoice(context)) }
+    var dialog by remember { mutableStateOf<String?>(null) }
+    var testNote by remember { mutableStateOf<String?>(null) }
+
+    SectionCard(title = "Jarvis voice", subtitle = "The voice you hear and the wake word Jarvis listens for") {
         InfoRow(
             Icons.Filled.Mic,
             "Microphone",
             when {
                 sessionOn -> "In use by Jarvis voice session ($connection)"
-                standby -> "In use by Jarvis wake word (standby)"
+                standby -> "In use by the \"Hey Jarvis\" wake word (standby)"
                 else -> "Free"
             }
         )
+        HorizontalDivider(color = MaterialTheme.ledger.deskHairline)
+        SettingRow(
+            icon = Icons.Filled.RecordVoiceOver,
+            title = "Gemini Live voice",
+            value = liveVoice
+        ) { dialog = "live" }
+        Text(
+            "Used from the next Gemini Live session (turn Jarvis off and on to hear it now).",
+            style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.deskInk),
+            modifier = Modifier.padding(start = 46.dp, end = 12.dp, bottom = 4.dp)
+        )
+        SliderSetting(
+            label = { "\"Hey Jarvis\" sensitivity: ${"%.2f".format(it)}  (higher = wakes more easily)" },
+            value = voiceSettings.sensitivity,
+            valueRange = VoiceSettings.MIN_SENSITIVITY..VoiceSettings.MAX_SENSITIVITY,
+            onCommit = { v ->
+                prefs.voskWakeWordSensitivity = v
+                scope.launch { runCatching { voiceStore.update { it.copy(sensitivity = v) } } }
+            }
+        )
+        HorizontalDivider(color = MaterialTheme.ledger.deskHairline)
+        SettingRow(
+            icon = Icons.Filled.GraphicEq,
+            title = "Reply voice (offline & chat read-aloud)",
+            value = if (edgeOn) "Edge neural (online)" else "Jarvis voice"
+        ) { dialog = "engine" }
+        if (edgeOn) {
+            SettingRow(
+                icon = Icons.Filled.Tune,
+                title = "Edge voice",
+                value = EdgeVoiceCatalog.labelFor(edgeVoice)
+            ) { dialog = "edge" }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            CloudCapsuleButton(
+                text = "Test reply voice",
+                icon = Icons.Filled.PlayArrow,
+                onClick = {
+                    testNote = "Speaking..."
+                    // The same engine Jarvis uses for non-Live speech (Edge when selected and online,
+                    // otherwise Android TTS / PocketTTS).
+                    PocketTtsEngine.speak(VOICE_TEST_LINE, context) { testNote = "Done - that is the reply voice." }
+                }
+            )
+            testNote?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.ledger.deskInk))
+            }
+        }
+    }
+
+    when (dialog) {
+        "live" -> ChoiceDialog(
+            title = "Gemini Live voice",
+            options = GeminiConstants.SUPPORTED_VOICES,
+            selected = liveVoice,
+            onDismiss = { dialog = null },
+            onSelect = { index ->
+                val v = GeminiConstants.SUPPORTED_VOICES[index]
+                prefs.voice = v
+                liveVoice = v
+                dialog = null
+            }
+        )
+        "engine" -> {
+            val engines = listOf(JarvisExtraPrefs.TTS_ENGINE_JARVIS, JarvisExtraPrefs.TTS_ENGINE_EDGE)
+            ChoiceDialog(
+                title = "Reply voice",
+                options = engines,
+                selected = if (edgeOn) JarvisExtraPrefs.TTS_ENGINE_EDGE else JarvisExtraPrefs.TTS_ENGINE_JARVIS,
+                onDismiss = { dialog = null },
+                onSelect = { index ->
+                    JarvisExtraPrefs.setTtsEngine(context, engines[index])
+                    edgeOn = JarvisExtraPrefs.isEdgeTtsSelected(context)
+                    dialog = null
+                },
+                labelFor = { id ->
+                    if (id == JarvisExtraPrefs.TTS_ENGINE_EDGE) "Edge neural - natural voice, needs internet (falls back to Jarvis voice)"
+                    else "Jarvis voice - Android TTS, works offline"
+                }
+            )
+        }
+        "edge" -> {
+            val voices = EdgeVoiceCatalog.VOICES
+            ChoiceDialog(
+                title = "Edge voice",
+                options = voices.map { it.id },
+                selected = edgeVoice,
+                onDismiss = { dialog = null },
+                onSelect = { index ->
+                    JarvisExtraPrefs.setEdgeVoice(context, voices[index].id)
+                    edgeVoice = voices[index].id
+                    dialog = null
+                },
+                labelFor = { id -> EdgeVoiceCatalog.labelFor(id) }
+            )
+        }
     }
 }
 
@@ -150,8 +278,8 @@ private fun SherpaEnginesCard() {
     }
 
     SectionCard(
-        title = "Offline engines (sherpa-onnx)",
-        subtitle = "Optional AndroLLM alternatives. Off by default; never run while Jarvis uses the mic."
+        title = "Offline wake word (sherpa-onnx)",
+        subtitle = "Optional second \"Hey Jarvis\" spotter while the app is open; on a hit it starts Jarvis' voice session. Needs the wake-word model below."
     ) {
         if (status.nativeAvailable == false) {
             WarningRow(
@@ -181,96 +309,6 @@ private fun SherpaEnginesCard() {
                 onCommit = { AndroLlmVoicePrefs.setWakeSensitivity(context, it) }
             )
         }
-        HorizontalDivider(color = MaterialTheme.ledger.deskHairline)
-
-        ToggleRow(
-            icon = Icons.Filled.Mic,
-            title = "sherpa speech recognition",
-            subtitle = "Offline streaming dictation (does not replace Gemini Live / Vosk)",
-            checked = cfg.asrEnabled,
-            onCheckedChange = { AndroLlmVoicePrefs.setFlag(context, AndroLlmFlags.SHERPA_ASR, it) }
-        )
-        if (cfg.asrEnabled) {
-            SliderSetting(
-                label = { "End of speech after ${"%.1f".format(it)} s silence" },
-                value = cfg.asrSilenceSeconds,
-                valueRange = AndroLlmVoiceConfig.MIN_SILENCE..AndroLlmVoiceConfig.MAX_SILENCE,
-                onCommit = { AndroLlmVoicePrefs.setAsrSilenceSeconds(context, it) }
-            )
-            val dictation = status.dictation
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                CloudCapsuleButton(
-                    text = if (dictation.active) "Stop" else "Try dictation",
-                    icon = Icons.Filled.Mic,
-                    onClick = {
-                        if (dictation.active) {
-                            SherpaVoiceController.stopDictation()
-                        } else if (!PermissionHelper.hasRecordAudioPermission(context)) {
-                            micLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                        } else {
-                            message = SherpaVoiceController.startDictation(context)
-                        }
-                    }
-                )
-                Text(
-                    text = when {
-                        dictation.active -> dictation.partial.ifBlank { "Listening..." }
-                        dictation.error != null -> dictation.error
-                        dictation.finalText.isNotBlank() -> "\"${dictation.finalText}\""
-                        else -> ""
-                    },
-                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.ledger.deskInk),
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-        HorizontalDivider(color = MaterialTheme.ledger.deskHairline)
-
-        ToggleRow(
-            icon = Icons.Filled.RecordVoiceOver,
-            title = "sherpa offline TTS",
-            subtitle = "VITS / Piper voice for read-aloud. Jarvis's conversation voice is unchanged.",
-            checked = cfg.ttsEnabled,
-            onCheckedChange = { AndroLlmVoicePrefs.setFlag(context, AndroLlmFlags.SHERPA_TTS, it) }
-        )
-        if (cfg.ttsEnabled) {
-            SliderSetting(
-                label = { "Speaking speed: ${"%.2f".format(it)}x" },
-                value = cfg.ttsSpeed,
-                valueRange = AndroLlmVoiceConfig.MIN_SPEED..AndroLlmVoiceConfig.MAX_SPEED,
-                onCommit = { AndroLlmVoicePrefs.setTtsSpeed(context, it) }
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                CloudCapsuleButton(
-                    text = if (status.speaking) "Stop" else "Test voice",
-                    icon = Icons.Filled.RecordVoiceOver,
-                    onClick = {
-                        if (status.speaking) {
-                            SherpaVoiceController.stopSpeaking()
-                        } else {
-                            message = SherpaVoiceController.speak(
-                                context,
-                                "Hello, I'm Jarvis. It's 10:30 am and the battery is at 85%."
-                            )
-                        }
-                    }
-                )
-                status.ttsError?.let {
-                    Text(it, style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.ledger.deskInk))
-                }
-            }
-        }
-
         message?.let {
             HorizontalDivider(color = MaterialTheme.ledger.deskHairline)
             Row(
@@ -301,9 +339,9 @@ private fun VoiceModelsCard() {
 
     SectionCard(
         title = "Voice models",
-        subtitle = "Downloaded only when you tap Download - stored in app files/models/voice"
+        subtitle = "Wake word = sherpa spotter above; speech recognition = Advanced Agentic voice (sherpa transcriber). Downloaded only when you tap Download."
     ) {
-        VoiceModelKind.values().forEachIndexed { kindIndex, kind ->
+        VoiceModelKind.values().filter { it != VoiceModelKind.TTS }.forEachIndexed { kindIndex, kind ->
             if (kindIndex > 0) HorizontalDivider(color = MaterialTheme.ledger.deskHairline)
             Text(
                 kind.label,
@@ -477,7 +515,7 @@ private fun NormalizationCard() {
 
     SectionCard(
         title = "Text normalization",
-        subtitle = "How replies are rewritten before offline TTS speaks them (Android TTS, sherpa)"
+        subtitle = "How offline voice replies are rewritten before they are spoken (3:30 pm -> three thirty pm)"
     ) {
         ToggleRow(
             icon = Icons.Filled.TextFields,

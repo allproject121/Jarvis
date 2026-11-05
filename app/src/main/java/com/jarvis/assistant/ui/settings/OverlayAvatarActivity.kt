@@ -37,8 +37,10 @@ class OverlayAvatarActivity : AppCompatActivity() {
     private val preferences get() = JarvisApp.instance.preferences
     private lateinit var assetLoader: WebViewAssetLoader
     private var edgeSelectionReady = false
-    /** "Maya character on home screen" option (floating 3D character + size). */
-    private var mayaOverlayCard: com.jarvis.assistant.maya.ui.MayaOverlaySettingsCard? = null
+    /** Set when the switch sent the user to "Display over other apps"; finished in onResume. */
+    private var pendingEnableAfterPermission = false
+    private lateinit var sizeSeek: android.widget.SeekBar
+    private lateinit var sizeLabel: TextView
 
     // Custom 3D Avatar Views
     private lateinit var ivCustomAvatarPreview: ImageView
@@ -99,7 +101,8 @@ class OverlayAvatarActivity : AppCompatActivity() {
                 if (!PermissionHelper.hasOverlayPermission(this)) {
                     overlaySwitch.isChecked = false
                     updateControlsState(false)
-                    Toast.makeText(this, "Please allow 'Display over other apps' to show the floating avatar", Toast.LENGTH_LONG).show()
+                    pendingEnableAfterPermission = true
+                    Toast.makeText(this, "Allow 'Display over other apps' for Jarvis, then come back - the avatar turns on by itself", Toast.LENGTH_LONG).show()
                     PermissionHelper.requestOverlayPermission(this)
                     return@setOnCheckedChangeListener
                 }
@@ -114,11 +117,7 @@ class OverlayAvatarActivity : AppCompatActivity() {
         }
 
         setupCustomAvatarCard()
-
-        mayaOverlayCard = com.jarvis.assistant.maya.ui.MayaOverlaySettingsCard(this).also { card ->
-            val root = findViewById<View>(R.id.overlayAvatarRoot) as? android.view.ViewGroup
-            root?.addView(card.view, minOf(1, root.childCount))
-        }
+        setupSizeSlider()
 
         avatarGallery = findViewById(R.id.avatarGallery)
         assetLoader = WebViewAssetLoader.Builder()
@@ -216,20 +215,57 @@ class OverlayAvatarActivity : AppCompatActivity() {
         }
     }
 
+    /** Floating avatar size (56..200 dp), stored by TaskProgressOverlay and applied live. */
+    private fun setupSizeSlider() {
+        sizeSeek = findViewById(R.id.seekOverlayAvatarSize)
+        sizeLabel = findViewById(R.id.tvOverlayAvatarSize)
+        val min = TaskProgressOverlay.MIN_AVATAR_SIZE_DP
+        sizeSeek.max = TaskProgressOverlay.MAX_AVATAR_SIZE_DP - min
+        val current = TaskProgressOverlay.avatarSizeDp(this)
+        sizeSeek.progress = current - min
+        sizeLabel.text = "$current dp"
+        sizeSeek.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
+                val dp = min + progress
+                sizeLabel.text = "$dp dp"
+                if (fromUser) TaskProgressOverlay.setAvatarSizeDp(this@OverlayAvatarActivity, dp)
+            }
+            override fun onStartTrackingTouch(seekBar: android.widget.SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: android.widget.SeekBar?) {
+                if (preferences.isTaskOverlayEnabled && PermissionHelper.hasOverlayPermission(this@OverlayAvatarActivity)) {
+                    TaskProgressOverlay.showOverlay(this@OverlayAvatarActivity, forceShow = true)
+                }
+            }
+        })
+    }
+
     override fun onResume() {
         super.onResume()
         val hasOverlayPermission = PermissionHelper.hasOverlayPermission(this)
+        if (pendingEnableAfterPermission) {
+            pendingEnableAfterPermission = false
+            if (hasOverlayPermission) {
+                // Back from "Display over other apps" with the permission granted: finish turning it on.
+                preferences.isTaskOverlayEnabled = true
+                Toast.makeText(this, "Floating avatar on. Drag to move, double-tap for task status, long-press to close.", Toast.LENGTH_LONG).show()
+            }
+        }
         if (preferences.isTaskOverlayEnabled && hasOverlayPermission) {
             overlaySwitch.isChecked = true
             updateControlsState(true)
             TaskProgressOverlay.showOverlay(this, forceShow = true)
-        } else if (preferences.isTaskOverlayEnabled && !hasOverlayPermission) {
+        } else {
+            // Disabled (e.g. closed by long-press on the avatar) or permission revoked.
             overlaySwitch.isChecked = false
             updateControlsState(false)
             TaskProgressOverlay.hideOverlay()
         }
         updateCustomAvatarUI()
-        mayaOverlayCard?.refresh()
+        if (::sizeSeek.isInitialized) {
+            val current = TaskProgressOverlay.avatarSizeDp(this)
+            sizeSeek.progress = current - TaskProgressOverlay.MIN_AVATAR_SIZE_DP
+            sizeLabel.text = "$current dp"
+        }
     }
 
     override fun onStop() {
@@ -249,6 +285,7 @@ class OverlayAvatarActivity : AppCompatActivity() {
     private fun updateControlsState(enabled: Boolean) {
         modeGroup.isEnabled = enabled
         edgeSpinner.isEnabled = enabled
+        // Size stays adjustable while off, so the avatar appears at the chosen size when enabled.
         for (i in 0 until modeGroup.childCount) modeGroup.getChildAt(i).isEnabled = enabled
     }
 

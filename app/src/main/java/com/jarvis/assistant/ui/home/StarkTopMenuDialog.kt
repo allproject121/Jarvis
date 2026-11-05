@@ -15,7 +15,6 @@ import com.jarvis.assistant.ui.chat.ChatHistoryBottomSheet
 import com.jarvis.assistant.ui.godseye.GodsEyeActivity
 import com.jarvis.assistant.ui.memory.MemoryActivity
 import com.jarvis.assistant.ui.settings.CustomizationStudioActivity
-import com.jarvis.assistant.ui.voice.VoiceEnrollmentActivity
 import com.jarvis.assistant.util.HudSoundManager
 
 class StarkTopMenuDialog : DialogFragment() {
@@ -64,7 +63,6 @@ class StarkTopMenuDialog : DialogFragment() {
             binding.menuItemChat,
             binding.menuItemGodsEye,
             binding.menuItemMemories,
-            binding.menuItemVoice,
             binding.menuItemBypassIde,
             binding.menuItemMatrixHub,
             binding.menuItemSuperCore
@@ -118,12 +116,6 @@ class StarkTopMenuDialog : DialogFragment() {
         }
 
         // 6. Voice Profile Enrollment
-        binding.menuItemVoice.setOnClickListener {
-            HudSoundManager.playTapSound()
-            dismiss()
-            startActivity(Intent(requireContext(), VoiceEnrollmentActivity::class.java))
-        }
-
         // 6b. JARVIS Bypass IDE
         binding.menuItemBypassIde.setOnClickListener {
             HudSoundManager.playTapSound()

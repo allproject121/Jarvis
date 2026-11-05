@@ -27,4 +27,20 @@
     <attr name="themeGlowBlob1" format="reference" />
     <attr name="themeGlowBlob2" format="reference" />
     <attr name="themeGlowBlob3" format="reference" />
+
+    <!-- Dark Bento tokens (2026-11-05). EVERY Theme.JarvisAssistant.* style must define these. -->
+    <!-- Fill of primary buttons / active pills / send button. -->
+    <attr name="themeAccentFill" format="color|reference" />
+    <!-- Label + icon colour on themeAccentFill (white on dark fills, near-black on light fills). -->
+    <attr name="themeOnAccent" format="color|reference" />
+    <!-- Hairline of inner plates (rows, chips, icon plates) - themeChipBg is the plate fill. -->
+    <attr name="themePlateBorder" format="color|reference" />
+    <!-- Soft corner glows bleeding into bento cards (low alpha). -->
+    <attr name="themeGlow1" format="color|reference" />
+    <attr name="themeGlow2" format="color|reference" />
+    <!-- Status ink, readable (>=4.5:1) on the theme's cards and plates. -->
+    <attr name="themeSuccess" format="color|reference" />
+    <attr name="themeWarning" format="color|reference" />
+    <attr name="themeDanger" format="color|reference" />
+    <attr name="themeInfo" format="color|reference" />
 </resources>

@@ -80,33 +80,6 @@ object PollinationsUrl {
     }
 }
 
-/**
- * The fixed auto-reply signature. Per Maya's rules it is always appended and the user cannot
- * remove or change it — that is how the other side knows the answer was automatic.
- */
-object AutoReplySignature {
-    const val PREFIX = "— auto-reply by "
-
-    fun line(assistantName: String): String = PREFIX + assistantName.trim().ifBlank { "JARVIS" }
-
-    /** Returns [reply] with exactly one signature line at the end (strips any model-written copies). */
-    fun apply(reply: String, assistantName: String): String {
-        val sig = line(assistantName)
-        val cleaned = reply.lines()
-            .filterNot { it.trim().startsWith(PREFIX) || it.trim().startsWith("- auto-reply by ") || it.trim().startsWith("-- auto-reply by ") }
-            .joinToString("\n")
-            .trim()
-        val body = cleaned.ifBlank { "Main abhi available nahi hoon, baad me reply karta hoon." }
-        return "$body\n$sig"
-    }
-
-    fun hasSignature(text: String, assistantName: String): Boolean =
-        text.trimEnd().endsWith(line(assistantName))
-
-    /** The reply Maya gives when the user asks to drop the signature. */
-    const val CANNOT_REMOVE =
-        "Auto-reply wali line na main badal sakta hoon na hata sakta hoon — usi se saamne wale ko pata chalta hai ki jawab apne aap gaya hai. Baaki reply ka matter, style ya away message badalna ho to bata do, kar dunga."
-}
 
 /** Reel/story guidance text ported from Maya (verb-loop steps + hard rules). */
 object ReelGuidance {

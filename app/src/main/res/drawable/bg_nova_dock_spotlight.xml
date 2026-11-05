@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nova dock: soft glow under the active tab (tinted with the accent from code). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:type="radial"
+        android:gradientRadius="36dp"
+        android:startColor="#40FFFFFF"
+        android:endColor="#00FFFFFF" />
+</shape>

@@ -1,0 +1,195 @@
+package com.jarvis.assistant.ui.settings
+
+import android.app.Dialog
+import android.graphics.Color
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.jarvis.assistant.JarvisApp
+import com.jarvis.assistant.databinding.BottomSheetThemeSelectionBinding
+import com.jarvis.assistant.ui.home.HomeFragment
+import com.jarvis.assistant.ui.home.MainActivity
+import com.jarvis.assistant.util.FrostedGlassEffect
+import com.jarvis.assistant.util.ThemeManager
+
+class ThemeSelectionBottomSheet : BottomSheetDialogFragment() {
+
+    private var _binding: BottomSheetThemeSelectionBinding? = null
+    private val binding get() = _binding!!
+    private val preferences by lazy { JarvisApp.instance.preferences }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = BottomSheetThemeSelectionBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onStart() {
+        super.onStart()
+        dialog?.window?.let { window ->
+            if (FrostedGlassEffect.isBlurEnabled()) {
+                FrostedGlassEffect.applyWindowBlur(window)
+            }
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val currentTheme = preferences.appTheme
+        updateCheckmarks(currentTheme)
+
+        val customHex = preferences.customThemeColor
+        binding.etCustomHex.setText(customHex)
+        try {
+            binding.viewCustomPreview.backgroundTintList =
+                android.content.res.ColorStateList.valueOf(Color.parseColor(customHex))
+        } catch (_: Exception) {}
+
+        binding.cardThemeLight.setOnClickListener { selectTheme("pearl_white", "Pearl White Light") }
+        binding.cardThemeDark.setOnClickListener { selectTheme("dark", "Obsidian Dark") }
+        binding.cardThemeRed.setOnClickListener { selectTheme("red", "Crimson Ruby") }
+        binding.cardThemeSunset.setOnClickListener { selectTheme("sunset", "Peach Sunset") }
+        binding.cardThemeStealth.setOnClickListener { selectTheme("stealth", "Stealth OLED Black") }
+        binding.cardThemeAndroNight.setOnClickListener { selectTheme(ThemeManager.THEME_ANDROLLM_NIGHT, "AndroLLM Night") }
+        binding.cardThemeAndroParchment.setOnClickListener { selectTheme(ThemeManager.THEME_ANDROLLM_PARCHMENT, "AndroLLM Parchment") }
+        binding.cardThemeMaya.setOnClickListener { selectMayaTheme() }
+
+        binding.btnApplyCustom.setOnClickListener {
+            val hex = binding.etCustomHex.text.toString().trim()
+            applyCustomColor(hex)
+        }
+
+        // Quick Swatches
+        binding.swatchRed.setOnClickListener { applyCustomColor("#FF4D5E") }
+        binding.swatch1.setOnClickListener { applyCustomColor("#F59E0B") }
+        binding.swatch2.setOnClickListener { applyCustomColor("#10B981") }
+        binding.swatch3.setOnClickListener { applyCustomColor("#EC4899") }
+        binding.swatch4.setOnClickListener { applyCustomColor("#FF7700") }
+        binding.swatch5.setOnClickListener { applyCustomColor("#6366F1") }
+        binding.swatch6.setOnClickListener { applyCustomColor("#22D3EE") }
+        binding.swatchPurple.setOnClickListener { applyCustomColor("#C084FC") }
+        binding.swatchWhite.setOnClickListener { applyCustomColor("#FFFFFF") }
+        binding.swatchBlack.setOnClickListener { applyCustomColor("#000000") }
+    }
+
+    private fun applyCustomColor(hexInput: String) {
+        val hex = if (hexInput.startsWith("#")) hexInput else "#$hexInput"
+        val parsed = try {
+            Color.parseColor(hex)
+        } catch (_: Exception) {
+            Toast.makeText(requireContext(), "Invalid HEX color format (e.g. #FFFFFF or #22D3EE)", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        preferences.customThemeColor = hex
+
+        val hsv = FloatArray(3)
+        Color.colorToHSV(parsed, hsv)
+        val h = hsv[0]
+        val s = hsv[1]
+        val v = hsv[2]
+
+        val targetTheme = when {
+            s < 0.15f && v > 0.65f -> "pearl_white"
+            s < 0.15f && v <= 0.65f -> "stealth"
+            (h in 345f..360f || h in 0f..15f) || hex.equals("#FF4D5E", ignoreCase = true) || hex.equals("#FF0000", ignoreCase = true) -> "red"
+            hex.equals("#F59E0B", ignoreCase = true) -> "gold"
+            hex.equals("#10B981", ignoreCase = true) || hex.equals("#84CC16", ignoreCase = true) -> "emerald"
+            hex.equals("#EC4899", ignoreCase = true) -> "pink"
+            hex.equals("#FF7700", ignoreCase = true) -> "orange"
+            hex.equals("#6366F1", ignoreCase = true) -> "indigo"
+            hex.equals("#C084FC", ignoreCase = true) || hex.equals("#A855F7", ignoreCase = true) -> "amethyst"
+            hex.equals("#22D3EE", ignoreCase = true) -> "dark"
+            else -> "custom"
+        }
+
+        preferences.appTheme = targetTheme
+        updateCheckmarks(targetTheme)
+
+        Toast.makeText(requireContext(), "Theme set to $hex", Toast.LENGTH_SHORT).show()
+
+        // Sync with Neural Orb
+        val mainActivity = activity as? MainActivity
+        val homeFrag = mainActivity?.supportFragmentManager?.fragments
+            ?.filterIsInstance<HomeFragment>()
+            ?.firstOrNull()
+        homeFrag?.setOrbTheme(targetTheme, hex)
+
+        dismiss()
+        activity?.recreate()
+    }
+
+    private fun selectTheme(themeKey: String, themeName: String) {
+        preferences.appTheme = themeKey
+        val hex = if (themeKey == "red" || themeKey == "crimson") "#FF4D5E" else ThemeManager.getThemeAccentHex()
+        preferences.customThemeColor = hex
+        updateCheckmarks(themeKey)
+        Toast.makeText(requireContext(), "Theme set to $themeName", Toast.LENGTH_SHORT).show()
+
+        val mainActivity = activity as? MainActivity
+        val homeFrag = mainActivity?.supportFragmentManager?.fragments
+            ?.filterIsInstance<HomeFragment>()
+            ?.firstOrNull()
+        homeFrag?.setOrbTheme(themeKey, hex)
+
+        dismiss()
+        activity?.recreate()
+    }
+
+    /**
+     * Maya is more than a palette: picking it also makes the companion experience
+     * (character stage, talk button, chips) the default Home screen.
+     */
+    private fun selectMayaTheme() {
+        preferences.appTheme = ThemeManager.THEME_MAYA
+        preferences.customThemeColor = ThemeManager.MAYA_ACCENT_HEX
+        val switchedHome = preferences.experienceMode != com.jarvis.assistant.data.preferences.AppPreferences.MODE_JARVIS_COMPANION
+        if (switchedHome) {
+            preferences.experienceMode = com.jarvis.assistant.data.preferences.AppPreferences.MODE_JARVIS_COMPANION
+        }
+        updateCheckmarks(ThemeManager.THEME_MAYA)
+        Toast.makeText(
+            requireContext(),
+            if (switchedHome) "Maya theme on • Home now shows the character stage (switch back any time from Home)"
+            else "Theme set to Maya",
+            Toast.LENGTH_LONG
+        ).show()
+
+        val mainActivity = activity as? MainActivity
+        val homeFrag = mainActivity?.supportFragmentManager?.fragments
+            ?.filterIsInstance<HomeFragment>()
+            ?.firstOrNull()
+        homeFrag?.setOrbTheme(ThemeManager.THEME_MAYA, ThemeManager.MAYA_ACCENT_HEX)
+
+        dismiss()
+        activity?.recreate()
+    }
+
+    private fun updateCheckmarks(activeTheme: String) {
+        binding.ivCheckMaya.visibility = if (activeTheme == ThemeManager.THEME_MAYA) View.VISIBLE else View.GONE
+        binding.ivCheckLight.visibility = if (activeTheme == "pearl_white" || activeTheme == "light") View.VISIBLE else View.GONE
+        binding.ivCheckDark.visibility = if (activeTheme == "dark") View.VISIBLE else View.GONE
+        binding.ivCheckRed.visibility = if (activeTheme == "red") View.VISIBLE else View.GONE
+        binding.ivCheckSunset.visibility = if (activeTheme == "sunset") View.VISIBLE else View.GONE
+        binding.ivCheckStealth.visibility = if (activeTheme == "stealth" || activeTheme == "black") View.VISIBLE else View.GONE
+        binding.ivCheckCustom.visibility = if (activeTheme == "custom") View.VISIBLE else View.GONE
+        binding.ivCheckAndroNight.visibility = if (activeTheme == ThemeManager.THEME_ANDROLLM_NIGHT) View.VISIBLE else View.GONE
+        binding.ivCheckAndroParchment.visibility = if (activeTheme == ThemeManager.THEME_ANDROLLM_PARCHMENT) View.VISIBLE else View.GONE
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    companion object {
+        const val TAG = "ThemeSelectionBottomSheet"
+        fun newInstance() = ThemeSelectionBottomSheet()
+    }
+}

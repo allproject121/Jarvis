@@ -135,7 +135,7 @@
                         android:layout_height="20dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_code_chip"
-                        app:tint="#00FF88"
+                        app:tint="?attr/themeSuccess"
                         android:contentDescription="Bypass IDE" />
                 </FrameLayout>
 
@@ -165,7 +165,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="NEW"
-                            android:textColor="#00FF88"
+                            android:textColor="?attr/themeSuccess"
                             android:textSize="9sp"
                             android:textStyle="bold"
                             android:fontFamily="monospace"
@@ -304,7 +304,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="OS Assistant, WhatsApp Reader &amp; Driving"
+                        android:text="OS Assistant, WhatsApp Reader &amp; Calls"
                         android:textColor="?attr/themeAccent"
                         android:textSize="11.5sp"
                         android:fontFamily="sans-serif"
@@ -519,68 +519,6 @@
                     android:contentDescription="Open" />
             </LinearLayout>
 
-            <!-- Item: Voice Biometrics -->
-            <LinearLayout
-                android:id="@+id/menuItemVoice"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="56dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_jarvis_row_item"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="9dp"
-                android:layout_marginBottom="12dp"
-                android:clickable="true"
-                android:focusable="true">
-
-                <FrameLayout
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:background="@drawable/bg_jarvis_icon_square">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_settings_owner_voice"
-                        app:tint="?attr/themeAccent"
-                        android:contentDescription="Voice Profile" />
-                </FrameLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Voice Biometrics"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="14.5sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-medium" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Owner voice security enrollment"
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="11.5sp"
-                        android:fontFamily="sans-serif"
-                        android:layout_marginTop="1dp" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:src="@drawable/ic_arrow_right"
-                    app:tint="?attr/themeTextMuted"
-                    android:contentDescription="Open" />
-            </LinearLayout>
 
             <!-- CATEGORY 3: PREFERENCES & STUDIO -->
             <TextView

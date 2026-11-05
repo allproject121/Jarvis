@@ -120,7 +120,7 @@ object MultiModelAiRouter {
             PROVIDER_LOCAL -> callLocalOllama(prefs.customEndpoint, prefs.localHostModel, systemPrompt, userPrompt)
             PROVIDER_GROQ, PROVIDER_MISTRAL, PROVIDER_TOGETHER, PROVIDER_DEEPINFRA, PROVIDER_NVIDIA, PROVIDER_CUSTOM ->
                 callBrainPreset(context, chosenProvider, systemPrompt, userPrompt, temperature, maxTokens)
-            else -> callGemini(prefs.apiKey, prefs.aiModel.ifBlank { "gemini-2.0-flash" }, systemPrompt, userPrompt, temperature, maxTokens)
+            else -> callGemini(prefs.apiKey, prefs.aiModel, systemPrompt, userPrompt, temperature, maxTokens)
         }
 
         if (!answer.isNullOrBlank()) {
@@ -140,7 +140,7 @@ object MultiModelAiRouter {
         for (provider in fallbackProviders) {
             if (provider == chosenProvider) continue
             val fbAns = when (provider) {
-                PROVIDER_GEMINI -> if (prefs.apiKey.isNotBlank()) callGemini(prefs.apiKey, "gemini-2.0-flash", systemPrompt, userPrompt, temperature, maxTokens) else null
+                PROVIDER_GEMINI -> if (prefs.apiKey.isNotBlank()) callGemini(prefs.apiKey, prefs.aiModel, systemPrompt, userPrompt, temperature, maxTokens) else null
                 PROVIDER_OPENAI -> if (prefs.openAiApiKey.isNotBlank()) callOpenAi(prefs.openAiApiKey, "gpt-4o-mini", systemPrompt, userPrompt, temperature, maxTokens) else null
                 PROVIDER_DEEPSEEK -> if (prefs.deepSeekApiKey.isNotBlank()) callDeepSeek(prefs.deepSeekApiKey, "deepseek-chat", systemPrompt, userPrompt, temperature, maxTokens) else null
                 PROVIDER_CLAUDE -> if (prefs.claudeApiKey.isNotBlank()) callClaude(prefs.claudeApiKey, "claude-3-5-haiku-20241022", systemPrompt, userPrompt, temperature, maxTokens) else null
@@ -185,7 +185,7 @@ object MultiModelAiRouter {
         val parallelTasks = mutableListOf<Pair<String, kotlinx.coroutines.Deferred<String?>>>()
 
         if (prefs.apiKey.isNotBlank()) {
-            parallelTasks.add("Google Gemini" to async { callGemini(prefs.apiKey, prefs.aiModel.ifBlank { "gemini-2.0-flash" }, systemPrompt, userPrompt, temperature, maxTokens) })
+            parallelTasks.add("Google Gemini" to async { callGemini(prefs.apiKey, prefs.aiModel, systemPrompt, userPrompt, temperature, maxTokens) })
         }
         if (prefs.openAiApiKey.isNotBlank()) {
             parallelTasks.add("OpenAI (${prefs.openAiModel})" to async { callOpenAi(prefs.openAiApiKey, prefs.openAiModel.ifBlank { "gpt-4o" }, systemPrompt, userPrompt, temperature, maxTokens) })
@@ -298,8 +298,26 @@ object MultiModelAiRouter {
         maxTokens: Int
     ): String? {
         if (apiKey.isBlank()) return null
+        // The saved model is often a Live-only model; try text-capable models this key really has.
+        for (model in GeminiTextModels.candidates(apiKey, modelName.takeIf { it.contains("gemini") })) {
+            val answer = callGeminiModel(apiKey, model, systemPrompt, userPrompt, temperature, maxTokens)
+            if (!answer.isNullOrBlank()) {
+                GeminiTextModels.markWorking(apiKey, model)
+                return answer
+            }
+        }
+        return null
+    }
+
+    private fun callGeminiModel(
+        apiKey: String,
+        resolvedModel: String,
+        systemPrompt: String,
+        userPrompt: String,
+        temperature: Double,
+        maxTokens: Int
+    ): String? {
         return try {
-            val resolvedModel = if (modelName.contains("gemini")) modelName.replace("models/", "") else "gemini-2.0-flash"
             val url = "https://generativelanguage.googleapis.com/v1beta/models/$resolvedModel:generateContent?key=$apiKey"
 
             val jsonBody = JSONObject().apply {
@@ -321,7 +339,10 @@ object MultiModelAiRouter {
                 .build()
 
             httpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) return null
+                if (!response.isSuccessful) {
+                    Log.w(TAG, "Gemini $resolvedModel HTTP ${response.code}")
+                    return null
+                }
                 val bodyStr = response.body?.string() ?: return null
                 val root = JSONObject(bodyStr)
                 val candidates = root.optJSONArray("candidates") ?: return null

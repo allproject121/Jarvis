@@ -1,17 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Bento icon plate: small rounded plate that holds an icon (tint = themeAccent / themeTextPrimary). -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="?attr/themeAccentLight">
     <item>
         <shape android:shape="rectangle">
-            <corners android:radius="16dp" />
-            <gradient
-                android:type="linear"
-                android:angle="135"
-                android:startColor="?attr/themeCardGlassStart"
-                android:endColor="?attr/themeCardGlassEnd" />
+            <corners android:radius="14dp" />
+            <solid android:color="?attr/themeChipBg" />
             <stroke
-                android:width="1.2dp"
-                android:color="?attr/themeCardBorder" />
+                android:width="1dp"
+                android:color="?attr/themePlateBorder" />
         </shape>
     </item>
 </ripple>

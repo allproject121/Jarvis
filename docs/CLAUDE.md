@@ -2,7 +2,7 @@
 
 > **Purpose:** Har kaam jo Claude ne is project mein kiya, woh yahan likha jaata hai.  
 > **Rule:** Jab bhi koi naya kaam karo, sabse pehle yahan update karo. Dusra AI bhi yahi padh ke project ko samjhe.  
-> **Last Updated:** Nov 3, 2026
+> **Last Updated:** Nov 5, 2026
 
 ---
 
@@ -215,9 +215,112 @@ Text chat → ModelRouter GEMINI_LIVE/AUTO_HYBRID → geminiTextOrLocal → fail
 **Result (Nov 4, 18:18):** `gradlew :app:testDebugUnitTest :app:assembleDebug` → BUILD SUCCESSFUL, 394/394 unit tests pass, APK `app/build/outputs/apk/debug/app-debug.apk` (517 MB). 8 tool packs / 281 tools registered, 0 name collisions. Phone par abhi test nahi hua (device connected nahi tha).
 **Pending:** phone test of every Maya screen/tool; Home par notices + Advanced Agentic talk-button hand-off; overlay character auto-restore after restart; per-character 3D models.
 
+### Session 7 — Nov 5, 2026 (cleanup: security + work messages removed, duplicates merged, colours/glass)
+**Backup:** `backups/cleanup-2026-11-05/restore.ps1` (java, res/layout, res/xml, manifest, tests; themes/colors .bak).
+- Security/Guardian/Privacy poora delete (Touch Guard, SOS, Watchman, App Lock, Privacy Shield/Mode, Owner Voice enroll UI, App Identity row, maya/guardian). `VoiceGuardGate`/`VoiceGuardPolicy` sirf stub (protected Gemini Live files inhe call karti hain) — kuch block nahi karte.
+- WORK & MESSAGES section delete (WhatsApp/Email/Social Story rows + SocialStoryManager), Maya WhatsApp auto-reply engine + tools delete, maya/business delete. Connectors row → Skills section.
+- Merge: Voice Engine dialog → "Advanced engine" (Maya VoiceEngineActivity); PC hub dialog → "Hub & Termux"; Persona dialog → "3D Characters" card; Skills sheet → "Macros & Watches"; duplicate Maya rows hataye. MAYA section → "MEDIA & EXTRAS".
+- Colours: low-contrast muted/accent text fixed (fix_contrast); maya_text_muted #9AA4B5. Glass: `styles_glass.xml` overlays + `ThemeManager.applyGlassOverlay` (cards translucent jab Frosted Glass ON).
+- Pending (phone chahiye): Home orb ke beech green cheez identify+remove, 3D character Home pe, device par command tests, non-working features delete.
+
+### Session 7b — Nov 5, 2026 (Nova redesign, 21st.dev style)
+**Backup:** `backups/ui-redesign-2026-11-05/restore.ps1` (layouts, drawables, values, ThemeManager, home, AppPreferences).
+- Naya default theme `nova` (`Theme.JarvisAssistant.Nova`): zinc-950 #09090B, hairline glass cards, violet #A78BFA accent, Inter font, aurora glow blobs `bg_nova_glow_1..3`, glass overlay `JarvisGlassOverlay.Nova`. JarvisApp me one-time migration (`jarvis_ui_migrations/ui_nova_redesign_applied`). Theme picker me "Nova (new look)" card.
+- Drawables ka hardcoded cyan (#xx00F0FF) → neutral white glass / ?attr/themeAccent (12 files). Active dock pill = white glass.
+- Home: green centre disk (`bg_arc_reactor_rings` centre glow) + arc reactor rings hata diye (GONE).
+- Installed + screenshot verified on I2221. Pending: phone unlock karke Settings screenshot, command tests, non-working features delete.
+
+### Session 7c — Nov 5, 2026 (3D character: touch + human idle)
+- Browser test (Edge headless, `python -m http.server` on assets): Mora loads, 11 clips bind, tap -> clapping reaction works. Asli problems: (1) Home pe character tap = `handleMicOrOrbClick` bhi (Jarvis on/off) -> ab avatar entities pe tap sirf reaction; plain orb pe tap-to-start rehta hai. (2) idle clip almost static + seedhi kohni -> `mora_character.html` me `updateHumanIdle` layer: saans, weight shift, kohni -0.32 rad (forward, browser me tested), har 6-12 s glance/tilt/smile/look-down, random blink. `?elbow=` / `?act=` URL params tuning ke liye.
+- Backup: `backups/ui-redesign-2026-11-05/mora_character.html.bak`, `HomeFragment.touchfix.bak`.
+- BUILD/INSTALL pending: dusri chat us waqt phone + project use kar rahi thi.
+
+### Session 7d — Nov 5, 2026 (RedMagic-style touch personality for Mora)
+- `mora_character.html`: zones from projected bones (headtop, face, hand, arm, belly, chest, hips, legs, outside). Chest/hips = unwanted: embarrassed -> angry -> sulk (turns her back 9 s, "Hmph! Pehle sorry bolo"), annoyance decays 1/15 s. Angry/Sorrow face morphs, head "no" shake, turn away + step back. Glass speech bubble with Hinglish lines. `?touch=a,b,c` test hook. Browser-verified (Edge headless).
+- `Jarvis3DModelBridge.onModelTouched(zone, mood, line)`: Live on -> [SYSTEM EVENT] so Gemini reacts in voice; else PocketTTS speaks the bubble line; 6 s throttle.
+- NOT built/installed yet (dusri chat phone/project use kar rahi thi). Backups: `backups/ui-redesign-2026-11-05/*.bak`.
+
+### Session 8 — Nov 5, 2026 (Offline Brain asli mein theek — phone par test kiya)
+**Problem (phone par dekha):** offline jawab me `</|im_end|><|im_start|>user …` jaisi fake lines aati thi, voice me 100–200 s lagte the, "Model is not loaded"/"No result" bolta tha, text chat me "torch on karo" kaam nahi karta tha. Phone par active model DeepSeek R1 1.5B tha, Qwen3 4B download hi nahi tha.
+**Backup:** `backups/offline-brain-fix-2026-11-05/restore.ps1` (sab badle files + naye files hatata hai).
+
+**Kya badla:**
+- `ai/local/ToolCallParser.kt` — turn-leak guard: `findTurnLeak/cutAtTurnLeak/streamVisibleText/cleanLocalModelText`. Model jab khud agla "user" turn likhne lage to wahi kaat dete hain; adhoora `<|im_…` stream me nahi dikhta; lone `</think>` se pehle ka reasoning hatata hai.
+- `ai/compat/ModelFamily.kt` + `ChatTemplateRenderer.kt` — DeepSeek ka asli template (`<｜User｜>…<｜Assistant｜><think>`), Llama 3 ko tool-call format bataya (pehle sirf tool list thi), double BOS hataya. Tools + rules prompt me SABSE PEHLE (constant prefix → llama.cpp cache reuse). Purani history se leaked tags saaf karke hi model ko dete hain.
+- `ai/provider/LocalPhoneProvider.kt` — ek waqt me ek hi generation (`generationMutex`); model switch chalti request ko nahi todta; `generate().use{}` se break par native task cancel; tool lock chhodne ke BAAD chalta hai; selected model download na ho to best downloaded model khud chunta hai.
+- `ai/provider/LocalPhoneProvider.kt` (2nd round) — llama.cpp 2 slots + shared (unified) KV: slot 0 = baat-cheet (tools+rules wala prefix cache me rehta hai → ~10 s jawab), slot 1 = background (memory extraction). Pehle background prompt cache mita deta tha → agla jawab ~3 min. Prompt reading ke liye fast cores (`setThreadsBatch`). Two-slot setup fail ho to purana single-slot load. `warmUpAsync()` asli prompt prefix slot 0 me pehle se padh leta hai; offline voice shuru hone par aur chat me "Local Offline" chunne par chalta hai.
+- `ai/router/ModelRouter.kt` — `setMode(LOCAL_OFFLINE)` par warm-up.
+- `ai/local/LocalModelManager.kt` — `resolveUsableModelId()` (Qwen3 4B > Qwen2.5 1.5B > Llama 3.2 > SmolLM > Qwen 0.5B > DeepSeek).
+- `ai/local/LocalAiEngine.kt` — offline brain me direct commands: `CommandParser` + `CommandExecutor` (voice wala hi) ab text chat / Auto Hybrid failover me bhi. "torch on karo" ~0.1 s.
+- `ai/local/JarvisThreadManager.kt` — inference priority 10 → 5. Priority 10 par Android thread ko "background" cgroup (chhote cores) me daal deta tha.
+- `ai/local/OfflineVoiceConversationEngine.kt` — naya utterance purane jawab ko cancel karta hai (pehle sab ek saath model par chadhte the); "huh/hmm/ah…" noise ignore; offline voice shuru hote hi model warm-up.
+- `automation/phone/PhoneControlManager.kt` — alias package (com.google.android.calculator) install na ho to installed apps me naam se dhoondta hai (vivo calculator khulta hai). Volume: muted ho to pehle unmute, aur asli level batata hai.
+- `automation/dispatcher/JarvisToolDispatcher.kt` — `set_volume` same unmute + asli level.
+- Test: `app/src/test/.../ai/local/OfflineBrainOutputGuardTest.kt` (8 tests). Poora suite 350/350 pass.
+- Debug-only test hook: `app/src/debug/.../OfflineBrainDebugReceiver.kt` (release me nahi aata, sirf adb shell bhej sakta hai):
+  `adb shell am broadcast -a com.jarvis.assistant.debug.OFFLINE_BRAIN -p com.jarvis.assistant --es text "'torch on karo'" [--es mode AUTO_HYBRID] [--es model qwen3-4b-instruct-2507]` → logcat tag `OfflineBrainTest`.
+
+**Phone (vivo I2221, SD 8s Gen 3, 7.1 GB RAM) par result, Qwen3 4B:**
+| Command | Result | Time |
+|---|---|---|
+| hello, tum kaun ho? | Hinglish jawab | ~10 s (warm) |
+| torch on/band karo, jalao/bujhao | camera service me torch on/off confirm | <0.5 s |
+| battery kitni bachi hai? | model ne `get_battery_status` chalaya | ~14 s |
+| calculator kholo | com.vivo.calculator khula | <1 s |
+| Auto Hybrid (Gemini fail) → India ki capital | "Delhi … Red Fort" | ~10 s |
+| volume 40 percent | tool chala, par vivo speaker media volume 0 par lock (adb se bhi nahi badla) → ab sach bolta hai "0%" | — |
+- Model `qwen3-4b-instruct-2507.gguf` (sha256 verified) adb se phone me daala aur active kiya.
+- Phone par jo APK hai (10:17 build) usme slot/warm-up wala last change NAHI hai. Naya APK (14:06, 350/350 tests pass) bana hai par phone disconnect ho gaya tha — install baaki: `adb install -r -d -t app/build/outputs/apk/debug/app-debug.apk`, phir `OfflineBrainTest` hook se 2 sawaal lagatar pooch ke time dekhna.
+- PC: do sessions ek saath build karein to Kotlin daemon (3 GB heap) full ho ke atak jaata hai (endless full GC). Build se theek pehle `gradlew.bat` process check karo.
+
+**Round 3 (Nov 5 shaam, phone USB + wireless par test):**
+- `automation/agent/TaskExecutionPolicy.kt` — `open_app`/`open_website` ab accessibility ke bina chalte hain (sirf intent launch; lock/screen check rehta hai). Pehle "youtube kholo" → "Jarvis Accessibility Service is disabled".
+- `ai/AiTextSynthesizer.kt` — MultiModelAiRouter ka providerUsed "Failed"/"None" (ensemble mode ka "All configured models failed…") ab failure maana jaata hai → offline brain failover chalta hai. Pehle ye error text jawab ban ke dikhta tha.
+- `ai/router/ModelRouter.kt` + `LocalAiEngine.tryDirectCommand()` — torch/calculator jaise commands HAR mode me sabse pehle (provider "Jarvis Command"); Gemini/ChatGPT text ke paas phone tools nahi the.
+- Final APK (15:23 build, 350/350 tests) phone par installed. Tested: torch on/off (camera confirm), chat Hinglish, battery tool, calculator, Auto Hybrid offline answer, YouTube khula (model ne open_app chalaya). Warm-up + 2-slot cache ke baad pehla jawab 13 s (thanda phone). Garam phone (thermal 2, big core 0.48 GHz cap) par 80–100 s.
+- Wireless adb: vivo screen lock/battery par wireless debugging so jaata hai; port badalta hai (mdns na dikhe to 30000–50000 scan). Charger + "Stay awake" rakho.
+- Gemini-fail-with-key wala path is round me phone par test nahi hua (phone ke paas tab internet nahi tha).
+
+**Pending:** Gemini Live phone par fail ho raha hai (isliye offline mode chal raha tha) — protected files, user permission chahiye. Vivo speaker media volume 0 par kyu atka hai, phone settings me dekhna. Voice se asli bolkar test (mic) abhi baaki.
+
+### Session 7e — Nov 5, 2026 (Mora "alive": face follow, mood memory, gestures)
+- `mora_character.html`: mood memory in localStorage (`mora_mood_v1`, grudge up to 10 min, survives restarts) + `forgive()`; long press (head = long pat/bliss, hand = holding hands, chest/hips = worse), pinch zoom (saved `mora_zoom`), horizontal swipe turns her (springs back), `setViewer(x,y,present)` gaze + "Aa gaye!" greeting after 20 s away. Test hooks `?viewer=x,y`, `?forgive=1`, `?touch=`. Browser-verified.
+- `ui/home/ViewerFaceTracker.kt` (new): Camera2 front cam 320x240 + ML Kit face detection ~5 fps -> setViewer. Opt-in Settings → MEDIA & EXTRAS → "Character looks at you" (`jarvis_avatar_prefs/follow_viewer_face`), CAMERA permission asked on enable.
+- `HomeFragment`: tracker start/stop with Home visibility; transcript "sorry/maaf/सॉरी/माफ" -> forgive(); long-press on avatar no longer triggers mic.
+- NOT compiled yet — dusri chat ka Gradle daemon BUSY tha.
+
+### Session 7f — Nov 5, 2026 (Mora grounded, side thought-bubble, voice)
+- Phone par "hawa me + ulta" ka cause: idle clip pose me sole deck se ~2.7 cm upar tha; aur sulk me `turnTarget = 2.6` (peeth dikhti thi, sir chhupa) → ab 1.0 (side profile, chin away).
+- `mora_character.html`: `groundMora()` — ek baar skinned mesh ka lowest point naap ke sole gap calibrate, phir har frame root Y adjust (clamp −8/+4 cm, jumps bache). Static dark foot pads hidden; foot shadows ab pairon ke saath chalti hain.
+- Bubble ab sir ke bagal me thought-bubble (2 dots) jo head follow karti hai; `say()` = bubble + voice. Local TTS bole to lips hilte hain (`localTalkUntil`).
+- `Jarvis3DModelBridge`: `onModelTouched` returns live/local/throttled (throttle 6 s → 2.5 s), naya `speakLine(line, mood)`, `isVoiceLive()`. Backup: `backups/mora-ground-2026-11-05/`.
+- Debug: phone WebView ko `adb forward tcp:9333 localabstract:webview_devtools_remote_<pid>` + CDP `Runtime.evaluate("window.__moraDebug()")`.
+
+### Session 9 — Nov 5, 2026 (JARVIS logo + app icon, Companion mode hataya, Nova design fixes)
+**Backup:** `backups/logo-companion-2026-11-05/restore.ps1` (edited files + `deleted/` me hataye gaye files).
+- **Logo:** Home header me gradient "Jarvis" text hata ke purana `ic_jarvis_brand_logo` (JARVIS arc logo, theme accent se tinted, tap par bounce + glow). PNG ab `drawable-nodpi/` me (pehle mdpi bucket me tha → ~13 MB decode).
+- **App icon:** naya launcher icon = wahi JARVIS logo, dark #09090B background (adaptive + monochrome + legacy PNGs, sab densities).
+- **Companion mode removed:** Settings toggle, Secret settings (intimacy), persona dialog card, name-dialog chip, Studio card/chip, Maya theme ka home-switch, hidden Home button, companion prompt hata diye. `MainActivity` me sirf Jarvis Home. Deleted (backup `deleted/`): `JarvisCompanionHomeFragment`, `CharacterSheet`, `MayaIntimateGate`, `MayaOrbView`, `MayaTalkRingsView`, `SecretSettingsBottomSheet` + layouts; `MAYA_INTIMATE` character. Prefs: `experienceMode` hamesha Jarvis, `isSecretSettingsEnabled` hamesha false, purana "Companion Mode" persona → Assistant. One-time migration `jarvis_ui_migrations/companion_mode_removed` (`AppPreferences.migrateAwayFromCompanionMode`). Protected Gemini Live files untouched.
+- **Companion se Jarvis me laaya (kaam ka):** Overlay & Avatar → Maya character card me "Look" picker (character look + voice sample; persona/voice nahi badalta).
+- **Home/dock fixes:** Mora page ka apna HUD pill hide (native status pill se overlap), Mora ka Nova violet colour, Settings tab ab active dikhta, Updates par Home highlight, resume par dock flash nahi, light themes me active pill dikhta, white accent par mic icon kaala, mic lift kam (upar ka hissa tap nahi hota tha), snackbars dock ke upar, telemetry text sentence case, focus-mode buttons system bars se door.
+- **Settings/Chat fixes:** caps HUD text → sentence case + theme colours, MCP list naye style me, bekaar search pill hidden, chat subtitle asli engine dikhata, drawer status bar ke neeche, drawer rows Nova style.
+- Build: `assembleDebug testDebugUnitTest` → BUILD SUCCESSFUL, 350/350 tests. APK 15:10. **Phone par install baaki** (wifi adb offline tha).
+
+### Session 10 — Nov 5, 2026 evening (Dark Bento design, settings cleanup, AI pages asli, debug hooks)
+**Backup:** `backups/redesign-cleanup-2026-11-05/restore.ps1` (edited files, `deleted/`, added files list).
+- **Design (Dribbble "Dark Bento UI Kit" jaisa):** Nova = #090812 page, indigo cards (top lighter gradient + corner glow + hairline), plates #17152E, text #F9F9FA/#BDBBCB/#9391A2, button #6352F5 + white label. Naye attrs: themeAccentFill, themeOnAccent, themePlateBorder, themeGlow1/2, themeSuccess/Warning/Danger/Info (har theme me defined). Contrast script (scratchpad `contrast.py`, `layout_audit.py`): 24 theme styles 19/19 checks pass; light-accent themes (Stealth, WhiteDark, Gold, Emerald, Orange, Dark) par buttons ka label kaala.
+- **Settings → Appearance:** "Customize home screen" + "Home HUD & widgets" + "Hide home screen cards" → ek row **"Home screen"** (HomeCardsCustomizationBottomSheet: hide-all, 3D character, HUD size 0.70–1.30x, compact stage, per-card switches).
+- **Floating avatar:** Maya overlay character + card hataye; purana `TaskProgressOverlay` avatar, size slider 56–200 dp (`jarvis_overlay_avatar_prefs`), long-press = close; "Always on" mode me app khulte hi wapas (MainActivity.onResume).
+- **Backup & restore:** `data/backup/BackupManager` ek engine — SAF se export/restore (prefs, dono memory stores, chats, rules/wiki/notices, macros...), API keys/tokens kabhi export nahi. Settings, Wiki → Backup, `export_backup` tool, Memory page import sab isi engine par.
+- **Deleted:** Driving mode (JarvisDrivingModeManager sirf answerCall/declineCall/onIncomingCall ke liye bacha — protected service use karti hai), Live wallpaper (service, xml, rows, Home card, Studio section).
+- **Media studio:** chips/buttons wrap, edge-to-edge insets; image size ab asli (center-crop/scale to chosen size, Gemini ko aspect ratio).
+- **AI pages:** Agent & Tools toggles ab Jarvis dispatcher par lagte hain (`JarvisDispatcherHooks.preflight`: master switch, per-tool off, confirmation mode; Direct autonomous mode ON ho to confirm nahi poochta), Tool Debug me "Run a tool" (asli dispatcher), Screen automation confirm ab dusre apps ke upar (`ConfirmationOverlay`), AI Feature Access me 6 naye real permission gates, Voice page = asli Jarvis voice (Live voice, wake-word sensitivity, reply voice + test), Developer & Diagnostics me asli model state + Gemini check card (`GeminiSelfTest`).
+- **Debug-only adb hooks:** `am start -n com.jarvis.assistant/.debug.DebugOpenActivity --es section VOICE|AGENT|AUTOMATION|PERMISSIONS` / `--es route tool_debug|developer`; `am broadcast -a com.jarvis.assistant.debug.RUN_TOOL -p com.jarvis.assistant --es name get_battery_status --es args '{}'` (tag JarvisToolTest); `am broadcast -a com.jarvis.assistant.debug.GEMINI_TEST -p com.jarvis.assistant --es text "'India ki capital?'" --es mode both` (tag GeminiTest).
+- Known: text chat saved Live model (`gemini-3.1-flash-live-preview`) text endpoint ko bhejta hai — GEMINI_TEST se verify karna. ~90 tools jo GeminiLiveWebSocket me hardcoded hain unpe Agent toggles lagu nahi (protected file).
+
 ## 🔲 Pending / Next Steps
 
-- [ ] **Phone par test** (P-08 in task.md): Qwen3 4B download, galat key daal ke voice start, "torch on karo" bolna.
+- [x] **Phone par test** (P-08): Qwen3 4B phone par, text/failover commands tested (Session 8). Voice mic test baaki.
 
 - [ ] Code Studio manifest entry confirm karna (AndroidManifest mein `<activity>` add hua kya)
 - [ ] Edge TTS test karna live device pe

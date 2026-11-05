@@ -131,7 +131,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="ON-DEVICE ACTIVE"
-                        android:textColor="@color/status_green"
+                        android:textColor="?attr/themeSuccess"
                         android:textSize="10sp"
                         android:textStyle="bold"
                         android:background="@drawable/bg_jarvis_pill_button"
@@ -166,7 +166,7 @@
                     android:textStyle="bold"
                     android:layout_marginTop="10dp"
                     android:background="@drawable/bg_jarvis_pill_button"
-                    android:textColor="#FFFFFF" />
+                    android:textColor="?attr/themeOnAccent" />
             </LinearLayout>
 
             <!-- AGENT 2: PYTHON & LINUX SANDBOX AGENT -->

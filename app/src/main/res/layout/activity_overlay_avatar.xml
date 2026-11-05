@@ -4,6 +4,7 @@
     android:id="@+id/overlayAvatarRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:orientation="vertical"
     android:background="?attr/themeBg">
 
@@ -138,6 +139,48 @@
                 android:layout_height="44dp"
                 android:entries="@array/overlay_edges"
                 android:spinnerMode="dropdown" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Avatar size"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textStyle="bold"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvOverlayAvatarSize"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="88 dp"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <SeekBar
+                android:id="@+id/seekOverlayAvatarSize"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:progressTint="?attr/themeAccent"
+                android:thumbTint="?attr/themeAccent" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Drag the avatar to move it, double-tap for task status, long-press to close it."
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="11sp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -275,7 +318,7 @@
                     android:src="@android:drawable/ic_menu_delete"
                     android:contentDescription="Remove 3D Avatar"
                     android:visibility="gone"
-                    app:tint="#ef4444" />
+                    app:tint="?attr/themeDanger" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

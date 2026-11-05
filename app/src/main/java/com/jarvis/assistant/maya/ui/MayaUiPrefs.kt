@@ -7,7 +7,7 @@ import com.jarvis.assistant.JarvisApp
 
 /**
  * Settings that belong to the Maya UI only (character stage on Home, the
- * floating character, its size, the wallpaper character mode).
+ * floating character, its size).
  *
  * Kept in their own SharedPreferences file so AppPreferences stays untouched.
  */
@@ -19,11 +19,7 @@ object MayaUiPrefs {
     private const val KEY_CHARACTER_SIZE_DP = "character_size_dp"
     private const val KEY_OVERLAY_X = "overlay_x"
     private const val KEY_OVERLAY_Y = "overlay_y"
-    private const val KEY_WALLPAPER_CHARACTER = "wallpaper_character_mode"
     private const val KEY_INTIMATE_AGE_CONFIRMED = "intimate_age_confirmed"
-
-    /** The wallpaper mode value stored in AppPreferences.wallpaperMode for the Maya look. */
-    const val WALLPAPER_MODE_MAYA = "maya_character"
 
     const val DEFAULT_CHARACTER_SIZE_DP = 168
     const val MIN_CHARACTER_SIZE_DP = 96
@@ -57,9 +53,6 @@ object MayaUiPrefs {
     }
     fun setOverlayPosition(context: Context, x: Int, y: Int) =
         prefs(context).edit().putInt(KEY_OVERLAY_X, x).putInt(KEY_OVERLAY_Y, y).apply()
-
-    fun isWallpaperCharacter(context: Context): Boolean = prefs(context).getBoolean(KEY_WALLPAPER_CHARACTER, false)
-    fun setWallpaperCharacter(context: Context, on: Boolean) = prefs(context).edit().putBoolean(KEY_WALLPAPER_CHARACTER, on).apply()
 
     fun isIntimateAgeConfirmed(context: Context): Boolean = prefs(context).getBoolean(KEY_INTIMATE_AGE_CONFIRMED, false)
     fun setIntimateAgeConfirmed(context: Context, on: Boolean) = prefs(context).edit().putBoolean(KEY_INTIMATE_AGE_CONFIRMED, on).apply()

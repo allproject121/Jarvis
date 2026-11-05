@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Layer 1: Frosted deep acrylic background -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="22dp" />
+            <gradient
+                android:type="linear"
+                android:angle="135"
+                android:startColor="?attr/themeCardGlassStart"
+                android:centerColor="?attr/themeSurface"
+                android:endColor="?attr/themeCardGlassEnd" />
+            <stroke
+                android:width="1.4dp"
+                android:color="?attr/themeCardBorder" />
+        </shape>
+    </item>
+
+    <!-- Layer 2: Top Glow Beam -->
+    <item
+        android:top="1dp"
+        android:left="16dp"
+        android:right="16dp"
+        android:height="2.5dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="2dp" />
+            <gradient
+                android:type="linear"
+                android:angle="0"
+                android:startColor="#00FFFFFF"
+                android:centerColor="?attr/themeGlassSpecular"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+
+    <!-- Layer 3: Apple-style Top Specular Glass Sheen -->
+    <item
+        android:top="2dp"
+        android:left="3dp"
+        android:right="3dp"
+        android:bottom="16dp">
+        <shape android:shape="rectangle">
+            <corners
+                android:topLeftRadius="20dp"
+                android:topRightRadius="20dp"
+                android:bottomLeftRadius="4dp"
+                android:bottomRightRadius="4dp" />
+            <gradient
+                android:type="linear"
+                android:angle="270"
+                android:startColor="#25FFFFFF"
+                android:centerColor="#08FFFFFF"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

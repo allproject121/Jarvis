@@ -91,7 +91,7 @@ fun AgentSettingsSection(onOpenToolDebug: () -> Unit = {}) {
                     description = tool.spec.description,
                     category = tool.spec.category,
                     requiresConfirmation = tool.spec.requiresConfirmation,
-                    source = if (tool is JarvisDispatcherTool) "Jarvis" else "AndroLLM"
+                    source = if (tool is JarvisDispatcherTool) "Jarvis" else "Extra (needs Agent pipeline)"
                 )
             }.sortedBy { it.name }
         }
@@ -105,8 +105,8 @@ fun AgentSettingsSection(onOpenToolDebug: () -> Unit = {}) {
         Column {
             ToggleRow(
                 icon = Icons.Filled.AccountTree,
-                title = "Agent pipeline",
-                subtitle = "Route LiteRT-LM, local core, Hermes and Cloud Gateway through the AndroLLM planner (plan → execute → re-plan). Gemini Live is unaffected.",
+                title = "Agent pipeline (extra engines)",
+                subtitle = "Only for the LiteRT-LM, Hermes and Cloud Gateway engines: plan → run tools → re-plan. Also offers the extra tools marked \"Extra\" below. Gemini Live and the offline brain always use Jarvis' own tool runner.",
                 checked = pipelineOn,
                 onCheckedChange = { on ->
                     AgentFlags.setPipelineEnabled(context, on)
@@ -116,7 +116,7 @@ fun AgentSettingsSection(onOpenToolDebug: () -> Unit = {}) {
             ToggleRow(
                 icon = Icons.Filled.Build,
                 title = "Tool calling",
-                subtitle = "Master switch for the agent pipeline's tools. Per-tool toggles below also apply to Jarvis' tool dispatcher.",
+                subtitle = if (settings.toolCallingEnabled) "On: Jarvis may use the tools switched on below (Gemini Live, offline brain, chat)." else "Off: Jarvis offers no tools and refuses every tool call - chat only.",
                 checked = settings.toolCallingEnabled,
                 onCheckedChange = { on -> update { it.copy(toolCallingEnabled = on) } }
             )
@@ -125,17 +125,25 @@ fun AgentSettingsSection(onOpenToolDebug: () -> Unit = {}) {
                 title = "Confirmations",
                 value = settings.confirmationMode.displayName
             ) { showModeDialog = true }
-            SliderSetting(
-                label = { "Max planning rounds per turn: ${it.toInt()}" },
-                value = settings.maxToolRounds.toFloat(),
-                valueRange = 1f..6f,
-                steps = 4,
-                onCommit = { v -> update { it.copy(maxToolRounds = v.toInt().coerceIn(1, 6)) } }
+            Text(
+                text = settings.confirmationMode.description +
+                    ". Jarvis shows Allow / Deny (inside Jarvis, or over other apps when 'Display over other apps' is allowed); no answer in 15 s = not done.",
+                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.deskInk),
+                modifier = Modifier.padding(start = 46.dp, end = 12.dp, bottom = 6.dp)
             )
+            if (pipelineOn) {
+                SliderSetting(
+                    label = { "Agent pipeline: max planning rounds per turn: ${it.toInt()}" },
+                    value = settings.maxToolRounds.toFloat(),
+                    valueRange = 1f..6f,
+                    steps = 4,
+                    onCommit = { v -> update { it.copy(maxToolRounds = v.toInt().coerceIn(1, 6)) } }
+                )
+            }
             SettingRow(
                 icon = Icons.Filled.BugReport,
                 title = "Tool Debug",
-                value = "Execution log"
+                value = "Run a tool • call log"
             ) { onOpenToolDebug() }
 
             HorizontalDivider(color = MaterialTheme.ledger.deskInk.copy(alpha = 0.15f))
@@ -146,6 +154,11 @@ fun AgentSettingsSection(onOpenToolDebug: () -> Unit = {}) {
                     fontWeight = FontWeight.SemiBold
                 ),
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+            )
+            Text(
+                text = "Off = Jarvis won't offer that tool to Gemini Live or the offline brain, and refuses it if asked.",
+                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.deskInk),
+                modifier = Modifier.padding(horizontal = 12.dp)
             )
             if (tools.isEmpty()) {
                 Text(

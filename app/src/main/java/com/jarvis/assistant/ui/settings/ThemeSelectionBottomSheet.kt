@@ -59,6 +59,7 @@ class ThemeSelectionBottomSheet : BottomSheetDialogFragment() {
         binding.cardThemeAndroNight.setOnClickListener { selectTheme(ThemeManager.THEME_ANDROLLM_NIGHT, "AndroLLM Night") }
         binding.cardThemeAndroParchment.setOnClickListener { selectTheme(ThemeManager.THEME_ANDROLLM_PARCHMENT, "AndroLLM Parchment") }
         binding.cardThemeMaya.setOnClickListener { selectMayaTheme() }
+        binding.cardThemeNova.setOnClickListener { selectTheme(ThemeManager.THEME_NOVA, "Nova") }
 
         binding.btnApplyCustom.setOnClickListener {
             val hex = binding.etCustomHex.text.toString().trim()
@@ -142,24 +143,12 @@ class ThemeSelectionBottomSheet : BottomSheetDialogFragment() {
         activity?.recreate()
     }
 
-    /**
-     * Maya is more than a palette: picking it also makes the companion experience
-     * (character stage, talk button, chips) the default Home screen.
-     */
+    /** Maya palette (colours only; Home stays the Jarvis Home). */
     private fun selectMayaTheme() {
         preferences.appTheme = ThemeManager.THEME_MAYA
         preferences.customThemeColor = ThemeManager.MAYA_ACCENT_HEX
-        val switchedHome = preferences.experienceMode != com.jarvis.assistant.data.preferences.AppPreferences.MODE_JARVIS_COMPANION
-        if (switchedHome) {
-            preferences.experienceMode = com.jarvis.assistant.data.preferences.AppPreferences.MODE_JARVIS_COMPANION
-        }
         updateCheckmarks(ThemeManager.THEME_MAYA)
-        Toast.makeText(
-            requireContext(),
-            if (switchedHome) "Maya theme on • Home now shows the character stage (switch back any time from Home)"
-            else "Theme set to Maya",
-            Toast.LENGTH_LONG
-        ).show()
+        Toast.makeText(requireContext(), "Theme set to Maya", Toast.LENGTH_SHORT).show()
 
         val mainActivity = activity as? MainActivity
         val homeFrag = mainActivity?.supportFragmentManager?.fragments
@@ -173,6 +162,7 @@ class ThemeSelectionBottomSheet : BottomSheetDialogFragment() {
 
     private fun updateCheckmarks(activeTheme: String) {
         binding.ivCheckMaya.visibility = if (activeTheme == ThemeManager.THEME_MAYA) View.VISIBLE else View.GONE
+        binding.ivCheckNova.visibility = if (activeTheme == ThemeManager.THEME_NOVA) View.VISIBLE else View.GONE
         binding.ivCheckLight.visibility = if (activeTheme == "pearl_white" || activeTheme == "light") View.VISIBLE else View.GONE
         binding.ivCheckDark.visibility = if (activeTheme == "dark") View.VISIBLE else View.GONE
         binding.ivCheckRed.visibility = if (activeTheme == "red") View.VISIBLE else View.GONE

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nova home: ghost icon button (12dp radius, hairline border). -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/themeAccentLight">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="12dp" />
+            <solid android:color="?attr/themeChipBg" />
+            <stroke
+                android:width="1dp"
+                android:color="?attr/themeCardBorder" />
+        </shape>
+    </item>
+</ripple>

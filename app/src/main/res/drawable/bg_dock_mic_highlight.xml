@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#4000F0FF">
+    android:color="#40FFFFFF">
     <item>
         <layer-list>
             <!-- Outer Glow Aura -->
             <item>
                 <shape android:shape="oval">
-                    <solid android:color="#2600F0FF" />
+                    <solid android:color="#26FFFFFF" />
                 </shape>
             </item>
             <!-- Arc Reactor Core -->
@@ -19,7 +19,7 @@
                     <gradient
                         android:type="linear"
                         android:angle="135"
-                        android:startColor="#00F0FF"
+                        android:startColor="?attr/themeAccent"
                         android:centerColor="#0284C7"
                         android:endColor="#0369A1" />
                     <stroke

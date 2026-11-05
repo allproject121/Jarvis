@@ -46,6 +46,11 @@ class SkillsBottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.btnOpenMacrosWatches.setOnClickListener {
+            HudSoundManager.playTapSound()
+            com.jarvis.assistant.maya.ui.MayaScreens.open(requireContext(), com.jarvis.assistant.maya.ui.MayaScreens.MACROS, "Macros & watches")
+        }
+
         binding.btnCloseSkills.setOnClickListener {
             HudSoundManager.playTapSound()
             dismiss()
@@ -76,21 +81,6 @@ class SkillsBottomSheet : BottomSheetDialogFragment() {
             PocketTtsEngine.speak("Sir, PocketTTS on-device neural voice engine is operating with low latency.", requireContext())
         }
 
-        // 5. Touch Guard Sentinel
-        binding.btnRunTouchGuardSkill.setOnClickListener {
-            HudSoundManager.playTapSound()
-            val prefs = com.jarvis.assistant.JarvisApp.instance.preferences
-            val currentArmed = prefs.isTouchGuardArmed
-            if (currentArmed) {
-                prefs.isTouchGuardArmed = false
-                com.jarvis.assistant.security.guardian.TouchGuardManager.disarm(requireContext())
-                Toast.makeText(requireContext(), "Touch Guard Disarmed.", Toast.LENGTH_SHORT).show()
-            } else {
-                prefs.isTouchGuardArmed = true
-                com.jarvis.assistant.security.guardian.TouchGuardManager.arm(requireContext())
-                Toast.makeText(requireContext(), "Touch Guard ARMED! Keep phone still.", Toast.LENGTH_LONG).show()
-            }
-        }
     }
 
     private fun promptAndRunMacro(macroName: String, paramKey: String, defaultPrompt: String) {

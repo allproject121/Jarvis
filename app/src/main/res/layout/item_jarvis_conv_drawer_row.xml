@@ -18,7 +18,8 @@
         android:textAllCaps="true"
         android:textColor="?attr/themeTextMuted"
         android:textSize="11sp"
-        android:textStyle="bold"
+        android:fontFamily="@font/inter"
+        android:textFontWeight="600"
         android:visibility="gone" />
 
     <LinearLayout
@@ -28,7 +29,7 @@
         android:layout_marginTop="4dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@drawable/bg_jarvis_card"
+        android:background="@drawable/bg_set_card_md"
         android:paddingStart="12dp"
         android:paddingTop="10dp"
         android:paddingEnd="6dp"
@@ -48,7 +49,8 @@
                 android:maxLines="1"
                 android:textColor="?attr/themeTextPrimary"
                 android:textSize="14sp"
-                android:fontFamily="sans-serif-medium" />
+                android:fontFamily="@font/inter"
+                android:textFontWeight="500" />
 
             <TextView
                 android:id="@+id/tvDrawerItemSubtitle"
@@ -58,7 +60,8 @@
                 android:ellipsize="end"
                 android:maxLines="2"
                 android:textColor="?attr/themeTextMuted"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                android:fontFamily="@font/inter" />
         </LinearLayout>
 
         <ImageView

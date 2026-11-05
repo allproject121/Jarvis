@@ -229,14 +229,6 @@ class JarvisNotificationListener : NotificationListenerService() {
 
         Log.i(TAG, "[$appLabel] from $title: $text (hasReply=${directReplyAction != null})")
 
-        // Maya media pack (WP9): WhatsApp auto-reply / support mode / per-contact handling.
-        // Additive hook — the engine is a no-op unless the user enabled auto-reply or a contact rule.
-        try {
-            com.jarvis.assistant.maya.media.WhatsAppAutoReplyEngine.onNotification(applicationContext, item)
-        } catch (e: Throwable) {
-            Log.w(TAG, "Maya auto-reply hook failed: ${e.message}")
-        }
-
         // If Jarvis is active in live conversation and reading is enabled, inject notification event
         val prefs = JarvisApp.instance.preferences
         if (prefs.isWhatsAppReaderEnabled && isMessaging) {

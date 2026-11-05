@@ -38,7 +38,6 @@ class CustomizationStudioActivity : AppCompatActivity() {
     private var isOrbLoaded = false
     private var companionCount = 0
     private var companionType = "orb"
-    private var selectedWallpaperMode = "character"
     private var hasUserChangedEntityInStudio = false
 
     private val pickStudioMediaLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri ->
@@ -337,16 +336,15 @@ class CustomizationStudioActivity : AppCompatActivity() {
         binding.switchAudioReactiveOrb.isChecked = preferences.isAudioReactiveOrb
 
         // 7. Voice Persona & Assistant Name
+        // "" = keep whatever persona is set elsewhere (Maria, Pari, Assistant...) unless a card is tapped.
         selectedPersona = when {
-            preferences.isJarvisCompanionMode || preferences.personality.equals(com.jarvis.assistant.data.model.GeminiConstants.PERSONALITY_COMPANION, ignoreCase = true) || preferences.assistantName.equals("JARVIS", ignoreCase = true) -> "JARVIS"
-            preferences.voice.equals("Aoede", ignoreCase = true) -> "friday"
-            preferences.voice.equals("Charon", ignoreCase = true) -> "edith"
-            else -> "jarvis"
+            preferences.personality.equals(com.jarvis.assistant.data.model.GeminiConstants.PERSONALITY_ROSHAN, ignoreCase = true) -> "jarvis"
+            preferences.personality.equals(com.jarvis.assistant.data.model.GeminiConstants.PERSONALITY_GIRLFRIEND, ignoreCase = true) && preferences.voice.equals("Aoede", ignoreCase = true) -> "friday"
+            preferences.personality.equals(com.jarvis.assistant.data.model.GeminiConstants.PERSONALITY_ASSISTANT, ignoreCase = true) && preferences.voice.equals("Charon", ignoreCase = true) -> "edith"
+            else -> ""
         }
 
         binding.etStudioAssistantName.setText(preferences.assistantName)
-        selectedWallpaperMode = preferences.wallpaperMode
-        updateWallpaperModeUI(selectedWallpaperMode)
 
         updatePresetUI(selectedPreset)
         updateThemeUI(selectedTheme)
@@ -958,9 +956,6 @@ class CustomizationStudioActivity : AppCompatActivity() {
                     else -> themeKey
                 }
                 customColorHex = if (themeKey == "red") "#FF4D5E" else if (themeKey == "light") "#FFFFFF" else if (themeKey == ThemeManager.THEME_MAYA) ThemeManager.MAYA_ACCENT_HEX else ""
-                if (themeKey == ThemeManager.THEME_MAYA) {
-                    Toast.makeText(this, "Maya look selected • after Save, Home shows the character stage", Toast.LENGTH_SHORT).show()
-                }
                 updateThemeUI(themeKey)
                 updatePresetUI(selectedPreset)
                 applyPreviewOrbParams()
@@ -1055,13 +1050,6 @@ class CustomizationStudioActivity : AppCompatActivity() {
         })
 
         // AI Voice Persona Selection
-        binding.cardPersonaJarvisCompanion.setOnClickListener {
-            HudSoundManager.playTapSound()
-            selectedPersona = "JARVIS"
-            binding.etStudioAssistantName.setText("JARVIS")
-            updateNameChipUI("JARVIS")
-            updatePersonaUI("JARVIS")
-        }
         binding.cardPersonaJarvis.setOnClickListener {
             HudSoundManager.playTapSound()
             selectedPersona = "jarvis"
@@ -1089,13 +1077,6 @@ class CustomizationStudioActivity : AppCompatActivity() {
             HudSoundManager.playTapSound()
             binding.etStudioAssistantName.setText("JARVIS")
             updateNameChipUI("JARVIS")
-        }
-        binding.btnNameChipJarvisCompanion.setOnClickListener {
-            HudSoundManager.playTapSound()
-            binding.etStudioAssistantName.setText("JARVIS")
-            updateNameChipUI("JARVIS")
-            selectedPersona = "JARVIS"
-            updatePersonaUI("JARVIS")
         }
         binding.btnNameChipFriday.setOnClickListener {
             HudSoundManager.playTapSound()
@@ -1139,28 +1120,10 @@ class CustomizationStudioActivity : AppCompatActivity() {
             binding.etStudioAssistantName.setText("ANALYST")
             Toast.makeText(this, "Template Applied: Executive Summary & TL;DR", Toast.LENGTH_SHORT).show()
         }
-
-        // Live Wallpaper Mode Selection
-        binding.cardWallpaperCharacter.setOnClickListener {
-            HudSoundManager.playTapSound()
-            selectedWallpaperMode = "character"
-            updateWallpaperModeUI("character")
-        }
-        binding.cardWallpaperArcReactor.setOnClickListener {
-            HudSoundManager.playTapSound()
-            selectedWallpaperMode = "arc_reactor"
-            updateWallpaperModeUI("arc_reactor")
-        }
-        binding.btnStudioApplyLiveWallpaper.setOnClickListener {
-            HudSoundManager.playSuccessSound()
-            preferences.wallpaperMode = selectedWallpaperMode
-            launchLiveWallpaperPicker()
-        }
     }
 
     private fun updatePersonaUI(persona: String) {
         val cards = listOf(
-            binding.cardPersonaJarvisCompanion to "JARVIS",
             binding.cardPersonaJarvis to "jarvis",
             binding.cardPersonaFriday to "friday",
             binding.cardPersonaEdith to "edith"
@@ -1194,21 +1157,10 @@ class CustomizationStudioActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateWallpaperModeUI(mode: String) {
-        if (mode.equals("arc_reactor", ignoreCase = true)) {
-            binding.cardWallpaperArcReactor.setBackgroundResource(R.drawable.bg_jarvis_chip)
-            binding.cardWallpaperCharacter.setBackgroundResource(R.drawable.bg_jarvis_row_item)
-        } else {
-            binding.cardWallpaperCharacter.setBackgroundResource(R.drawable.bg_jarvis_chip)
-            binding.cardWallpaperArcReactor.setBackgroundResource(R.drawable.bg_jarvis_row_item)
-        }
-    }
-
     private fun updateNameChipUI(name: String) {
         val upper = name.uppercase()
         val chips = listOf(
             binding.btnNameChipJarvis to "JARVIS",
-            binding.btnNameChipJarvisCompanion to "JARVIS",
             binding.btnNameChipFriday to "FRIDAY"
         )
         chips.forEach { (chip, key) ->
@@ -1218,25 +1170,6 @@ class CustomizationStudioActivity : AppCompatActivity() {
             } else {
                 chip.setBackgroundResource(R.drawable.bg_jarvis_row_item)
                 chip.setTextColor(ContextCompat.getColor(this, R.color.text_primary))
-            }
-        }
-    }
-
-    private fun launchLiveWallpaperPicker() {
-        try {
-            val intent = android.content.Intent(android.app.WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).apply {
-                putExtra(
-                    android.app.WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
-                    android.content.ComponentName(this@CustomizationStudioActivity, com.jarvis.assistant.wallpaper.JarvisWallpaperService::class.java)
-                )
-            }
-            startActivity(intent)
-        } catch (_: Exception) {
-            try {
-                val chooserIntent = android.content.Intent(android.app.WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER)
-                startActivity(chooserIntent)
-            } catch (e: Exception) {
-                Toast.makeText(this, "Wallpaper chooser not available: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -1340,10 +1273,6 @@ class CustomizationStudioActivity : AppCompatActivity() {
 
                 // Save Theme
                 preferences.appTheme = selectedTheme
-                if (selectedTheme == ThemeManager.THEME_MAYA) {
-                    // Maya is the companion look: the character stage becomes the default Home.
-                    preferences.experienceMode = com.jarvis.assistant.data.preferences.AppPreferences.MODE_JARVIS_COMPANION
-                }
                 // Save Widgets & HUD Overlays
                 preferences.hideAllHomeCards = binding.switchHideAllCards.isChecked
                 preferences.showTelemetryWidget = binding.switchTelemetryWidget.isChecked
@@ -1367,22 +1296,14 @@ class CustomizationStudioActivity : AppCompatActivity() {
                         .update { it.copy(sensitivity = voskSensitivity) }
                 }
 
-                // Save Assistant Name & Live Wallpaper Mode
+                // Save Assistant Name
                 val customName = binding.etStudioAssistantName.text?.toString()?.trim() ?: ""
                 if (customName.isNotEmpty()) {
                     preferences.assistantName = customName
                 }
-                preferences.wallpaperMode = selectedWallpaperMode
 
                 // Save AI Voice Persona
                 when (selectedPersona) {
-                    "JARVIS" -> {
-                        preferences.voice = "Aoede"
-                        preferences.personality = com.jarvis.assistant.data.model.GeminiConstants.PERSONALITY_COMPANION
-                        if (customName.isEmpty()) {
-                            preferences.assistantName = "JARVIS"
-                        }
-                    }
                     "friday" -> {
                         preferences.voice = "Aoede"
                         preferences.personality = com.jarvis.assistant.data.model.GeminiConstants.PERSONALITY_GIRLFRIEND
@@ -1391,10 +1312,11 @@ class CustomizationStudioActivity : AppCompatActivity() {
                         preferences.voice = "Charon"
                         preferences.personality = com.jarvis.assistant.data.model.GeminiConstants.PERSONALITY_ASSISTANT
                     }
-                    else -> {
+                    "jarvis" -> {
                         preferences.voice = "Puck"
                         preferences.personality = com.jarvis.assistant.data.model.GeminiConstants.PERSONALITY_ROSHAN
                     }
+                    else -> Unit // no persona card picked: keep the current persona & voice
                 }
 
                 ThemeManager.applyTheme(this)

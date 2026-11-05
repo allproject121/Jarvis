@@ -140,60 +140,6 @@ class MediaPrefs private constructor(context: Context) {
         writeList(KEY_RECENT_IMAGES, list.take(40))
     }
 
-    // ---------------- WhatsApp auto-reply ----------------
-
-    var autoReplyEnabled: Boolean
-        get() = prefs.getBoolean(KEY_AR_ENABLED, false)
-        set(value) = prefs.edit().putBoolean(KEY_AR_ENABLED, value).apply()
-
-    /** Free-text style hint, e.g. "short, friendly, Hinglish". */
-    var autoReplyStyle: String
-        get() = prefs.getString(KEY_AR_STYLE, "") ?: ""
-        set(value) = prefs.edit().putString(KEY_AR_STYLE, value.trim()).apply()
-
-    var autoReplyAwayMessage: String
-        get() = prefs.getString(KEY_AR_AWAY, "") ?: ""
-        set(value) = prefs.edit().putString(KEY_AR_AWAY, value.trim()).apply()
-
-    /** Customer-support mode: answer FAQs about the user's business instead of a plain away line. */
-    var autoReplySupportMode: Boolean
-        get() = prefs.getBoolean(KEY_AR_SUPPORT, false)
-        set(value) = prefs.edit().putBoolean(KEY_AR_SUPPORT, value).apply()
-
-    /** Per-contact handling rules: contact name (lowercase) -> instructions. */
-    fun handledContacts(): Map<String, String> {
-        val raw = prefs.getString(KEY_AR_HANDLED, null) ?: return emptyMap()
-        return try {
-            val obj = JSONObject(raw)
-            val out = linkedMapOf<String, String>()
-            obj.keys().forEach { k -> out[k] = obj.optString(k, "") }
-            out
-        } catch (e: Exception) {
-            emptyMap()
-        }
-    }
-
-    fun setHandledContact(contact: String, instructions: String) {
-        val map = handledContacts().toMutableMap()
-        map[contact.trim().lowercase()] = instructions.trim()
-        prefs.edit().putString(KEY_AR_HANDLED, JSONObject(map as Map<*, *>).toString()).apply()
-    }
-
-    fun removeHandledContact(contact: String): Boolean {
-        val map = handledContacts().toMutableMap()
-        val removed = map.remove(contact.trim().lowercase()) != null
-        prefs.edit().putString(KEY_AR_HANDLED, JSONObject(map as Map<*, *>).toString()).apply()
-        return removed
-    }
-
-    fun handlingRuleFor(contact: String): String? {
-        val key = contact.trim().lowercase()
-        if (key.isBlank()) return null
-        val map = handledContacts()
-        map[key]?.let { return it }
-        return map.entries.firstOrNull { key.contains(it.key) || it.key.contains(key) }?.value
-    }
-
     // ---------------- Music ----------------
 
     /** "youtube_music" | "spotify" | "gaana" | "youtube" | "jiosaavn" | "" (ask / system default). */

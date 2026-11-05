@@ -52,7 +52,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="CUSTOMIZE HOME SCREEN"
+                android:text="HOME SCREEN"
                 android:textColor="?attr/themeTextPrimary"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -62,7 +62,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Hide or show any card, widget, or option"
+                android:text="Cards, widgets, HUD size &amp; 3D character"
                 android:textColor="?attr/themeAccent"
                 android:textSize="10.5sp"
                 android:letterSpacing="0.04"
@@ -84,26 +84,12 @@
             android:layout_width="0dp"
             android:layout_height="38dp"
             android:layout_weight="1"
-            android:layout_marginEnd="6dp"
-            android:text="Show All"
+            android:text="Show everything"
             android:textSize="11sp"
             android:textStyle="bold"
             app:cornerRadius="8dp"
-            android:backgroundTint="?attr/themeAccent"
-            android:textColor="#FFFFFF" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnHideAllHomeCards"
-            android:layout_width="0dp"
-            android:layout_height="38dp"
-            android:layout_weight="1"
-            android:layout_marginStart="6dp"
-            android:text="Hide All (Zen)"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            app:cornerRadius="8dp"
-            android:backgroundTint="?attr/themeCardBorder"
-            android:textColor="?attr/themeTextPrimary" />
+            android:backgroundTint="?attr/themeAccentFill"
+            android:textColor="?attr/themeOnAccent" />
     </LinearLayout>
 
     <View
@@ -116,7 +102,6 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxHeight="420dp"
         android:fillViewport="true"
         android:scrollbars="none">
 
@@ -124,6 +109,224 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
+            <!-- Section 0: layout, HUD size and character (merged from the old Settings rows
+                 "Home HUD & widgets" and "Hide home screen cards", 2026-11-05) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LAYOUT, HUD SIZE &amp; CHARACTER"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/rowHideAllCards"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_jarvis_row_item"
+                android:paddingVertical="10dp"
+                android:paddingHorizontal="10dp"
+                android:layout_marginBottom="6dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_zen_mode"
+                    app:tint="?attr/themeAccent" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hide all home cards"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Clean edge-to-edge character view (Zen)"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchHideAllCards"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/rowCharacter3d"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_jarvis_row_item"
+                android:paddingVertical="10dp"
+                android:paddingHorizontal="10dp"
+                android:layout_marginBottom="6dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_settings_orb"
+                    app:tint="?attr/themeAccent" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="3D character"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="On: Mora 3D character · Off: arc-reactor orb"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchCharacter3d"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_row_item"
+                android:paddingVertical="10dp"
+                android:paddingHorizontal="10dp"
+                android:layout_marginBottom="6dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_code_chip"
+                        app:tint="?attr/themeAccent" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="HUD size"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Size of the orb / 3D character on Home"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvHudScaleValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1.00x"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <SeekBar
+                    android:id="@+id/seekHudScale"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:max="12"
+                    android:progressTint="?attr/themeAccent"
+                    android:thumbTint="?attr/themeAccent" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/rowCompactStage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_jarvis_row_item"
+                android:paddingVertical="10dp"
+                android:paddingHorizontal="10dp"
+                android:layout_marginBottom="14dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_settings_story"
+                    app:tint="?attr/themeAccent" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Compact HUD stage"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="On: stage uses 48% of the screen · Off: 60%"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchCompactStage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
 
             <!-- Section 1: HUD & Telemetry -->
             <TextView
@@ -529,72 +732,6 @@
 
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/switchProtocolsSection"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-
-            <!-- Arc Reactor Live Wallpaper -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_jarvis_row_item"
-                android:paddingVertical="8dp"
-                android:paddingHorizontal="10dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginBottom="4dp">
-
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:src="@drawable/ic_sparkle"
-                    app:tint="?attr/themeAccent" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Live Wallpaper Card"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="12sp"
-                    android:layout_marginStart="12dp" />
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switchWallpaperCard"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-
-            <!-- Biometric AppLock -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_jarvis_row_item"
-                android:paddingVertical="8dp"
-                android:paddingHorizontal="10dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginBottom="4dp">
-
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:src="@drawable/ic_verified_badge"
-                    app:tint="?attr/themeAccent" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Biometric AppLock Card"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="12sp"
-                    android:layout_marginStart="12dp" />
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switchAppLockCard"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>

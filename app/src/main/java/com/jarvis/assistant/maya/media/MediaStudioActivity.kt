@@ -12,6 +12,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -53,6 +59,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.jarvis.assistant.ui.compose.theme.AndroLLMTheme
 import com.jarvis.assistant.util.ThemeManager
@@ -86,11 +93,33 @@ class MediaStudioActivity : AppCompatActivity() {
 @Composable
 private fun SectionCard(title: String, content: @Composable () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             content()
         }
     }
+}
+
+/** Chips that wrap onto the next line instead of running off a 411 dp-wide screen. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ChipFlow(content: @Composable () -> Unit) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) { content() }
+}
+
+/** Buttons that wrap when the row is too narrow (e.g. large font scale). */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ButtonFlow(content: @Composable () -> Unit) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) { content() }
 }
 
 @Composable
@@ -104,23 +133,28 @@ private fun ToggleRow(label: String, checked: Boolean, onChange: (Boolean) -> Un
 @Composable
 private fun SecretField(label: String, initial: String, onSave: (String) -> Unit) {
     var value by remember { mutableStateOf(initial) }
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         OutlinedTextField(
-            value = value, onValueChange = { value = it }, label = { Text(label) }, singleLine = true,
+            value = value, onValueChange = { value = it },
+            label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) }, singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.weight(1f)
         )
-        TextButton(onClick = { onSave(value) }) { Text("Save") }
+        TextButton(onClick = { onSave(value) }, modifier = Modifier.widthIn(min = 56.dp)) { Text("Save") }
     }
 }
 
 @Composable
 private fun TextSetting(label: String, initial: String, singleLine: Boolean = true, onSave: (String) -> Unit) {
     var value by remember { mutableStateOf(initial) }
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        OutlinedTextField(value = value, onValueChange = { value = it }, label = { Text(label) }, singleLine = singleLine, modifier = Modifier.weight(1f))
-        TextButton(onClick = { onSave(value) }) { Text("Save") }
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        OutlinedTextField(
+            value = value, onValueChange = { value = it },
+            label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            singleLine = singleLine, modifier = Modifier.weight(1f)
+        )
+        TextButton(onClick = { onSave(value) }, modifier = Modifier.widthIn(min = 56.dp)) { Text("Save") }
     }
 }
 
@@ -136,7 +170,7 @@ private fun loadThumb(context: Context, ref: String): Bitmap? = try {
 private fun Thumb(ref: String, onClick: () -> Unit) {
     val context = LocalContext.current
     val bmp by produceState<Bitmap?>(initialValue = null, ref) { value = withContext(Dispatchers.IO) { loadThumb(context, ref) } }
-    Surface(modifier = Modifier.size(96.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick), color = MaterialTheme.colorScheme.surfaceVariant) {
+    Surface(modifier = Modifier.size(84.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick), color = MaterialTheme.colorScheme.surfaceVariant) {
         bmp?.let { Image(bitmap = it.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
     }
 }
@@ -156,32 +190,35 @@ private fun MediaStudioScreen(onBack: () -> Unit) {
     var status by remember { mutableStateOf("") }
     var gallery by remember { mutableStateOf(prefs.recentImages()) }
 
-    var arEnabled by remember { mutableStateOf(prefs.autoReplyEnabled) }
-    var supportMode by remember { mutableStateOf(prefs.autoReplySupportMode) }
-    var handled by remember { mutableStateOf(prefs.handledContacts()) }
-    var newContact by remember { mutableStateOf("") }
-    var newRule by remember { mutableStateOf("") }
 
     var musicApp by remember { mutableStateOf(prefs.defaultMusicApp) }
     var fps by remember { mutableStateOf(prefs.commentaryFps) }
     var commentaryOn by remember { mutableStateOf(CommentaryMode.isOn) }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .imePadding()
+            .padding(horizontal = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            Row(Modifier.fillMaxWidth().padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Media Studio", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "Media Studio", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)
+                )
                 TextButton(onClick = onBack) { Text("Close") }
             }
-            Text("Image generation, WhatsApp auto-reply, music, YouTube & maps keys, commentary.", style = MaterialTheme.typography.bodySmall)
+            Text("Image generation, music, YouTube & maps keys, commentary.", style = MaterialTheme.typography.bodySmall)
         }
 
         item {
             SectionCard("Image generation") {
                 Text("Provider", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ChipFlow {
                     listOf(
                         MediaPrefs.PROVIDER_POLLINATIONS to "Pollinations",
                         MediaPrefs.PROVIDER_GEMINI_IMAGE to "Nano Banana",
@@ -199,11 +236,24 @@ private fun MediaStudioScreen(onBack: () -> Unit) {
                         else -> "OpenAI images (b64). Uses the key below or your OpenAI chat key."
                     }, style = MaterialTheme.typography.bodySmall
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf("square", "portrait", "landscape", "instagram_story").forEach { s ->
-                        FilterChip(selected = size == s, onClick = { size = s; prefs.imageSize = s }, label = { Text(s.replace('_', ' ')) })
+                Text("Image size", style = MaterialTheme.typography.labelLarge)
+                ChipFlow {
+                    listOf(
+                        "square" to "Square",
+                        "portrait" to "Portrait",
+                        "landscape" to "Landscape",
+                        "instagram_post" to "Post 4:5",
+                        "instagram_story" to "Story / Reel 9:16"
+                    ).forEach { (s, label) ->
+                        FilterChip(
+                            selected = ImageSize.parse(size) == ImageSize.parse(s),
+                            onClick = { size = s; prefs.imageSize = s },
+                            label = { Text(label) }
+                        )
                     }
                 }
+                val dims = ImageSize.parse(size)
+                Text("Output: ${dims.width} x ${dims.height} px (every provider is cropped/scaled to this size).", style = MaterialTheme.typography.bodySmall)
                 SecretField("Pollinations token (optional)", prefs.pollinationsToken) { prefs.pollinationsToken = it; toast(context, "Saved") }
                 SecretField("OpenAI image API key", prefs.openAiImageKey) { prefs.openAiImageKey = it; toast(context, "Saved") }
                 TextSetting("Gemini image model", if (provider == MediaPrefs.PROVIDER_IMAGEN) prefs.imagenModel else prefs.geminiImageModel) {
@@ -212,8 +262,8 @@ private fun MediaStudioScreen(onBack: () -> Unit) {
                 }
                 TextSetting("OpenAI image model (e.g. gpt-image-1)", prefs.openAiImageModel) { prefs.openAiImageModel = it; toast(context, "Saved") }
                 HorizontalDivider()
-                OutlinedTextField(value = testPrompt, onValueChange = { testPrompt = it }, label = { Text("Test prompt") }, modifier = Modifier.fillMaxWidth())
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(value = testPrompt, onValueChange = { testPrompt = it }, label = { Text("Test prompt") }, minLines = 2, maxLines = 4, modifier = Modifier.fillMaxWidth())
+                ButtonFlow {
                     Button(enabled = !generating, onClick = {
                         generating = true; status = "Generating…"
                         scope.launch {
@@ -230,14 +280,14 @@ private fun MediaStudioScreen(onBack: () -> Unit) {
                     OutlinedButton(enabled = !generating, onClick = {
                         generating = true
                         scope.launch {
-                            val (bmp, saved) = QuoteImageRenderer.renderAndSave(context, testPrompt, null, null, ImageSize.STORY, false)
+                            val (bmp, saved) = QuoteImageRenderer.renderAndSave(context, testPrompt, null, null, ImageSize.parse(size, ImageSize.STORY), false)
                             bmp.recycle()
                             gallery = prefs.recentImages()
                             status = if (saved != null) "Quote poster saved." else "Could not save poster."
                             generating = false
                         }
                     }) { Text("Quote poster") }
-                    if (generating) CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp)
+                    if (generating) CircularProgressIndicator(modifier = Modifier.padding(top = 8.dp).size(22.dp), strokeWidth = 2.dp)
                 }
                 if (status.isNotBlank()) Text(status, style = MaterialTheme.typography.bodySmall)
                 if (gallery.isNotEmpty()) {
@@ -254,51 +304,16 @@ private fun MediaStudioScreen(onBack: () -> Unit) {
         }
 
         item {
-            SectionCard("WhatsApp auto-reply & support mode") {
-                ToggleRow("Auto-reply when I'm away", arEnabled) { arEnabled = it; prefs.autoReplyEnabled = it }
-                ToggleRow("Customer-support mode", supportMode) { supportMode = it; prefs.autoReplySupportMode = it }
-                TextSetting("Away message", prefs.autoReplyAwayMessage, singleLine = false) { prefs.autoReplyAwayMessage = it; toast(context, "Saved") }
-                TextSetting("Reply style", prefs.autoReplyStyle) { prefs.autoReplyStyle = it; toast(context, "Saved") }
-                val name = remember { runCatching { com.jarvis.assistant.JarvisApp.instance.preferences.assistantName }.getOrDefault("JARVIS") }
-                Text("Every auto-reply ends with \"${AutoReplySignature.line(name)}\" — this line is fixed and cannot be removed.", style = MaterialTheme.typography.bodySmall)
-                if (!com.jarvis.assistant.automation.notification.JarvisNotificationListener.isNotificationServiceEnabled(context)) {
-                    OutlinedButton(onClick = {
-                        runCatching { context.startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-                    }) { Text("Grant notification access (required)") }
-                }
-                HorizontalDivider()
-                Text("Chats I handle for you", style = MaterialTheme.typography.labelLarge)
-                if (handled.isEmpty()) Text("None yet. Say \"Rahul ka chat handle karo, bolo main 6 baje free hoon\".", style = MaterialTheme.typography.bodySmall)
-                handled.forEach { (c, rule) ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text(c, fontWeight = FontWeight.Medium)
-                            Text(rule, style = MaterialTheme.typography.bodySmall)
-                        }
-                        TextButton(onClick = { prefs.removeHandledContact(c); handled = prefs.handledContacts() }) { Text("Stop") }
-                    }
-                }
-                OutlinedTextField(value = newContact, onValueChange = { newContact = it }, label = { Text("Contact name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = newRule, onValueChange = { newRule = it }, label = { Text("Instructions") }, modifier = Modifier.fillMaxWidth())
-                Button(enabled = newContact.isNotBlank() && newRule.isNotBlank(), onClick = {
-                    prefs.setHandledContact(newContact, newRule); handled = prefs.handledContacts(); newContact = ""; newRule = ""
-                }) { Text("Add rule") }
-            }
-        }
-
-        item {
             SectionCard("Music") {
                 Text("Default music app", style = MaterialTheme.typography.labelLarge)
                 val installed = remember { MusicPlayback.installedApps(context).map { it.id }.toSet() }
-                MusicPlayback.APPS.chunked(3).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        row.forEach { app ->
-                            FilterChip(
-                                selected = musicApp == app.id,
-                                onClick = { musicApp = app.id; prefs.defaultMusicApp = app.id },
-                                label = { Text(app.label + if (app.id in installed) "" else " (n/a)") }
-                            )
-                        }
+                ChipFlow {
+                    MusicPlayback.APPS.forEach { app ->
+                        FilterChip(
+                            selected = musicApp == app.id,
+                            onClick = { musicApp = app.id; prefs.defaultMusicApp = app.id },
+                            label = { Text(app.label + if (app.id in installed) "" else " (n/a)") }
+                        )
                     }
                 }
                 val recent = remember { prefs.recentSongs().take(5) }
@@ -319,10 +334,10 @@ private fun MediaStudioScreen(onBack: () -> Unit) {
             SectionCard("Commentary mode") {
                 Text("Live esports commentary on your shared screen. Start the live session + screen share, then say \"commentary shuru karo\".", style = MaterialTheme.typography.bodySmall)
                 TextSetting("Default game", prefs.commentaryGame) { prefs.commentaryGame = it; toast(context, "Saved") }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ChipFlow {
                     (1..4).forEach { f -> FilterChip(selected = fps == f, onClick = { fps = f; prefs.commentaryFps = f }, label = { Text("$f fps") }) }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ButtonFlow {
                     Button(onClick = {
                         val (okk, msg) = CommentaryMode.start(context, null); commentaryOn = CommentaryMode.isOn; toast(context, msg)
                         if (!okk) status = msg

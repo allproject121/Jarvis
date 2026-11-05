@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Maya companion home components. Colours come from theme attrs so every Jarvis theme stays legible. -->
+<resources>
+
+    <style name="MayaCharacterCard">
+        <item name="android:layout_width">150dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginEnd">10dp</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:background">@drawable/bg_maya_card</item>
+        <item name="android:padding">14dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="MayaCharacterMono">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:layout_marginBottom">10dp</item>
+    </style>
+
+    <style name="MayaCharacterName">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textColor">?attr/themeTextPrimary</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <style name="MayaCharacterTagline">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">3dp</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:minLines">2</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textColor">?attr/themeTextSecondary</item>
+        <item name="android:textSize">11.5sp</item>
+    </style>
+
+    <style name="MayaCharacterPreview">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:background">@drawable/bg_maya_chip</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:text">▶  Voice</item>
+        <item name="android:textColor">?attr/themeTextPrimary</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="MayaToolCard">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:background">@drawable/bg_maya_card</item>
+        <item name="android:padding">16dp</item>
+    </style>
+
+    <style name="MayaToolTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:textColor">?attr/themeTextPrimary</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="MayaToolBody">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="android:lineSpacingExtra">1dp</item>
+        <item name="android:textColor">?attr/themeTextSecondary</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="MayaToolButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">38dp</item>
+        <item name="android:layout_marginTop">12dp</item>
+        <item name="android:background">@drawable/bg_maya_button</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+</resources>

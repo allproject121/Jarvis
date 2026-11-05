@@ -59,6 +59,10 @@ class HomeFragment : Fragment() {
     private var taskFallbackPanel: android.widget.LinearLayout? = null
     private var taskFallbackText: android.widget.TextView? = null
 
+    // Nova home (2026-11-05): window insets remembered so code-driven padding never drops them.
+    private var systemTopInset = 0
+    private var navBottomInset = 0
+
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -146,13 +150,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-        binding.btnSwitchToJarvisMode.visibility = View.GONE
-        binding.btnSwitchToJarvisMode.setOnClickListener {
-            HudSoundManager.playTapSound()
-            preferences.experienceMode = com.jarvis.assistant.data.preferences.AppPreferences.MODE_JARVIS
-            android.widget.Toast.makeText(requireContext(), "💜 Switched to JARVIS Mode", android.widget.Toast.LENGTH_SHORT).show()
-            (activity as? MainActivity)?.switchExperienceMode(com.jarvis.assistant.data.preferences.AppPreferences.MODE_JARVIS)
-        }
         // Default to 3D Mora Cyber Character on Home Screen per user specification
         try {
             val explicitChoice = preferences.userExplicitlyChoseEntity
@@ -166,9 +163,8 @@ class HomeFragment : Fragment() {
         if (isMoraInit) {
             binding.orbHaloRing.visibility = View.GONE
             try {
-                val density = resources.displayMetrics.density
                 val screenHeight = resources.displayMetrics.heightPixels
-                val initialHeight = if (preferences.hideAllHomeCards) screenHeight else (360 * density).toInt()
+                val initialHeight = if (preferences.hideAllHomeCards) screenHeight else heroStageHeight()
                 val params = binding.orbContainer.layoutParams
                 if (params != null) {
                     params.height = initialHeight
@@ -203,7 +199,7 @@ class HomeFragment : Fragment() {
         }
 
         binding.cardUpdateVoice.setOnClickListener {
-            startActivity(Intent(requireContext(), com.jarvis.assistant.ui.voice.VoiceEnrollmentActivity::class.java))
+            com.jarvis.assistant.maya.ui.MayaScreens.open(requireContext(), com.jarvis.assistant.maya.ui.MayaScreens.VOICE_ENGINE, "Voice engine")
         }
 
         binding.cardUpdateGodsEye.setOnClickListener {
@@ -225,17 +221,19 @@ class HomeFragment : Fragment() {
         }
 
         // Safe Window Insets: Guarantee header sits safely below status bar / camera cutout without being pushed down too far
-        ViewCompat.setOnApplyWindowInsetsListener(binding.homeScrollView) { v, insets ->
-            val statusBarInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val density = resources.displayMetrics.density
-            val topInset = statusBarInsets.top
-            val safeTopPadding = if (topInset > 0) topInset + (6 * density).toInt() else (14 * density).toInt()
-            v.setPadding(
-                v.paddingLeft,
-                safeTopPadding,
-                v.paddingRight,
-                v.paddingBottom
-            )
+        ViewCompat.setOnApplyWindowInsetsListener(binding.homeScrollView) { _, insets ->
+            systemTopInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top
+            navBottomInset = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            applyHomeScrollPadding(isZenModeActive || preferences.hideAllHomeCards)
+            // Focus-mode exit buttons float over the screen edges: keep them clear of the system bars.
+            (binding.btnExitZenModeTop.layoutParams as? ViewGroup.MarginLayoutParams)?.let {
+                it.topMargin = systemTopInset + dp(12)
+                binding.btnExitZenModeTop.layoutParams = it
+            }
+            (binding.btnExitZenMode.layoutParams as? ViewGroup.MarginLayoutParams)?.let {
+                it.bottomMargin = navBottomInset + dp(24)
+                binding.btnExitZenMode.layoutParams = it
+            }
             insets
         }
 
@@ -248,37 +246,10 @@ class HomeFragment : Fragment() {
         if (binding.orbHaloRing.visibility != View.GONE) {
             HudAnimationHelper.startBreathingHalo(binding.orbHaloRing)
         }
-        HudAnimationHelper.startArcReactorRotation(binding.orbArcReactorRings)
+        // Green arc-reactor rings removed in the Nova redesign (2026-11-05).
+        binding.orbArcReactorRings.visibility = View.GONE
 
         // Stark Tactical Protocols Click Handlers
-        binding.cardHomeWallpaper.setOnClickListener {
-            HudSoundManager.playTapSound()
-            try {
-                val intent = Intent(android.app.WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).apply {
-                    putExtra(
-                        android.app.WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
-                        android.content.ComponentName(requireContext(), com.jarvis.assistant.wallpaper.JarvisWallpaperService::class.java)
-                    )
-                }
-                startActivity(intent)
-            } catch (e: Exception) {
-                try {
-                    startActivity(Intent(android.app.WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER))
-                } catch (_: Exception) {
-                    android.widget.Toast.makeText(requireContext(), "Stark Arc Reactor Wallpaper service active", android.widget.Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-
-        binding.cardHomeAppLock.setOnClickListener {
-            HudSoundManager.playTapSound()
-            val intent = Intent(requireContext(), com.jarvis.assistant.ui.facelock.JarvisAppLockActivity::class.java).apply {
-                putExtra(com.jarvis.assistant.ui.facelock.JarvisAppLockActivity.EXTRA_PACKAGE_NAME, requireContext().packageName)
-                putExtra(com.jarvis.assistant.ui.facelock.JarvisAppLockActivity.EXTRA_APP_LABEL, "JARVIS Core Console")
-            }
-            startActivity(intent)
-        }
-
         binding.cardHomePocketTts.setOnClickListener {
             HudSoundManager.playTapSound()
             com.jarvis.assistant.voice.PocketTtsEngine.getInstance(requireContext())
@@ -299,8 +270,6 @@ class HomeFragment : Fragment() {
         // Long-press to hide any card / widget directly from the home screen
         setupCardHideOnLongClick(binding.cardWeather, "Weather Information") { preferences.showWeatherWidget = false }
         setupCardHideOnLongClick(binding.cardTelemetry, "Stark Telemetry HUD") { preferences.showTelemetryWidget = false }
-        setupCardHideOnLongClick(binding.cardHomeWallpaper, "Live Wallpaper Card") { preferences.showWallpaperCard = false }
-        setupCardHideOnLongClick(binding.cardHomeAppLock, "Biometric AppLock Card") { preferences.showAppLockCard = false }
         setupCardHideOnLongClick(binding.cardHomePocketTts, "PocketTTS Voice Card") { preferences.showPocketTtsCard = false }
         setupCardHideOnLongClick(binding.cardHomeMatrix, "Matrix & Protocols Card") { preferences.showMatrixCard = false }
         setupCardHideOnLongClick(binding.btnScreenShareQuick, "Screen Share Button") { preferences.showScreenShareButton = false }
@@ -322,8 +291,6 @@ class HomeFragment : Fragment() {
             binding.btnScreenShareQuick,
             binding.btnSavedMemories,
             binding.btnConversationLanguageQuick,
-            binding.cardHomeWallpaper,
-            binding.cardHomeAppLock,
             binding.cardHomePocketTts,
             binding.cardHomeMatrix,
             binding.cardUpdateAgent,
@@ -392,6 +359,8 @@ class HomeFragment : Fragment() {
 
                 // Force immediate canvas resize and layout calibration
                 view?.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.resize){ window.JarvisOrb.resize(); }", null)
+                // The native status pill sits over the stage; hide the page's own HUD badge so they don't overlap.
+                view?.evaluateJavascript("var h=document.getElementById('hudBadge'); if(h) h.style.display='none';", null)
 
                 // Sync Theme
                 val currentTheme = pendingThemeKey ?: preferences.appTheme
@@ -417,12 +386,19 @@ class HomeFragment : Fragment() {
             val gestureDetector = GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
                 override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
                     binding.orbWebView.evaluateJavascript("if(window.JarvisOrb && window.JarvisOrb.triggerTouchReaction){ window.JarvisOrb.triggerTouchReaction(); }", null)
-                    (activity as? MainActivity)?.handleMicOrOrbClick()
+                    // A 3D character reacts to touch (the page picks head-pat / poke / wave by where
+                    // you touched). Starting/stopping Jarvis on every touch made her reactions look
+                    // broken, so only the plain orb keeps tap-to-start; the dock mic and the status
+                    // pill still start Jarvis.
+                    val isAvatar = preferences.orbEntityType in setOf("mora_cyber", "custom_3d", "ai_girl", "hinata_anime")
+                    if (!isAvatar) (activity as? MainActivity)?.handleMicOrOrbClick()
                     return true
                 }
 
                 override fun onLongPress(e: MotionEvent) {
-                    (activity as? MainActivity)?.handleHoldMicOrOrb()
+                    // A 3D character handles long press herself (long head pat / holding hands).
+                    val isAvatar = preferences.orbEntityType in setOf("mora_cyber", "custom_3d", "ai_girl", "hinata_anime")
+                    if (!isAvatar) (activity as? MainActivity)?.handleHoldMicOrOrb()
                 }
             })
 
@@ -485,8 +461,33 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private var viewerTracker: ViewerFaceTracker? = null
+
+    /** Front-camera "she looks at you" — only while Home shows a 3D character and the user opted in. */
+    fun syncViewerTracker(visible: Boolean = isVisible && !isHidden) {
+        val ctx = context ?: return
+        val isAvatar = preferences.orbEntityType in setOf("mora_cyber", "custom_3d", "ai_girl", "hinata_anime")
+        val want = visible && isAvatar && ViewerFaceTracker.isEnabled(ctx)
+        if (want) {
+            val t = viewerTracker ?: ViewerFaceTracker(ctx) { x, y, present ->
+                activity?.runOnUiThread {
+                    if (_binding != null && isPageLoaded) {
+                        binding.orbWebView.evaluateJavascript(
+                            "if(window.MoraCompanion && window.MoraCompanion.setViewer){ window.MoraCompanion.setViewer(" +
+                                String.format(java.util.Locale.US, "%.3f,%.3f,%b", x, y, present) + "); }", null
+                        )
+                    }
+                }
+            }.also { viewerTracker = it }
+            if (!t.isRunning) t.start()
+        } else {
+            viewerTracker?.stop()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
+        syncViewerTracker(true)
         com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
         binding.orbWebView.onResume()
         binding.orbWebView.resumeTimers()
@@ -510,12 +511,14 @@ class HomeFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
+        viewerTracker?.stop()
         binding.orbWebView.onPause()
         (activity as? MainActivity)?.setBottomDockVisibility(true, animated = false)
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
+        syncViewerTracker(!hidden)
         if (!hidden && _binding != null) {
             binding.root.visibility = View.VISIBLE
             binding.orbWebView.visibility = View.VISIBLE
@@ -552,7 +555,7 @@ class HomeFragment : Fragment() {
                         binding.root,
                         "$cardTitle hidden from Home",
                         com.google.android.material.snackbar.Snackbar.LENGTH_LONG
-                    ).setAction("Customize") {
+                    ).setAnchorView(requireActivity().findViewById<View>(R.id.bottomDock)).setAction("Customize") {
                         HomeCardsCustomizationBottomSheet.newInstance().show(childFragmentManager, HomeCardsCustomizationBottomSheet.TAG)
                     }.show()
                 }
@@ -569,7 +572,6 @@ class HomeFragment : Fragment() {
         val b = _binding ?: return
 
         // Mode Switcher Banner: Always hidden per user specification
-        b.btnSwitchToJarvisMode.visibility = View.GONE
 
         // Master Clean Immersion Mode or Zen Mode hides all bottom cards
         val hideAll = isZenModeActive || preferences.hideAllHomeCards
@@ -586,15 +588,14 @@ class HomeFragment : Fragment() {
         if (hideAll) {
             b.layoutHeader.visibility = View.GONE
             b.layoutHomeCardsContainer.visibility = View.GONE
-            b.homeScrollView.setPadding(0, 0, 0, 0)
+            // The status badge floats inside the hero now; keep focus mode clean.
+            b.layoutStatusIndicator.visibility = View.GONE
+            applyHomeScrollPadding(true)
             (activity as? MainActivity)?.setBottomDockVisibility(false, animated = false)
         } else {
             b.layoutHeader.visibility = View.VISIBLE
             b.layoutHomeCardsContainer.visibility = View.VISIBLE
-            val pStart = (18 * density).toInt()
-            val pTop = (14 * density).toInt()
-            val pBottom = (100 * density).toInt()
-            b.homeScrollView.setPadding(pStart, pTop, pStart, pBottom)
+            applyHomeScrollPadding(false)
             (activity as? MainActivity)?.setBottomDockVisibility(true, animated = false)
 
             b.layoutStatusIndicator.visibility = if (preferences.showStatusIndicatorWidget) View.VISIBLE else View.GONE
@@ -612,17 +613,12 @@ class HomeFragment : Fragment() {
             b.layoutActionGrid.visibility = if (preferences.showQuickActionsWidget && hasQuickAction) View.VISIBLE else View.GONE
 
             // Tactical Protocols
-            val showWallpaper = preferences.showWallpaperCard
-            val showAppLock = preferences.showAppLockCard
             val showPocketTts = preferences.showPocketTtsCard
             val showMatrix = preferences.showMatrixCard
-            b.cardHomeWallpaper.visibility = if (showWallpaper) View.VISIBLE else View.GONE
-            b.cardHomeAppLock.visibility = if (showAppLock) View.VISIBLE else View.GONE
             b.cardHomePocketTts.visibility = if (showPocketTts) View.VISIBLE else View.GONE
             b.cardHomeMatrix.visibility = if (showMatrix) View.VISIBLE else View.GONE
-            b.rowTacticalProtocols1.visibility = if (showWallpaper || showAppLock) View.VISIBLE else View.GONE
             b.rowTacticalProtocols2.visibility = if (showPocketTts || showMatrix) View.VISIBLE else View.GONE
-            val hasProtocol = showWallpaper || showAppLock || showPocketTts || showMatrix
+            val hasProtocol = showPocketTts || showMatrix
             b.layoutTacticalProtocols.visibility = if (preferences.showProtocolsWidget && hasProtocol) View.VISIBLE else View.GONE
 
             // Updates & Announcements
@@ -659,19 +655,11 @@ class HomeFragment : Fragment() {
         }
 
         // Hide purple orb halo ring when Mora is active to avoid circle across character
-        b.orbHaloRing.visibility = if (isMora || hideAll) View.GONE else View.VISIBLE
+        b.orbHaloRing.visibility = View.GONE // green halo disk behind the orb removed on request (2026-11-05)
 
         // Dynamic Stage Height
         try {
-            val targetStageHeight = if (hideAll) {
-                fullHeight
-            } else if (preferences.isOrbCinematic50) {
-                (screenHeight * 0.48f).toInt()
-            } else if (isMora) {
-                (360 * density).toInt()
-            } else {
-                (280 * density).toInt()
-            }
+            val targetStageHeight = if (hideAll) fullHeight else heroStageHeight()
             val params = b.orbContainer.layoutParams as? ViewGroup.MarginLayoutParams
             if (params != null) {
                 params.topMargin = if (hideAll) 0 else (4 * density).toInt()
@@ -783,12 +771,25 @@ class HomeFragment : Fragment() {
         try {
             val t = DeviceTelemetryHelper.getTelemetry(requireContext())
             binding.tvTelemetryBattery.text = "${t.batteryPercent}%"
-            binding.tvTelemetryBatteryState.text = t.batteryStatusText
+            // Sentence-case copy for the Nova cards (the helper's caps strings are also read by AI tools).
+            binding.tvTelemetryBatteryState.text = when {
+                t.isCharging && t.batteryPercent >= 100 -> "Full"
+                t.isCharging -> "Charging"
+                t.batteryPercent <= 15 -> "Low battery"
+                else -> "On battery"
+            }
             binding.tvTelemetryRam.text = "${t.ramUsedGb} / ${t.ramTotalGb} GB"
-            binding.tvTelemetryRamPercent.text = "${t.ramPercent}% LOAD"
-            binding.tvTelemetryNetwork.text = t.networkType
-            binding.tvTelemetryNetworkStatus.text = if (t.isOnline) "SECURE" else "OFFLINE"
-            binding.tvTelemetryUptime.text = t.uptimeFormatted
+            binding.tvTelemetryRamPercent.text = "${t.ramPercent}% load"
+            binding.tvTelemetryNetwork.text = when {
+                t.networkType.contains("WI-FI") -> "Wi-Fi"
+                t.networkType.contains("CELLULAR") -> "Mobile data"
+                t.networkType.contains("ETHERNET") -> "Ethernet"
+                !t.isOnline -> "No network"
+                else -> "Connected"
+            }
+            binding.tvTelemetryNetworkStatus.text = if (t.isOnline) "Online" else "Offline"
+            val upMin = android.os.SystemClock.elapsedRealtime() / 60_000
+            binding.tvTelemetryUptime.text = "Up ${upMin / 60}h ${upMin % 60}m"
         } catch (_: Exception) {}
     }
 
@@ -898,10 +899,9 @@ class HomeFragment : Fragment() {
         // 3. Status Feedback
         com.google.android.material.snackbar.Snackbar.make(
             b.root,
-            "✦ JARVIS CORE ONLINE • ALL SYSTEMS NOMINAL",
+            "Jarvis is online · all systems nominal",
             com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
-        ).setBackgroundTint(brandColor)
-         .setTextColor(android.graphics.Color.WHITE)
+        ).setAnchorView(requireActivity().findViewById<View>(R.id.bottomDock))
          .show()
     }
 
@@ -971,6 +971,11 @@ class HomeFragment : Fragment() {
                     com.jarvis.assistant.background.JarvisConversationService.liveUserTranscript.collect { transcript ->
                         if (transcript.isNotBlank()) {
                             val lower = transcript.lowercase().trim()
+                            if (SORRY_REGEX.containsMatchIn(lower) && isPageLoaded && _binding != null) {
+                                binding.orbWebView.evaluateJavascript(
+                                    "if(window.MoraCompanion && window.MoraCompanion.forgive){ window.MoraCompanion.forgive(); }", null
+                                )
+                            }
                             if (lower.contains("dance") || lower.contains("nach") || lower.contains("naach")) {
                                 triggerOrbReaction("dance")
                             } else if (lower.contains("hello") || lower.contains("hi jarvis") || lower.contains("hey jarvis") || lower.contains("namaste") || lower.contains("wave") || lower.contains("haath hilao")) {
@@ -1025,7 +1030,7 @@ class HomeFragment : Fragment() {
                         }
                         binding.tvQuickScreenShareStatus.setTextColor(
                             if (sharing && hasFrame) Color.parseColor("#10B981")
-                            else ContextCompat.getColor(requireContext(), R.color.text_subtle)
+                            else com.jarvis.assistant.util.ThemeManager.attrColor(requireContext(), R.attr.themeTextMuted)
                         )
                     }
                 }
@@ -1041,9 +1046,8 @@ class HomeFragment : Fragment() {
                     }.collect { status ->
                         if (!status.isOn) {
                             setOrbState("idle")
-                            binding.tvListeningStatus.text = "JARVIS OFF • TAP TO START"
-                            binding.tvListeningStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_subtle))
-                            binding.tvHoldHint.text = "Tap mic or orb to power on"
+                            binding.tvListeningStatus.text = "Jarvis is off · tap the mic to talk"
+                            binding.tvHoldHint.text = "Tap the mic to power on"
                             binding.tvHoldHint.visibility = View.VISIBLE
                             binding.dotStatusGlow.backgroundTintList = ColorStateList.valueOf(
                                 Color.parseColor("#64748B")
@@ -1052,18 +1056,16 @@ class HomeFragment : Fragment() {
                             // Mic muted only stops listening - Jarvis can still be talking (typed query /
                             // reply in flight), so keep Mora's lip-sync & talking clip alive.
                             setOrbState(if (status.state == ConversationState.SPEAKING) "speaking" else "idle")
-                            binding.tvListeningStatus.text = "MIC MUTED (OFF) • TAP TO TALK"
-                            binding.tvListeningStatus.setTextColor(Color.parseColor("#EF4444"))
-                            binding.tvHoldHint.text = "Microphone is muted • Tap mic to unmute"
+                            binding.tvListeningStatus.text = "Mic muted · tap to talk"
+                            binding.tvHoldHint.text = "Tap the mic to unmute"
                             binding.tvHoldHint.visibility = View.VISIBLE
                             binding.dotStatusGlow.backgroundTintList = ColorStateList.valueOf(
                                 Color.parseColor("#EF4444")
                             )
                         } else if (status.isStandby) {
                             setOrbState(if (status.state == ConversationState.SPEAKING) "speaking" else "idle")
-                            binding.tvListeningStatus.text = "STANDBY • SAY 'HEY JARVIS'"
-                            binding.tvListeningStatus.setTextColor(Color.parseColor("#3B82F6"))
-                            binding.tvHoldHint.text = "Listening for wake word • Hold mic to power off"
+                            binding.tvListeningStatus.text = "Standby · say “Hey Jarvis”"
+                            binding.tvHoldHint.text = "Listening for the wake word · hold mic to power off"
                             binding.tvHoldHint.visibility = View.VISIBLE
                             binding.dotStatusGlow.backgroundTintList = ColorStateList.valueOf(
                                 Color.parseColor("#3B82F6")
@@ -1073,36 +1075,32 @@ class HomeFragment : Fragment() {
                             when (status.state) {
                                 ConversationState.LISTENING -> {
                                     setOrbState("listening")
-                                    binding.tvListeningStatus.text = "MIC ON • LISTENING..."
-                                    binding.tvListeningStatus.setTextColor(Color.parseColor("#10B981"))
-                                    binding.tvHoldHint.text = "Speak now • Tap to mute • Hold to power off"
+                                    binding.tvListeningStatus.text = "Listening…"
+                                    binding.tvHoldHint.text = "Speak now · tap to mute · hold to power off"
                                     binding.dotStatusGlow.backgroundTintList = ColorStateList.valueOf(
                                         Color.parseColor("#10B981")
                                     )
                                 }
                                 ConversationState.SPEAKING -> {
                                     setOrbState("speaking")
-                                    binding.tvListeningStatus.text = "JARVIS SPEAKING..."
-                                    binding.tvListeningStatus.setTextColor(Color.parseColor("#06B6D4"))
-                                    binding.tvHoldHint.text = "Tap mic to interrupt"
+                                    binding.tvListeningStatus.text = "Jarvis is speaking…"
+                                    binding.tvHoldHint.text = "Tap the mic to interrupt"
                                     binding.dotStatusGlow.backgroundTintList = ColorStateList.valueOf(
                                         Color.parseColor("#06B6D4")
                                     )
                                 }
                                 ConversationState.THINKING -> {
                                     setOrbState("thinking")
-                                    binding.tvListeningStatus.text = "THINKING..."
-                                    binding.tvListeningStatus.setTextColor(Color.parseColor("#F59E0B"))
-                                    binding.tvHoldHint.text = "Processing request..."
+                                    binding.tvListeningStatus.text = "Thinking…"
+                                    binding.tvHoldHint.text = "Working on your request"
                                     binding.dotStatusGlow.backgroundTintList = ColorStateList.valueOf(
                                         Color.parseColor("#F59E0B")
                                     )
                                 }
                                 ConversationState.IDLE -> {
                                     setOrbState("idle")
-                                    binding.tvListeningStatus.text = "MIC ON • READY"
-                                    binding.tvListeningStatus.setTextColor(Color.parseColor("#10B981"))
-                                    binding.tvHoldHint.text = "Tap to mute • Hold to power off"
+                                    binding.tvListeningStatus.text = "Ready · mic on"
+                                    binding.tvHoldHint.text = "Tap to mute · hold to power off"
                                     binding.dotStatusGlow.backgroundTintList = ColorStateList.valueOf(
                                         Color.parseColor("#10B981")
                                     )
@@ -1294,6 +1292,31 @@ class HomeFragment : Fragment() {
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
+    // ==================== NOVA HOME LAYOUT HELPERS (2026-11-05) ====================
+
+    /** Character stage height: ~60% of the screen (48% when the "cinematic 50" option is on). */
+    private fun heroStageHeight(): Int {
+        val screenHeight = resources.displayMetrics.heightPixels
+        val fraction = if (preferences.isOrbCinematic50) 0.48f else 0.60f
+        return (screenHeight * fraction).toInt()
+    }
+
+    /**
+     * Scroll padding: no side padding (full-bleed hero, the bento has its own gutter), top clears
+     * the status bar, bottom clears the floating dock (64dp + 16dp margin + raised mic) plus the
+     * navigation-bar inset the dock is lifted by, so the last card never slides under the dock.
+     */
+    private fun applyHomeScrollPadding(hideAll: Boolean) {
+        val b = _binding ?: return
+        if (hideAll) {
+            b.homeScrollView.setPadding(0, 0, 0, 0)
+            return
+        }
+        val top = if (systemTopInset > 0) systemTopInset + dp(6) else dp(14)
+        val bottom = navBottomInset + dp(124)
+        b.homeScrollView.setPadding(0, top, 0, bottom)
+    }
+
     // ==================== ON-DEVICE AI DASHBOARD (merged AndroLLM home) ====================
 
     private var localAiDashboardKey: String? = null
@@ -1318,8 +1341,8 @@ class HomeFragment : Fragment() {
             return
         }
         view.visibility = View.VISIBLE
-        val privacy = preferences.isPrivacyModeEnabled
-        val key = "$privacy|${preferences.appTheme}|${preferences.customThemeColor}"
+        val privacy = false // privacy mode was removed with the security section (2026-11-05)
+        val key = "${preferences.appTheme}|${preferences.customThemeColor}"
         if (key == localAiDashboardKey) return
         localAiDashboardKey = key
         view.setViewCompositionStrategy(
@@ -1362,8 +1385,15 @@ class HomeFragment : Fragment() {
 
     override fun onDestroyView() {
         localAiDashboardKey = null
+        viewerTracker?.stop()
+        viewerTracker = null
         super.onDestroyView()
         _binding = null
+    }
+
+    private companion object {
+        /** "sorry", "sorry baby", "maaf karo", "maafi" … she forgives when she hears it. */
+        val SORRY_REGEX = Regex("(\\bsor+y\\b|\\bsori\\b|maaf|maafi|forgive|सॉरी|माफ)")
     }
 
     fun toggleZenMode() {
@@ -1380,7 +1410,6 @@ class HomeFragment : Fragment() {
     private fun applyZenModeState(animated: Boolean = true) {
         val b = _binding ?: return
         val density = resources.displayMetrics.density
-        val isMora = preferences.orbEntityType == "mora_cyber"
         val hideCards = isZenModeActive || preferences.hideAllHomeCards
 
         b.btnToggleZenMode.setImageResource(
@@ -1388,7 +1417,6 @@ class HomeFragment : Fragment() {
         )
         b.btnExitZenMode.visibility = if (hideCards) View.VISIBLE else View.GONE
         b.btnExitZenModeTop.visibility = if (hideCards) View.VISIBLE else View.GONE
-        b.btnSwitchToJarvisMode.visibility = View.GONE
 
         (activity as? MainActivity)?.setBottomDockVisibility(!hideCards, animated = animated)
 
@@ -1440,17 +1468,12 @@ class HomeFragment : Fragment() {
             b.layoutActionGrid.visibility = if (preferences.showQuickActionsWidget && hasQuickAction) View.VISIBLE else View.GONE
 
             // Tactical Protocols
-            val showWallpaper = preferences.showWallpaperCard
-            val showAppLock = preferences.showAppLockCard
             val showPocketTts = preferences.showPocketTtsCard
             val showMatrix = preferences.showMatrixCard
-            b.cardHomeWallpaper.visibility = if (showWallpaper) View.VISIBLE else View.GONE
-            b.cardHomeAppLock.visibility = if (showAppLock) View.VISIBLE else View.GONE
             b.cardHomePocketTts.visibility = if (showPocketTts) View.VISIBLE else View.GONE
             b.cardHomeMatrix.visibility = if (showMatrix) View.VISIBLE else View.GONE
-            b.rowTacticalProtocols1.visibility = if (showWallpaper || showAppLock) View.VISIBLE else View.GONE
             b.rowTacticalProtocols2.visibility = if (showPocketTts || showMatrix) View.VISIBLE else View.GONE
-            val hasProtocol = showWallpaper || showAppLock || showPocketTts || showMatrix
+            val hasProtocol = showPocketTts || showMatrix
             b.layoutTacticalProtocols.visibility = if (preferences.showProtocolsWidget && hasProtocol) View.VISIBLE else View.GONE
 
             // Updates & Announcements
@@ -1466,26 +1489,17 @@ class HomeFragment : Fragment() {
         }
 
         if (hideCards) {
-            b.homeScrollView.setPadding(0, 0, 0, 0)
+            // The status badge floats inside the hero now; keep focus mode clean.
+            b.layoutStatusIndicator.visibility = View.GONE
+            applyHomeScrollPadding(true)
             b.homeScrollView.scrollTo(0, 0)
         } else {
-            val pStart = (18 * density).toInt()
-            val pTop = (14 * density).toInt()
-            val pBottom = (100 * density).toInt()
-            b.homeScrollView.setPadding(pStart, pTop, pStart, pBottom)
+            applyHomeScrollPadding(false)
         }
 
         val screenHeight = resources.displayMetrics.heightPixels
         val fullHeight = b.root.height.takeIf { it > 0 } ?: screenHeight
-        val targetStageHeight = if (hideCards) {
-            fullHeight
-        } else if (preferences.isOrbCinematic50) {
-            (screenHeight * 0.48f).toInt()
-        } else if (isMora) {
-            (360 * density).toInt()
-        } else {
-            (280 * density).toInt()
-        }
+        val targetStageHeight = if (hideCards) fullHeight else heroStageHeight()
 
         val currentParams = b.orbContainer.layoutParams as? ViewGroup.MarginLayoutParams
         if (currentParams != null) {
@@ -1543,12 +1557,10 @@ class HomeFragment : Fragment() {
         val execMode = preferences.aiExecutionMode
         if (execMode == com.jarvis.assistant.ai.MultiModelAiRouter.MODE_ALL_TOGETHER) {
             binding.tvBrainActiveBadge.text = "ALL MODELS ENSEMBLE"
-            binding.tvBrainActiveBadge.setTextColor(Color.parseColor("#A855F7"))
-            binding.tvPrimaryBrainStatus.text = "🌐 Parallel Consensus Mode"
+            binding.tvPrimaryBrainStatus.text = "Parallel consensus mode"
         } else {
             binding.tvBrainActiveBadge.text = "GEMINI LIVE + ANDROLLM"
-            binding.tvBrainActiveBadge.setTextColor(Color.parseColor("#4ADE80"))
-            binding.tvPrimaryBrainStatus.text = "🟢 Bidirectional WebSocket"
+            binding.tvPrimaryBrainStatus.text = "Live · bidirectional WebSocket"
         }
 
         val localMgr = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(requireContext(), viewLifecycleOwner.lifecycleScope)
@@ -1557,7 +1569,7 @@ class HomeFragment : Fragment() {
         val localName = localDesc?.name ?: "Qwen 2.5 (1.5B)"
         val isReady = localMgr.isModelReady(com.jarvis.assistant.ai.local.LocalAiConfig.MODEL_LLAMA_3_2_1B) || localDesc != null
         binding.tvLocalBrainModel.text = localName
-        binding.tvLocalBrainStatus.text = if (isReady) "🟢 On-Device Fallback Ready" else "⚪ Download in AI Matrix"
+        binding.tvLocalBrainStatus.text = if (isReady) "Ready · offline fallback" else "Not downloaded · open AI setup"
     }
 
 }

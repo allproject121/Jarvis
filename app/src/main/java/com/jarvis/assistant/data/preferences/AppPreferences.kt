@@ -149,33 +149,17 @@ class AppPreferences(context: Context) {
         private const val KEY_WHATSAPP_READER_ENABLED = "key_whatsapp_reader_enabled"
         private const val KEY_TELEGRAM_READER_ENABLED = "key_telegram_reader_enabled"
         private const val KEY_MESSAGE_AUTO_REPLY_CONFIRM = "key_message_auto_reply_confirm"
-        private const val KEY_DRIVING_MODE_AUTO_CAR = "key_driving_mode_auto_car"
         private const val KEY_CALLER_ID_ANNOUNCEMENT = "key_caller_id_announcement"
-        private const val KEY_DRIVING_MODE_ENABLED = "key_driving_mode_enabled"
-        private const val KEY_DRIVING_CAR_DEVICE_ADDRESS = "key_driving_car_device_address"
-        private const val KEY_DRIVING_CALL_MODE = "key_driving_call_mode"
-        private const val KEY_DRIVING_AUTO_REPLY_TEXT = "key_driving_auto_reply_text"
-
-        /** Driving-mode incoming call handling: speak the caller out loud. */
-        const val DRIVING_CALL_MODE_ANNOUNCE = "ANNOUNCE"
-        /** Driving-mode incoming call handling: reject the call and SMS the caller. */
-        const val DRIVING_CALL_MODE_AUTO_REJECT_SMS = "AUTO_REJECT_SMS"
-        const val DEFAULT_DRIVING_AUTO_REPLY_TEXT = "Main abhi drive kar raha hoon, thodi der mein call karta hoon."
         private const val KEY_MEM0_MEMORY_ENABLED = "key_mem0_memory_enabled"
         private const val KEY_MUSE_EXPERIENCE_ENABLED = "key_muse_experience_enabled"
         private const val KEY_SECRET_SETTINGS_ENABLED = "key_secret_settings_enabled"
         private const val KEY_SECRET_INTIMACY_LEVEL = "key_secret_intimacy_level"
-        private const val KEY_TOUCH_GUARD_ARMED = "key_touch_guard_armed"
-        private const val KEY_TOUCH_GUARD_STEALTH = "key_touch_guard_stealth"
-        private const val KEY_EMERGENCY_SOS_CONTACTS = "key_emergency_sos_contacts"
-        private const val KEY_EMERGENCY_SOS_SIREN = "key_emergency_sos_siren"
         private const val KEY_EMAIL_SIGNATURE = "key_email_signature"
         private const val KEY_EMAIL_CUSTOM_SMTP = "key_email_custom_smtp"
         private const val KEY_SOCIAL_DAILY_STORY = "key_social_daily_story"
         private const val KEY_REELS_AUTO_SCROLL = "key_reels_auto_scroll"
         private const val KEY_PROACTIVE_JARVIS = "key_proactive_jarvis"
         private const val KEY_BATTERY_SAVER = "key_battery_saver"
-        private const val KEY_WALLPAPER_MODE = "key_wallpaper_mode"
         private const val KEY_EVENT_TRIGGERS_BATTERY = "key_event_triggers_battery"
         private const val KEY_EVENT_TRIGGERS_CHARGER = "key_event_triggers_charger"
         private const val KEY_EVENT_TRIGGERS_BLUETOOTH = "key_event_triggers_bluetooth"
@@ -187,7 +171,6 @@ class AppPreferences(context: Context) {
         const val MODE_JARVIS_COMPANION = "jarvis_companion"
         private const val KEY_EXPERIENCE_MODE = "key_experience_mode"
         private const val KEY_JARVIS_ACTIVE_CHARACTER = "key_jarvis_active_character"
-        private const val KEY_PRIVACY_MODE = "key_privacy_mode"
         private const val KEY_HOME_ASSISTANT_URL = "key_home_assistant_url"
         private const val KEY_HOME_ASSISTANT_TOKEN = "key_home_assistant_token"
         private const val KEY_MCP_BRIDGE_ENABLED = "key_mcp_bridge_enabled"
@@ -477,7 +460,11 @@ class AppPreferences(context: Context) {
         set(value) = prefs.edit().putString(KEY_VOICE, value).apply()
 
     var personality: String
-        get() = prefs.getString(KEY_PERSONALITY, GeminiConstants.PERSONALITY_ASSISTANT) ?: GeminiConstants.PERSONALITY_ASSISTANT
+        get() {
+            val stored = prefs.getString(KEY_PERSONALITY, GeminiConstants.PERSONALITY_ASSISTANT) ?: GeminiConstants.PERSONALITY_ASSISTANT
+            // Companion mode was removed (2026-11-05); old saved value falls back to the normal assistant.
+            return if (stored.equals(GeminiConstants.PERSONALITY_COMPANION, ignoreCase = true)) GeminiConstants.PERSONALITY_ASSISTANT else stored
+        }
         set(value) = prefs.edit().putString(KEY_PERSONALITY, value).apply()
 
     var userName: String
@@ -491,7 +478,7 @@ class AppPreferences(context: Context) {
 
     var appTheme: String
         get() {
-            val stored = prefs.getString(KEY_APP_THEME, "dark") ?: "dark"
+            val stored = prefs.getString(KEY_APP_THEME, "nova") ?: "nova"
             return when (stored.lowercase()) {
                 "light", "pearl_white", "white" -> "pearl_white"
                 "dark", "midnight_onyx", "obsidian", "cyan" -> "dark"
@@ -580,10 +567,6 @@ class AppPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_ORB_SHOW_SHADOW, true)
         set(value) = prefs.edit().putBoolean(KEY_ORB_SHOW_SHADOW, value).apply()
 
-    var wallpaperMode: String
-        get() = prefs.getString(KEY_WALLPAPER_MODE, "character") ?: "character"
-        set(value) = prefs.edit().putString(KEY_WALLPAPER_MODE, value).apply()
-
     var orbShowIdleBreathing: Boolean
         get() = prefs.getBoolean(KEY_ORB_SHOW_IDLE_BREATHING, true)
         set(value) = prefs.edit().putBoolean(KEY_ORB_SHOW_IDLE_BREATHING, value).apply()
@@ -631,14 +614,6 @@ class AppPreferences(context: Context) {
     var showStatusIndicatorWidget: Boolean
         get() = prefs.getBoolean(KEY_SHOW_STATUS_INDICATOR_WIDGET, true)
         set(value) = prefs.edit().putBoolean(KEY_SHOW_STATUS_INDICATOR_WIDGET, value).apply()
-
-    var showWallpaperCard: Boolean
-        get() = prefs.getBoolean("key_show_home_wallpaper", true)
-        set(value) = prefs.edit().putBoolean("key_show_home_wallpaper", value).apply()
-
-    var showAppLockCard: Boolean
-        get() = prefs.getBoolean("key_show_home_applock", true)
-        set(value) = prefs.edit().putBoolean("key_show_home_applock", value).apply()
 
     var showPocketTtsCard: Boolean
         get() = prefs.getBoolean("key_show_home_pockettts", true)
@@ -881,36 +856,9 @@ class AppPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_MESSAGE_AUTO_REPLY_CONFIRM, false)
         set(value) = prefs.edit().putBoolean(KEY_MESSAGE_AUTO_REPLY_CONFIRM, value).apply()
 
-    var isDrivingModeAutoCarEnabled: Boolean
-        get() = prefs.getBoolean(KEY_DRIVING_MODE_AUTO_CAR, true)
-        set(value) = prefs.edit().putBoolean(KEY_DRIVING_MODE_AUTO_CAR, value).apply()
-
     var isCallerIdAnnouncementEnabled: Boolean
         get() = prefs.getBoolean(KEY_CALLER_ID_ANNOUNCEMENT, true)
         set(value) = prefs.edit().putBoolean(KEY_CALLER_ID_ANNOUNCEMENT, value).apply()
-
-    /** Last driving-mode on/off state, restored by JarvisDrivingModeManager after an app restart. */
-    var drivingModeEnabled: Boolean
-        get() = prefs.getBoolean(KEY_DRIVING_MODE_ENABLED, false)
-        set(value) = prefs.edit().putBoolean(KEY_DRIVING_MODE_ENABLED, value).apply()
-
-    /** MAC address of the car Bluetooth device that auto-enabled driving mode ("" = manual / none). */
-    var drivingCarDeviceAddress: String
-        get() = prefs.getString(KEY_DRIVING_CAR_DEVICE_ADDRESS, "") ?: ""
-        set(value) = prefs.edit().putString(KEY_DRIVING_CAR_DEVICE_ADDRESS, value).apply()
-
-    /** DRIVING_CALL_MODE_ANNOUNCE (default) or DRIVING_CALL_MODE_AUTO_REJECT_SMS. */
-    var drivingCallMode: String
-        get() = prefs.getString(KEY_DRIVING_CALL_MODE, DRIVING_CALL_MODE_ANNOUNCE) ?: DRIVING_CALL_MODE_ANNOUNCE
-        set(value) = prefs.edit().putString(
-            KEY_DRIVING_CALL_MODE,
-            if (value == DRIVING_CALL_MODE_AUTO_REJECT_SMS) DRIVING_CALL_MODE_AUTO_REJECT_SMS else DRIVING_CALL_MODE_ANNOUNCE
-        ).apply()
-
-    /** SMS text sent to callers rejected while driving (AUTO_REJECT_SMS mode). */
-    var drivingAutoReplyText: String
-        get() = prefs.getString(KEY_DRIVING_AUTO_REPLY_TEXT, null)?.takeIf { it.isNotBlank() } ?: DEFAULT_DRIVING_AUTO_REPLY_TEXT
-        set(value) = prefs.edit().putString(KEY_DRIVING_AUTO_REPLY_TEXT, value.trim()).apply()
 
     var isMem0MemoryEnabled: Boolean
         get() = prefs.getBoolean(KEY_MEM0_MEMORY_ENABLED, true)
@@ -920,29 +868,14 @@ class AppPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_MUSE_EXPERIENCE_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_MUSE_EXPERIENCE_ENABLED, value).apply()
 
+    /** Companion intimacy add-on was removed (2026-11-05); always off. */
     var isSecretSettingsEnabled: Boolean
-        get() = prefs.getBoolean(KEY_SECRET_SETTINGS_ENABLED, false)
+        get() = false
         set(value) = prefs.edit().putBoolean(KEY_SECRET_SETTINGS_ENABLED, value).apply()
 
     var secretIntimacyLevel: Int
         get() = prefs.getInt(KEY_SECRET_INTIMACY_LEVEL, 1) // 1=Friendly, 2=Romantic, 3=Intense (18+)
         set(value) = prefs.edit().putInt(KEY_SECRET_INTIMACY_LEVEL, value).apply()
-
-    var isTouchGuardArmed: Boolean
-        get() = prefs.getBoolean(KEY_TOUCH_GUARD_ARMED, false)
-        set(value) = prefs.edit().putBoolean(KEY_TOUCH_GUARD_ARMED, value).apply()
-
-    var isTouchGuardStealth: Boolean
-        get() = prefs.getBoolean(KEY_TOUCH_GUARD_STEALTH, false)
-        set(value) = prefs.edit().putBoolean(KEY_TOUCH_GUARD_STEALTH, value).apply()
-
-    var emergencySosContacts: String
-        get() = prefs.getString(KEY_EMERGENCY_SOS_CONTACTS, "112, 100") ?: "112, 100"
-        set(value) = prefs.edit().putString(KEY_EMERGENCY_SOS_CONTACTS, value.trim()).apply()
-
-    var isEmergencySosSirenEnabled: Boolean
-        get() = prefs.getBoolean(KEY_EMERGENCY_SOS_SIREN, true)
-        set(value) = prefs.edit().putBoolean(KEY_EMERGENCY_SOS_SIREN, value).apply()
 
     var emailSignature: String
         get() = prefs.getString(KEY_EMAIL_SIGNATURE, "Sent via Jarvis AI Assistant") ?: "Sent via Jarvis AI Assistant"
@@ -996,16 +929,14 @@ class AppPreferences(context: Context) {
         get() = prefs.getString(KEY_ASSISTANT_NAME, "JARVIS") ?: "JARVIS"
         set(value) = prefs.edit().putString(KEY_ASSISTANT_NAME, value.trim()).apply()
 
+    /** Companion home was removed (2026-11-05); Jarvis is the only experience. */
     var experienceMode: String
-        get() = prefs.getString(KEY_EXPERIENCE_MODE, MODE_JARVIS) ?: MODE_JARVIS
+        get() = MODE_JARVIS
         set(value) = prefs.edit().putString(KEY_EXPERIENCE_MODE, value).apply()
 
     var jarvisActiveCharacter: String
         get() = prefs.getString(KEY_JARVIS_ACTIVE_CHARACTER, "Maya") ?: "Maya"
         set(value) = prefs.edit().putString(KEY_JARVIS_ACTIVE_CHARACTER, value).apply()
-
-    val isJarvisCompanionMode: Boolean
-        get() = experienceMode == MODE_JARVIS_COMPANION
 
     var homeAssistantUrl: String
         get() = prefs.getString(KEY_HOME_ASSISTANT_URL, "") ?: ""
@@ -1026,10 +957,6 @@ class AppPreferences(context: Context) {
         get() = prefs.getString(KEY_SMART_HOME_WEBHOOK_URL, "") ?: ""
         set(value) = prefs.edit().putString(KEY_SMART_HOME_WEBHOOK_URL, value.trim()).apply()
 
-    var isPrivacyModeEnabled: Boolean
-        get() = prefs.getBoolean(KEY_PRIVACY_MODE, false)
-        set(value) = prefs.edit().putBoolean(KEY_PRIVACY_MODE, value).apply()
-
     var isMcpBridgeEnabled: Boolean
         get() = prefs.getBoolean(KEY_MCP_BRIDGE_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_MCP_BRIDGE_ENABLED, value).apply()
@@ -1046,20 +973,31 @@ class AppPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_SENTENCE_ASSEMBLER, true)
         set(value) = prefs.edit().putBoolean(KEY_SENTENCE_ASSEMBLER, value).apply()
 
-    fun activateJarvisCompanionMode(enable: Boolean) {
-        if (enable) {
-            experienceMode = MODE_JARVIS_COMPANION
-            assistantName = "JARVIS"
-            personality = com.jarvis.assistant.data.model.GeminiConstants.PERSONALITY_COMPANION
-            wallpaperMode = "character"
-            voice = "Aoede"
-        } else {
-            experienceMode = MODE_JARVIS
-            assistantName = "JARVIS"
-            personality = com.jarvis.assistant.data.model.GeminiConstants.PERSONALITY_ASSISTANT
-            wallpaperMode = "arc_reactor"
-            voice = "Puck"
+    /** Back to the plain Jarvis assistant (name, persona, voice). */
+    fun resetToJarvisDefaults() {
+        experienceMode = MODE_JARVIS
+        assistantName = "JARVIS"
+        personality = com.jarvis.assistant.data.model.GeminiConstants.PERSONALITY_ASSISTANT
+        voice = "Puck"
+    }
+
+    /**
+     * One-time cleanup after Companion mode was removed (2026-11-05): users who were in it
+     * get Jarvis' normal persona/voice back; intimacy add-on and experience mode are cleared.
+     */
+    fun migrateAwayFromCompanionMode() {
+        val wasCompanion = prefs.getString(KEY_EXPERIENCE_MODE, MODE_JARVIS) == MODE_JARVIS_COMPANION ||
+            prefs.getString(KEY_PERSONALITY, "").equals(GeminiConstants.PERSONALITY_COMPANION, ignoreCase = true)
+        val edit = prefs.edit()
+            .putString(KEY_EXPERIENCE_MODE, MODE_JARVIS)
+            .putBoolean(KEY_SECRET_SETTINGS_ENABLED, false)
+            .putInt(KEY_SECRET_INTIMACY_LEVEL, 1)
+        if (wasCompanion) {
+            edit.putString(KEY_PERSONALITY, GeminiConstants.PERSONALITY_ASSISTANT)
+            if (prefs.getString(KEY_VOICE, null) == "Aoede") edit.putString(KEY_VOICE, "Puck")
         }
+        if (jarvisActiveCharacter.equals("Maya Intimate", ignoreCase = true)) edit.putString(KEY_JARVIS_ACTIVE_CHARACTER, "Maya")
+        edit.apply()
     }
 
     fun loadChatHistory(): List<ChatTurn> {

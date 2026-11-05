@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ripple on accent-filled buttons: the on-accent ink at 22% (white on dark fills, black on light fills). -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/themeOnAccent" android:alpha="0.22" />
+</selector>

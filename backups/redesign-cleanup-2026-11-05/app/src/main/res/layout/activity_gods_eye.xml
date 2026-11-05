@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootGodsEyeLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/themeBg">
+
+    <!-- Primary Fullscreen Hardware-Accelerated Cesium WebGL WebView -->
+    <WebView
+        android:id="@+id/webViewGodsEye"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layerType="none"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Minimalist Floating Cyber HUD Top Toolbar -->
+    <LinearLayout
+        android:id="@+id/layoutTopHudToolbar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="52dp"
+        android:elevation="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_godseye_hud_back"
+            android:src="@drawable/ic_back"
+            android:padding="8dp"
+            app:tint="?attr/themeAccent"
+            android:contentDescription="Return to JARVIS" />
+
+        <ImageButton
+            android:id="@+id/btnApiHub"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_godseye_hud_back"
+            android:src="@drawable/ic_code_chip"
+            android:padding="8dp"
+            app:tint="?attr/themeAccent"
+            android:contentDescription="Open Gods Eye Direct API Hub" />
+
+        <ImageButton
+            android:id="@+id/btnOrientationToggle"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_godseye_hud_back"
+            android:src="@drawable/ic_screen_rotate"
+            android:padding="8dp"
+            app:tint="?attr/themeAccent2"
+            android:contentDescription="Toggle Screen Orientation (Widescreen Tactical HUD)" />
+
+        <ImageButton
+            android:id="@+id/btnHeroScene"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_godseye_hud_back"
+            android:src="@drawable/ic_hero_target"
+            android:padding="8dp"
+            app:tint="#FFB300"
+            android:contentDescription="Hero Demo Mode (Arizona Pinal Airpark Cockpit Follow)" />
+
+        <ImageButton
+            android:id="@+id/btnAutoTour"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_godseye_hud_back"
+            android:src="@drawable/ic_auto_cycle"
+            android:padding="8dp"
+            app:tint="?attr/themeAccent3"
+            android:contentDescription="Toggle Auto Sentinel Tour" />
+
+        <!-- Cyber HUD Auto-Tour Active Status Pill -->
+        <LinearLayout
+            android:id="@+id/layoutAutoTourHud"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_godseye_hud_back"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tvAutoTourBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:text="⟳ AUTO: FLIGHTS (14s)"
+                android:textColor="?attr/themeAccent"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/btnAutoTourNext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="?attr/themeChipBg"
+                android:fontFamily="monospace"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:text="NEXT ⏭"
+                android:textColor="?attr/themeAccent2"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Hidden reload button for programmatic / legacy access -->
+    <ImageButton
+        android:id="@+id/btnReload"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Cyber HUD Loading State Overlay -->
+    <LinearLayout
+        android:id="@+id/layoutLoading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/bg_godseye_hud_card"
+        android:padding="24dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ProgressBar
+            android:id="@+id/pbLoading"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:indeterminate="true"
+            android:indeterminateTint="?attr/themeAccent" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CONNECTING TO GOD'S EYE..."
+            android:textColor="?attr/themeAccent"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.08"
+            android:layout_marginTop="14dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Loading Cesium 3D Globe &amp; HUD layers"
+            android:textColor="?attr/themeTextSecondary"
+            android:textSize="11sp"
+            android:fontFamily="sans-serif"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
+
+    <!-- Cyber HUD Error & Recovery Card Overlay -->
+    <LinearLayout
+        android:id="@+id/layoutError"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:background="@drawable/bg_godseye_hud_card"
+        android:padding="22dp"
+        android:layout_marginHorizontal="24dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:src="@drawable/ic_warning"
+            app:tint="#FF3B30"
+            android:contentDescription="Server Offline" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="God's Eye Console Offline"
+            android:textColor="?attr/themeTextPrimary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.05"
+            android:layout_marginTop="12dp" />
+
+        <TextView
+            android:id="@+id/tvErrorMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Could not connect to http://localhost:4173/.\n\nPlease ensure the background server is running in Termux:\ncd ~/gods-eye-view\nnpm run preview -- --host localhost --port 4173"
+            android:textColor="?attr/themeTextSecondary"
+            android:textSize="12sp"
+            android:fontFamily="sans-serif"
+            android:gravity="center"
+            android:layout_marginTop="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="18dp">
+
+            <Button
+                android:id="@+id/btnErrorBack"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_weight="1"
+                android:text="BACK"
+                android:textColor="?attr/themeAccent"
+                android:background="@drawable/bg_godseye_hud_card"
+                android:layout_marginEnd="6dp" />
+
+            <Button
+                android:id="@+id/btnRetry"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_weight="1"
+                android:text="RETRY"
+                android:textColor="?attr/themeBg"
+                android:background="@drawable/bg_godseye_hud_card"
+                android:backgroundTint="?attr/themeAccent"
+                android:layout_marginStart="6dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

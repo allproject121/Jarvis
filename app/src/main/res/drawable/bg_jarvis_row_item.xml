@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Bento inner plate (list rows inside cards): one step lighter than the card + plate hairline. -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="?attr/themeAccentLight">
     <item>
@@ -7,7 +8,7 @@
             <solid android:color="?attr/themeChipBg" />
             <stroke
                 android:width="1dp"
-                android:color="?attr/themeCardBorder" />
+                android:color="?attr/themePlateBorder" />
         </shape>
     </item>
 </ripple>

@@ -32,6 +32,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.jarvis.assistant.ai.provider.LocalPhoneProvider
+import com.jarvis.assistant.androllm.AndroLlmFlags
+import com.jarvis.assistant.androllm.agent.AgentToolGraph
+import com.jarvis.assistant.androllm.agent.trace.ToolExecutionTrace
+import com.jarvis.assistant.androllm.diagnostics.GeminiSelfTest
 
 /** App-lifetime scope for singletons that need one on first creation. */
 private object DeveloperSingletonScope {
@@ -99,6 +104,53 @@ class DeveloperViewModel(application: Application) : AndroidViewModel(applicatio
     val aiMode: StateFlow<AiModelMode> = router.currentMode
     val lastProvider: StateFlow<String> = router.lastActiveProviderName
     val fallbackActive: StateFlow<Boolean> = router.isOfflineFallbackActive
+
+    /** Every tool call Jarvis made (JarvisToolDispatcher records them all). */
+    val toolTraces: StateFlow<List<ToolExecutionTrace>> = AgentToolGraph.getInstance(application).traceStore.traces
+
+    /**
+     * The offline brain loads its model through LocalPhoneProvider directly (ModelRouter), not
+     * through LocalAiEngine — so "model loaded" must come from the provider, or the page said
+     * "No model loaded" while Qwen was answering.
+     */
+    private val phoneProvider: LocalPhoneProvider = LocalPhoneProvider.getInstance(application, DeveloperSingletonScope.scope)
+    private val _phoneModelReady = MutableStateFlow(false)
+    val phoneModelReady: StateFlow<Boolean> = _phoneModelReady.asStateFlow()
+
+    /** LiteRT-LM engine switched on in Settings → Engines (otherwise its card is hidden). */
+    fun liteRtEnabled(): Boolean = runCatching { AndroLlmFlags.isEnabled(app, AndroLlmFlags.LITERT_ENGINE) }.getOrDefault(false)
+
+    // ── Gemini check (real requests with the saved key / model) ──
+    private val _geminiText = MutableStateFlow<GeminiSelfTest.TextResult?>(null)
+    val geminiText: StateFlow<GeminiSelfTest.TextResult?> = _geminiText.asStateFlow()
+    private val _geminiLive = MutableStateFlow<GeminiSelfTest.LiveResult?>(null)
+    val geminiLive: StateFlow<GeminiSelfTest.LiveResult?> = _geminiLive.asStateFlow()
+    private val _geminiBusy = MutableStateFlow<String?>(null)
+    val geminiBusy: StateFlow<String?> = _geminiBusy.asStateFlow()
+
+    fun testGeminiText() {
+        if (_geminiBusy.value != null) return
+        _geminiBusy.value = "Asking Gemini (text)…"
+        viewModelScope.launch {
+            _geminiText.value = runCatching {
+                GeminiSelfTest.runText(app, "Reply with exactly: Jarvis online.")
+            }.getOrNull()
+            _geminiBusy.value = null
+            refreshRuntimes()
+        }
+    }
+
+    fun testGeminiLive() {
+        if (_geminiBusy.value != null) return
+        _geminiBusy.value = "Opening a Gemini Live session…"
+        viewModelScope.launch {
+            _geminiLive.value = runCatching {
+                GeminiSelfTest.runLive(app, "Say: Jarvis online.")
+            }.getOrNull()
+            _geminiBusy.value = null
+            refreshRuntimes()
+        }
+    }
 
     private val _systemMemory = MutableStateFlow<SystemMemoryInfo?>(null)
     val systemMemory: StateFlow<SystemMemoryInfo?> = _systemMemory.asStateFlow()
@@ -277,13 +329,36 @@ class DeveloperViewModel(application: Application) : AndroidViewModel(applicatio
     fun refreshRuntimes() {
         val rows = mutableListOf<RuntimeRow>()
 
+        val phoneReady = runCatching { phoneProvider.isReady() }.getOrDefault(false)
+        _phoneModelReady.value = phoneReady
         val state = engineState.value
+        val engineUp = phoneReady || state is LocalEngineState.Ready || state is LocalEngineState.Generating
         rows += RuntimeRow(
-            name = "Local AI engine",
+            name = "Offline brain (on-device model)",
             category = "Inference",
-            available = state is LocalEngineState.Ready || state is LocalEngineState.Generating,
-            summary = engineStateLabel(state) + " • " + modelName(activeModelId.value),
+            available = engineUp,
+            summary = (if (phoneReady) "Model loaded" else engineStateLabel(state)) + " • " + modelName(activeModelId.value),
             detail = (state as? LocalEngineState.Error)?.message
+        )
+
+        val prefs = JarvisApp.instance.preferences
+        val live = geminiLive.value
+        val liveStatus = JarvisConversationService.connectionStatus.value
+        rows += RuntimeRow(
+            name = "Gemini Live (voice)",
+            category = "Voice",
+            available = live?.ok ?: (liveStatus.contains("LIVE", ignoreCase = true) || liveStatus.contains("ONLINE", ignoreCase = true)),
+            summary = live?.summary() ?: "Voice session status: $liveStatus (run the Live check to really test it)",
+            detail = "Model ${prefs.aiModel} • voice ${prefs.voice}" +
+                if (prefs.apiKey.isBlank()) " • NO API KEY" else ""
+        )
+        val text = geminiText.value
+        rows += RuntimeRow(
+            name = "Gemini text (chat)",
+            category = "Routing",
+            available = text?.ok ?: false,
+            summary = text?.summary() ?: "Not tested yet - tap \"Test text\" in Gemini check",
+            detail = text?.steps?.joinToString("\n") { it.line() }
         )
 
         val mode = aiMode.value

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Accessibility
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material.icons.filled.Psychology
@@ -21,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -36,12 +38,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.jarvis.assistant.androllm.AndroLlmFlags
 import com.jarvis.assistant.androllm.accessibility.debug.AccessibilityDebugStore
 import com.jarvis.assistant.androllm.accessibility.settings.AccessibilitySettings
 import com.jarvis.assistant.androllm.accessibility.settings.AccessibilitySettingsStore
+import com.jarvis.assistant.androllm.agent.confirm.ConfirmationOverlay
 import com.jarvis.assistant.automation.accessibility.JarvisAccessibilityService
 import com.jarvis.assistant.automation.agent.ToolConfirmationManager
 import com.jarvis.assistant.ui.compose.components.CloudGlassCard
@@ -65,12 +69,14 @@ fun AutomationSettingsSection() {
 
     var llmFlag by remember { mutableStateOf(AndroLlmFlags.isEnabled(context, AndroLlmFlags.LLM_UI_PLANNER, false)) }
     var serviceOn by remember { mutableStateOf(JarvisAccessibilityService.isRunning()) }
+    var overlayOn by remember { mutableStateOf(ConfirmationOverlay.canShow(context)) }
 
     // Refresh the service status whenever the screen resumes (user may come back from system settings).
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             serviceOn = JarvisAccessibilityService.isRunning()
+            overlayOn = ConfirmationOverlay.canShow(context)
             llmFlag = AndroLlmFlags.isEnabled(context, AndroLlmFlags.LLM_UI_PLANNER, false)
         }
     }
@@ -90,6 +96,22 @@ fun AutomationSettingsSection() {
                     context.startActivity(
                         Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                }
+            }
+            SettingRow(
+                icon = Icons.Filled.Layers,
+                title = "Ask over other apps",
+                value = if (overlayOn) "Allowed" else "Off - tap to allow"
+            ) {
+                // Automation runs inside other apps; without this access the Allow / Deny
+                // question can't be seen there and risky steps are declined after 15 s.
+                runCatching {
+                    context.startActivity(
+                        Intent(
+                            android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            android.net.Uri.parse("package:${context.packageName}")
+                        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     )
                 }
             }
@@ -117,7 +139,7 @@ fun AutomationSettingsSection() {
             ToggleRow(
                 icon = Icons.Filled.Security,
                 title = "Confirm high-risk steps",
-                subtitle = "Ask before tapping send, pay, buy, delete, install, post or call.",
+                subtitle = "Ask before tapping send, pay, buy, delete, install, post or call (ui_run and every tap tool).",
                 checked = settings.confirmHighRisk,
                 onCheckedChange = { on -> update { it.copy(confirmHighRisk = on) } }
             )
@@ -138,7 +160,7 @@ fun AutomationSettingsSection() {
             ToggleRow(
                 icon = Icons.Filled.BugReport,
                 title = "Automation developer log",
-                subtitle = "Record screen dumps and every automation step.",
+                subtitle = "Show the last automation steps below (and keep screen dumps).",
                 checked = settings.developerMode,
                 onCheckedChange = { on -> update { it.copy(developerMode = on) } }
             )
@@ -193,6 +215,28 @@ fun AutomationSettingsSection() {
  */
 @Composable
 fun ToolConfirmationPrompt() {
+    // While this dialog's screen is resumed the over-other-apps card stays hidden (no double prompt);
+    // when it is paused (e.g. automation inside WhatsApp) the card takes over.
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        ConfirmationOverlay.ensureStarted(context)
+        var resumed = false
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && !resumed) {
+                resumed = true
+                ConfirmationOverlay.hostResumed()
+            } else if (event == Lifecycle.Event.ON_PAUSE && resumed) {
+                resumed = false
+                ConfirmationOverlay.hostPaused()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            if (resumed) ConfirmationOverlay.hostPaused()
+        }
+    }
     val pending by ToolConfirmationManager.pending.collectAsState()
     val action = pending ?: return
     AlertDialog(

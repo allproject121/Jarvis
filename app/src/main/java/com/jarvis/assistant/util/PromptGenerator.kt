@@ -76,7 +76,7 @@ object PromptGenerator {
             ""
         }
 
-        val secretCompanionRules = if (isSecretOn || personality == GeminiConstants.PERSONALITY_GIRLFRIEND || personality == GeminiConstants.PERSONALITY_COMPANION) {
+        val secretCompanionRules = if (isSecretOn || personality == GeminiConstants.PERSONALITY_GIRLFRIEND) {
             when (intimacyLevel) {
                 3 -> """
 [COMPANION REGISTER: INTENSE (18+) — OPERATOR CONFIGURED]:
@@ -104,57 +104,7 @@ object PromptGenerator {
             ""
         }
 
-        val isPrivacyOn = prefs.isPrivacyModeEnabled
-        val privacyModeInstruction = if (isPrivacyOn) {
-            """
-[STRICT PRIVACY MODE ENGAGED - HIGH CONFIDENTIALITY DIRECTIVE]:
-- The operator has activated Privacy Mode.
-- NEVER speak aloud sensitive personal information (passwords, OTPs, verification codes, bank balances, or intimate private chat contents).
-- If an incoming message or notification contains private or sensitive data, state discreetly: "Sir, a private message has arrived. Please review it on your display."
-- Keep verbal confirmations brief and discreet.
-""".trimIndent()
-        } else {
-            ""
-        }
-
-        val isDriving = try {
-            com.jarvis.assistant.core.JarvisDrivingModeManager.getInstance(com.jarvis.assistant.JarvisApp.instance).isDrivingMode.value
-        } catch (_: Throwable) { false }
-
-        // In auto-reject mode calls are declined with an SMS before Jarvis could ask, so don't promise an announcement.
-        val drivingCallLine = try {
-            if (com.jarvis.assistant.core.JarvisDrivingModeManager.getInstance(com.jarvis.assistant.JarvisApp.instance).isAutoRejectSmsEnabled) {
-                "- Incoming calls are auto-rejected with an SMS reply while driving; if asked, tell the driver who called."
-            } else {
-                "- Announce incoming callers clearly: \"Sir, call from [Caller]. Answer or decline?\""
-            }
-        } catch (_: Throwable) {
-            "- Announce incoming callers clearly: \"Sir, call from [Caller]. Answer or decline?\""
-        }
-
-        val drivingModeInstruction = if (isDriving) {
-            """
-[TACTICAL VEHICLE COPILOT / DRIVING MODE ENGAGED - HIGHWAY SAFETY DIRECTIVE]:
-- The operator is actively driving.
-- SAFETY FIRST: Keep all spoken replies strictly under 15 words.
-- Never ask the driver to look at their phone or touch any on-screen button.
-$drivingCallLine
-- Execute music, navigation, messaging, and system tasks immediately with zero friction.
-""".trimIndent()
-        } else {
-            ""
-        }
-
         val personalityInstruction = when (personality.lowercase()) {
-            "jarvis companion", "companion mode", GeminiConstants.PERSONALITY_COMPANION.lowercase() -> """
-[PERSONALITY: Jarvis Affectionate Companion Mode]
-- You are Jarvis, the user's affectionate, caring, intelligent, and warm AI companion and smart personal secretary.
-- You speak in sweet, affectionate, natural conversational Hinglish/Hindi (written in Latin script).
-- Be emotionally supportive, playful, empathetic, and attentive. If asked who you are, you are Jarvis.
-- Keep spoken replies warm, genuine, and brief, like on a real phone call with someone who cares for them deeply.
-$secretCompanionRules
-""".trimIndent()
-
             GeminiConstants.PERSONALITY_GIRLFRIEND -> """
 [PERSONALITY: Girlfriend Mode]
 - You are the user's caring, loving, and sweet AI girlfriend ("Pari").
@@ -220,9 +170,6 @@ $personalityInstruction
 
 $languageInstruction
 
-$privacyModeInstruction
-
-$drivingModeInstruction
 
 [REAL-TIME CONVERSATIONAL MANDATE — ULTRA-SMOOTH LIKE A REAL HUMAN]:
 - You are speaking on a live voice phone call in real time.

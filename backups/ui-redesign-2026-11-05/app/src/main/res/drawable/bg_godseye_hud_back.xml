@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- God's Eye HUD round button — follows the active Jarvis theme (dock glass + border). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="?attr/themeDockBg" />
+    <stroke
+        android:width="1.5dp"
+        android:color="?attr/themeDockBorder" />
+</shape>

@@ -308,7 +308,7 @@
                         android:layout_height="match_parent"
                         android:background="@drawable/bg_jarvis_avatar"
                         android:src="@drawable/ic_settings_shield"
-                        app:tint="#3B82F6"
+                        app:tint="?attr/themeInfo"
                         android:padding="12dp"
                         android:contentDescription="Boyfriend" />
                 </FrameLayout>
@@ -341,7 +341,7 @@
                             android:text="CHARMING"
                             android:singleLine="true"
                             android:maxLines="1"
-                            android:textColor="#3B82F6"
+                            android:textColor="?attr/themeInfo"
                             android:textSize="10sp"
                             android:textStyle="bold"
                             android:fontFamily="sans-serif-medium"
@@ -392,7 +392,7 @@
                         android:layout_height="match_parent"
                         android:background="@drawable/bg_jarvis_avatar"
                         android:src="@drawable/ic_code_chip"
-                        app:tint="#10B981"
+                        app:tint="?attr/themeSuccess"
                         android:padding="12dp"
                         android:contentDescription="Roshan Mode" />
                 </FrameLayout>
@@ -425,7 +425,7 @@
                             android:text="NEURAL CORE"
                             android:singleLine="true"
                             android:maxLines="1"
-                            android:textColor="#10B981"
+                            android:textColor="?attr/themeSuccess"
                             android:textSize="10sp"
                             android:textStyle="bold"
                             android:fontFamily="sans-serif-medium"
@@ -624,7 +624,7 @@
             android:background="@drawable/bg_jarvis_pill_button"
             app:backgroundTint="@null"
             android:text="Activate Persona"
-            android:textColor="?attr/themeBg"
+            android:textColor="?attr/themeOnAccent"
             android:textSize="15sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"

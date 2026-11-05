@@ -147,17 +147,51 @@ fun MemorySettingsSection() {
         if (uri == null) return@rememberLauncherForActivityResult
         busy = true
         scope.launch {
-            val result = runCatching {
-                val text = withContext(Dispatchers.IO) {
+            val text = runCatching {
+                withContext(Dispatchers.IO) {
                     context.contentResolver.openInputStream(uri)?.use { it.bufferedReader().readText() }
-                } ?: error("Could not read the selected file")
-                pipeline.importMemories(text)
+                }
+            }.getOrNull()
+            // A full Jarvis backup (Settings → Backup) picked here goes to the one backup engine.
+            val isFullBackup = text != null && runCatching {
+                val root = org.json.JSONObject(text)
+                root.has("settings") && root.has("data")
+            }.getOrDefault(false)
+            if (isFullBackup) {
+                message = com.jarvis.assistant.data.backup.BackupManager.restoreFromUri(context, uri).fold(
+                    { "Full Jarvis backup restored: ${it.describe()} Restart Jarvis to apply restored settings." },
+                    { "Restore failed: ${it.message}" }
+                )
+                runCatching { reload() }
+                busy = false
+                return@launch
+            }
+            val result = runCatching {
+                pipeline.importMemories(text ?: error("Could not read the selected file"))
             }
             message = result.fold(
                 { "Imported: +${it.inserted} new, ~${it.updated} merged, -${it.skipped} skipped, ${it.relationships} link(s)" },
                 { "Import failed: ${it.message}" }
             )
             runCatching { reload() }
+            busy = false
+        }
+    }
+
+    // Memories-only export into a file the user picks (was: a private app folder nobody could open).
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        busy = true
+        scope.launch {
+            message = pipeline.exportMemories().mapCatching { file ->
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openOutputStream(uri, "wt")?.use { out -> file.inputStream().use { it.copyTo(out) } }
+                        ?: error("Could not write the selected file")
+                }
+            }.fold(
+                { "Memories exported. (Full backup with settings & chats: Settings → Backup.)" },
+                { "Export failed: ${it.message}" }
+            )
             busy = false
         }
     }
@@ -302,15 +336,12 @@ fun MemorySettingsSection() {
                     busy = false
                 }
             }
-            SettingRow(icon = Icons.Filled.FileDownload, title = "Export memories (JSON)", enabled = !busy) {
-                scope.launch {
-                    message = pipeline.exportMemories().fold(
-                        { "Exported to ${it.absolutePath}" },
-                        { "Export failed: ${it.message}" }
-                    )
-                }
+            SettingRow(icon = Icons.Filled.FileDownload, title = "Export memories only (JSON file)", enabled = !busy) {
+                val stamp = java.text.SimpleDateFormat("yyyyMMdd-HHmm", java.util.Locale.US).format(java.util.Date())
+                runCatching { exportLauncher.launch("jarvis-memories-$stamp.json") }
+                    .onFailure { message = "No file picker available: ${it.message}" }
             }
-            SettingRow(icon = Icons.Filled.FileUpload, title = "Import memories (JSON)", enabled = !busy) {
+            SettingRow(icon = Icons.Filled.FileUpload, title = "Import memories (or a full Jarvis backup)", enabled = !busy) {
                 runCatching { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) }
                     .onFailure { message = "No file picker available: ${it.message}" }
             }

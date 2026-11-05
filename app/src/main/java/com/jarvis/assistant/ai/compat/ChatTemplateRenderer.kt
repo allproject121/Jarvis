@@ -730,14 +730,63 @@ class ChatTemplateRenderer {
             systemPrompt: String,
             memoryContext: String,
             chatHistory: List<ChatTurn>,
-            tools: List<JSONObject>
+            tools: List<JSONObject>,
+            extraTools: List<JSONObject> = emptyList()
         ): String {
+            // Earlier offline replies may hold leaked template tags ("</|im_end|><|im_start|>user ..."),
+            // feeding them back teaches the model to repeat them, so history is cleaned first.
+            val history = chatHistory.takeLast(4).map {
+                it.copy(jarvisResponse = com.jarvis.assistant.ai.local.ToolCallParser.cleanLocalModelText(it.jarvisResponse))
+            }
+            // Per-request tools ride inside the variable part of the system text (after the cached prefix).
+            val sys = if (extraTools.isEmpty()) systemPrompt else buildString {
+                append(systemPrompt.ifBlank { DEFAULT_SYSTEM }.trim())
+                append("\n\nMore tools for this request:\n")
+                extraTools.forEach { append(com.jarvis.assistant.ai.local.OfflineToolRouter.toLine(it)).append("\n") }
+            }
             return when (family) {
-                ModelFamily.GEMMA -> renderGemma(cleanPrompt, systemPrompt, memoryContext, chatHistory, tools)
-                ModelFamily.LLAMA3 -> renderLlama3(cleanPrompt, systemPrompt, memoryContext, chatHistory, tools)
-                else -> renderChatMl(cleanPrompt, systemPrompt, memoryContext, chatHistory, tools)
+                ModelFamily.GEMMA -> renderGemma(cleanPrompt, sys, memoryContext, history, tools)
+                ModelFamily.LLAMA3 -> renderLlama3(cleanPrompt, sys, memoryContext, history, tools)
+                ModelFamily.DEEPSEEK -> renderDeepSeek(cleanPrompt, sys, memoryContext, history, tools)
+                else -> renderChatMl(cleanPrompt, sys, memoryContext, history, tools)
             }
         }
+
+        private const val DEFAULT_SYSTEM =
+            "You are JARVIS, Tony Stark's ultra-intelligent Android AI assistant created by Roshan Sir."
+
+        /** Shared rule so every family answers briefly in the user's language. */
+        private const val REPLY_RULES =
+            "Reply in the same language the user writes in (Hindi, Hinglish or English). Keep replies short."
+
+        private fun toolBlock(tools: List<JSONObject>): String = buildString {
+            // One short line per tool (see OfflineToolRouter.toLine): ~5x fewer tokens than JSON schemas,
+            // and the phone reads prompts at only a few tokens per second.
+            append("\n\n# Tools\nYou can control this phone with these tools:\n")
+            for (t in tools) append(com.jarvis.assistant.ai.local.OfflineToolRouter.toLine(t)).append("\n")
+            append("When the user asks you to DO something on the phone, reply with ONLY one tool call and nothing else:\n")
+            append("<tool_call>\n{\"name\": \"function_name\", \"arguments\": {\"arg\": \"value\"}}\n</tool_call>\n")
+            append("Example: user \"torch on karo\" -> <tool_call>\n{\"name\": \"set_flashlight\", \"arguments\": {\"enabled\": true}}\n</tool_call>\n")
+            append("For normal questions or chat, answer in plain text without any tool call.\n")
+            append("After a <tool_response>, either call the next tool the task still needs, or tell the user the result in one short sentence.")
+        }
+
+        /**
+         * The tool list and rules never change between turns, so they come FIRST: llama.cpp then reuses
+         * that already-processed prefix from its cache and only reads the changing part (persona with
+         * memory/RAG text, history, question). With the changing text first, every turn re-read the
+         * whole ~1K-token prompt, which alone took tens of seconds on the phone CPU.
+         */
+        private fun systemContent(systemPrompt: String, memoryContext: String, tools: List<JSONObject>): String = buildString {
+            if (tools.isNotEmpty()) append(toolBlock(tools).trimStart()).append("\n\n")
+            append(REPLY_RULES).append("\n\n")
+            append(systemPrompt.ifBlank { DEFAULT_SYSTEM }.trim())
+            if (memoryContext.isNotBlank()) append("\n\n[PERSISTENT MEMORY CONTEXT]:\n").append(memoryContext.trim())
+            append("\n\nCurrent date and time: ").append(nowText())
+        }
+
+        private fun nowText(): String =
+            java.text.SimpleDateFormat("EEEE, d MMMM yyyy, h:mm a", java.util.Locale.ENGLISH).format(java.util.Date())
 
         private fun renderChatMl(
             prompt: String,
@@ -747,25 +796,8 @@ class ChatTemplateRenderer {
             tools: List<JSONObject>
         ): String {
             val sb = StringBuilder()
-            sb.append("<|im_start|>system\n")
-            sb.append(systemPrompt.ifBlank { "You are JARVIS, Tony Stark's ultra-intelligent Android AI assistant created by Roshan Sir." }.trim())
-
-            if (memoryContext.isNotBlank()) {
-                sb.append("\n\n[PERSISTENT MEMORY CONTEXT]:\n").append(memoryContext.trim())
-            }
-
-            if (tools.isNotEmpty()) {
-                sb.append("\n\n# Tools Available\nYou have access to the following device control tools:\n<tools>\n")
-                for (t in tools) {
-                    sb.append(t.toString()).append("\n")
-                }
-                sb.append("</tools>\n")
-                sb.append("When you need to execute a tool, reply ONLY with:\n")
-                sb.append("<tool_call>\n{\"name\": \"function_name\", \"arguments\": { ... }}\n</tool_call>\n")
-            }
-            sb.append("<|im_end|>\n")
-
-            for (turn in chatHistory.takeLast(4)) {
+            sb.append("<|im_start|>system\n").append(systemContent(systemPrompt, memoryContext, tools)).append("<|im_end|>\n")
+            for (turn in chatHistory) {
                 if (turn.userTranscript.isNotBlank()) {
                     sb.append("<|im_start|>user\n").append(turn.userTranscript.trim()).append("<|im_end|>\n")
                 }
@@ -773,9 +805,38 @@ class ChatTemplateRenderer {
                     sb.append("<|im_start|>assistant\n").append(turn.jarvisResponse.trim()).append("<|im_end|>\n")
                 }
             }
-
             sb.append("<|im_start|>user\n").append(prompt.trim()).append("<|im_end|>\n")
             sb.append("<|im_start|>assistant\n")
+            return sb.toString()
+        }
+
+        /** Text the DeepSeek prompt already ends with; the provider prepends it to the decoded reply. */
+        const val DEEPSEEK_THINK_PREFILL = "<think>\n"
+
+        /**
+         * DeepSeek-R1-Distill official framing: {system}<｜User｜>...<｜Assistant｜>.
+         * The BOS is left to llama.cpp (the GGUF sets add_bos_token), and the reply is opened with
+         * a think tag like the official template so the reasoning block is always well-formed and
+         * stripped before anything is shown or spoken.
+         */
+        private fun renderDeepSeek(
+            prompt: String,
+            systemPrompt: String,
+            memoryContext: String,
+            chatHistory: List<ChatTurn>,
+            tools: List<JSONObject>
+        ): String {
+            val user = "<｜User｜>"
+            val assistant = "<｜Assistant｜>"
+            val eos = ModelFamily.DEEPSEEK.eosToken
+            val sb = StringBuilder()
+            sb.append(systemContent(systemPrompt, memoryContext, tools))
+            for (turn in chatHistory) {
+                if (turn.userTranscript.isNotBlank()) sb.append(user).append(turn.userTranscript.trim())
+                if (turn.jarvisResponse.isNotBlank()) sb.append(assistant).append(turn.jarvisResponse.trim()).append(eos)
+            }
+            sb.append(user).append(prompt.trim())
+            sb.append(assistant).append(DEEPSEEK_THINK_PREFILL)
             return sb.toString()
         }
 
@@ -787,17 +848,8 @@ class ChatTemplateRenderer {
             tools: List<JSONObject>
         ): String {
             val sb = StringBuilder()
-            val sysContent = buildString {
-                append(systemPrompt.ifBlank { "You are JARVIS, Tony Stark's ultra-intelligent Android AI assistant created by Roshan Sir." }.trim())
-                if (memoryContext.isNotBlank()) append("\n\n[PERSISTENT MEMORY]:\n").append(memoryContext.trim())
-                if (tools.isNotEmpty()) {
-                    append("\n\nAvailable tools:\n")
-                    for (t in tools) append(t.toString()).append("\n")
-                    append("To call a tool, reply with: <tool_call>{\"name\": \"...\", \"arguments\": {...}}</tool_call>")
-                }
-            }
-
-            for (turn in chatHistory.takeLast(4)) {
+            val sysContent = systemContent(systemPrompt, memoryContext, tools)
+            for (turn in chatHistory) {
                 if (turn.userTranscript.isNotBlank()) {
                     sb.append("<start_of_turn>user\n").append(turn.userTranscript.trim()).append("<end_of_turn>\n")
                 }
@@ -805,7 +857,6 @@ class ChatTemplateRenderer {
                     sb.append("<start_of_turn>model\n").append(turn.jarvisResponse.trim()).append("<end_of_turn>\n")
                 }
             }
-
             sb.append("<start_of_turn>user\n")
             if (chatHistory.isEmpty()) {
                 sb.append(sysContent).append("\n\n")
@@ -823,28 +874,19 @@ class ChatTemplateRenderer {
             tools: List<JSONObject>
         ): String {
             val sb = StringBuilder()
-            sb.append("<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n")
-            sb.append(systemPrompt.ifBlank { "You are JARVIS, Tony Stark's ultra-intelligent Android AI assistant created by Roshan Sir." }.trim())
-
-            if (memoryContext.isNotBlank()) {
-                sb.append("\n\n[PERSISTENT MEMORY CONTEXT]:\n").append(memoryContext.trim())
-            }
-            if (tools.isNotEmpty()) {
-                sb.append("\n\n# Tools\n")
-                for (t in tools) sb.append(t.toString()).append("\n")
-            }
-            sb.append("<|eot_id|>\n")
-
-            for (turn in chatHistory.takeLast(4)) {
+            // No begin_of_text here: llama.cpp adds the BOS itself (a second one degrades output).
+            sb.append("<|start_header_id|>system<|end_header_id|>\n\n")
+            sb.append(systemContent(systemPrompt, memoryContext, tools))
+            sb.append("<|eot_id|>")
+            for (turn in chatHistory) {
                 if (turn.userTranscript.isNotBlank()) {
-                    sb.append("<|start_header_id|>user<|end_header_id|>\n\n").append(turn.userTranscript.trim()).append("<|eot_id|>\n")
+                    sb.append("<|start_header_id|>user<|end_header_id|>\n\n").append(turn.userTranscript.trim()).append("<|eot_id|>")
                 }
                 if (turn.jarvisResponse.isNotBlank()) {
-                    sb.append("<|start_header_id|>assistant<|end_header_id|>\n\n").append(turn.jarvisResponse.trim()).append("<|eot_id|>\n")
+                    sb.append("<|start_header_id|>assistant<|end_header_id|>\n\n").append(turn.jarvisResponse.trim()).append("<|eot_id|>")
                 }
             }
-
-            sb.append("<|start_header_id|>user<|end_header_id|>\n\n").append(prompt.trim()).append("<|eot_id|>\n")
+            sb.append("<|start_header_id|>user<|end_header_id|>\n\n").append(prompt.trim()).append("<|eot_id|>")
             sb.append("<|start_header_id|>assistant<|end_header_id|>\n\n")
             return sb.toString()
         }

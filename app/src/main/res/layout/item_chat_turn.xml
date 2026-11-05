@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- One voice-chat turn (ChatAdapter / chat history sheet) - 2026-11-05 redesign:
+     muted 11sp timestamp, accent-tinted user bubble right, glass assistant bubble left. Ids unchanged. -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:layout_marginBottom="18dp">
+    android:layout_marginBottom="16dp">
 
     <TextView
         android:id="@+id/tvTimestamp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:textColor="@color/text_muted"
+        android:layout_marginBottom="8dp"
+        android:textColor="?attr/themeTextMuted"
         android:textSize="11sp"
-        android:layout_marginBottom="6dp"
-        tools:text="19:45:10" />
+        android:fontFamily="@font/inter"
+        tools:text="19:45" />
 
     <LinearLayout
         android:id="@+id/boxUserMessage"
@@ -23,7 +26,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end"
         android:layout_marginStart="48dp"
-        android:background="@drawable/bg_user_bubble"
+        android:background="@drawable/bg_set_bubble_user"
         android:orientation="vertical"
         android:paddingHorizontal="14dp"
         android:paddingVertical="10dp">
@@ -34,16 +37,18 @@
             android:text="@string/chat_label_you"
             android:textColor="?attr/themeTextSecondary"
             android:textSize="11sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.05" />
+            android:fontFamily="@font/inter"
+            android:textFontWeight="600" />
 
         <TextView
             android:id="@+id/tvUserTranscript"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
             android:textColor="?attr/themeTextPrimary"
             android:textSize="14sp"
-            android:layout_marginTop="2dp"
+            android:fontFamily="@font/inter"
+            android:lineSpacingExtra="2dp"
             tools:text="Hello JARVIS, how are you?" />
     </LinearLayout>
 
@@ -54,7 +59,7 @@
         android:layout_gravity="start"
         android:layout_marginEnd="48dp"
         android:layout_marginTop="8dp"
-        android:background="@drawable/bg_jarvis_bubble"
+        android:background="@drawable/bg_set_bubble_assistant"
         android:orientation="vertical"
         android:paddingHorizontal="14dp"
         android:paddingVertical="10dp">
@@ -63,18 +68,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/chat_label_jarvis"
-            android:textColor="?attr/themeAccent"
+            android:textColor="?attr/themeTextSecondary"
             android:textSize="11sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.05" />
+            android:fontFamily="@font/inter"
+            android:textFontWeight="600" />
 
         <TextView
             android:id="@+id/tvJarvisResponse"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
             android:textColor="?attr/themeTextPrimary"
             android:textSize="14sp"
-            android:layout_marginTop="2dp"
+            android:fontFamily="@font/inter"
+            android:lineSpacingExtra="2dp"
             tools:text="Online and ready. How can I assist you today, Boss?" />
     </LinearLayout>
 

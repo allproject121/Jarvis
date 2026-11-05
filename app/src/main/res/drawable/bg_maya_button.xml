@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Filled accent button (text colour picked in code for contrast). -->
+<!-- Maya filled primary button.
+     Fill = ?attr/themeAccentFill; label/icon MUST use ?attr/themeOnAccent
+     (ThemeManager.onAccentColor(ctx) in code) so text never matches the button. -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#33FFFFFF">
+    android:color="@color/ripple_on_accent">
     <item>
         <shape android:shape="rectangle">
             <corners android:radius="14dp" />
-            <solid android:color="?attr/themeAccent" />
+            <solid android:color="?attr/themeAccentFill" />
         </shape>
     </item>
 </ripple>

@@ -46,8 +46,11 @@ object JarvisRuntimes {
         override val description = "Primary real-time voice brain (websocket)."
         override suspend fun status(): RuntimeStatus {
             val key = jarvisApp(context)?.preferences?.apiKey.orEmpty()
-            return if (key.isNotBlank()) RuntimeStatus(true, "API key configured")
-            else RuntimeStatus(false, "No Gemini API key", "Add a key in Settings to use Gemini Live.")
+            if (key.isBlank()) return RuntimeStatus(false, "No Gemini API key", "Add a key in Settings to use Gemini Live.")
+            // A saved key is not proof it works: report the real session state.
+            val status = com.jarvis.assistant.background.JarvisConversationService.connectionStatus.value
+            return if (status.equals("LIVE", ignoreCase = true)) RuntimeStatus(true, "Session live")
+            else RuntimeStatus(false, "Key saved, session: $status", "Developer & Diagnostics → Gemini check sends a real test request.")
         }
     }
 

@@ -137,12 +137,12 @@
                     android:minHeight="48dp"
                     android:layout_marginTop="16dp"
                     android:text="Configure Accessibility Service"
-                    android:textColor="?attr/themeBg"
+                    android:textColor="?attr/themeOnAccent"
                     android:textStyle="bold"
                     android:textSize="14sp"
                     android:textAllCaps="false"
                     app:cornerRadius="14dp"
-                    app:backgroundTint="?attr/themeAccent" />
+                    app:backgroundTint="?attr/themeAccentFill" />
             </LinearLayout>
 
             <!-- SECTION 1: HOW JARVIS WORKS (NON-DEVELOPER GUIDE) -->
@@ -396,12 +396,12 @@
                     android:minHeight="48dp"
                     android:layout_marginTop="14dp"
                     android:text="Open Accessibility Settings"
-                    android:textColor="?attr/themeBg"
+                    android:textColor="?attr/themeOnAccent"
                     android:textStyle="bold"
                     android:textSize="14sp"
                     android:textAllCaps="false"
                     app:cornerRadius="12dp"
-                    app:backgroundTint="?attr/themeAccent" />
+                    app:backgroundTint="?attr/themeAccentFill" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnOpenAllPermissions"

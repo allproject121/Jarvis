@@ -10,16 +10,10 @@ import com.jarvis.assistant.automation.whatsapp.WhatsAppAssistant
 import com.jarvis.assistant.automation.youtube.YouTubeAutomationManager
 import com.jarvis.assistant.connectors.GitHubConnector
 import com.jarvis.assistant.connectors.N8nWorkflowGenerator
-import com.jarvis.assistant.core.DrivingCallPolicy
-import com.jarvis.assistant.core.JarvisDrivingModeManager
 import com.jarvis.assistant.data.memory.MemoryManager
 import com.jarvis.assistant.finance.YahooFinanceClient
 import com.jarvis.assistant.marketing.SeoAuditEngine
 import com.jarvis.assistant.marketing.YouTubeCreatorToolkit
-import com.jarvis.assistant.security.guardian.ActionCategory
-import com.jarvis.assistant.security.guardian.GuardianRole
-import com.jarvis.assistant.security.guardian.VoiceGuardian
-import com.jarvis.assistant.security.guardian.WatchmanSecurityManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -33,8 +27,6 @@ class CommandExecutor(
     private val memoryManager: MemoryManager,
     private val macroEngine: MacroEngine? = null,
     private val termuxBridge: TermuxBridge? = null,
-    private val voiceGuardian: VoiceGuardian? = null,
-    private val watchmanSecurity: WatchmanSecurityManager? = null,
     private val financeClient: YahooFinanceClient? = null,
     private val gitHubConnector: GitHubConnector? = null,
     private val seoAuditEngine: SeoAuditEngine? = null,
@@ -116,11 +108,6 @@ class CommandExecutor(
                     Log.w(TAG, "Could not move to background: ${e.message}")
                     "I couldn't switch to the home screen."
                 }
-            }
-            is JarvisCommand.SetDrivingMode -> {
-                val manager = JarvisDrivingModeManager.getInstance(com.jarvis.assistant.JarvisApp.instance)
-                manager.setDrivingMode(command.enabled)
-                DrivingCallPolicy.statusMessage(manager.isDrivingMode.value, manager.drivingCallMode)
             }
 
             // --- JARVIS INTEGRATED PROTOCOL FEATURES ---
@@ -210,65 +197,6 @@ class CommandExecutor(
             is JarvisCommand.TermuxWriteFile -> {
                 val ok = termuxBridge?.writeFile(command.path, command.content) ?: false
                 if (ok) "File written to Termux: ${command.path}" else "Failed to write file."
-            }
-
-            // 3. Voice Guardian & Biometric Security
-            is JarvisCommand.EnrollVoice -> {
-                val role = try { GuardianRole.valueOf(command.role.uppercase()) } catch (_: Exception) { GuardianRole.FAMILY }
-                val ok = voiceGuardian?.enrollVoice(command.name, role) ?: false
-                if (ok) "Saved ${command.name} as $role in Voice Guardian. ${VoiceGuardian.ENROLL_REPLY_NOTE}" else "Voice Guardian not ready."
-            }
-            is JarvisCommand.RemoveVoice -> {
-                val ok = voiceGuardian?.removeVoice(command.name) ?: false
-                if (ok) "Voice removed for ${command.name}" else "Profile not found."
-            }
-            is JarvisCommand.SetVoiceRole -> {
-                val role = try { GuardianRole.valueOf(command.role.uppercase()) } catch (_: Exception) { GuardianRole.FAMILY }
-                val ok = voiceGuardian?.setVoiceRole(command.name, role) ?: false
-                if (ok) "Updated ${command.name}'s role to $role" else "Profile not found."
-            }
-            is JarvisCommand.ListVoices -> {
-                val list = voiceGuardian?.listVoices() ?: emptyList()
-                if (list.isEmpty()) "No enrolled voices." else list.joinToString("\n") { "${it.name} (${it.role})" }
-            }
-            is JarvisCommand.ArmVoiceGuard -> {
-                if (voiceGuardian == null) {
-                    "Voice Guardian isn't available, so I couldn't ${if (command.armed) "arm" else "disarm"} it."
-                } else {
-                    val applied = try {
-                        voiceGuardian.isArmed = command.armed
-                        voiceGuardian.isArmed == command.armed
-                    } catch (e: Exception) {
-                        Log.w(TAG, "ArmVoiceGuard failed: ${e.message}")
-                        false
-                    }
-                    when {
-                        !applied -> "I couldn't ${if (command.armed) "arm" else "disarm"} Voice Guardian."
-                        command.armed -> "Voice Guardian armed. Security active."
-                        else -> "Voice Guardian disarmed."
-                    }
-                }
-            }
-            is JarvisCommand.CaptureIntruderPhoto -> {
-                if (watchmanSecurity == null) {
-                    "Watchman security isn't available, so no photo was taken."
-                } else {
-                    // Wait (bounded) for the camera callback so we report what really happened.
-                    val file = withTimeoutOrNull(INTRUDER_CAPTURE_TIMEOUT_MS) {
-                        suspendCancellableCoroutine<java.io.File?> { cont ->
-                            try {
-                                watchmanSecurity.captureIntruderPhoto { captured ->
-                                    Log.i(TAG, "Intruder snapshot saved at: ${captured?.absolutePath}")
-                                    if (cont.isActive) cont.resume(captured)
-                                }
-                            } catch (e: Exception) {
-                                Log.w(TAG, "Intruder capture failed: ${e.message}")
-                                if (cont.isActive) cont.resume(null)
-                            }
-                        }
-                    }
-                    if (file != null) "Intruder snapshot captured and saved." else "I couldn't capture an intruder photo (camera unavailable or permission missing)."
-                }
             }
 
             // 4. Stock Market & Finance

@@ -248,14 +248,6 @@ class JarvisAccessibilityService : AccessibilityService() {
         try {
             com.jarvis.assistant.maya.screen.ScreenEventBus.onEvent(event)
         } catch (_: Throwable) {}
-        // Protocol 7 App Lock: guard locked apps when they come to the foreground.
-        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            try {
-                com.jarvis.assistant.ui.facelock.AppLockEnforcer.onWindowStateChanged(this, event.packageName?.toString())
-            } catch (e: Exception) {
-                Log.w(TAG, "App lock check failed: ${e.message}")
-            }
-        }
         val pkg = event.packageName?.toString().orEmpty()
         if (event.eventType in setOf(
                 AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,

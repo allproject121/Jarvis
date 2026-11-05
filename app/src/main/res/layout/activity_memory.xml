@@ -102,7 +102,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="49/49 INDEXED"
-                    android:textColor="#4ADE80"
+                    android:textColor="?attr/themeSuccess"
                     android:textSize="11sp"
                     android:textStyle="bold" />
             </LinearLayout>

@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_jarvis_menu_glass"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="24dp">
+
+    <!-- Handle -->
+    <View
+        android:layout_width="44dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/bg_jarvis_row_item"
+        android:layout_marginBottom="14dp" />
+
+    <!-- Header -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true">
+
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_jarvis_icon_square">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_sparkle"
+                    app:tint="?attr/themeAccent"
+                    android:contentDescription="Skills" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="INSTALLED SKILLS &amp; PLAYBOOKS"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.06"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Automated capabilities, tools &amp; macros"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11.5sp"
+                    android:fontFamily="sans-serif"
+                    android:layout_marginTop="1dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnCloseSkills"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_jarvis_icon_square"
+            android:src="@drawable/ic_close"
+            android:padding="8dp"
+            app:tint="?attr/themeTextMuted"
+            android:contentDescription="Close" />
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/themeCardBorder"
+        android:layout_marginBottom="12dp" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="520dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- SKILL 1: CHATGPT IMAGE MACRO -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="14dp"
+                android:layout_marginBottom="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎨 ChatGPT Image Generator"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Autonomous accessibility workflow that launches ChatGPT app, types image prompt, and captures output."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11.5sp"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnRunChatGptSkill"
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:text="RUN CHATGPT IMAGE SKILL"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_jarvis_pill_button"
+                    android:textColor="#FFFFFF" />
+            </LinearLayout>
+
+            <!-- SKILL 2: GEMINI VIDEO & IMAGE -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="14dp"
+                android:layout_marginBottom="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎬 Gemini Veo Video &amp; Image Creator"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Generates cinematic videos and high-fidelity visuals using Google Veo and Imagen workflows."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11.5sp"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnRunGeminiSkill"
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:text="RUN GEMINI VEO SKILL"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_jarvis_pill_button"
+                    android:textColor="#FFFFFF" />
+            </LinearLayout>
+
+            <!-- SKILL 3: WHATSAPP VOICE DISPATCHER -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="14dp"
+                android:layout_marginBottom="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="💬 WhatsApp Instant Voice Dispatcher"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sends WhatsApp text messages directly to contacts hands-free via voice or tool calls."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11.5sp"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnRunWhatsAppSkill"
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:text="TEST WHATSAPP DISPATCH"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:textColor="?attr/themeTextPrimary" />
+            </LinearLayout>
+
+            <!-- SKILL 4: POCKETTTS ON-DEVICE NEURAL SYNTHESIS -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="14dp"
+                android:layout_marginBottom="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎙️ PocketTTS On-Device Voice"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="High-performance neural speech synthesis running natively on device with zero cloud latency."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11.5sp"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnRunPocketTtsSkill"
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:text="TEST ON-DEVICE VOICE SYNTHESIS"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:textColor="?attr/themeTextPrimary" />
+            </LinearLayout>
+
+            <!-- SKILL 5: TOUCH GUARD SENTINEL -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="14dp"
+                android:layout_marginBottom="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🚨 Touch Guard Anti-Theft Sentinel"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Detects unauthorized device movement, triggers siren alarm, and captures front-camera intruder selfie."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11.5sp"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/btnRunTouchGuardSkill"
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:text="ARM / TEST TOUCH GUARD"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:textColor="?attr/themeTextPrimary" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

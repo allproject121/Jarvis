@@ -50,6 +50,54 @@
 
             <!-- Theme 1: Light -->
             <LinearLayout
+                android:id="@+id/cardThemeNova"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="16dp"
+                android:layout_marginBottom="10dp">
+
+                <View
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:background="@drawable/bg_jarvis_chip"
+                    android:backgroundTint="#A78BFA" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Nova (new look)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="15sp"
+                        android:fontFamily="@font/inter"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="21st.dev style · zinc black · violet glow · Inter"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="12sp"
+                        android:fontFamily="@font/inter" />
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/ivCheckNova"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_checklist_tasks"
+                    app:tint="?attr/themeAccent" />
+            </LinearLayout>
+            <LinearLayout
                 android:id="@+id/cardThemeLight"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -533,8 +581,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="44dp"
                         android:text="Apply"
-                        android:textColor="#FFFFFF"
-                        app:backgroundTint="?attr/themeAccent"
+                        android:textColor="?attr/themeOnAccent"
+                        app:backgroundTint="?attr/themeAccentFill"
                         app:cornerRadius="10dp"
                         android:layout_marginStart="10dp" />
                 </LinearLayout>

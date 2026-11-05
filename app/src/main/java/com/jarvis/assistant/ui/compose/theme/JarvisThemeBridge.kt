@@ -129,8 +129,14 @@ object JarvisThemeBridge {
     /** Flatten a (possibly translucent) token onto [under] so Compose surfaces stay opaque. */
     private fun Color.over(under: Color): Color = if (alpha >= 0.999f) this else compositeOver(under)
 
-    private fun readableOn(bg: Color): Color =
-        if (bg.luminance() > 0.45f) Color(0xFF0B0B10) else Color.White
+    /** White or near-black, whichever has the higher WCAG contrast on [bg] (never ink = fill). */
+    private fun readableOn(bg: Color): Color {
+        val l = bg.copy(alpha = 1f).luminance()
+        val dark = Color(0xFF0B0B10)
+        val onWhite = 1.05f / (l + 0.05f)
+        val onDark = (l + 0.05f) / (dark.luminance() + 0.05f)
+        return if (onWhite >= onDark) Color.White else dark
+    }
 
     /**
      * Push [accent] towards readable contrast against [bg]: on light grounds a

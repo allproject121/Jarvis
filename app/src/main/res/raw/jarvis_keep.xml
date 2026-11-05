@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Glass overlays are looked up by name at runtime (ThemeManager.applyGlassOverlay); keep them in release builds. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@style/JarvisGlassOverlay*" />

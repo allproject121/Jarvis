@@ -157,11 +157,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="36dp"
                             android:text="START ⟳"
-                            android:textColor="?attr/themeBg"
+                            android:textColor="?attr/themeOnAccent"
                             android:textSize="11sp"
                             android:textStyle="bold"
                             android:fontFamily="monospace"
-                            android:backgroundTint="?attr/themeAccent"
+                            android:backgroundTint="?attr/themeAccentFill"
                             app:cornerRadius="8dp" />
                     </LinearLayout>
                 </LinearLayout>
@@ -219,11 +219,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="38dp"
                     android:text="DIRECT CONNECT • FETCH LAUNCHES"
-                    android:textColor="?attr/themeBg"
+                    android:textColor="?attr/themeOnAccent"
                     android:textSize="11sp"
                     android:textStyle="bold"
                     android:background="@drawable/bg_godseye_hud_back"
-                    android:backgroundTint="?attr/themeAccent"
+                    android:backgroundTint="?attr/themeAccentFill"
                     android:layout_marginTop="10dp" />
 
                 <ProgressBar
@@ -273,7 +273,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="30,000+ STATIONS"
-                        android:textColor="#10B981"
+                        android:textColor="?attr/themeSuccess"
                         android:textSize="10sp"
                         android:textStyle="bold"
                         android:background="?attr/themeChipBg"
@@ -320,7 +320,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
                         android:text="STOP"
-                        android:textColor="#FF3B30"
+                        android:textColor="?attr/themeDanger"
                         android:textSize="10sp"
                         android:background="@drawable/bg_godseye_hud_back" />
                 </LinearLayout>
@@ -412,7 +412,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="ADSBdb"
-                        android:textColor="#F59E0B"
+                        android:textColor="?attr/themeWarning"
                         android:textSize="10sp"
                         android:textStyle="bold"
                         android:background="?attr/themeChipBg"
@@ -516,7 +516,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="NHC / CPHC"
-                        android:textColor="#38BDF8"
+                        android:textColor="?attr/themeInfo"
                         android:textSize="10sp"
                         android:textStyle="bold"
                         android:background="?attr/themeAccentLight"
@@ -598,7 +598,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="GDELT 2.0"
-                        android:textColor="#A855F7"
+                        android:textColor="?attr/themeAccent3"
                         android:textSize="10sp"
                         android:textStyle="bold"
                         android:background="?attr/themeChipBg"
@@ -675,7 +675,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="LIVE FEEDS"
-                        android:textColor="#10B981"
+                        android:textColor="?attr/themeSuccess"
                         android:textSize="10sp"
                         android:textStyle="bold"
                         android:background="?attr/themeChipBg"

@@ -54,7 +54,7 @@
             android:layout_marginStart="4dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_delete"
-            app:tint="@color/status_red"
+            app:tint="?attr/themeDanger"
             android:contentDescription="Delete" />
     </LinearLayout>
 

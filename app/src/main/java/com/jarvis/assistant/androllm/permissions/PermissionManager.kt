@@ -15,6 +15,12 @@ import com.jarvis.assistant.androllm.permissions.handler.MicrophonePermissionHan
 import com.jarvis.assistant.androllm.permissions.handler.NotificationAccessHandler
 import com.jarvis.assistant.androllm.permissions.handler.NotificationPermissionHandler
 import com.jarvis.assistant.androllm.permissions.handler.SmsPermissionHandler
+import com.jarvis.assistant.androllm.permissions.handler.PhoneCallsPermissionHandler
+import com.jarvis.assistant.androllm.permissions.handler.OverlayAccessHandler
+import com.jarvis.assistant.androllm.permissions.handler.DndAccessHandler
+import com.jarvis.assistant.androllm.permissions.handler.SystemSettingsAccessHandler
+import com.jarvis.assistant.androllm.permissions.handler.UsageAccessHandler
+import com.jarvis.assistant.androllm.permissions.handler.BatteryOptimizationHandler
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -223,13 +229,19 @@ class PermissionManager(
             "voice_assistant",
             "notifications",
             "accessibility",
+            "overlay",
+            "battery",
             "notification_access",
             "contacts",
+            "phone",
             "sms",
             "calendar",
             "camera",
             "location",
             "bluetooth",
+            "dnd",
+            "write_settings",
+            "usage",
             "alarms"
         )
 
@@ -245,7 +257,13 @@ class PermissionManager(
             CameraPermissionHandler(),
             LocationPermissionHandler(),
             BluetoothPermissionHandler(),
-            AlarmAccessHandler()
+            AlarmAccessHandler(),
+            PhoneCallsPermissionHandler(),
+            OverlayAccessHandler(),
+            DndAccessHandler(),
+            SystemSettingsAccessHandler(),
+            UsageAccessHandler(),
+            BatteryOptimizationHandler()
         )
 
         @Volatile

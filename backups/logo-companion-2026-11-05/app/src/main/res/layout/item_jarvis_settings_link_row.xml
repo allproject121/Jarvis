@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One Settings row (same look as the rows in fragment_settings.xml: 36dp icon tile, 15sp title,
+     muted subtitle, pill badge, chevron), inflated programmatically for the merged on-device AI
+     settings. An inset hairline divider precedes every row except the first. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <View
+        android:id="@+id/rowDivider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="60dp"
+        android:background="?attr/themeCardBorder" />
+
+    <LinearLayout
+        android:id="@+id/rowRoot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="60dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="14dp"
+        android:paddingVertical="12dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true">
+
+        <FrameLayout
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_set_icon_tile">
+
+            <ImageView
+                android:id="@+id/ivRowIcon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_settings_advanced"
+                app:tint="?attr/themeAccent"
+                android:contentDescription="@null" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvRowTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="15sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="500" />
+
+            <TextView
+                android:id="@+id/tvRowSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="12sp"
+                android:fontFamily="@font/inter" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvRowBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:maxLines="1"
+            android:background="@drawable/bg_set_badge_accent"
+            android:paddingHorizontal="9dp"
+            android:paddingVertical="3dp"
+            android:textColor="?attr/themeTextPrimary"
+            android:textSize="11sp"
+            android:fontFamily="@font/inter"
+            android:textFontWeight="600"
+            android:visibility="gone" />
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_set_chevron_right"
+            app:tint="?attr/themeTextMuted"
+            android:contentDescription="Open" />
+    </LinearLayout>
+</LinearLayout>

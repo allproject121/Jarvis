@@ -52,19 +52,22 @@ class AutomationSettingsStore(
 
     val settings: Flow<AutomationSettings> = dataStore.data
         .catch { emit(androidx.datastore.preferences.core.emptyPreferences()) }
-        .map { p ->
-            val defaults = AutomationSettings()
-            AutomationSettings(
-                toolCallingEnabled = p[Keys.TOOL_CALLING_ENABLED] ?: defaults.toolCallingEnabled,
-                confirmationMode = runCatching {
-                    ConfirmationMode.valueOf(p[Keys.CONFIRMATION_MODE] ?: defaults.confirmationMode.name)
-                }.getOrDefault(defaults.confirmationMode),
-                disabledTools = p[Keys.DISABLED_TOOLS] ?: defaults.disabledTools,
-                voiceConfirmations = p[Keys.VOICE_CONFIRMATIONS] ?: defaults.voiceConfirmations,
-                maxToolRounds = (p[Keys.MAX_TOOL_ROUNDS] ?: defaults.maxToolRounds).coerceIn(1, 6),
-                showToolActivity = p[Keys.SHOW_TOOL_ACTIVITY] ?: defaults.showToolActivity
-            )
-        }
+        .map { p -> read(p) }
+
+    /** Maps stored preferences to settings (defaults for anything never written). */
+    private fun read(p: Preferences): AutomationSettings {
+        val defaults = AutomationSettings()
+        return AutomationSettings(
+            toolCallingEnabled = p[Keys.TOOL_CALLING_ENABLED] ?: defaults.toolCallingEnabled,
+            confirmationMode = runCatching {
+                ConfirmationMode.valueOf(p[Keys.CONFIRMATION_MODE] ?: defaults.confirmationMode.name)
+            }.getOrDefault(defaults.confirmationMode),
+            disabledTools = p[Keys.DISABLED_TOOLS] ?: defaults.disabledTools,
+            voiceConfirmations = p[Keys.VOICE_CONFIRMATIONS] ?: defaults.voiceConfirmations,
+            maxToolRounds = (p[Keys.MAX_TOOL_ROUNDS] ?: defaults.maxToolRounds).coerceIn(1, 6),
+            showToolActivity = p[Keys.SHOW_TOOL_ACTIVITY] ?: defaults.showToolActivity
+        )
+    }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _snapshot = MutableStateFlow(AutomationSettings())
@@ -74,18 +77,31 @@ class AutomationSettingsStore(
 
     /** Starts the in-memory mirror (done once for the shared [getInstance] store). */
     private fun startMirror() {
-        scope.launch { settings.collect { _snapshot.value = it } }
+        scope.launch { settings.collect { _snapshot.value = it; mirrorLoaded = true } }
     }
 
     suspend fun current(): AutomationSettings = settings.first().also { _snapshot.value = it }
 
-    /** Non-suspending read of the mirrored settings (may lag a write by one emission). */
-    fun currentBlocking(): AutomationSettings = _snapshot.value
+    @Volatile private var mirrorLoaded = false
+
+    /**
+     * Non-suspending read of the mirrored settings (may lag a write by one emission).
+     * Before the mirror's first DataStore read lands (cold start) it waits up to 400 ms for the
+     * real values, so e.g. the first Gemini Live setup never advertises a tool the user disabled.
+     */
+    fun currentBlocking(): AutomationSettings {
+        if (mirrorLoaded) return _snapshot.value
+        return runCatching {
+            kotlinx.coroutines.runBlocking { kotlinx.coroutines.withTimeoutOrNull(400L) { current() } }
+        }.getOrNull() ?: _snapshot.value
+    }
 
     /** Atomically applies [transform] to the persisted settings. */
     suspend fun update(transform: (AutomationSettings) -> AutomationSettings) {
         dataStore.edit { p ->
-            val next = transform(current())
+            // Transform the values inside this edit (not a separate settings.first() read),
+            // so two quick toggles can never overwrite each other with a stale copy.
+            val next = transform(read(p))
             p[Keys.TOOL_CALLING_ENABLED] = next.toolCallingEnabled
             p[Keys.CONFIRMATION_MODE] = next.confirmationMode.name
             p[Keys.DISABLED_TOOLS] = next.disabledTools

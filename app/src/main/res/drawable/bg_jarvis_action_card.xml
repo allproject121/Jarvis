@@ -1,41 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento card (2026-11-05) - action tile, second glow from the top-left: theme fill with a lighter top edge,
+     soft corner glow, 1dp hairline. Colours are theme attrs only, so light themes get white cards + grey hairline. -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="?attr/themeAccentLight">
     <item>
         <layer-list>
-            <!-- Layer 1: Frosted Cyber Obsidian Action Base Fill -->
             <item>
                 <shape android:shape="rectangle">
                     <corners android:radius="20dp" />
                     <gradient
                         android:type="linear"
-                        android:angle="135"
+                        android:angle="270"
                         android:startColor="?attr/themeCardGlassStart"
                         android:endColor="?attr/themeCardGlassEnd" />
-                    <stroke
-                        android:width="1.2dp"
-                        android:color="?attr/themeCardBorder" />
                 </shape>
             </item>
-
-            <!-- Layer 2: Holographic Top Specular Glass Sheen -->
-            <item
-                android:top="1dp"
-                android:left="1dp"
-                android:right="1dp"
-                android:bottom="14dp">
+            <!-- soft corner glow (very faint on light themes) -->
+            <item>
                 <shape android:shape="rectangle">
-                    <corners
-                        android:topLeftRadius="19dp"
-                        android:topRightRadius="19dp"
-                        android:bottomLeftRadius="4dp"
-                        android:bottomRightRadius="4dp" />
+                    <corners android:radius="20dp" />
                     <gradient
-                        android:type="linear"
-                        android:angle="270"
-                        android:startColor="#2600F0FF"
-                        android:centerColor="#0800F0FF"
-                        android:endColor="#00000000" />
+                        android:type="radial"
+                        android:centerX="0.0"
+                        android:centerY="0.0"
+                        android:gradientRadius="95%"
+                        android:startColor="?attr/themeGlow2"
+                        android:endColor="@android:color/transparent" />
+                </shape>
+            </item>
+            <!-- 1dp hairline -->
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="20dp" />
+                    <solid android:color="@android:color/transparent" />
+                    <stroke
+                        android:width="1dp"
+                        android:color="?attr/themeCardBorder" />
                 </shape>
             </item>
         </layer-list>

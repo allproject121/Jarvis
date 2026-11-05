@@ -70,7 +70,7 @@
                         android:paddingHorizontal="6dp"
                         android:paddingVertical="2dp"
                         android:text="100% Free"
-                        android:textColor="@color/status_green"
+                        android:textColor="?attr/themeSuccess"
                         android:textSize="9sp"
                         android:fontFamily="sans-serif-medium" />
                 </LinearLayout>
@@ -191,7 +191,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="GOD'S EYE: "
-                    android:textColor="@color/status_amber"
+                    android:textColor="?attr/themeWarning"
                     android:textSize="10sp"
                     android:fontFamily="monospace"
                     android:textStyle="bold" />
@@ -249,7 +249,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="VOICE: "
-                    android:textColor="@color/status_green"
+                    android:textColor="?attr/themeSuccess"
                     android:textSize="10sp"
                     android:fontFamily="monospace"
                     android:textStyle="bold" />
@@ -309,11 +309,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="34dp"
                     android:layout_marginStart="6dp"
-                    android:backgroundTint="?attr/themeAccent"
+                    android:backgroundTint="?attr/themeAccentFill"
                     android:fontFamily="monospace"
                     android:paddingHorizontal="10dp"
                     android:text="🌐 CONNECT"
-                    android:textColor="?attr/themeBg"
+                    android:textColor="?attr/themeOnAccent"
                     android:textSize="10sp"
                     android:textStyle="bold"
                     app:cornerRadius="7dp" />

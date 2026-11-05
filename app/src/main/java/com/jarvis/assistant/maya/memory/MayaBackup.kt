@@ -216,7 +216,7 @@ object MayaBackup {
         }.getOrDefault(emptyList())
 
         val contacts = MayaBackupFormat.Contacts(
-            sos = runCatching { MayaBackupFormat.splitContacts(jarvis.preferences.emergencySosContacts) }.getOrDefault(emptyList()),
+            sos = emptyList(),
             favourites = emptyList()
         )
 
@@ -354,18 +354,6 @@ object MayaBackup {
         report = report.copy(wikiPages = wikiCount)
 
         report = report.copy(notices = NoticesStore.merge(app, MayaBackupFormat.readNotices(root)))
-
-        val contacts = MayaBackupFormat.readContacts(root)
-        if (contacts.sos.isNotEmpty()) {
-            runCatching {
-                val current = MayaBackupFormat.splitContacts(jarvis.preferences.emergencySosContacts)
-                val merged = (current + contacts.sos).distinct()
-                if (merged != current) {
-                    jarvis.preferences.emergencySosContacts = merged.joinToString(", ")
-                    report = report.copy(contacts = true)
-                }
-            }
-        }
 
         val name = root.optJSONObject("user")?.optString("name").orEmpty()
         if (name.isNotBlank() && UserNames.isValid(name)) {

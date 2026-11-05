@@ -286,11 +286,12 @@ object MemoryToolPack {
         // ── Backup & privacy ─────────────────────────────────────────────────
         MayaToolRegistry.register(
             name = "export_backup",
-            description = "Back up everything the user has shared (remembered facts, chat transcripts, rules, episodes, wiki, notices, favourite/SOS contacts) into one JSON file and open the share sheet so they can send it to Drive/WhatsApp/another phone. 'backup le lo', 'meri yaadein save kar do', 'naye phone me le jaana hai'. API keys and the voice print are never included.",
+            description = "Back up everything the user has shared (app settings, remembered facts, chat transcripts, rules, episodes, wiki, notices, custom macros) into one JSON file and open the share sheet so they can send it to Drive/WhatsApp/another phone. 'backup le lo', 'meri yaadein save kar do', 'naye phone me le jaana hai'. API keys and the voice print are never included.",
             family = FAMILY
         ) { ctx, _ ->
             note(ctx, "export_backup")
-            val result = MayaBackup.exportAndShare(ctx)
+            // One backup format app-wide: same file as Settings -> Backup & restore (no API keys).
+            val result = com.jarvis.assistant.data.backup.BackupManager.exportAndShare(ctx)
             result.fold(
                 onSuccess = { f -> ToolOutcome.ok("Backup ready (${f.length() / 1024} KB); share sheet opened.", JSONObject().put("file", f.name).put("bytes", f.length())) },
                 onFailure = { ToolOutcome.fail("Backup failed: ${it.message}") }

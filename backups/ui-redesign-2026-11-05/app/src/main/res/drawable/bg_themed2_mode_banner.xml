@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Theme-following variant of bg_mode_switch_banner. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/themeAccentLight" />
+    <corners android:radius="14dp" />
+    <stroke
+        android:width="1.2dp"
+        android:color="?attr/themeCardBorder" />
+</shape>

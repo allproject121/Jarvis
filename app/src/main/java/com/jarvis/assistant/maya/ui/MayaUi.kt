@@ -52,8 +52,14 @@ object MayaUi {
     fun textMuted(context: Context) = attr(context, R.attr.themeTextMuted, MayaPalette.TEXT_MUTED)
     fun accent(context: Context) = attr(context, R.attr.themeAccent, MayaPalette.PRIMARY)
 
-    /** Ink that stays readable on the active accent (white on deep accents, dark on pale ones). */
-    fun onAccent(context: Context): Int {
+    /**
+     * Ink that stays readable on the accent button fill (bg_maya_button = ?attr/themeAccentFill).
+     * Uses the theme's own ?attr/themeOnAccent (contrast-audited per theme, 2026-11-05).
+     */
+    fun onAccent(context: Context): Int = com.jarvis.assistant.util.ThemeManager.onAccentColor(context)
+
+    @Suppress("unused")
+    private fun legacyOnAccent(context: Context): Int {
         val acc = accent(context) or 0xFF000000.toInt()
         val bg = attr(context, R.attr.themeBg, MayaPalette.BG) or 0xFF000000.toInt()
         val white = Color.WHITE

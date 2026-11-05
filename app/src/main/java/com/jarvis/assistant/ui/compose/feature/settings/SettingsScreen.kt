@@ -100,9 +100,7 @@ import com.jarvis.assistant.ui.compose.navigation.ComposeRoutes
 import com.jarvis.assistant.ui.compose.theme.ledger
 import com.jarvis.assistant.ui.memory.MemoryActivity
 import com.jarvis.assistant.ui.permission.PermissionActivity
-import com.jarvis.assistant.ui.settings.PrivacyShieldActivity
 import com.jarvis.assistant.ui.settings.SettingsActivity
-import com.jarvis.assistant.ui.voice.VoiceEnrollmentActivity
 
 /** Which modal is open on the settings screen (null = none). */
 private enum class SettingsDialog {
@@ -726,20 +724,6 @@ private fun SettingsScreen(
                                 onCheckedChange = { viewModel.setBatterySaver(it) }
                             )
                             ToggleRow(
-                                icon = Icons.Filled.Security,
-                                title = "Owner voice verification",
-                                subtitle = if (state.ownerVoiceEnrolled) "Only respond to your enrolled voice" else "Enroll your voice first",
-                                checked = state.ownerVoiceEnabled,
-                                enabled = state.ownerVoiceEnrolled,
-                                onCheckedChange = { viewModel.setOwnerVoice(it) }
-                            )
-                            SettingRow(
-                                icon = Icons.Filled.Mic,
-                                title = "Enroll owner voice",
-                                value = if (state.ownerVoiceEnrolled) "Enrolled" else "Setup",
-                                onClick = { context.launchSafely(Intent(context, VoiceEnrollmentActivity::class.java)) }
-                            )
-                            ToggleRow(
                                 icon = Icons.Filled.TouchApp,
                                 title = "Task overlay",
                                 subtitle = "Floating avatar while Jarvis works",
@@ -926,36 +910,6 @@ private fun SettingsScreen(
                         onRemove = { viewModel.removeMcpServer(it) },
                         onToggle = { server, enabled -> viewModel.setMcpServerEnabled(server, enabled) }
                     )
-                }
-
-                // ── Safety & privacy ────────────────────────────────────────
-                settingsAccordionItem(
-                    group = SettingsGroup.Safety,
-                    icon = Icons.Filled.Security,
-                    expanded = expandedGroup == SettingsGroup.Safety.name,
-                    onToggle = { toggleGroup(SettingsGroup.Safety) },
-                    visible = SettingsGroup.Safety.matches(searchQuery),
-                    subtitle = if (state.privacyMode) "Privacy mode on" else "Privacy mode off",
-                    reduceMotion = state.reduceMotion
-                ) {
-                    CloudGlassCard(modifier = Modifier.fillMaxWidth()) {
-                        Column {
-                            ToggleRow(
-                                icon = Icons.Filled.Security,
-                                title = "Privacy mode",
-                                subtitle = "Shield sensitive chat logs & readouts",
-                                checked = state.privacyMode,
-                                onCheckedChange = { viewModel.setPrivacyMode(it) }
-                            )
-                            SettingRow(
-                                icon = Icons.Filled.Lock,
-                                title = "Privacy Shield",
-                                value = "Policy & data controls",
-                                onClick = { context.launchSafely(Intent(context, PrivacyShieldActivity::class.java)) }
-                            )
-                            UnavailableRow(title = "Warn before opening AI links")
-                        }
-                    }
                 }
 
                 // ── Developer ───────────────────────────────────────────────

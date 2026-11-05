@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated 2026-11-05: frosted-glass overlays applied by ThemeManager when "Frosted Glass Blur FX" is on.
+     Same hue as each theme, lower alpha, so the blurred glow behind cards shows through. -->
+<resources>
+    <style name="JarvisGlassOverlay.Light" parent="">
+        <item name="themeCardGlassStart">#B8FFFFFF</item>
+        <item name="themeCardGlassEnd">#94FFFFFF</item>
+        <item name="themeDockGlassStart">#C7FFFFFF</item>
+        <item name="themeDockGlassEnd">#A6FFFFFF</item>
+    </style>
+    <style name="JarvisGlassOverlay.Dark" parent="">
+        <item name="themeCardGlassStart">#8C142244</item>
+        <item name="themeCardGlassEnd">#66090F1E</item>
+        <item name="themeDockGlassStart">#A6101930</item>
+        <item name="themeDockGlassEnd">#80050710</item>
+    </style>
+    <style name="JarvisGlassOverlay.Red" parent="">
+        <item name="themeCardGlassStart">#8C360E18</item>
+        <item name="themeCardGlassEnd">#661C050D</item>
+        <item name="themeDockGlassStart">#A6300A14</item>
+        <item name="themeDockGlassEnd">#80170409</item>
+    </style>
+    <style name="JarvisGlassOverlay.Sunset" parent="">
+        <item name="themeCardGlassStart">#B8FFFFFF</item>
+        <item name="themeCardGlassEnd">#94FFE2D7</item>
+        <item name="themeDockGlassStart">#C7FFFFFF</item>
+        <item name="themeDockGlassEnd">#A6FFE8DF</item>
+    </style>
+    <style name="JarvisGlassOverlay.Stealth" parent="">
+        <item name="themeCardGlassStart">#8C181820</item>
+        <item name="themeCardGlassEnd">#6608080C</item>
+        <item name="themeDockGlassStart">#A6141418</item>
+        <item name="themeDockGlassEnd">#80000000</item>
+    </style>
+    <style name="JarvisGlassOverlay.Amethyst" parent="">
+        <item name="themeCardGlassStart">#8C240D4A</item>
+        <item name="themeCardGlassEnd">#66120626</item>
+        <item name="themeDockGlassStart">#A61F0D3D</item>
+        <item name="themeDockGlassEnd">#800B061A</item>
+    </style>
+    <style name="JarvisGlassOverlay.Gold" parent="">
+        <item name="themeCardGlassStart">#8C261D08</item>
+        <item name="themeCardGlassEnd">#66120E03</item>
+        <item name="themeDockGlassStart">#A6261D08</item>
+        <item name="themeDockGlassEnd">#800F0C03</item>
+    </style>
+    <style name="JarvisGlassOverlay.Emerald" parent="">
+        <item name="themeCardGlassStart">#8C0A2618</item>
+        <item name="themeCardGlassEnd">#6603120B</item>
+        <item name="themeDockGlassStart">#A60A2618</item>
+        <item name="themeDockGlassEnd">#80040F08</item>
+    </style>
+    <style name="JarvisGlassOverlay.Pink" parent="">
+        <item name="themeCardGlassStart">#8C36081E</item>
+        <item name="themeCardGlassEnd">#6618040F</item>
+        <item name="themeDockGlassStart">#A636081E</item>
+        <item name="themeDockGlassEnd">#8014030B</item>
+    </style>
+    <style name="JarvisGlassOverlay.Orange" parent="">
+        <item name="themeCardGlassStart">#8C331406</item>
+        <item name="themeCardGlassEnd">#66170802</item>
+        <item name="themeDockGlassStart">#A6331406</item>
+        <item name="themeDockGlassEnd">#80120602</item>
+    </style>
+    <style name="JarvisGlassOverlay.Indigo" parent="">
+        <item name="themeCardGlassStart">#8C14163B</item>
+        <item name="themeCardGlassEnd">#66090A1D</item>
+        <item name="themeDockGlassStart">#A614163B</item>
+        <item name="themeDockGlassEnd">#80070817</item>
+    </style>
+    <style name="JarvisGlassOverlay.PearlWhite" parent="">
+        <item name="themeCardGlassStart">#B8FFFFFF</item>
+        <item name="themeCardGlassEnd">#94F1F5F9</item>
+        <item name="themeDockGlassStart">#C7FFFFFF</item>
+        <item name="themeDockGlassEnd">#A6F1F5F9</item>
+    </style>
+    <style name="JarvisGlassOverlay.WhiteDark" parent="">
+        <item name="themeCardGlassStart">#8C22222C</item>
+        <item name="themeCardGlassEnd">#660E0E14</item>
+        <item name="themeDockGlassStart">#A61C1C24</item>
+        <item name="themeDockGlassEnd">#8007070A</item>
+    </style>
+    <style name="JarvisGlassOverlay.AndroLlmNight" parent="">
+        <item name="themeCardGlassStart">#8C1A1A1A</item>
+        <item name="themeCardGlassEnd">#660A0A0A</item>
+        <item name="themeDockGlassStart">#A6121212</item>
+        <item name="themeDockGlassEnd">#80000000</item>
+    </style>
+    <style name="JarvisGlassOverlay.AndroLlmParchment" parent="">
+        <item name="themeCardGlassStart">#B8FFFFFF</item>
+        <item name="themeCardGlassEnd">#94FBFAF4</item>
+        <item name="themeDockGlassStart">#C7FFFFFF</item>
+        <item name="themeDockGlassEnd">#A6F5F4ED</item>
+    </style>
+    <style name="JarvisGlassOverlay.Maya" parent="">
+        <item name="themeCardGlassStart">#8C1F2330</item>
+        <item name="themeCardGlassEnd">#661A1D26</item>
+        <item name="themeDockGlassStart">#A61F2330</item>
+        <item name="themeDockGlassEnd">#800B0C10</item>
+    </style>
+    <style name="JarvisGlassOverlay.Nova" parent="">
+        <item name="themeCardGlassStart">#A61B1733</item>
+        <item name="themeCardGlassEnd">#80110E21</item>
+        <item name="themeDockGlassStart">#A6171428</item>
+        <item name="themeDockGlassEnd">#800B0A16</item>
+    </style>
+</resources>

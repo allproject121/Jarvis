@@ -87,8 +87,13 @@ class ModelRouter private constructor(
     fun getLocalHostClient(): com.jarvis.assistant.network.LocalHostLlmClient = localHostClient
 
     fun setMode(mode: AiModelMode) {
+        val previous = _currentMode.value
         _currentMode.value = mode
         Log.i(TAG, "Switched AI Model Mode to: ${mode.displayName}")
+        // Picking the on-device brain: start paging the model into RAM now, not on the first question.
+        if (mode == AiModelMode.LOCAL_OFFLINE && previous != AiModelMode.LOCAL_OFFLINE) {
+            com.jarvis.assistant.ai.provider.LocalPhoneProvider.getInstance(context, scope).warmUpAsync()
+        }
     }
 
     /**
@@ -113,6 +118,15 @@ class ModelRouter private constructor(
     ): Flow<String> = flow {
         val clean = userPrompt.trim()
         if (clean.isBlank()) return@flow
+
+        // 0. Phone commands run first in EVERY mode: the cloud text models (Gemini/ChatGPT REST) have
+        //    no phone tools, so "torch jalao" sent to them could never switch the torch on.
+        localAiEngine.tryDirectCommand(clean)?.let { reply ->
+            _lastActiveProviderName.value = "Jarvis Command"
+            _isOfflineFallbackActive.value = false
+            emit(reply)
+            return@flow
+        }
 
         // 1. Retrieve RAG memory context dynamically
         val memoryContext = vectorMemoryEngine.buildMemoryRAGContext(clean)

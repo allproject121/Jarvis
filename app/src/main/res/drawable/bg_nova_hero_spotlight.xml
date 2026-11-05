@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nova home: soft accent spotlight behind the 3D character (replaces the old rings). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.5"
+                android:centerY="0.46"
+                android:gradientRadius="75%"
+                android:startColor="?attr/themeAccentLight"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.5"
+                android:centerY="0.42"
+                android:gradientRadius="38%"
+                android:startColor="?attr/themeAccentLight"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+</layer-list>

@@ -215,7 +215,7 @@ class PermissionActivity : AppCompatActivity() {
             row.addView(labels, LinearLayout.LayoutParams(0, -2, 1f))
             val button = Button(this).apply {
                 text = "Grant"; textSize = 12f; setTypeface(typeface, Typeface.BOLD)
-                setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeBg))
+                setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeOnAccent))
                 background = androidx.core.content.ContextCompat.getDrawable(this@PermissionActivity, com.jarvis.assistant.R.drawable.bg_jarvis_pill_button)
                 setPadding(dp(12), 0, dp(12), 0)
                 setOnClickListener { action() }

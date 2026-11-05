@@ -45,7 +45,7 @@ object ToolFinder {
         "teach" to listOf("record", "macro"), "learn" to listOf("record", "macro"), "watch" to listOf("watch"),
         "alert" to listOf("watch", "event"), "notify" to listOf("watch", "event"), "tell" to listOf("watch"),
         "automate" to listOf("agent", "task"), "automation" to listOf("agent", "task"), "do" to listOf("agent"),
-        "driving" to listOf("driving"), "car" to listOf("driving"), "dnd" to listOf("dnd"), "disturb" to listOf("dnd"),
+        "dnd" to listOf("dnd"), "disturb" to listOf("dnd"),
         "share" to listOf("share"), "send" to listOf("whatsapp", "share"), "memory" to listOf("memory"),
         "remember" to listOf("memory"), "forget" to listOf("memory"), "crypto" to listOf("crypto"), "bitcoin" to listOf("crypto"),
         "price" to listOf("crypto", "price"), "wiki" to listOf("wikipedia"), "traffic" to listOf("traffic"),

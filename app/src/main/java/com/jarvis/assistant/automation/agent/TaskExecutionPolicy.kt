@@ -79,6 +79,14 @@ object TaskExecutionPolicy {
         "inspect_screen"
     )
 
+    /**
+     * Foreground tools that only fire an Android launch intent (app launcher / browser). They need an
+     * unlocked, awake screen but NOT the accessibility service: blocking them on it made the offline
+     * brain answer "Jarvis Accessibility Service is disabled" to "youtube kholo" while the direct
+     * command path opened the same app fine. Steps inside an app still go through accessibility.
+     */
+    private val INTENT_LAUNCH_TOOLS = setOf("open_app", "open_website")
+
     private val NON_IDEMPOTENT_CONSEQUENTIAL_TOOLS = setOf(
         "send_whatsapp_message",
         "call_contact",
@@ -169,7 +177,7 @@ object TaskExecutionPolicy {
                 )
             }
 
-            if (!isAccessibilityActive()) {
+            if (toolName !in INTENT_LAUNCH_TOOLS && !isAccessibilityActive()) {
                 Log.w(TAG, "Blocked UI action '$toolName': Jarvis Accessibility Service is disabled.")
                 return PolicyEvaluation.Blocked(
                     reason = "Jarvis Accessibility Service is disabled.",

@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit
 object VisionLookup {
 
     private const val TAG = "MayaVisionLookup"
-    private val MODELS = listOf("gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash")
     private val JSON = "application/json; charset=utf-8".toMediaType()
 
     private val http = OkHttpClient.Builder()
@@ -115,7 +114,7 @@ object VisionLookup {
             put("generationConfig", JSONObject().put("temperature", 0.2).put("maxOutputTokens", 700))
         }.toString()
         var lastError = "vision request failed"
-        for (model in MODELS) {
+        for (model in com.jarvis.assistant.ai.GeminiTextModels.candidates(key, null)) {
             try {
                 val req = Request.Builder()
                     .url("https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$key")

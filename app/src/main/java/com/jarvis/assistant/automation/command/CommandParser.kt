@@ -85,21 +85,6 @@ object CommandParser {
             return ParsedCommandResult(JarvisCommand.Flash(false), 0.98f, "FLASH_OFF")
         }
 
-        // 3a. Driving Mode (must run before the generic "<x> chalu karo" open-app suffix)
-        val driveWords = "(?:driving|drive|car)\\s+mode"
-        if (clean.matches(Regex("$prefix(?:turn\\s+on|enable|activate|start|switch\\s+on)\\s+(?:the\\s+)?$driveWords$")) ||
-            clean.matches(Regex("$prefix(?:turn|switch)\\s+(?:the\\s+)?$driveWords\\s+on$")) ||
-            clean.matches(Regex("$prefix$driveWords\\s+(?:on|chalu|chalu\\s+karo|chalu\\s+kar\\s+do|on\\s+karo|on\\s+kar\\s+do|shuru\\s+karo|activate\\s+karo)$"))
-        ) {
-            return ParsedCommandResult(JarvisCommand.SetDrivingMode(true), 0.98f, "DRIVING_MODE_ON")
-        }
-        if (clean.matches(Regex("$prefix(?:turn\\s+off|disable|deactivate|stop|exit|switch\\s+off)\\s+(?:the\\s+)?$driveWords$")) ||
-            clean.matches(Regex("$prefix(?:turn|switch)\\s+(?:the\\s+)?$driveWords\\s+off$")) ||
-            clean.matches(Regex("$prefix$driveWords\\s+(?:off|band|bandh|band\\s+karo|band\\s+kar\\s+do|bandh\\s+karo|off\\s+karo|off\\s+kar\\s+do)$"))
-        ) {
-            return ParsedCommandResult(JarvisCommand.SetDrivingMode(false), 0.98f, "DRIVING_MODE_OFF")
-        }
-
         // 3a-2. Integrated-protocol phrases whose handlers already exist in CommandExecutor (macros,
         //       Termux file write, Voice Guardian roles, watchlist removal, GitHub issues, n8n).
         //       Checked here, before the YouTube "<x> chalao" suffix and the generic open-app
@@ -587,28 +572,6 @@ object CommandParser {
             return ParsedCommandResult(JarvisCommand.AddToWatchlist(sym), 0.98f, "STOCK_ADD_WATCHLIST")
         }
 
-        // Voice Guardian & Security
-        val enrollVoiceMatch = Regex("$prefix(?:enroll\\s+voice|awaaz\\s+save\\s+karo|enroll\\s+kar\\s+lo)\\s+(?:for\\s+)?([a-zA-Z0-9]+)$", RegexOption.IGNORE_CASE).find(clean)
-        if (enrollVoiceMatch != null) {
-            return ParsedCommandResult(JarvisCommand.EnrollVoice(enrollVoiceMatch.groupValues[1].trim()), 0.98f, "ENROLL_VOICE")
-        }
-
-        if (clean.matches(Regex("$prefix(?:arm\\s+guard|guard\\s+mode\\s+on\\s+karo|activate\\s+guard|away\\s+mode\\s+on)$", RegexOption.IGNORE_CASE))) {
-            return ParsedCommandResult(JarvisCommand.ArmVoiceGuard(true), 0.98f, "ARM_GUARD")
-        }
-
-        if (clean.matches(Regex("$prefix(?:disarm\\s+guard|guard\\s+mode\\s+off\\s+karo|deactivate\\s+guard|away\\s+mode\\s+off)$", RegexOption.IGNORE_CASE))) {
-            return ParsedCommandResult(JarvisCommand.ArmVoiceGuard(false), 0.98f, "DISARM_GUARD")
-        }
-
-        if (clean.matches(Regex("$prefix(?:list\\s+voices|enrolled\\s+voices|kaunsi\\s+awaazein\\s+hain)$", RegexOption.IGNORE_CASE))) {
-            return ParsedCommandResult(JarvisCommand.ListVoices, 0.98f, "LIST_VOICES")
-        }
-
-        if (clean.matches(Regex("$prefix(?:capture\\s+intruder|intruder\\s+photo|watchman\\s+photo|chor\\s+ki\\s+photo)$", RegexOption.IGNORE_CASE))) {
-            return ParsedCommandResult(JarvisCommand.CaptureIntruderPhoto, 0.98f, "WATCHMAN_PHOTO")
-        }
-
         // GitHub
         if (clean.matches(Regex("$prefix(?:my\\s+github\\s+repos|list\\s+github\\s+repos|github\\s+repos\\s+dikhao)$", RegexOption.IGNORE_CASE))) {
             return ParsedCommandResult(JarvisCommand.ListGitHubRepos, 0.98f, "GITHUB_REPOS")
@@ -657,16 +620,6 @@ object CommandParser {
     private const val HATAO = "(?:hatao|hata\\s+do|nikalo|nikal\\s+do|remove\\s+karo|delete\\s+karo)"
     private val NON_NAMES = setOf("profile", "the", "my", "all", "a", "an", "voice", "role")
 
-    /** Maps a spoken role word to the GuardianRole enum name. */
-    internal fun normalizeGuardianRole(word: String): String? = when (word.trim().lowercase(Locale.ROOT)) {
-        "boss", "owner", "malik", "admin" -> "BOSS"
-        "family", "parivar" -> "FAMILY"
-        "friend", "dost" -> "FRIEND"
-        "guest", "mehman", "mehmaan" -> "GUEST"
-        "blocked" -> "BLOCKED"
-        else -> null
-    }
-
     /** "schedule" for time-based descriptions, "form" for forms, otherwise "webhook". */
     internal fun inferN8nTrigger(description: String): String {
         val d = description.lowercase(Locale.ROOT)
@@ -710,29 +663,6 @@ object CommandParser {
         }
         Regex("${P}write\\s+(.+?)\\s+(?:to|in|into)\\s+(?:the\\s+)?termux\\s+file\\s+$path$", ic).find(cased)?.let {
             return result(JarvisCommand.TermuxWriteFile(it.groupValues[2], it.groupValues[1].trim()), "TERMUX_WRITE_FILE")
-        }
-
-        // ── Voice Guardian: remove voice ──
-        val removeVoiceName = (Regex("$P(?:remove|delete|unenroll)\\s+(?:the\\s+)?voice\\s+(?:profile\\s+)?(?:of\\s+|for\\s+)?([a-z0-9]+)$").find(clean)
-            ?: Regex("$P(?:remove|delete|unenroll)\\s+([a-z0-9]+)(?:'s)?\\s+voice(?:\\s+profile)?$").find(clean)
-            ?: Regex("^(?:voice|awaaz|awaz)\\s+([a-z0-9]+)\\s+$HATAO$").find(clean)
-            ?: Regex("^([a-z0-9]+)\\s+(?:ki|ka)\\s+(?:voice|awaaz|awaz)\\s+$HATAO$").find(clean))
-            ?.groupValues?.get(1)?.trim()
-        if (!removeVoiceName.isNullOrBlank() && removeVoiceName !in NON_NAMES) {
-            return result(JarvisCommand.RemoveVoice(removeVoiceName), "REMOVE_VOICE")
-        }
-
-        // ── Voice Guardian: set role ──
-        val roleMatch = Regex("${P}set\\s+(?:the\\s+)?voice\\s+role\\s+(?:of\\s+|for\\s+)?([a-z0-9]+)\\s+(?:to|as)\\s+(?:a\\s+|an\\s+)?$ROLE_WORDS$").find(clean)
-            ?: Regex("$P(?:set|change|make)\\s+([a-z0-9]+)(?:'s)?\\s+(?:voice\\s+)?role\\s+(?:to|as)\\s+(?:a\\s+|an\\s+)?$ROLE_WORDS$").find(clean)
-            ?: Regex("^([a-z0-9]+)\\s+ko\\s+$ROLE_WORDS\\s+(?:role\\s+)?(?:banao|bana\\s+do|do|de\\s+do|set\\s+karo)$").find(clean)
-            ?: Regex("^([a-z0-9]+)\\s+ka\\s+role\\s+$ROLE_WORDS\\s+(?:karo|kar\\s+do|set\\s+karo|banao)$").find(clean)
-        if (roleMatch != null) {
-            val who = roleMatch.groupValues[1].trim()
-            val role = normalizeGuardianRole(roleMatch.groupValues[2])
-            if (role != null && who.isNotBlank() && who !in NON_NAMES) {
-                return result(JarvisCommand.SetVoiceRole(who, role), "SET_VOICE_ROLE")
-            }
         }
 
         // ── Watchlist removal ──

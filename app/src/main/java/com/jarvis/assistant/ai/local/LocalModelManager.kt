@@ -302,6 +302,25 @@ class LocalModelManager(
         return sizeValid && isGgufHeaderValid(file)
     }
 
+    /**
+     * The model the offline brain should load: the selected one when its file is ready, otherwise
+     * the strongest downloaded model (so a selected-but-missing model never leaves Jarvis brainless).
+     * Reasoning-only DeepSeek R1 comes last because it is the weakest at tool calls.
+     */
+    fun resolveUsableModelId(): String? {
+        val selected = _activeModelId.value
+        if (isModelReady(selected)) return selected
+        val preference = listOf(
+            LocalAiConfig.MODEL_QWEN3_4B,
+            LocalAiConfig.MODEL_QWEN_1_5B,
+            LocalAiConfig.MODEL_LLAMA_3_2_1B,
+            LocalAiConfig.MODEL_SMOLLM_1_7B,
+            LocalAiConfig.MODEL_QWEN_0_5B,
+            LocalAiConfig.MODEL_DEEPSEEK_R1_1_5B
+        ) + _customModels.value.map { it.id }
+        return preference.firstOrNull { isModelReady(it) }
+    }
+
     fun getActiveModelFile(): File? {
         val id = _activeModelId.value
         return if (isModelReady(id)) getModelFile(id) else null

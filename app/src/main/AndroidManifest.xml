@@ -33,7 +33,6 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
-    <uses-permission android:name="android.permission.SET_WALLPAPER" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
@@ -117,11 +116,6 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
-        <activity
-            android:name=".ui.voice.VoiceEnrollmentActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".ui.settings.ApiConnectionActivity"
@@ -167,11 +161,6 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
-        <activity
-            android:name=".ui.settings.PrivacyShieldActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".ui.settings.HandsFreeActivity"
@@ -199,13 +188,6 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
-        <activity
-            android:name=".ui.facelock.JarvisAppLockActivity"
-            android:exported="false"
-            android:taskAffinity=""
-            android:launchMode="singleTask"
-            android:excludeFromRecents="true"
-            android:theme="@style/Theme.JarvisAssistant" />
 
         <activity
             android:name=".termux.TermuxPermissionActivity"
@@ -258,18 +240,6 @@
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
-        </service>
-
-        <service
-            android:name=".wallpaper.JarvisWallpaperService"
-            android:permission="android.permission.BIND_WALLPAPER"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.wallpaper.WallpaperService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.service.wallpaper"
-                android:resource="@xml/jarvis_wallpaper" />
         </service>
 
         <service
@@ -398,16 +368,6 @@
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
-        <!-- Touch Guard: keeps the user-armed motion sentry alive after the app is closed -->
-        <service
-            android:name=".security.guardian.GuardianForegroundService"
-            android:exported="false"
-            android:stopWithTask="false"
-            android:foregroundServiceType="specialUse|camera">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Touch Guard anti-theft motion sentry: keeps the user-armed accelerometer monitor running in the background" />
-        </service>
 
         <!-- Maya parity WP6: wiki, rules, episodes, notices, backup -->
         <activity
@@ -451,47 +411,8 @@
                 android:resource="@xml/maya_media_file_paths" />
         </provider>
 
-        <!-- Maya WP5: Faces, Face Lock, Watchman, Listen mode, God Mode, Device admin -->
-        <activity
-            android:name=".maya.guardian.FacesActivity"
-            android:exported="false"
-            android:label="Faces &amp; Guardian"
-            android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.JarvisAssistant" />
 
-        <!-- Maya WP5: device admin for lock_device / wipe_device (user enables it in Faces) -->
-        <receiver
-            android:name=".maya.guardian.JarvisDeviceAdminReceiver"
-            android:exported="true"
-            android:label="Jarvis Guardian"
-            android:permission="android.permission.BIND_DEVICE_ADMIN">
-            <meta-data
-                android:name="android.app.device_admin"
-                android:resource="@xml/device_admin_policies" />
-            <intent-filter>
-                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
-            </intent-filter>
-        </receiver>
 
-        <!-- Maya WP4: Business / Marketing / CRM / Finance board -->
-        <activity
-            android:name=".maya.business.BusinessActivity"
-            android:exported="false"
-            android:label="Business"
-            android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.JarvisAssistant" />
-        <receiver
-            android:name=".maya.business.PostReminderReceiver"
-            android:exported="false" />
-        <provider
-            android:name=".maya.business.BusinessFileProvider"
-            android:authorities="${applicationId}.maya.business.files"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/maya_business_paths" />
-        </provider>
 
         <!-- Maya WP1: Screen automation — Macros & Watches / Automation lab -->
         <activity

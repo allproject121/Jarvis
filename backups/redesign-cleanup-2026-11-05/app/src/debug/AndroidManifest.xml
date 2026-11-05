@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: lets adb (shell holds android.permission.DUMP, normal apps cannot) send a typed
+     command through the offline brain and read the reply from logcat (tag OfflineBrainTest). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <receiver
+            android:name="com.jarvis.assistant.debug.OfflineBrainDebugReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="com.jarvis.assistant.debug.OFFLINE_BRAIN" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

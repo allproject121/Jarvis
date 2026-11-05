@@ -256,6 +256,9 @@
     rightPad.rotation.z = -0.035;
     rightPad.position.set(0.105, 0.0012, 0.015);
     stageGroup.add(rightPad);
+    // The fixed pads never matched where her feet actually are (they read as dark squares
+    // next to the shoes), so they stay hidden; the soft foot shadows below follow the feet.
+    leftPad.visible = false; rightPad.visible = false;
 
     // 6. Dedicated Dual Contact Ambient Occlusion Shadows (Direct contact under each shoe sole)
     const footShadowCanvas = document.createElement("canvas");
@@ -432,6 +435,10 @@
         primary = 0xd97757;   // AndroLLM terracotta
         secondary = 0xb3573e;
         particle = 0xe69d81;
+      } else if (key === "nova") {
+        primary = 0xa78bfa;   // Nova violet (app default theme)
+        secondary = 0x818cf8; // indigo
+        particle = 0xa78bfa;
       } else if (key === "stealth") {
         primary = 0x38bdf8;
         secondary = 0x64748b;
@@ -464,6 +471,15 @@
     /* =========================================================================
        MoraCharacterController & Expression / Lip-Sync System
        ========================================================================= */
+    const AXIS_X = new THREE.Vector3(1, 0, 0);
+    const AXIS_Y = new THREE.Vector3(0, 1, 0);
+    const AXIS_Z = new THREE.Vector3(0, 0, 1);
+    const _qp = new URLSearchParams(window.location.search);
+    // Elbow bend for the idle layer; ?elbow=<signed radians> overrides it when tuning.
+    const ELBOW_BEND = _qp.has("elbow") ? Math.abs(parseFloat(_qp.get("elbow"))) : 0.32;
+    const ELBOW_SIGN_L = _qp.has("elbow") ? (parseFloat(_qp.get("elbow")) < 0 ? -1 : 1) : -1; // -1 = forearms bend forward (tested)
+    const ELBOW_SIGN_R = -ELBOW_SIGN_L;
+
     class MoraCharacterController {
       constructor(rootModel) {
         this.root = rootModel;
@@ -488,7 +504,13 @@
           brwSurprised: [],
           allJoy: [],
           allSurprised: [],
-          allFun: []
+          allFun: [],
+          allAngry: [],
+          brwAngry: [],
+          eyeAngry: [],
+          mthAngry: [],
+          allSorrow: [],
+          mthSorrow: []
         };
         this.mixer = new THREE.AnimationMixer(this.root);
         this.actions = {};
@@ -527,7 +549,9 @@
           leftThigh: /j_bip_l_upperleg/i,
           leftCalf: /j_bip_l_lowerleg/i,
           rightThigh: /j_bip_r_upperleg/i,
-          rightCalf: /j_bip_r_lowerleg/i
+          rightCalf: /j_bip_r_lowerleg/i,
+          leftFoot: /j_bip_l_foot/i,
+          rightFoot: /j_bip_r_foot/i
         };
 
         this.root.traverse(function(node) {
@@ -575,6 +599,12 @@
                 else if (name === "Fcl_ALL_Joy") self.morphMap.allJoy.push({ mesh: node, idx });
                 else if (name === "Fcl_ALL_Surprised") self.morphMap.allSurprised.push({ mesh: node, idx });
                 else if (name === "Fcl_ALL_Fun") self.morphMap.allFun.push({ mesh: node, idx });
+                else if (name === "Fcl_ALL_Angry") self.morphMap.allAngry.push({ mesh: node, idx });
+                else if (name === "Fcl_BRW_Angry") self.morphMap.brwAngry.push({ mesh: node, idx });
+                else if (name === "Fcl_EYE_Angry") self.morphMap.eyeAngry.push({ mesh: node, idx });
+                else if (name === "Fcl_MTH_Angry") self.morphMap.mthAngry.push({ mesh: node, idx });
+                else if (name === "Fcl_ALL_Sorrow") self.morphMap.allSorrow.push({ mesh: node, idx });
+                else if (name === "Fcl_MTH_Sorrow") self.morphMap.mthSorrow.push({ mesh: node, idx });
               }
             }
           }
@@ -839,8 +869,10 @@
         }
 
         // Natural eyelid blinking: 110ms duration every 3.2s
-        const blinkPhase = time % 3.2;
-        const isBlinking = (blinkPhase < 0.11 && targetWinkR === 0) ? 1.0 : 0.0;
+        // Natural blinking at irregular 2-6 s gaps (a fixed 3.2 s metronome looked robotic)
+        if (!this.nextBlink) this.nextBlink = time + 2 + Math.random() * 3;
+        if (time > this.nextBlink) { this.blinkUntil = time + 0.12; this.nextBlink = time + 2.2 + Math.random() * 4.0; }
+        const isBlinking = (time < (this.blinkUntil || 0) && targetWinkR === 0) ? 1.0 : 0.0;
 
         this.applyMorphGroup(this.morphMap.eyeBlink, isBlinking, 35, dt);
         this.applyMorphGroup(this.morphMap.eyeWinkR, targetWinkR, 28, dt);
@@ -890,6 +922,106 @@
           const additiveQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(clampedPitch, clampedYaw, clampedRoll, 'YXZ'));
           this.bones.head.quaternion.multiply(additiveQ);
         }
+
+        // 5. Human idle layer (additive, on top of the clip). The retargeted idle clip barely
+        //    moves (max ~0.15 rad) and keeps the elbows dead straight, so she stood like a
+        //    mannequin. This adds breathing, a slow weight shift, relaxed elbows and small
+        //    "alive" moments (glances, head tilts, a smile) while she is calm.
+        this.updateHumanIdle(dt, time, state, activeReaction);
+        this.updateTouchMood(dt, time);
+      }
+
+      // RedMagic-style personality: angry / embarrassed / sulking moods from touches.
+      updateTouchMood(dt, time) {
+        const m = touchMood;
+        const active = m && time < m.until;
+        const angry = active && (m.type === "angry" || m.type === "sulk");
+        const annoyed = active && m.type === "annoyed";
+        const embarrassed = active && m.type === "embarrassed";
+        const k = active ? Math.min(1, (time - m.start) * 6) : 0; // fast onset
+        this.applyMorphGroup(this.morphMap.allAngry, angry ? 0.85 * k : (annoyed ? 0.45 * k : 0), 12, dt);
+        this.applyMorphGroup(this.morphMap.brwAngry, (angry || annoyed) ? 0.9 * k : 0, 12, dt);
+        this.applyMorphGroup(this.morphMap.eyeAngry, angry ? 0.7 * k : 0, 12, dt);
+        this.applyMorphGroup(this.morphMap.mthAngry, angry ? 0.8 * k : (annoyed ? 0.4 * k : 0), 12, dt);
+        const sulky = !active && grudgeActive();
+        if (sulky) {
+          this.applyMorphGroup(this.morphMap.brwAngry, 0.35, 6, dt);
+          this.applyMorphGroup(this.morphMap.mthAngry, 0.15, 6, dt);
+        }
+        if (active && m.type === "bliss" && this.bones.neck) this.rotAdd(this.bones.neck, "z", 0.14 * k);
+        this.applyMorphGroup(this.morphMap.allSorrow, embarrassed ? 0.55 * k : 0, 10, dt);
+        this.applyMorphGroup(this.morphMap.mthSorrow, embarrassed ? 0.5 * k : 0, 10, dt);
+
+        // Head: quick "no" shake right after an unwanted touch, chin away while angry
+        if (active && (angry || annoyed || embarrassed) && this.bones.neck) {
+          const since = time - m.start;
+          const shake = since < 0.9 ? Math.sin(since * 22) * 0.22 * (1 - since / 0.9) : 0;
+          this.rotAdd(this.bones.neck, "y", shake + (angry ? 0.18 : 0) * k);
+          this.rotAdd(this.bones.neck, "z", embarrassed ? -0.08 * k : 0);
+        }
+        // Sulk: chin up and face turned further away from you ("hmph!")
+        if (active && m.type === "sulk" && this.bones.neck) {
+          this.rotAdd(this.bones.neck, "y", 0.32 * k);
+          this.rotAdd(this.bones.neck, "x", -0.10 * k);
+        }
+      }
+
+      rotAdd(bone, axis, angle) {
+        if (!bone || !angle) return;
+        const q = this._tmpQ || (this._tmpQ = new THREE.Quaternion());
+        const v = axis === "x" ? AXIS_X : (axis === "y" ? AXIS_Y : AXIS_Z);
+        q.setFromAxisAngle(v, angle);
+        bone.quaternion.multiply(q);
+      }
+
+      updateHumanIdle(dt, time, state, activeReaction) {
+        if (!this.hasClips) return;
+        const b = this.bones;
+        const calm = (activeReaction === "none" || !activeReaction) && (state === "idle" || state === "listening");
+        const talking = state === "speaking";
+        this.idleBlend = THREE.MathUtils.lerp(this.idleBlend || 0, calm ? 1 : (talking ? 0.55 : 0.25), Math.min(1, dt * 2.5));
+        const w = this.idleBlend;
+
+        // Breathing (~14 breaths/min) through chest + upper chest
+        const breath = Math.sin(time * 1.5);
+        this.rotAdd(b.chest, "x", breath * 0.016 * w);
+        this.rotAdd(b.upperChest, "x", breath * 0.012 * w);
+
+        // Slow weight shift from one leg to the other, the spine counter-balances
+        const sway = Math.sin(time * 0.4);
+        this.rotAdd(b.hips, "z", sway * 0.022 * w);
+        this.rotAdd(b.spine, "z", -sway * 0.016 * w);
+        this.rotAdd(b.hips, "y", Math.sin(time * 0.23) * 0.035 * w);
+        this.rotAdd(b.leftThigh, "z", -sway * 0.012 * w);
+        this.rotAdd(b.rightThigh, "z", -sway * 0.012 * w);
+
+        // Relaxed, slightly bent elbows that drift a little (never mannequin-straight)
+        this.rotAdd(b.leftForearm, "y", (ELBOW_BEND + Math.sin(time * 0.9) * 0.025) * w * ELBOW_SIGN_L);
+        this.rotAdd(b.rightForearm, "y", (ELBOW_BEND + Math.sin(time * 0.9 + 1.3) * 0.025) * w * ELBOW_SIGN_R);
+
+        // Small "alive" moments every 6-12 s: glance aside, tilt the head, look down, or smile
+        if (calm) {
+          if (!this.nextIdleAct) this.nextIdleAct = time + 4 + Math.random() * 4;
+          if (time > this.nextIdleAct && !this.idleAct) {
+            const acts = ["glanceL", "glanceR", "tilt", "smile", "lookDown"];
+            const forced = _qp.get("act");
+            this.idleAct = { type: forced || acts[Math.floor(Math.random() * acts.length)], until: time + 1.6 + Math.random() * 1.4 };
+            this.nextIdleAct = time + 6 + Math.random() * 6;
+          }
+        }
+        if (this.idleAct && (time > this.idleAct.until || !calm)) this.idleAct = null;
+        const act = this.idleAct ? this.idleAct.type : null;
+        const gx = act === "glanceL" ? 0.45 : (act === "glanceR" ? -0.45 : 0);
+        const gy = act === "lookDown" ? 0.25 : 0;
+        this.autoGazeX = THREE.MathUtils.lerp(this.autoGazeX || 0, gx, Math.min(1, dt * 3));
+        this.autoGazeY = THREE.MathUtils.lerp(this.autoGazeY || 0, gy, Math.min(1, dt * 3));
+        this.autoTilt = THREE.MathUtils.lerp(this.autoTilt || 0, act === "tilt" ? 0.12 : 0, Math.min(1, dt * 3));
+        if (b.neck) {
+          this.rotAdd(b.neck, "y", this.autoGazeX * 0.35);
+          this.rotAdd(b.neck, "x", this.autoGazeY * 0.3);
+          this.rotAdd(b.neck, "z", this.autoTilt);
+        }
+        if (act === "smile") this.applyMorphGroup(this.morphMap.mthJoy, 0.45, 6, dt);
       }
     }
 
@@ -897,6 +1029,24 @@
        Model Loading & State Machine
        ========================================================================= */
     let moraController = null;
+    let moraPivot = null;
+    const viewer = { x: 0, y: 0, present: false, at: 0, goneAt: performance.now() };
+    function setViewer(x, y, present) {
+      const now = performance.now();
+      const was = viewer.present && (now - viewer.at) < 1500;
+      if (present) {
+        if (!was && now - viewer.goneAt > 20000 && moraController) {
+          if (grudgeActive()) say("Hmph 😒", "annoyed");
+          else { triggerMoraReaction("wave"); say(["Aa gaye! 😊", "Kahan the itni der? 🥺", "Hi! 👋"][Math.floor(Math.random() * 3)], "happy"); }
+        }
+        viewer.x = Math.max(-1, Math.min(1, Number(x) || 0));
+        viewer.y = Math.max(-1, Math.min(1, Number(y) || 0));
+        viewer.present = true; viewer.at = now;
+      } else {
+        if (was) viewer.goneAt = now;
+        viewer.present = false;
+      }
+    }
     let moraModel = null;
     let currentState = "idle";
     let activeReaction = "none";
@@ -909,6 +1059,7 @@
     function setMoraState(state) {
       const prev = currentState;
       currentState = (state || "idle").toLowerCase();
+      if (currentState !== "idle") { try { noteInteraction(); } catch (_) {} }
       if (hudState) hudState.textContent = "MORA • " + currentState.toUpperCase();
       if (hudDot) {
         let dot = moraIdleDotColor;
@@ -959,11 +1110,134 @@
          resolved to the thinking clip or no clip at all). */
     let reactionCycle = 0;
     let lastPokeAt = 0;
-    const POKE_POOLS = {
-      head: ["headpat", "joy", "blush"],
-      body: ["poke", "clapping", "excited", "thankful"],
-      outside: ["wave", "joy", "dance"]
+    let touchMood = null;          // { type, start, until }
+    let annoyance = 0;             // grows with unwanted touches, decays over time
+    let lastAnnoyAt = 0;
+    let lastFaceTouchAt = 0;
+    let turnTarget = 0;            // radians she turns her body away
+    let backTarget = 0;            // how far she steps back
+
+    // What she says (Hinglish), shown in the bubble and sent to Jarvis' voice when live.
+    const TOUCH_LINES = {
+      headtop: ["Hehe~ achha lagta hai 😊", "Aww, aur karo 🥰", "Hmm~ 😌"],
+      face: ["Ei! 😳", "Arre, gaal mat kheencho!", "Hehe, kya hai? 😄"],
+      faceAgain: ["Bas bhi karo na! 😒", "Chehra chhodo, baat karo 😤"],
+      hand: ["Hi! 👋", "High five! ✋", "Haath milao, dost 🤝"],
+      arm: ["Haan? Bolo na 🙂", "Kya hua? 👀"],
+      belly: ["Hahaha gudgudi hoti hai! 😆", "Hehe, mat karo! 😂"],
+      chest: ["Hey! Wahan nahi! 😠", "Ye kya kar rahe ho?! 😳", "Tameez se pesh aao! 😤"],
+      hips: ["Excuse me?! 😡", "Haath door rakho! 😠", "Bilkul nahi! 😤"],
+      legs: ["Pair mat chhuo na 😒", "Hey, gudgudi! 😅"],
+      outside: ["Main yahan hoon! 👋", "Idhar dekho~ 😊"],
+      sulk: ["Hmph! 😤 Pehle sorry bolo.", "Main naraz hoon. 😒"]
     };
+    // ---- Mood memory: a sulk survives reloads / app restarts until she hears "sorry" (max 10 min)
+    const MOOD_KEY = "mora_mood_v1";
+    let grudgeUntil = 0;           // epoch ms
+    function saveMood() {
+      try { localStorage.setItem(MOOD_KEY, JSON.stringify({ annoyance, grudgeUntil, savedAt: Date.now() })); } catch (_) {}
+    }
+    function loadMood() {
+      try {
+        const m = JSON.parse(localStorage.getItem(MOOD_KEY) || "{}");
+        grudgeUntil = Number(m.grudgeUntil) || 0;
+        const ageMin = (Date.now() - (Number(m.savedAt) || 0)) / 60000;
+        annoyance = Math.max(0, (Number(m.annoyance) || 0) - ageMin * 4); // ~1 point per 15 s
+      } catch (_) {}
+    }
+    function grudgeActive() { return Date.now() < grudgeUntil; }
+    function forgive() {
+      if (!grudgeActive() && annoyance < 1 && !(touchMood && touchMood.type === "sulk")) return false;
+      annoyance = 0; grudgeUntil = 0; touchMood = null; turnTarget = 0; backTarget = 0;
+      addBond(3); noteInteraction();
+      saveMood();
+      triggerMoraReaction("thankful"); reactionTimer = 4.5;
+      const line = ["Theek hai, maaf kiya 🥰", "Hmm… chalo maan gayi 😊", "Aage se dhyan rakhna, haan? 😌"][Math.floor(Math.random() * 3)];
+      // "Sorry" usually comes through Gemini Live, which already answers in its own voice
+      let live = false;
+      try { live = !!(window.Jarvis3DModelBridge && window.Jarvis3DModelBridge.isVoiceLive && window.Jarvis3DModelBridge.isVoiceLive()); } catch (_) {}
+      if (live) showBubble(line, "happy"); else say(line, "happy");
+      return true;
+    }
+    loadMood();
+
+    function pickLine(key) { const a = TOUCH_LINES[key] || TOUCH_LINES.outside; return a[Math.floor(Math.random() * a.length)]; }
+
+    // ---- Thought bubble beside her head (follows the head every frame), and her voice.
+    let bubbleUntil = 0;
+    let localTalkUntil = 0;        // on-device voice is speaking her line -> move the lips
+    function ensureBubble() {
+      let el = document.getElementById("moraBubble");
+      if (el) return el;
+      el = document.createElement("div");
+      el.id = "moraBubble";
+      el.style.cssText = "position:fixed;left:0;top:0;max-width:46vw;padding:8px 12px;border-radius:14px;" +
+        "font:600 13px/1.3 Inter,system-ui,sans-serif;color:#FAFAFA;background:rgba(24,24,27,.86);" +
+        "border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);" +
+        "box-shadow:0 6px 24px rgba(0,0,0,.45);opacity:0;transition:opacity .2s ease;pointer-events:none;z-index:20";
+      document.body.appendChild(el);
+      for (let i = 0; i < 2; i++) {
+        const d = document.createElement("div");
+        d.id = "moraBubbleDot" + i;
+        const sz = i === 0 ? 9 : 5;
+        d.style.cssText = "position:fixed;width:" + sz + "px;height:" + sz + "px;border-radius:50%;background:rgba(24,24,27,.86);" +
+          "border:1px solid rgba(255,255,255,.16);opacity:0;transition:opacity .2s ease;pointer-events:none;z-index:20";
+        document.body.appendChild(d);
+      }
+      return el;
+    }
+    function placeBubble() {
+      const el = document.getElementById("moraBubble");
+      if (!el || !moraController) return;
+      const head = screenPosOfBone(moraController.bones.head);
+      const hips = screenPosOfBone(moraController.bones.hips);
+      if (!head || !hips) return;
+      const unit = Math.max(24, Math.abs(hips.y - head.y));
+      const W = window.innerWidth, H = window.innerHeight;
+      const bw = el.offsetWidth, bh = el.offsetHeight;
+      const right = head.x < W * 0.55;                 // put it on the side with more room
+      let x = right ? head.x + unit * 0.32 : head.x - unit * 0.32 - bw;
+      let y = head.y - unit * 0.30 - bh;
+      x = Math.max(8, Math.min(W - bw - 8, x));
+      y = Math.max(6, Math.min(H - bh - 6, y));
+      el.style.left = x + "px"; el.style.top = y + "px";
+      // two small "thinking" dots from the head to the bubble
+      const ax = right ? x + 10 : x + bw - 10, ay = y + bh;
+      const hx = head.x + (right ? unit * 0.14 : -unit * 0.14), hy = head.y - unit * 0.10;
+      [0.45, 0.75].forEach((t, i) => {
+        const d = document.getElementById("moraBubbleDot" + i);
+        if (!d) return;
+        d.style.left = (ax + (hx - ax) * t - (i === 0 ? 4.5 : 2.5)) + "px";
+        d.style.top = (ay + (hy - ay) * t - (i === 0 ? 4.5 : 2.5)) + "px";
+      });
+    }
+    function setBubbleVisible(on) {
+      ["moraBubble", "moraBubbleDot0", "moraBubbleDot1"].forEach(id => {
+        const d = document.getElementById(id); if (d) d.style.opacity = on ? "1" : "0";
+      });
+    }
+    function showBubble(text, mood) {
+      const el = ensureBubble();
+      el.textContent = text;
+      el.style.borderColor = (mood === "angry" || mood === "sulk") ? "rgba(239,68,68,.6)" :
+        (mood === "embarrassed" ? "rgba(244,114,182,.6)" : "rgba(255,255,255,.16)");
+      placeBubble();
+      setBubbleVisible(true);
+      bubbleUntil = performance.now() + Math.min(5200, 2000 + text.length * 70);
+    }
+    // The page asked Android to speak; "local" means the on-device voice -> animate her lips.
+    function voiceStarted(result, text) {
+      if (result === "local") localTalkUntil = performance.now() + Math.min(5000, 700 + String(text || "").length * 75);
+    }
+    // A line she says on her own (not from a touch): bubble + voice.
+    function say(text, mood) {
+      showBubble(text, mood);
+      try {
+        if (window.Jarvis3DModelBridge && typeof window.Jarvis3DModelBridge.speakLine === "function") {
+          voiceStarted(window.Jarvis3DModelBridge.speakLine(text, mood || ""), text);
+        }
+      } catch (_) {}
+    }
 
     function screenPosOfBone(bone) {
       if (!bone) return null;
@@ -974,62 +1248,199 @@
       return { x: rect.left + (v.x + 1) / 2 * rect.width, y: rect.top + (1 - v.y) / 2 * rect.height };
     }
 
-    function classifyTouch(clientX, clientY) {
-      if (!moraController || typeof clientX !== "number") return "body";
+    // Zones from the live skeleton projected to the screen (works at any framing / pose).
+    function classifyTouch(x, y) {
+      if (!moraController || typeof x !== "number") return "belly";
       const b = moraController.bones;
-      const head = screenPosOfBone(b.head);
-      const hips = screenPosOfBone(b.hips);
-      const foot = screenPosOfBone(b.leftCalf) || hips;
-      if (!head || !hips) return "body";
-      const unit = Math.max(24, Math.abs(hips.y - head.y)); // head-to-hips distance in px
-      if (Math.hypot(clientX - head.x, clientY - (head.y - unit * 0.12)) < unit * 0.42) return "head";
-      const withinX = Math.abs(clientX - hips.x) < unit * 0.55;
-      const withinY = clientY > head.y - unit * 0.3 && clientY < (foot ? foot.y + unit * 1.0 : hips.y + unit * 1.9); // knee + shin/shoes
-      return (withinX && withinY) ? "body" : "outside";
+      const P = (k) => screenPosOfBone(b[k]);
+      const head = P("head"), neck = P("neck") || head, upper = P("upperChest") || P("chest"), hips = P("hips");
+      if (!head || !hips) return "belly";
+      const knee = P("leftCalf") || hips, foot = P("leftFoot") || knee;
+      const unit = Math.max(24, Math.abs(hips.y - head.y));
+      const d = (a) => a ? Math.hypot(x - a.x, y - a.y) : 1e9;
+      if (Math.min(d(P("leftHand")), d(P("rightHand"))) < unit * 0.2) return "hand";
+      if (Math.min(d(P("leftForearm")), d(P("rightForearm")), d(P("leftUpperArm")), d(P("rightUpperArm"))) < unit * 0.17) return "arm";
+      if (y < head.y - unit * 0.1 && Math.abs(x - head.x) < unit * 0.38) return "headtop";
+      if (d(head) < unit * 0.3) return "face";
+      const torsoHalf = unit * 0.33;
+      if (Math.abs(x - hips.x) < torsoHalf) {
+        const chestBottom = (upper ? upper.y : neck.y) + (hips.y - (upper ? upper.y : neck.y)) * 0.45;
+        if (y > neck.y + unit * 0.05 && y <= chestBottom) return "chest";
+        if (y > chestBottom && y <= hips.y - unit * 0.12) return "belly";
+      }
+      if (Math.abs(x - hips.x) < unit * 0.42 && y > hips.y - unit * 0.12 && y <= knee.y - unit * 0.1) return "hips";
+      if (Math.abs(x - hips.x) < unit * 0.42 && y > knee.y - unit * 0.1 && y <= foot.y + unit * 0.25) return "legs";
+      return "outside";
+    }
+
+    function setMood(type, seconds) {
+      const t = clock.getElapsedTime();
+      touchMood = { type, start: t, until: t + seconds };
+    }
+
+    function notifyHost(zone, mood, line) {
+      try {
+        if (window.Jarvis3DModelBridge && typeof window.Jarvis3DModelBridge.onModelTouched === "function") {
+          voiceStarted(window.Jarvis3DModelBridge.onModelTouched(zone, mood, line), line);
+        } else if (window.Jarvis3DModelBridge && typeof window.Jarvis3DModelBridge.onModelTouchReact === "function") {
+          window.Jarvis3DModelBridge.onModelTouchReact();
+        }
+      } catch (_) {}
+    }
+
+    function handleTouchZone(zone) {
+      const now = clock.getElapsedTime();
+      // annoyance cools down by 1 every 15 s
+      if (annoyance > 0) annoyance = Math.max(0, annoyance - (now - lastAnnoyAt) / 15);
+      // Sulking: she ignores everything but says so
+      if (touchMood && touchMood.type === "sulk" && now < touchMood.until) {
+        const line = pickLine("sulk"); showBubble(line, "sulk"); notifyHost(zone, "sulk", line);
+        turnTarget = 1.0; return;
+      }
+      if (grudgeActive() && zone !== "chest" && zone !== "hips") {
+        setMood("annoyed", 2.4); triggerMoraReaction("none");
+        const line = ["Main abhi bhi naraz hoon 😒 Sorry bolo.", "Hmph. Pehle sorry. 😤"][Math.floor(Math.random() * 2)];
+        showBubble(line, "annoyed"); notifyHost(zone, "annoyed", line);
+        return;
+      }
+      let mood = "happy", key = zone;
+      switch (zone) {
+        case "headtop": triggerMoraReaction("headpat"); mood = "shy"; break;
+        case "face":
+          if (now - lastFaceTouchAt < 6) { key = "faceAgain"; mood = "annoyed"; setMood("annoyed", 2.6); triggerMoraReaction("none"); }
+          else { triggerMoraReaction("surprise"); mood = "surprised"; }
+          lastFaceTouchAt = now; break;
+        case "hand": triggerMoraReaction(Math.random() < 0.6 ? "wave" : "thankful"); break;
+        case "arm": triggerMoraReaction("curious"); mood = "curious"; break;
+        case "belly": triggerMoraReaction("joy"); mood = "ticklish"; break;
+        case "legs": triggerMoraReaction("none"); mood = "annoyed"; setMood("annoyed", 2.4); backTarget = 0.08; break;
+        case "chest":
+        case "hips": {
+          triggerMoraReaction("none");
+          annoyance += zone === "hips" ? 1.5 : 1; lastAnnoyAt = now;
+          if (annoyance >= 3) {
+            key = "sulk"; mood = "sulk"; setMood("sulk", 9); turnTarget = 1.0; backTarget = 0.14;
+            grudgeUntil = Date.now() + 10 * 60 * 1000;
+          } else if (annoyance >= 1.5) {
+            mood = "angry"; setMood("angry", 3.4); turnTarget = 0.6; backTarget = 0.16;
+          } else {
+            mood = "embarrassed"; setMood("embarrassed", 2.8); turnTarget = 0.32; backTarget = 0.12;
+          }
+          break;
+        }
+        default: triggerMoraReaction("wave");
+      }
+      const line = pickLine(key);
+      showBubble(line, mood);
+      notifyHost(zone, mood, line);
+      noteInteraction();
+      addBond({ sulk: -3, angry: -2, embarrassed: -1, annoyed: -0.5 }[mood] ?? 1);
+      saveMood();
+      console.log("Mora touch:", zone, "->", mood, "| annoyance", annoyance.toFixed(2));
     }
 
     function onTouchPoke(e) {
       const now = performance.now();
       if (now - lastPokeAt < 650) return; // same physical tap delivered twice (canvas + Kotlin)
       lastPokeAt = now;
-      const zone = (e && typeof e.clientX === "number") ? classifyTouch(e.clientX, e.clientY) : "body";
-      const pool = POKE_POOLS[zone] || POKE_POOLS.body;
-      reactionCycle = (reactionCycle + 1) % 12;
-      triggerMoraReaction(pool[reactionCycle % pool.length]);
-      console.log("Mora touch:", zone, "->", activeReaction);
-      try {
-        if (window.Jarvis3DModelBridge && typeof window.Jarvis3DModelBridge.onModelTouchReact === "function") {
-          window.Jarvis3DModelBridge.onModelTouchReact();
-        }
-      } catch (_) {}
+      const zone = (e && typeof e.clientX === "number") ? classifyTouch(e.clientX, e.clientY) : "belly";
+      handleTouchZone(zone);
+    }
+
+    // Test hooks: ?viewer=x,y fakes a face position, ?forgive=1 fakes hearing "sorry".
+    if (_qp.get("viewer")) { const v = _qp.get("viewer").split(",").map(Number); setInterval(() => setViewer(v[0], v[1] || 0, true), 400); }
+    if (_qp.has("forgive")) setTimeout(() => console.log("forgive ->", forgive()), 8000);
+    // Test hook: ?touch=<zone>[,<zone>...] fires those zones after the model is ready.
+    if (_qp.get("touch")) {
+      const zones = _qp.get("touch").split(",");
+      zones.forEach((z, i) => setTimeout(() => { lastPokeAt = 0; handleTouchZone(z.trim()); }, 7000 + i * 900));
+    }
+
+    // ---- Touch input: tap = reaction, long press = long pat, swipe = turn her, pinch = zoom
+    let dragging = false;
+    let lastX = 0, lastY = 0, downX = 0, downY = 0;
+    let manualYaw = 0;
+    let suppressClick = false;
+    let longTimer = null;
+    const pointers = new Map();
+    let pinch0 = 0, zoom0 = 1;
+    let camZoom = 1;
+    try { camZoom = Math.max(0.75, Math.min(1.8, parseFloat(localStorage.getItem("mora_zoom")) || 1)); } catch (_) {}
+    camera.zoom = camZoom; camera.updateProjectionMatrix();
+
+    function handleLongPress(x, y) {
+      const zone = classifyTouch(x, y);
+      if ((zone === "headtop" || zone === "face") && !grudgeActive()) {
+        lastPokeAt = performance.now();
+        triggerMoraReaction("headpat"); reactionTimer = 4.5;
+        setMood("bliss", 4.5); addBond(2); noteInteraction();
+        const line = ["Hmm~ 😌 aise hi karte raho", "Kitna sukoon hai… 🥰", "Mmm, achha lag raha hai 😊"][Math.floor(Math.random() * 3)];
+        showBubble(line, "shy"); notifyHost(zone, "shy", line);
+      } else if (zone === "hand" && !grudgeActive()) {
+        lastPokeAt = performance.now();
+        triggerMoraReaction("thankful");
+        const line = "Haath pakad liya? 🥰"; showBubble(line, "shy"); notifyHost(zone, "shy", line);
+      } else {
+        if (zone === "chest" || zone === "hips") annoyance += 1; // holding is worse than a tap
+        lastPokeAt = 0;
+        handleTouchZone(zone);
+      }
     }
 
     canvas.addEventListener("click", (e) => {
-      // Ignore the synthetic click that ends a gaze-drag gesture
+      if (suppressClick) { suppressClick = false; return; }
+      // Ignore the synthetic click that ends a drag / swipe gesture
       if (Math.hypot(e.clientX - downX, e.clientY - downY) > 18) return;
       onTouchPoke(e);
     });
 
-    // Pointer Drag Gaze Tracking
-    let dragging = false;
-    let lastX = 0, lastY = 0, downX = 0, downY = 0;
     canvas.addEventListener("pointerdown", (e) => {
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        pinch0 = Math.hypot(a.x - b.x, a.y - b.y); zoom0 = camZoom;
+        clearTimeout(longTimer); dragging = false; suppressClick = true;
+        return;
+      }
       dragging = true;
       lastX = downX = e.clientX;
       lastY = downY = e.clientY;
+      clearTimeout(longTimer);
+      longTimer = setTimeout(() => {
+        if (dragging && Math.hypot(lastX - downX, lastY - downY) < 12) {
+          suppressClick = true;
+          handleLongPress(downX, downY);
+        }
+      }, 600);
     });
     canvas.addEventListener("pointermove", (e) => {
+      if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2 && pinch0 > 0) {
+        const [a, b] = [...pointers.values()];
+        camZoom = Math.max(0.75, Math.min(1.8, zoom0 * Math.hypot(a.x - b.x, a.y - b.y) / pinch0));
+        camera.zoom = camZoom; camera.updateProjectionMatrix();
+        return;
+      }
       if (!dragging) return;
       const dx = (e.clientX - lastX) / window.innerWidth;
       const dy = (e.clientY - lastY) / window.innerHeight;
       lastX = e.clientX;
       lastY = e.clientY;
+      if (Math.hypot(lastX - downX, lastY - downY) > 12) clearTimeout(longTimer);
+      // Horizontal swipe turns her around; vertical drag moves her gaze
+      manualYaw = Math.max(-1.4, Math.min(1.4, manualYaw + dx * 3.2));
       if (moraController) {
         moraController.gazeX = Math.max(-1, Math.min(1, moraController.gazeX + dx * 3.0));
         moraController.gazeY = Math.max(-1, Math.min(1, moraController.gazeY + dy * 3.0));
       }
     });
-    const stopDrag = () => {
+    const stopDrag = (e) => {
+      if (e && pointers.has(e.pointerId)) pointers.delete(e.pointerId);
+      if (pointers.size < 2 && pinch0 > 0) {
+        pinch0 = 0;
+        try { localStorage.setItem("mora_zoom", String(camZoom)); } catch (_) {}
+      }
+      clearTimeout(longTimer);
       dragging = false;
       if (moraController) {
         moraController.gazeX = 0;
@@ -1054,11 +1465,14 @@
         moraModel.rotation.y = 0;
 
         const characterPivot = new THREE.Group();
+        moraPivot = characterPivot;
         characterPivot.rotation.y = Math.PI;
         characterPivot.add(moraModel);
         scene.add(characterPivot);
 
         moraController = new MoraCharacterController(moraModel);
+        setTimeout(() => { try { greetForDayPart(); batteryTick(); } catch (_) {} }, 3500);
+        if (grudgeActive()) setTimeout(() => { setMood("annoyed", 4); say("Hmph… ab bhi naraz hoon. Sorry bolo 😒", "annoyed"); }, 1500);
         applyMoraRimLighting(moraModel);
 
         // Load retargeted clips from mora_clips.js (or fallback to mora_animations.glb)
@@ -1090,6 +1504,147 @@
       }
     );
 
+    // ---- Grounding: measure once how far the sole is below the foot bones, then every frame
+    //      move the root so the lower foot's sole sits on the deck top (y = 0).
+    let soleGap = null, groundY = -0.002, groundCalibAt = 0;
+    const _fl = new THREE.Vector3(), _fr = new THREE.Vector3(), _gv = new THREE.Vector3();
+    function calibrateSole() {
+      const b = moraController.bones;
+      if (!b.leftFoot || !b.rightFoot) return;
+      moraModel.updateMatrixWorld(true);
+      let minY = Infinity;
+      moraModel.traverse(o => {
+        if (!o.isSkinnedMesh || !o.geometry || !o.geometry.attributes.position) return;
+        const pos = o.geometry.attributes.position;
+        for (let i = 0; i < pos.count; i += 2) {
+          _gv.fromBufferAttribute(pos, i);
+          o.boneTransform(i, _gv);
+          _gv.applyMatrix4(o.matrixWorld);
+          if (_gv.y < minY) minY = _gv.y;
+        }
+      });
+      if (!isFinite(minY)) return;
+      b.leftFoot.getWorldPosition(_fl); b.rightFoot.getWorldPosition(_fr);
+      soleGap = Math.min(_fl.y, _fr.y) - minY;
+      console.log("Mora grounding calibrated: sole gap", soleGap.toFixed(4), "lowest point", minY.toFixed(4));
+    }
+    function groundMora(dt) {
+      if (!moraModel || !moraController || !moraController.hasClips) return;
+      const b = moraController.bones;
+      if (!b.leftFoot || !b.rightFoot) return;
+      if (soleGap === null) {
+        if (!groundCalibAt) groundCalibAt = performance.now() + 1200; // let the idle clip settle
+        if (performance.now() < groundCalibAt) return;
+        try { calibrateSole(); } catch (e) { console.warn("grounding calibration failed", e); soleGap = 0.12; }
+        if (soleGap === null) return;
+      }
+      moraModel.updateMatrixWorld(true);
+      b.leftFoot.getWorldPosition(_fl); b.rightFoot.getWorldPosition(_fr);
+      const sole = Math.min(_fl.y, _fr.y) - soleGap;          // lowest sole point right now
+      const shift = Math.max(-0.08, Math.min(0.04, -sole));    // clamp so jumps still read as jumps
+      groundY += (moraModel.position.y + shift - groundY) * Math.min(1, dt * 10);
+      moraModel.position.y = groundY;
+      // Foot shadows follow each shoe (toward the toes) and fade as that foot lifts
+      const yaw = moraPivot ? moraPivot.rotation.y - Math.PI : 0;
+      const fx = Math.sin(yaw) * 0.03, fz = Math.cos(yaw) * 0.03;
+      [[leftFootShadow, _fl], [rightFootShadow, _fr]].forEach(([sh, f]) => {
+        sh.position.set(f.x + fx, 0.002, f.z + fz);
+        sh.rotation.z = yaw;
+        const h = f.y - Math.min(_fl.y, _fr.y);      // how much higher this foot is than the other
+        sh.material.opacity = 0.9 * Math.max(0.25, 1 - h * 8);
+      });
+    }
+    window.__moraDebug = () => ({ soleGap, groundY, turnTarget, manualYaw, touchMood, annoyance, grudge: grudgeActive(), state: currentState, reaction: activeReaction });
+
+    // ---- She talks on her own (like a real companion): greeting for the time of day, a line now
+    //      and then when you're around but quiet, stops if you keep ignoring her. Bond grows with
+    //      gentle touches and drops with rude ones; charger in/out and low battery get a reaction.
+    const BOND_KEY = "mora_bond_v1";
+    let bond = 30;
+    try { bond = Math.max(0, Math.min(100, parseFloat(localStorage.getItem(BOND_KEY)) || 30)); } catch (_) {}
+    function addBond(d) {
+      bond = Math.max(0, Math.min(100, bond + d));
+      try { localStorage.setItem(BOND_KEY, String(bond.toFixed(1))); } catch (_) {}
+    }
+    let lastInteractAt = performance.now();
+    let ignoredLines = 0;
+    let nextChatAt = performance.now() + (150 + Math.random() * 120) * 1000;
+    function noteInteraction() { lastInteractAt = performance.now(); ignoredLines = 0; }
+    function voiceLive() {
+      try { return !!(window.Jarvis3DModelBridge && window.Jarvis3DModelBridge.isVoiceLive && window.Jarvis3DModelBridge.isVoiceLive()); } catch (_) { return false; }
+    }
+    function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+    function dayPart() {
+      const h = new Date().getHours();
+      return h >= 5 && h < 12 ? "morning" : h < 17 ? "afternoon" : h < 21 ? "evening" : "night";
+    }
+    const GREET = {
+      morning: ["Good morning! ☀️ Aaj ka plan kya hai?", "Uth gaye? ☀️ Chalo, aaj ka din badhiya banate hain!"],
+      afternoon: ["Lunch kiya? 🍱", "Dopahar ho gayi~ thoda paani pi lo 💧"],
+      evening: ["Shaam ho gayi~ chai ho jaaye? ☕", "Aaj ka din kaisa raha? 😊"],
+      night: ["Itni raat ko jaage ho? 🌙", "Raat ho gayi… zyada der mat jaagna, haan? 🌙"]
+    };
+    const CLOSE_GREET = ["Tumhara hi intezaar tha 🥰", "Aa gaye tum! Ab achha lag raha hai 😊"];
+    const CHAT = [
+      "Bore ho rahi hoon… kuch baat karo na 🥺", "Mujhe tap karke dekho~ 👀", "Kuch kaam ho to bas bolo, main hoon na 😊",
+      "Pata hai, mujhe dance bhi aata hai 💃", "Hmm~ kya soch rahe ho? 🤔", "Break le lo thoda, aankhon ko aaram do 😌"
+    ];
+    const CHAT_CLOSE = ["Tumse baat karke achha lagta hai 🥰", "Aaj tum busy ho kya? Main yahin hoon 😊"];
+    function greetForDayPart() {
+      if (!moraController || grudgeActive()) return;
+      const part = dayPart();
+      const today = new Date().toDateString();
+      let last = {};
+      try { last = JSON.parse(localStorage.getItem("mora_greet_v1") || "{}"); } catch (_) {}
+      if (last.part === part && last.day === today) return;
+      try { localStorage.setItem("mora_greet_v1", JSON.stringify({ part, day: today })); } catch (_) {}
+      if (voiceLive()) return;                      // Gemini is talking with you already
+      triggerMoraReaction("wave"); reactionTimer = 3;
+      say(bond >= 60 && Math.random() < 0.5 ? pick(CLOSE_GREET) : pick(GREET[part]), "happy");
+      noteInteraction();
+    }
+    function idleChatterTick() {
+      const now = performance.now();
+      if (!moraController || document.hidden || now < nextChatAt) return;
+      nextChatAt = now + (200 + Math.random() * 160) * 1000;
+      const h = new Date().getHours();
+      if (h >= 23 || h < 7) return;                  // quiet at night
+      if (currentState !== "idle" || activeReaction !== "none" || grudgeActive() || voiceLive()) return;
+      if (now - lastInteractAt < 90 * 1000) return;  // you were just busy with her
+      if (ignoredLines >= 3) return;                 // she already gave up; waits for you
+      ignoredLines++;
+      if (ignoredLines === 3) {
+        setMood("annoyed", 3); say("Theek hai… main chup ho jaati hoon 😔", "annoyed");
+        return;
+      }
+      triggerMoraReaction(Math.random() < 0.5 ? "curious" : "wave"); reactionTimer = 3;
+      say(bond >= 60 && Math.random() < 0.4 ? pick(CHAT_CLOSE) : pick(CHAT), "happy");
+    }
+    let battery = { level: -1, plugged: null, lowWarned: false, fullSaid: false };
+    function batteryTick() {
+      if (!moraController || !window.Jarvis3DModelBridge || !window.Jarvis3DModelBridge.getBatteryInfo) return;
+      let info;
+      try { info = JSON.parse(window.Jarvis3DModelBridge.getBatteryInfo()); } catch (_) { return; }
+      const lvl = Number(info.level), plugged = !!info.plugged;
+      if (battery.plugged !== null && plugged !== battery.plugged && !voiceLive()) {
+        if (plugged) { triggerMoraReaction("joy"); reactionTimer = 3; say("Charging shuru! ⚡ Mujhe bhi energy mil gayi 😄", "happy"); }
+        else say(lvl >= 0 ? "Charger hata diya. Battery " + lvl + "% hai 🔋" : "Charger hata diya 🔋", "happy");
+        noteInteraction();
+      }
+      if (!plugged && lvl >= 0 && lvl <= 15 && !battery.lowWarned && !voiceLive()) {
+        battery.lowWarned = true;
+        triggerMoraReaction("thinking"); reactionTimer = 3;
+        say("Battery sirf " + lvl + "% hai… charger laga do na 🥺", "annoyed");
+      }
+      if (plugged && lvl >= 100 && !battery.fullSaid && battery.plugged !== null && !voiceLive()) {
+        battery.fullSaid = true; say("Battery full ho gayi! 💯", "happy");
+      }
+      if (lvl > 20) battery.lowWarned = false;
+      if (!plugged) battery.fullSaid = false;
+      battery.level = lvl; battery.plugged = plugged;
+    }
+    setInterval(() => { try { idleChatterTick(); batteryTick(); } catch (e) { console.warn("alive tick", e); } }, 15000);
+
     // Render Loop
     function animate() {
       requestAnimationFrame(animate);
@@ -1117,8 +1672,36 @@
         }
       }
 
+      // Look at the person in front of the phone (front camera face position from Android)
+      if (moraController && !dragging) {
+        const seen = viewer.present && (performance.now() - viewer.at) < 1500;
+        const gx = seen ? viewer.x * 0.9 : 0, gy = seen ? viewer.y * 0.6 : 0;
+        moraController.gazeX += (gx - moraController.gazeX) * Math.min(1, dt * 4);
+        moraController.gazeY += (gy - moraController.gazeY) * Math.min(1, dt * 4);
+      }
+
       if (moraController) {
-        moraController.update(dt, time, currentState, extAudioLevel, activeReaction, reactionTimer);
+        // While the on-device voice speaks her line, open/close the mouth with a speech-like rhythm
+        const localTalk = performance.now() < localTalkUntil && (currentState === "idle" || currentState === "listening");
+        const st = localTalk ? "speaking" : currentState;
+        const amp = localTalk ? 0.25 + 0.6 * Math.abs(Math.sin(time * 11.0) * Math.sin(time * 3.3 + 0.7)) : extAudioLevel;
+        moraController.update(dt, time, st, amp, activeReaction, reactionTimer);
+        groundMora(dt);
+      }
+
+      if (bubbleUntil) {
+        if (performance.now() > bubbleUntil) { bubbleUntil = 0; setBubbleVisible(false); }
+        else placeBubble();
+      }
+
+      // Turn away / step back after unwanted touches, then come back once the mood ends
+      if (moraPivot) {
+        const moodOn = touchMood && time < touchMood.until;
+        if (!moodOn) { turnTarget = 0; backTarget = 0; }
+        if (!dragging) manualYaw += (0 - manualYaw) * Math.min(1, dt * 1.8);
+        const tY = Math.PI + turnTarget + manualYaw;
+        moraPivot.rotation.y += (tY - moraPivot.rotation.y) * Math.min(1, dt * (moodOn ? 6 : 2.2));
+        moraPivot.position.z += (-backTarget - moraPivot.position.z) * Math.min(1, dt * (moodOn ? 7 : 2.5));
       }
 
       renderer.render(scene, camera);
@@ -1143,6 +1726,11 @@
       },
       triggerReaction: triggerMoraReaction,
       triggerTouchReaction: onTouchPoke,
+      forgive: forgive,
+      isSulking: () => grudgeActive() || !!(touchMood && touchMood.type === "sulk"),
+      setViewer: setViewer,
+      getBond: () => Math.round(bond),
+      greet: () => { try { localStorage.removeItem("mora_greet_v1"); } catch (_) {} greetForDayPart(); },
       resize: handleResize,
       interrupt: () => {
         setMoraState("listening");

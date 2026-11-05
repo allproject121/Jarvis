@@ -132,13 +132,15 @@ enum class ModelFamily(
         eosToken = "<|eot_id|>",
         stopTokens = listOf("<|eot_id|>", "<|end_of_text|>")
     ),
+    // DeepSeek-R1-Distill uses its own fullwidth-bar template, not ChatML. With ChatML framing the
+    // model never emitted a stop token and wrote "</|im_end|><|im_start|>user …" fake turns into replies.
     DEEPSEEK(
         "DeepSeek",
         listOf("deepseek"),
         TokenizerKind.BPE,
-        bosToken = "",
-        eosToken = "<|im_end|>",
-        stopTokens = listOf("<|im_end|>", "<|endoftext|>")
+        bosToken = "<｜begin▁of▁sentence｜>",
+        eosToken = "<｜end▁of▁sentence｜>",
+        stopTokens = listOf("<｜end▁of▁sentence｜>", "<｜User｜>", "</tool_call>")
     ),
     MISTRAL(
         "Mistral",

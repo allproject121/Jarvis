@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="280dp"
+    android:height="280dp"
+    android:viewportWidth="280"
+    android:viewportHeight="280">
+
+    <!-- Center Ambient Glow -->
+    <path
+        android:fillColor="#1500F0FF"
+        android:pathData="M140,140m-90,0a90,90 0,1,1 180,0a90,90 0,1,1 -180,0" />
+
+    <!-- Outer Telemetry Ring -->
+    <path
+        android:strokeColor="#2200F0FF"
+        android:strokeWidth="1.2"
+        android:pathData="M140,140m-130,0a130,130 0,1,1 260,0a130,130 0,1,1 -260,0" />
+
+    <!-- Secondary Ring with Dash pattern simulation -->
+    <path
+        android:strokeColor="#3300F0FF"
+        android:strokeWidth="1.5"
+        android:pathData="M140,140m-112,0a112,112 0,1,1 224,0a112,112 0,1,1 -224,0" />
+
+    <!-- Inner Core Focus Ring -->
+    <path
+        android:strokeColor="#4D00F0FF"
+        android:strokeWidth="1.5"
+        android:pathData="M140,140m-80,0a80,80 0,1,1 160,0a80,80 0,1,1 -160,0" />
+
+    <!-- Innermost Arc Reactor Aperture Ring -->
+    <path
+        android:strokeColor="#6600F0FF"
+        android:strokeWidth="1.2"
+        android:pathData="M140,140m-52,0a52,52 0,1,1 104,0a52,52 0,1,1 -104,0" />
+
+    <!-- Top & Bottom Crosshair Ticks -->
+    <path
+        android:strokeColor="#8000F0FF"
+        android:strokeWidth="2"
+        android:pathData="M140,4 L140,18 M140,262 L140,276" />
+
+    <!-- Left & Right Crosshair Ticks -->
+    <path
+        android:strokeColor="#8000F0FF"
+        android:strokeWidth="2"
+        android:pathData="M4,140 L18,140 M262,140 L276,140" />
+
+    <!-- 4 Diagonal Targeting Brackets -->
+    <path
+        android:strokeColor="#5000F0FF"
+        android:strokeWidth="1.5"
+        android:pathData="M48,48 L58,48 M48,48 L48,58" />
+    <path
+        android:strokeColor="#5000F0FF"
+        android:strokeWidth="1.5"
+        android:pathData="M232,48 L222,48 M232,48 L232,58" />
+    <path
+        android:strokeColor="#5000F0FF"
+        android:strokeWidth="1.5"
+        android:pathData="M48,232 L58,232 M48,232 L48,222" />
+    <path
+        android:strokeColor="#5000F0FF"
+        android:strokeWidth="1.5"
+        android:pathData="M232,232 L222,232 M232,232 L232,222" />
+
+    <!-- 4 Cardinal Orbit Indicator Dots -->
+    <path
+        android:fillColor="#8000F0FF"
+        android:pathData="M140,26m-3,0a3,3 0,1,1 6,0a3,3 0,1,1 -6,0" />
+    <path
+        android:fillColor="#8000F0FF"
+        android:pathData="M140,254m-3,0a3,3 0,1,1 6,0a3,3 0,1,1 -6,0" />
+    <path
+        android:fillColor="#8000F0FF"
+        android:pathData="M26,140m-3,0a3,3 0,1,1 6,0a3,3 0,1,1 -6,0" />
+    <path
+        android:fillColor="#8000F0FF"
+        android:pathData="M254,140m-3,0a3,3 0,1,1 6,0a3,3 0,1,1 -6,0" />
+</vector>

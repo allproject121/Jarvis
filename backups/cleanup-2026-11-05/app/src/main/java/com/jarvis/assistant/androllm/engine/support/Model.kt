@@ -1,0 +1,76 @@
+package com.jarvis.assistant.androllm.engine.support
+
+import com.jarvis.assistant.androllm.engine.support.AppConstants
+import kotlinx.serialization.Serializable
+
+/**
+ * Categories for catalog model organization.
+ */
+enum class ModelCategory {
+    RECOMMENDED,
+    CHAT,
+    REASONING,
+    MOBILE_OPTIMIZED
+}
+
+/**
+ * Represents an LLM model available to the app.
+ * Supports GGUF/GGML/SafeTensors formats for local inference.
+ */
+@Serializable
+data class Model(
+    val id: String,
+    val name: String,
+    val description: String = "",
+    val filePath: String? = null,
+    val fileSize: Long = 0,
+    val format: ModelFormat = ModelFormat.GGUF,
+    val parameters: String = "",
+    val quantization: String = "",
+    val contextLength: Int = AppConstants.Model.DEFAULT_CONTEXT_LENGTH,
+    val downloadUrl: String? = null,
+    val isDownloaded: Boolean = false,
+    val isLoaded: Boolean = false,
+    val downloadStatus: DownloadStatus = DownloadStatus.NOT_DOWNLOADED,
+    val status: ModelStatus = ModelStatus.NOT_LOADED,
+    val createdAt: Long = 0,
+    val updatedAt: Long = 0,
+    val sha256: String? = null,
+    /**
+     * Optional companion artifact URL downloaded next to the main file (e.g.
+     * the tokenizer for a `.tflite` embedding model, saved as `tokenizer.model`).
+     */
+    val companionUrl: String? = null,
+    val architecture: String = "llama",
+    val family: String = "Llama",
+    val minRamGb: Float = 4.0f,
+    val recommendedRamGb: Float = 8.0f,
+    val isFavorite: Boolean = false,
+    val isDefault: Boolean = false,
+    val addedDate: Long = 0,
+    val lastUsedDate: Long = 0,
+    val category: ModelCategory = ModelCategory.CHAT,
+    val badges: List<String> = emptyList(),
+    val strengths: List<String> = emptyList(),
+    val weaknesses: List<String> = emptyList(),
+    val expectedTokSec: String = "30-50 tok/s",
+    val license: String = "Apache-2.0",
+    /**
+     * Model-specific stop sequences (from the catalog entry), merged with the
+     * family's official stop tokens by the engine at load. Generation stops
+     * on the first occurrence of any of them — never streaming a stop token
+     * to the UI and never running past a natural end.
+     */
+    val stopSequences: List<String> = emptyList(),
+
+    // ---- backend compatibility flags (catalog schema) ----
+    // Gate which inference backends this artifact may run on. The engine's
+    // automatic selection skips a backend the model does not support and
+    // silently falls back (NPU → GPU → CPU) without user interaction. CPU is
+    // the universal default; NPU defaults to false because LiteRT-LM NPU
+    // execution requires SoC-specific model builds — an ordinary container
+    // would fail NPU initialization and burn load time on the attempt.
+    val supportsCpu: Boolean = true,
+    val supportsGpu: Boolean = true,
+    val supportsNpu: Boolean = false
+)

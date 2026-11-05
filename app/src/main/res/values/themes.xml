@@ -10,36 +10,49 @@
         <item name="android:navigationBarColor">#EEF2F9</item>
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowBackground">#EEF2F9</item>
-        <item name="colorPrimary">#2F6BFF</item>
+        <item name="colorPrimary">#2563EB</item>
         <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorSurface">#B8FFFFFF</item>
+        <item name="colorSurface">#FBFCFE</item>
         <item name="colorOnSurface">#0F172A</item>
 
         <item name="themeBg">#EEF2F9</item>
-        <item name="themeSurface">#B8FFFFFF</item>
-        <item name="themeCardBg">#B8FFFFFF</item>
-        <item name="themeCardBorder">#CBD5E1</item>
-        <item name="themeCardGlassStart">#F0FFFFFF</item>
-        <item name="themeCardGlassEnd">#A6FFFFFF</item>
+        <item name="themeSurface">#FFFBFCFE</item>
+        <item name="themeCardBg">#FFFBFCFE</item>
+        <item name="themeCardBorder">#D5DCE8</item>
+        <item name="themeCardGlassStart">#FFFFFFFF</item>
+        <item name="themeCardGlassEnd">#FFFBFCFE</item>
         <item name="themeDockBg">#CCFFFFFF</item>
         <item name="themeDockGlassStart">#FAFFFFFF</item>
         <item name="themeDockGlassEnd">#B8FFFFFF</item>
         <item name="themeDockBorder">#CBD5E1</item>
         <item name="themeGlassSpecular">#FFFFFF</item>
-        <item name="themeChipBg">#66FFFFFF</item>
+        <item name="themeChipBg">#F1F4F9</item>
         <item name="themeInputBg">#B8FFFFFF</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_light_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_light_2</item>
         <item name="themeGlowBlob3">@drawable/bg_liquid_glow_light_3</item>
 
         <item name="themeTextPrimary">#0F172A</item>
-        <item name="themeTextSecondary">#475569</item>
-        <item name="themeTextMuted">#64748B</item>
+        <item name="themeTextSecondary">#334155</item>
+        <item name="themeTextMuted">#4B5567</item>
         <item name="themeAccent1">#2F6BFF</item>
-        <item name="themeAccent2">#8B5CF6</item>
-        <item name="themeAccent3">#06B6D4</item>
-        <item name="themeAccent">#2F6BFF</item>
-        <item name="themeAccentLight">#E0E7FF</item>
+        <item name="themeAccent2">#7A39E8</item>
+        <item name="themeAccent3">#0D6D87</item>
+        <item name="themeAccent">#1D4ED8</item>
+        <item name="themeAccentLight">#1F2F6BFF</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#2563EB</item>
+        <item name="themeOnAccent">#FFFFFF</item>
+        <item name="themePlateBorder">#DCE2EC</item>
+        <item name="themeGlow1">#1A2F6BFF</item>
+        <item name="themeGlow2">#128B5CF6</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#116A33</item>
+        <item name="themeWarning">#954507</item>
+        <item name="themeDanger">#B01E1E</item>
+        <item name="themeInfo">#036093</item>
     </style>
 
     <!-- 2. DARK THEME - LIQUID OBSIDIAN GLASS EDITION (STARK HUD) -->
@@ -51,15 +64,15 @@
         <item name="android:windowBackground">#060812</item>
         <item name="colorPrimary">#00F0FF</item>
         <item name="colorOnPrimary">#060812</item>
-        <item name="colorSurface">#0E1528</item>
+        <item name="colorSurface">#0C1427</item>
         <item name="colorOnSurface">#F8FAFC</item>
 
         <item name="themeBg">#060812</item>
-        <item name="themeSurface">#E60E1528</item>
-        <item name="themeCardBg">#E60E1528</item>
-        <item name="themeCardBorder">#3300F0FF</item>
-        <item name="themeCardGlassStart">#F2142244</item>
-        <item name="themeCardGlassEnd">#EB090F1E</item>
+        <item name="themeSurface">#F20C1427</item>
+        <item name="themeCardBg">#F20C1427</item>
+        <item name="themeCardBorder">#2E00F0FF</item>
+        <item name="themeCardGlassStart">#F214223E</item>
+        <item name="themeCardGlassEnd">#F20C1427</item>
         <item name="themeDockBg">#F5060914</item>
         <item name="themeDockGlassStart">#F5101930</item>
         <item name="themeDockGlassEnd">#EB050710</item>
@@ -72,13 +85,82 @@
         <item name="themeGlowBlob3">@drawable/bg_liquid_glow_dark_3</item>
 
         <item name="themeTextPrimary">#F8FAFC</item>
-        <item name="themeTextSecondary">#94A3B8</item>
-        <item name="themeTextMuted">#64748B</item>
+        <item name="themeTextSecondary">#B4C0D0</item>
+        <item name="themeTextMuted">#9AA9BC</item>
         <item name="themeAccent1">#00F0FF</item>
         <item name="themeAccent2">#38BDF8</item>
-        <item name="themeAccent3">#A855F7</item>
+        <item name="themeAccent3">#C68FFA</item>
         <item name="themeAccent">#00F0FF</item>
         <item name="themeAccentLight">#2600F0FF</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#00F0FF</item>
+        <item name="themeOnAccent">#060812</item>
+        <item name="themePlateBorder">#2400F0FF</item>
+        <item name="themeGlow1">#3300F0FF</item>
+        <item name="themeGlow2">#26A855F7</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#4ADE80</item>
+        <item name="themeWarning">#FBBF24</item>
+        <item name="themeDanger">#F98585</item>
+        <item name="themeInfo">#38BDF8</item>
+    </style>
+
+    <!-- NOVA THEME (2026-11-05) — 21st.dev / shadcn-style: zinc-950 canvas, hairline glass cards,
+         violet→indigo accent, Inter type. Default look of the redesign. -->
+    <style name="Theme.JarvisAssistant.Nova" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:statusBarColor">#090812</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">#090812</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowBackground">#090812</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="fontFamily">@font/inter</item>
+        <item name="colorPrimary">#6352F5</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#818CF8</item>
+        <item name="colorSurface">#110E21</item>
+        <item name="colorOnSurface">#FAFAFA</item>
+
+        <item name="themeBg">#090812</item>
+        <item name="themeSurface">#F2110E21</item>
+        <item name="themeCardBg">#F2110E21</item>
+        <item name="themeCardBorder">#17FFFFFF</item>
+        <item name="themeCardGlassStart">#F21B1733</item>
+        <item name="themeCardGlassEnd">#F2110E21</item>
+        <item name="themeDockBg">#F20D0B19</item>
+        <item name="themeDockGlassStart">#F2171428</item>
+        <item name="themeDockGlassEnd">#F20B0A16</item>
+        <item name="themeDockBorder">#1AFFFFFF</item>
+        <item name="themeGlassSpecular">#33FFFFFF</item>
+        <item name="themeChipBg">#17152E</item>
+        <item name="themeInputBg">#100E1F</item>
+        <item name="themeGlowBlob1">@drawable/bg_nova_glow_1</item>
+        <item name="themeGlowBlob2">@drawable/bg_nova_glow_2</item>
+        <item name="themeGlowBlob3">@drawable/bg_nova_glow_3</item>
+
+        <item name="themeTextPrimary">#F9F9FA</item>
+        <item name="themeTextSecondary">#BDBBCB</item>
+        <item name="themeTextMuted">#9391A2</item>
+        <item name="themeAccent1">#9A8CFF</item>
+        <item name="themeAccent2">#818CF8</item>
+        <item name="themeAccent3">#3FD0C9</item>
+        <item name="themeAccent">#9A8CFF</item>
+        <item name="themeAccentLight">#2E6D5DFC</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#6352F5</item>
+        <item name="themeOnAccent">#FFFFFF</item>
+        <item name="themePlateBorder">#1FFFFFFF</item>
+        <item name="themeGlow1">#407F7CF3</item>
+        <item name="themeGlow2">#2EBC694A</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#4ADE80</item>
+        <item name="themeWarning">#FBBF24</item>
+        <item name="themeDanger">#F87171</item>
+        <item name="themeInfo">#38BDF8</item>
     </style>
 
     <!-- 3. RED THEME - LIQUID RUBY GLASS EDITION -->
@@ -88,23 +170,23 @@
         <item name="android:navigationBarColor">#0E0307</item>
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowBackground">#0E0307</item>
-        <item name="colorPrimary">#FF4D5E</item>
+        <item name="colorPrimary">#E11D48</item>
         <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorSurface">#E02D0A13</item>
+        <item name="colorSurface">#250911</item>
         <item name="colorOnSurface">#FFF1F2</item>
 
         <item name="themeBg">#0E0307</item>
-        <item name="themeSurface">#E02D0A13</item>
-        <item name="themeCardBg">#E02D0A13</item>
-        <item name="themeCardBorder">#66FF4D5E</item>
-        <item name="themeCardGlassStart">#E0360E18</item>
-        <item name="themeCardGlassEnd">#CC1C050D</item>
+        <item name="themeSurface">#F2250911</item>
+        <item name="themeCardBg">#F2250911</item>
+        <item name="themeCardBorder">#4DFF4D5E</item>
+        <item name="themeCardGlassStart">#F23A0F1A</item>
+        <item name="themeCardGlassEnd">#F2250911</item>
         <item name="themeDockBg">#F20E0307</item>
         <item name="themeDockGlassStart">#F2300A14</item>
         <item name="themeDockGlassEnd">#E6170409</item>
         <item name="themeDockBorder">#66FF4D5E</item>
         <item name="themeGlassSpecular">#FFA6B0</item>
-        <item name="themeChipBg">#E0380D17</item>
+        <item name="themeChipBg">#34101A</item>
         <item name="themeInputBg">#E02D0A13</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_red_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_red_2</item>
@@ -112,12 +194,25 @@
 
         <item name="themeTextPrimary">#FFF1F2</item>
         <item name="themeTextSecondary">#FDA4AF</item>
-        <item name="themeTextMuted">#BE727E</item>
+        <item name="themeTextMuted">#D49AA4</item>
         <item name="themeAccent1">#FF4D5E</item>
         <item name="themeAccent2">#FB7185</item>
-        <item name="themeAccent3">#F97316</item>
-        <item name="themeAccent">#FF4D5E</item>
-        <item name="themeAccentLight">#3A0C16</item>
+        <item name="themeAccent3">#F9761B</item>
+        <item name="themeAccent">#FF6B79</item>
+        <item name="themeAccentLight">#33FF4D5E</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#E11D48</item>
+        <item name="themeOnAccent">#FFFFFF</item>
+        <item name="themePlateBorder">#33FF4D5E</item>
+        <item name="themeGlow1">#38FF4D5E</item>
+        <item name="themeGlow2">#26F97316</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#4ADE80</item>
+        <item name="themeWarning">#FBBF24</item>
+        <item name="themeDanger">#F87A7A</item>
+        <item name="themeInfo">#38BDF8</item>
     </style>
 
     <!-- 4. SUNSET THEME - LIQUID SUNSET GLASS EDITION -->
@@ -127,36 +222,49 @@
         <item name="android:navigationBarColor">#FFF0EA</item>
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowBackground">#FFF0EA</item>
-        <item name="colorPrimary">#FF6A3D</item>
+        <item name="colorPrimary">#D63200</item>
         <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorSurface">#CCFFF2EC</item>
+        <item name="colorSurface">#FFF9F6</item>
         <item name="colorOnSurface">#2E1020</item>
 
         <item name="themeBg">#FFF0EA</item>
-        <item name="themeSurface">#CCFFF2EC</item>
-        <item name="themeCardBg">#CCFFF2EC</item>
-        <item name="themeCardBorder">#402E1020</item>
-        <item name="themeCardGlassStart">#F5FFFFFF</item>
-        <item name="themeCardGlassEnd">#B3FFE2D7</item>
+        <item name="themeSurface">#FFFFF9F6</item>
+        <item name="themeCardBg">#FFFFF9F6</item>
+        <item name="themeCardBorder">#F0D2C5</item>
+        <item name="themeCardGlassStart">#FFFFFFFF</item>
+        <item name="themeCardGlassEnd">#FFFFF9F6</item>
         <item name="themeDockBg">#E6FFF0EB</item>
         <item name="themeDockGlassStart">#FAFFFFFF</item>
         <item name="themeDockGlassEnd">#CCFFE8DF</item>
         <item name="themeDockBorder">#402E1020</item>
         <item name="themeGlassSpecular">#FFFFFF</item>
-        <item name="themeChipBg">#80FFFFFF</item>
+        <item name="themeChipBg">#FFEEE6</item>
         <item name="themeInputBg">#CCFFF2EC</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_sunset_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_sunset_2</item>
         <item name="themeGlowBlob3">@drawable/bg_liquid_glow_sunset_3</item>
 
         <item name="themeTextPrimary">#2E1020</item>
-        <item name="themeTextSecondary">#783A5B</item>
-        <item name="themeTextMuted">#9C6282</item>
+        <item name="themeTextSecondary">#6B2F4F</item>
+        <item name="themeTextMuted">#7A4565</item>
         <item name="themeAccent1">#FF6A3D</item>
-        <item name="themeAccent2">#F43F5E</item>
-        <item name="themeAccent3">#8B5CF6</item>
-        <item name="themeAccent">#FF6A3D</item>
-        <item name="themeAccentLight">#FFE6DD</item>
+        <item name="themeAccent2">#C4193F</item>
+        <item name="themeAccent3">#7A39E8</item>
+        <item name="themeAccent">#B23C0B</item>
+        <item name="themeAccentLight">#26FF6A3D</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#D63200</item>
+        <item name="themeOnAccent">#FFFFFF</item>
+        <item name="themePlateBorder">#ECCCBF</item>
+        <item name="themeGlow1">#24FF6A3D</item>
+        <item name="themeGlow2">#148B5CF6</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#126C33</item>
+        <item name="themeWarning">#974608</item>
+        <item name="themeDanger">#B21F1F</item>
+        <item name="themeInfo">#036194</item>
     </style>
 
     <!-- 5. CUSTOM LIGHT - LIQUID GLASS -->
@@ -167,36 +275,49 @@
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:colorBackground">@android:color/transparent</item>
-        <item name="colorPrimary">#2F6BFF</item>
+        <item name="colorPrimary">#2563EB</item>
         <item name="colorOnPrimary">#FFFFFF</item>
         <item name="colorSurface">#B8FFFFFF</item>
         <item name="colorOnSurface">#0F172A</item>
 
         <item name="themeBg">@android:color/transparent</item>
-        <item name="themeSurface">#B8FFFFFF</item>
-        <item name="themeCardBg">#B8FFFFFF</item>
-        <item name="themeCardBorder">#CBD5E1</item>
-        <item name="themeCardGlassStart">#F0FFFFFF</item>
-        <item name="themeCardGlassEnd">#A6FFFFFF</item>
+        <item name="themeSurface">#EBFBFCFE</item>
+        <item name="themeCardBg">#EBFBFCFE</item>
+        <item name="themeCardBorder">#D5DCE8</item>
+        <item name="themeCardGlassStart">#F5FFFFFF</item>
+        <item name="themeCardGlassEnd">#EBFBFCFE</item>
         <item name="themeDockBg">#CCFFFFFF</item>
         <item name="themeDockGlassStart">#FAFFFFFF</item>
         <item name="themeDockGlassEnd">#B8FFFFFF</item>
         <item name="themeDockBorder">#CBD5E1</item>
         <item name="themeGlassSpecular">#FFFFFF</item>
-        <item name="themeChipBg">#66FFFFFF</item>
+        <item name="themeChipBg">#F1F4F9</item>
         <item name="themeInputBg">#B8FFFFFF</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_light_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_light_2</item>
         <item name="themeGlowBlob3">@drawable/bg_liquid_glow_light_3</item>
 
         <item name="themeTextPrimary">#0F172A</item>
-        <item name="themeTextSecondary">#475569</item>
-        <item name="themeTextMuted">#64748B</item>
+        <item name="themeTextSecondary">#334155</item>
+        <item name="themeTextMuted">#4B5567</item>
         <item name="themeAccent1">#2F6BFF</item>
-        <item name="themeAccent2">#8B5CF6</item>
-        <item name="themeAccent3">#06B6D4</item>
-        <item name="themeAccent">#2F6BFF</item>
-        <item name="themeAccentLight">#E0E7FF</item>
+        <item name="themeAccent2">#7A39E8</item>
+        <item name="themeAccent3">#0D6D87</item>
+        <item name="themeAccent">#1D4ED8</item>
+        <item name="themeAccentLight">#1F2F6BFF</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#2563EB</item>
+        <item name="themeOnAccent">#FFFFFF</item>
+        <item name="themePlateBorder">#DCE2EC</item>
+        <item name="themeGlow1">#1A2F6BFF</item>
+        <item name="themeGlow2">#128B5CF6</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#116A33</item>
+        <item name="themeWarning">#954507</item>
+        <item name="themeDanger">#B01E1E</item>
+        <item name="themeInfo">#036093</item>
     </style>
 
     <!-- 6. CUSTOM DARK - LIQUID GLASS -->
@@ -207,36 +328,49 @@
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:colorBackground">@android:color/transparent</item>
-        <item name="colorPrimary">#5B8CFF</item>
+        <item name="colorPrimary">#396BE9</item>
         <item name="colorOnPrimary">#FFFFFF</item>
         <item name="colorSurface">#33141B3D</item>
         <item name="colorOnSurface">#F8FAFC</item>
 
         <item name="themeBg">@android:color/transparent</item>
-        <item name="themeSurface">#33141B3D</item>
-        <item name="themeCardBg">#33141B3D</item>
+        <item name="themeSurface">#CC0F1733</item>
+        <item name="themeCardBg">#CC0F1733</item>
         <item name="themeCardBorder">#4D5B8CFF</item>
-        <item name="themeCardGlassStart">#4D1B2654</item>
-        <item name="themeCardGlassEnd">#1A0F1733</item>
+        <item name="themeCardGlassStart">#D91B2654</item>
+        <item name="themeCardGlassEnd">#CC0F1733</item>
         <item name="themeDockBg">#660F1535</item>
         <item name="themeDockGlassStart">#80172048</item>
         <item name="themeDockGlassEnd">#4D0B1028</item>
         <item name="themeDockBorder">#665B8CFF</item>
         <item name="themeGlassSpecular">#80A5FF</item>
-        <item name="themeChipBg">#331A244E</item>
+        <item name="themeChipBg">#E61A244E</item>
         <item name="themeInputBg">#33141B3D</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_dark_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_dark_2</item>
         <item name="themeGlowBlob3">@drawable/bg_liquid_glow_dark_3</item>
 
         <item name="themeTextPrimary">#F8FAFC</item>
-        <item name="themeTextSecondary">#94A3B8</item>
-        <item name="themeTextMuted">#64748B</item>
+        <item name="themeTextSecondary">#B4C0D0</item>
+        <item name="themeTextMuted">#A0AEC2</item>
         <item name="themeAccent1">#5B8CFF</item>
-        <item name="themeAccent2">#A78BFA</item>
+        <item name="themeAccent2">#B097FA</item>
         <item name="themeAccent3">#22D3EE</item>
-        <item name="themeAccent">#5B8CFF</item>
-        <item name="themeAccentLight">#1E2858</item>
+        <item name="themeAccent">#7FA6FF</item>
+        <item name="themeAccentLight">#335B8CFF</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#396BE9</item>
+        <item name="themeOnAccent">#FFFFFF</item>
+        <item name="themePlateBorder">#335B8CFF</item>
+        <item name="themeGlow1">#335B8CFF</item>
+        <item name="themeGlow2">#26A78BFA</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#4ADE80</item>
+        <item name="themeWarning">#FBBF24</item>
+        <item name="themeDanger">#F98383</item>
+        <item name="themeInfo">#38BDF8</item>
     </style>
 
     <!-- 7. STEALTH CARBON THEME (PURE OLED JET BLACK) -->
@@ -248,34 +382,47 @@
         <item name="android:windowBackground">#000000</item>
         <item name="colorPrimary">#FFFFFF</item>
         <item name="colorOnPrimary">#000000</item>
-        <item name="colorSurface">#0F0F12</item>
+        <item name="colorSurface">#0E0E11</item>
         <item name="colorOnSurface">#F8FAFC</item>
 
         <item name="themeBg">#000000</item>
-        <item name="themeSurface">#E60F0F12</item>
-        <item name="themeCardBg">#E60F0F12</item>
-        <item name="themeCardBorder">#33FFFFFF</item>
-        <item name="themeCardGlassStart">#E6181820</item>
-        <item name="themeCardGlassEnd">#CC08080C</item>
+        <item name="themeSurface">#F20E0E11</item>
+        <item name="themeCardBg">#F20E0E11</item>
+        <item name="themeCardBorder">#1FFFFFFF</item>
+        <item name="themeCardGlassStart">#F21A1A1F</item>
+        <item name="themeCardGlassEnd">#F20E0E11</item>
         <item name="themeDockBg">#F2000000</item>
         <item name="themeDockGlassStart">#F2141418</item>
         <item name="themeDockGlassEnd">#E6000000</item>
         <item name="themeDockBorder">#40FFFFFF</item>
         <item name="themeGlassSpecular">#80FFFFFF</item>
-        <item name="themeChipBg">#E0181820</item>
+        <item name="themeChipBg">#18181C</item>
         <item name="themeInputBg">#E00F0F12</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_dark_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_dark_2</item>
         <item name="themeGlowBlob3">@drawable/bg_liquid_glow_dark_3</item>
 
         <item name="themeTextPrimary">#FFFFFF</item>
-        <item name="themeTextSecondary">#A1A1AA</item>
-        <item name="themeTextMuted">#71717A</item>
+        <item name="themeTextSecondary">#C4C4CC</item>
+        <item name="themeTextMuted">#A3A3AB</item>
         <item name="themeAccent1">#FFFFFF</item>
         <item name="themeAccent2">#CBD5E1</item>
-        <item name="themeAccent3">#94A3B8</item>
+        <item name="themeAccent3">#96A5B9</item>
         <item name="themeAccent">#FFFFFF</item>
-        <item name="themeAccentLight">#20FFFFFF</item>
+        <item name="themeAccentLight">#24FFFFFF</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#FFFFFF</item>
+        <item name="themeOnAccent">#000000</item>
+        <item name="themePlateBorder">#26FFFFFF</item>
+        <item name="themeGlow1">#1AFFFFFF</item>
+        <item name="themeGlow2">#12A1A1AA</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#4ADE80</item>
+        <item name="themeWarning">#FBBF24</item>
+        <item name="themeDanger">#F97F7F</item>
+        <item name="themeInfo">#38BDF8</item>
     </style>
 
     <!-- 8. AMETHYST QUANTUM THEME (CYBERPUNK VIOLET) -->
@@ -285,23 +432,23 @@
         <item name="android:navigationBarColor">#0B061A</item>
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowBackground">#0B061A</item>
-        <item name="colorPrimary">#C084FC</item>
-        <item name="colorOnPrimary">#0B061A</item>
-        <item name="colorSurface">#E01A0E38</item>
+        <item name="colorPrimary">#9333EA</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSurface">#180B30</item>
         <item name="colorOnSurface">#FAF5FF</item>
 
         <item name="themeBg">#0B061A</item>
-        <item name="themeSurface">#E01A0E38</item>
-        <item name="themeCardBg">#E01A0E38</item>
-        <item name="themeCardBorder">#59C084FC</item>
-        <item name="themeCardGlassStart">#E0240D4A</item>
-        <item name="themeCardGlassEnd">#CC120626</item>
+        <item name="themeSurface">#F2180B30</item>
+        <item name="themeCardBg">#F2180B30</item>
+        <item name="themeCardBorder">#4DC084FC</item>
+        <item name="themeCardGlassStart">#F2261046</item>
+        <item name="themeCardGlassEnd">#F2180B30</item>
         <item name="themeDockBg">#F20B061A</item>
         <item name="themeDockGlassStart">#F21F0D3D</item>
         <item name="themeDockGlassEnd">#E60B061A</item>
         <item name="themeDockBorder">#59C084FC</item>
         <item name="themeGlassSpecular">#80C084FC</item>
-        <item name="themeChipBg">#E02E1065</item>
+        <item name="themeChipBg">#241048</item>
         <item name="themeInputBg">#E01A0E38</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_dark_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_dark_2</item>
@@ -309,12 +456,25 @@
 
         <item name="themeTextPrimary">#FAF5FF</item>
         <item name="themeTextSecondary">#D8B4FE</item>
-        <item name="themeTextMuted">#A855F7</item>
+        <item name="themeTextMuted">#B8A6CC</item>
         <item name="themeAccent1">#C084FC</item>
         <item name="themeAccent2">#E879F9</item>
         <item name="themeAccent3">#38BDF8</item>
         <item name="themeAccent">#C084FC</item>
-        <item name="themeAccentLight">#1FC084FC</item>
+        <item name="themeAccentLight">#29C084FC</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#9333EA</item>
+        <item name="themeOnAccent">#FFFFFF</item>
+        <item name="themePlateBorder">#33C084FC</item>
+        <item name="themeGlow1">#40C084FC</item>
+        <item name="themeGlow2">#26E879F9</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#4ADE80</item>
+        <item name="themeWarning">#FBBF24</item>
+        <item name="themeDanger">#F87272</item>
+        <item name="themeInfo">#38BDF8</item>
     </style>
 
     <!-- Stark Top HUD Menu Animation & Theme -->
@@ -331,22 +491,22 @@
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowBackground">#0A0802</item>
         <item name="colorPrimary">#F59E0B</item>
-        <item name="colorOnPrimary">#000000</item>
-        <item name="colorSurface">#E01A1405</item>
+        <item name="colorOnPrimary">#0A0802</item>
+        <item name="colorSurface">#1A1405</item>
         <item name="colorOnSurface">#FEF3C7</item>
 
         <item name="themeBg">#0A0802</item>
-        <item name="themeSurface">#E01A1405</item>
-        <item name="themeCardBg">#E01A1405</item>
+        <item name="themeSurface">#F21A1405</item>
+        <item name="themeCardBg">#F21A1405</item>
         <item name="themeCardBorder">#4DF59E0B</item>
-        <item name="themeCardGlassStart">#E0261D08</item>
-        <item name="themeCardGlassEnd">#CC120E03</item>
+        <item name="themeCardGlassStart">#F22A2008</item>
+        <item name="themeCardGlassEnd">#F21A1405</item>
         <item name="themeDockBg">#F20A0802</item>
         <item name="themeDockGlassStart">#F2261D08</item>
         <item name="themeDockGlassEnd">#E60F0C03</item>
         <item name="themeDockBorder">#4DF59E0B</item>
         <item name="themeGlassSpecular">#FCD34D</item>
-        <item name="themeChipBg">#E02E230B</item>
+        <item name="themeChipBg">#2A200A</item>
         <item name="themeInputBg">#E01A1405</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_dark_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_dark_2</item>
@@ -354,12 +514,25 @@
 
         <item name="themeTextPrimary">#FEF3C7</item>
         <item name="themeTextSecondary">#FDE68A</item>
-        <item name="themeTextMuted">#D97706</item>
+        <item name="themeTextMuted">#D9B45A</item>
         <item name="themeAccent1">#F59E0B</item>
         <item name="themeAccent2">#FBBF24</item>
         <item name="themeAccent3">#F59E0B</item>
         <item name="themeAccent">#F59E0B</item>
-        <item name="themeAccentLight">#26F59E0B</item>
+        <item name="themeAccentLight">#29F59E0B</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#F59E0B</item>
+        <item name="themeOnAccent">#0A0802</item>
+        <item name="themePlateBorder">#33F59E0B</item>
+        <item name="themeGlow1">#38F59E0B</item>
+        <item name="themeGlow2">#26FBBF24</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#4ADE80</item>
+        <item name="themeWarning">#FBBF24</item>
+        <item name="themeDanger">#F97C7C</item>
+        <item name="themeInfo">#38BDF8</item>
     </style>
 
     <style name="Theme.JarvisAssistant.Emerald" parent="Theme.Material3.Dark.NoActionBar">
@@ -369,22 +542,22 @@
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowBackground">#020A06</item>
         <item name="colorPrimary">#10B981</item>
-        <item name="colorOnPrimary">#000000</item>
-        <item name="colorSurface">#E0051A10</item>
+        <item name="colorOnPrimary">#020A06</item>
+        <item name="colorSurface">#061C12</item>
         <item name="colorOnSurface">#D1FAE5</item>
 
         <item name="themeBg">#020A06</item>
-        <item name="themeSurface">#E0051A10</item>
-        <item name="themeCardBg">#E0051A10</item>
+        <item name="themeSurface">#F2061C12</item>
+        <item name="themeCardBg">#F2061C12</item>
         <item name="themeCardBorder">#4D10B981</item>
-        <item name="themeCardGlassStart">#E00A2618</item>
-        <item name="themeCardGlassEnd">#CC03120B</item>
+        <item name="themeCardGlassStart">#F20C2C1C</item>
+        <item name="themeCardGlassEnd">#F2061C12</item>
         <item name="themeDockBg">#F2020A06</item>
         <item name="themeDockGlassStart">#F20A2618</item>
         <item name="themeDockGlassEnd">#E6040F08</item>
         <item name="themeDockBorder">#4D10B981</item>
         <item name="themeGlassSpecular">#6EE7B7</item>
-        <item name="themeChipBg">#E00D301E</item>
+        <item name="themeChipBg">#0D3020</item>
         <item name="themeInputBg">#E0051A10</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_dark_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_dark_2</item>
@@ -392,12 +565,25 @@
 
         <item name="themeTextPrimary">#D1FAE5</item>
         <item name="themeTextSecondary">#A7F3D0</item>
-        <item name="themeTextMuted">#059669</item>
+        <item name="themeTextMuted">#8FBFA8</item>
         <item name="themeAccent1">#10B981</item>
         <item name="themeAccent2">#34D399</item>
-        <item name="themeAccent3">#10B981</item>
-        <item name="themeAccent">#10B981</item>
-        <item name="themeAccentLight">#2610B981</item>
+        <item name="themeAccent3">#21BE8A</item>
+        <item name="themeAccent">#21BE8A</item>
+        <item name="themeAccentLight">#2910B981</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#10B981</item>
+        <item name="themeOnAccent">#020A06</item>
+        <item name="themePlateBorder">#3310B981</item>
+        <item name="themeGlow1">#3810B981</item>
+        <item name="themeGlow2">#2634D399</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#4ADE80</item>
+        <item name="themeWarning">#FBBF24</item>
+        <item name="themeDanger">#F98585</item>
+        <item name="themeInfo">#38BDF8</item>
     </style>
 
     <style name="Theme.JarvisAssistant.Pink" parent="Theme.Material3.Dark.NoActionBar">
@@ -406,23 +592,23 @@
         <item name="android:navigationBarColor">#0E0308</item>
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowBackground">#0E0308</item>
-        <item name="colorPrimary">#EC4899</item>
+        <item name="colorPrimary">#C81E6E</item>
         <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorSurface">#E0260616</item>
+        <item name="colorSurface">#260616</item>
         <item name="colorOnSurface">#FCE7F3</item>
 
         <item name="themeBg">#0E0308</item>
-        <item name="themeSurface">#E0260616</item>
-        <item name="themeCardBg">#E0260616</item>
+        <item name="themeSurface">#F2260616</item>
+        <item name="themeCardBg">#F2260616</item>
         <item name="themeCardBorder">#4DEC4899</item>
-        <item name="themeCardGlassStart">#E036081E</item>
-        <item name="themeCardGlassEnd">#CC18040F</item>
+        <item name="themeCardGlassStart">#F23A0A22</item>
+        <item name="themeCardGlassEnd">#F2260616</item>
         <item name="themeDockBg">#F20E0308</item>
         <item name="themeDockGlassStart">#F236081E</item>
         <item name="themeDockGlassEnd">#E614030B</item>
         <item name="themeDockBorder">#4DEC4899</item>
         <item name="themeGlassSpecular">#F472B6</item>
-        <item name="themeChipBg">#E0400A24</item>
+        <item name="themeChipBg">#3A0A24</item>
         <item name="themeInputBg">#E0260616</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_red_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_red_2</item>
@@ -430,12 +616,25 @@
 
         <item name="themeTextPrimary">#FCE7F3</item>
         <item name="themeTextSecondary">#FBCFE8</item>
-        <item name="themeTextMuted">#DB2777</item>
+        <item name="themeTextMuted">#C9A0B6</item>
         <item name="themeAccent1">#EC4899</item>
         <item name="themeAccent2">#F472B6</item>
-        <item name="themeAccent3">#EC4899</item>
-        <item name="themeAccent">#EC4899</item>
-        <item name="themeAccentLight">#26EC4899</item>
+        <item name="themeAccent3">#EF65A9</item>
+        <item name="themeAccent">#F472B6</item>
+        <item name="themeAccentLight">#29EC4899</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#C81E6E</item>
+        <item name="themeOnAccent">#FFFFFF</item>
+        <item name="themePlateBorder">#33EC4899</item>
+        <item name="themeGlow1">#38EC4899</item>
+        <item name="themeGlow2">#26F472B6</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#4ADE80</item>
+        <item name="themeWarning">#FBBF24</item>
+        <item name="themeDanger">#F87777</item>
+        <item name="themeInfo">#38BDF8</item>
     </style>
 
     <style name="Theme.JarvisAssistant.Orange" parent="Theme.Material3.Dark.NoActionBar">
@@ -445,22 +644,22 @@
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowBackground">#0E0602</item>
         <item name="colorPrimary">#FF7700</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorSurface">#E0240D04</item>
+        <item name="colorOnPrimary">#0E0602</item>
+        <item name="colorSurface">#240D04</item>
         <item name="colorOnSurface">#FFEDD5</item>
 
         <item name="themeBg">#0E0602</item>
-        <item name="themeSurface">#E0240D04</item>
-        <item name="themeCardBg">#E0240D04</item>
+        <item name="themeSurface">#F2240D04</item>
+        <item name="themeCardBg">#F2240D04</item>
         <item name="themeCardBorder">#4DFF7700</item>
-        <item name="themeCardGlassStart">#E0331406</item>
-        <item name="themeCardGlassEnd">#CC170802</item>
+        <item name="themeCardGlassStart">#F2381608</item>
+        <item name="themeCardGlassEnd">#F2240D04</item>
         <item name="themeDockBg">#F20E0602</item>
         <item name="themeDockGlassStart">#F2331406</item>
         <item name="themeDockGlassEnd">#E6120602</item>
         <item name="themeDockBorder">#4DFF7700</item>
         <item name="themeGlassSpecular">#FDBA74</item>
-        <item name="themeChipBg">#E0401808</item>
+        <item name="themeChipBg">#3A1808</item>
         <item name="themeInputBg">#E0240D04</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_sunset_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_sunset_2</item>
@@ -468,12 +667,25 @@
 
         <item name="themeTextPrimary">#FFEDD5</item>
         <item name="themeTextSecondary">#FED7AA</item>
-        <item name="themeTextMuted">#EA580C</item>
+        <item name="themeTextMuted">#D9A57A</item>
         <item name="themeAccent1">#FF7700</item>
         <item name="themeAccent2">#FB923C</item>
         <item name="themeAccent3">#FF7700</item>
-        <item name="themeAccent">#FF7700</item>
-        <item name="themeAccentLight">#26FF7700</item>
+        <item name="themeAccent">#FF8A1F</item>
+        <item name="themeAccentLight">#29FF7700</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#FF7700</item>
+        <item name="themeOnAccent">#0E0602</item>
+        <item name="themePlateBorder">#33FF7700</item>
+        <item name="themeGlow1">#38FF7700</item>
+        <item name="themeGlow2">#26FB923C</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#4ADE80</item>
+        <item name="themeWarning">#FBBF24</item>
+        <item name="themeDanger">#F87B7B</item>
+        <item name="themeInfo">#38BDF8</item>
     </style>
 
     <style name="Theme.JarvisAssistant.Indigo" parent="Theme.Material3.Dark.NoActionBar">
@@ -482,23 +694,23 @@
         <item name="android:navigationBarColor">#050614</item>
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowBackground">#050614</item>
-        <item name="colorPrimary">#6366F1</item>
+        <item name="colorPrimary">#5558E8</item>
         <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorSurface">#E00C0E28</item>
+        <item name="colorSurface">#0C0E28</item>
         <item name="colorOnSurface">#E0E7FF</item>
 
         <item name="themeBg">#050614</item>
-        <item name="themeSurface">#E00C0E28</item>
-        <item name="themeCardBg">#E00C0E28</item>
+        <item name="themeSurface">#F20C0E28</item>
+        <item name="themeCardBg">#F20C0E28</item>
         <item name="themeCardBorder">#4D6366F1</item>
-        <item name="themeCardGlassStart">#E014163B</item>
-        <item name="themeCardGlassEnd">#CC090A1D</item>
+        <item name="themeCardGlassStart">#F2181A44</item>
+        <item name="themeCardGlassEnd">#F20C0E28</item>
         <item name="themeDockBg">#F2050614</item>
         <item name="themeDockGlassStart">#F214163B</item>
         <item name="themeDockGlassEnd">#E6070817</item>
         <item name="themeDockBorder">#4D6366F1</item>
         <item name="themeGlassSpecular">#A5B4FC</item>
-        <item name="themeChipBg">#E01A1D4E</item>
+        <item name="themeChipBg">#1A1D4E</item>
         <item name="themeInputBg">#E00C0E28</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_dark_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_dark_2</item>
@@ -506,38 +718,51 @@
 
         <item name="themeTextPrimary">#E0E7FF</item>
         <item name="themeTextSecondary">#C7D2FE</item>
-        <item name="themeTextMuted">#4F46E5</item>
+        <item name="themeTextMuted">#A5ADCC</item>
         <item name="themeAccent1">#6366F1</item>
-        <item name="themeAccent2">#818CF8</item>
-        <item name="themeAccent3">#6366F1</item>
-        <item name="themeAccent">#6366F1</item>
-        <item name="themeAccentLight">#266366F1</item>
+        <item name="themeAccent2">#8993F8</item>
+        <item name="themeAccent3">#9092F5</item>
+        <item name="themeAccent">#9092F7</item>
+        <item name="themeAccentLight">#336366F1</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#5558E8</item>
+        <item name="themeOnAccent">#FFFFFF</item>
+        <item name="themePlateBorder">#336366F1</item>
+        <item name="themeGlow1">#406366F1</item>
+        <item name="themeGlow2">#26818CF8</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#4ADE80</item>
+        <item name="themeWarning">#FBBF24</item>
+        <item name="themeDanger">#F87474</item>
+        <item name="themeInfo">#38BDF8</item>
     </style>
 
     <!-- 12. PEARL WHITE THEME (CRYSTAL MONOCHROME LIGHT) -->
     <style name="Theme.JarvisAssistant.PearlWhite" parent="Theme.Material3.Light.NoActionBar">
-        <item name="android:statusBarColor">#F8FAFC</item>
+        <item name="android:statusBarColor">#F1F3F7</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:navigationBarColor">#F8FAFC</item>
+        <item name="android:navigationBarColor">#F1F3F7</item>
         <item name="android:windowLightNavigationBar">true</item>
-        <item name="android:windowBackground">#F8FAFC</item>
+        <item name="android:windowBackground">#F1F3F7</item>
         <item name="colorPrimary">#0F172A</item>
         <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorSurface">#E6FFFFFF</item>
+        <item name="colorSurface">#FCFCFD</item>
         <item name="colorOnSurface">#0F172A</item>
 
-        <item name="themeBg">#F8FAFC</item>
-        <item name="themeSurface">#E6FFFFFF</item>
-        <item name="themeCardBg">#E6FFFFFF</item>
-        <item name="themeCardBorder">#CBD5E1</item>
-        <item name="themeCardGlassStart">#F8FFFFFF</item>
-        <item name="themeCardGlassEnd">#D9F1F5F9</item>
+        <item name="themeBg">#F1F3F7</item>
+        <item name="themeSurface">#FFFCFCFD</item>
+        <item name="themeCardBg">#FFFCFCFD</item>
+        <item name="themeCardBorder">#E1E4EB</item>
+        <item name="themeCardGlassStart">#FFFFFFFF</item>
+        <item name="themeCardGlassEnd">#FFFCFCFD</item>
         <item name="themeDockBg">#F2FFFFFF</item>
         <item name="themeDockGlassStart">#FAFFFFFF</item>
         <item name="themeDockGlassEnd">#E6F1F5F9</item>
         <item name="themeDockBorder">#CBD5E1</item>
         <item name="themeGlassSpecular">#FFFFFF</item>
-        <item name="themeChipBg">#150F172A</item>
+        <item name="themeChipBg">#F3F4F8</item>
         <item name="themeInputBg">#FFFFFF</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_light_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_light_2</item>
@@ -545,12 +770,25 @@
 
         <item name="themeTextPrimary">#0F172A</item>
         <item name="themeTextSecondary">#334155</item>
-        <item name="themeTextMuted">#64748B</item>
+        <item name="themeTextMuted">#566070</item>
         <item name="themeAccent1">#0F172A</item>
         <item name="themeAccent2">#334155</item>
-        <item name="themeAccent3">#64748B</item>
+        <item name="themeAccent3">#566070</item>
         <item name="themeAccent">#0F172A</item>
-        <item name="themeAccentLight">#150F172A</item>
+        <item name="themeAccentLight">#140F172A</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#0F172A</item>
+        <item name="themeOnAccent">#FFFFFF</item>
+        <item name="themePlateBorder">#E0E3EA</item>
+        <item name="themeGlow1">#146D5DFC</item>
+        <item name="themeGlow2">#0FBC694A</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#126C33</item>
+        <item name="themeWarning">#974608</item>
+        <item name="themeDanger">#B01E1E</item>
+        <item name="themeInfo">#036093</item>
     </style>
 
     <!-- 13. WHITE ON DARK / MONOCHROME OBSIDIAN -->
@@ -561,22 +799,22 @@
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowBackground">#07070A</item>
         <item name="colorPrimary">#FFFFFF</item>
-        <item name="colorOnPrimary">#000000</item>
-        <item name="colorSurface">#14141A</item>
+        <item name="colorOnPrimary">#07070A</item>
+        <item name="colorSurface">#131318</item>
         <item name="colorOnSurface">#FFFFFF</item>
 
         <item name="themeBg">#07070A</item>
-        <item name="themeSurface">#E614141A</item>
-        <item name="themeCardBg">#E614141A</item>
-        <item name="themeCardBorder">#4DFFFFFF</item>
-        <item name="themeCardGlassStart">#E622222C</item>
-        <item name="themeCardGlassEnd">#CC0E0E14</item>
+        <item name="themeSurface">#F2131318</item>
+        <item name="themeCardBg">#F2131318</item>
+        <item name="themeCardBorder">#26FFFFFF</item>
+        <item name="themeCardGlassStart">#F21E1E26</item>
+        <item name="themeCardGlassEnd">#F2131318</item>
         <item name="themeDockBg">#F207070A</item>
         <item name="themeDockGlassStart">#F21C1C24</item>
         <item name="themeDockGlassEnd">#E607070A</item>
         <item name="themeDockBorder">#66FFFFFF</item>
         <item name="themeGlassSpecular">#FFFFFF</item>
-        <item name="themeChipBg">#E022222C</item>
+        <item name="themeChipBg">#1D1D24</item>
         <item name="themeInputBg">#E014141A</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_dark_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_dark_2</item>
@@ -584,12 +822,25 @@
 
         <item name="themeTextPrimary">#FFFFFF</item>
         <item name="themeTextSecondary">#E2E8F0</item>
-        <item name="themeTextMuted">#94A3B8</item>
+        <item name="themeTextMuted">#A3AEBF</item>
         <item name="themeAccent1">#FFFFFF</item>
         <item name="themeAccent2">#E2E8F0</item>
         <item name="themeAccent3">#CBD5E1</item>
         <item name="themeAccent">#FFFFFF</item>
         <item name="themeAccentLight">#26FFFFFF</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#FFFFFF</item>
+        <item name="themeOnAccent">#07070A</item>
+        <item name="themePlateBorder">#2EFFFFFF</item>
+        <item name="themeGlow1">#1FFFFFFF</item>
+        <item name="themeGlow2">#14CBD5E1</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#4ADE80</item>
+        <item name="themeWarning">#FBBF24</item>
+        <item name="themeDanger">#F98D8D</item>
+        <item name="themeInfo">#38BDF8</item>
     </style>
 
 
@@ -600,36 +851,49 @@
         <item name="android:navigationBarColor">#000000</item>
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowBackground">#000000</item>
-        <item name="colorPrimary">#7A5CFF</item>
+        <item name="colorPrimary">#7050F5</item>
         <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorSurface">#121212</item>
+        <item name="colorSurface">#111111</item>
         <item name="colorOnSurface">#FFFFFF</item>
 
         <item name="themeBg">#000000</item>
-        <item name="themeSurface">#F2121212</item>
-        <item name="themeCardBg">#F2121212</item>
+        <item name="themeSurface">#F2111111</item>
+        <item name="themeCardBg">#F2111111</item>
         <item name="themeCardBorder">#2A2A2A</item>
         <item name="themeCardGlassStart">#F21A1A1A</item>
-        <item name="themeCardGlassEnd">#E60A0A0A</item>
+        <item name="themeCardGlassEnd">#F2111111</item>
         <item name="themeDockBg">#F20A0A0A</item>
         <item name="themeDockGlassStart">#F2121212</item>
         <item name="themeDockGlassEnd">#E6000000</item>
         <item name="themeDockBorder">#407A5CFF</item>
         <item name="themeGlassSpecular">#807A5CFF</item>
-        <item name="themeChipBg">#E01A1A1A</item>
+        <item name="themeChipBg">#1A1A1A</item>
         <item name="themeInputBg">#F2121212</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_dark_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_dark_2</item>
         <item name="themeGlowBlob3">@drawable/bg_liquid_glow_dark_3</item>
 
         <item name="themeTextPrimary">#FFFFFF</item>
-        <item name="themeTextSecondary">#A3A3A3</item>
-        <item name="themeTextMuted">#888888</item>
+        <item name="themeTextSecondary">#B3B3B3</item>
+        <item name="themeTextMuted">#9A9A9A</item>
         <item name="themeAccent1">#7A5CFF</item>
         <item name="themeAccent2">#CFC2FF</item>
         <item name="themeAccent3">#9D85FF</item>
-        <item name="themeAccent">#7A5CFF</item>
-        <item name="themeAccentLight">#267A5CFF</item>
+        <item name="themeAccent">#9D85FF</item>
+        <item name="themeAccentLight">#337A5CFF</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#7050F5</item>
+        <item name="themeOnAccent">#FFFFFF</item>
+        <item name="themePlateBorder">#333333</item>
+        <item name="themeGlow1">#337A5CFF</item>
+        <item name="themeGlow2">#1FCFC2FF</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#4ADE80</item>
+        <item name="themeWarning">#FBBF24</item>
+        <item name="themeDanger">#F87171</item>
+        <item name="themeInfo">#38BDF8</item>
     </style>
 
     <!-- 15. ANDROLLM PARCHMENT - the AndroLLM daylight ledger (parchment, ink, terracotta) -->
@@ -639,23 +903,23 @@
         <item name="android:navigationBarColor">#F5F4ED</item>
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowBackground">#F5F4ED</item>
-        <item name="colorPrimary">#D97757</item>
-        <item name="colorOnPrimary">#FBFAF4</item>
-        <item name="colorSurface">#FBFAF4</item>
+        <item name="colorPrimary">#BE4F2B</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSurface">#FEFDF8</item>
         <item name="colorOnSurface">#141413</item>
 
         <item name="themeBg">#F5F4ED</item>
-        <item name="themeSurface">#F7FBFAF4</item>
-        <item name="themeCardBg">#F7FBFAF4</item>
+        <item name="themeSurface">#FFFEFDF8</item>
+        <item name="themeCardBg">#FFFEFDF8</item>
         <item name="themeCardBorder">#E2DFD3</item>
-        <item name="themeCardGlassStart">#FAFFFFFF</item>
-        <item name="themeCardGlassEnd">#EBFBFAF4</item>
+        <item name="themeCardGlassStart">#FFFFFFFF</item>
+        <item name="themeCardGlassEnd">#FFFEFDF8</item>
         <item name="themeDockBg">#F2FBFAF4</item>
         <item name="themeDockGlassStart">#FAFFFFFF</item>
         <item name="themeDockGlassEnd">#EBF5F4ED</item>
         <item name="themeDockBorder">#E2DFD3</item>
         <item name="themeGlassSpecular">#FFFFFF</item>
-        <item name="themeChipBg">#ECEBE3</item>
+        <item name="themeChipBg">#F0EEE6</item>
         <item name="themeInputBg">#FFFFFF</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_sunset_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_sunset_2</item>
@@ -663,12 +927,25 @@
 
         <item name="themeTextPrimary">#141413</item>
         <item name="themeTextSecondary">#5E5D59</item>
-        <item name="themeTextMuted">#8F8D87</item>
+        <item name="themeTextMuted">#4B5563</item>
         <item name="themeAccent1">#D97757</item>
-        <item name="themeAccent2">#B3573E</item>
-        <item name="themeAccent3">#E69D81</item>
-        <item name="themeAccent">#D97757</item>
-        <item name="themeAccentLight">#F6E3DA</item>
+        <item name="themeAccent2">#9C4C36</item>
+        <item name="themeAccent3">#8E533E</item>
+        <item name="themeAccent">#A8431F</item>
+        <item name="themeAccentLight">#26D97757</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#BE4F2B</item>
+        <item name="themeOnAccent">#FFFFFF</item>
+        <item name="themePlateBorder">#DEDACD</item>
+        <item name="themeGlow1">#1FD97757</item>
+        <item name="themeGlow2">#14B3573E</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#126C33</item>
+        <item name="themeWarning">#974608</item>
+        <item name="themeDanger">#B21F1F</item>
+        <item name="themeInfo">#036194</item>
     </style>
 
     <!-- 16. MAYA - the Maya companion look: deep charcoal-navy ground, electric-blue neon, Inter type -->
@@ -686,12 +963,12 @@
     </style>
 
     <style name="Theme.JarvisAssistant.Maya" parent="Theme.Material3.Dark.NoActionBar">
-        <item name="android:statusBarColor">@color/maya_bg_edge</item>
+        <item name="android:statusBarColor">#14161C</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:navigationBarColor">@color/maya_bg_edge</item>
+        <item name="android:navigationBarColor">#14161C</item>
         <item name="android:windowLightNavigationBar">false</item>
-        <item name="android:windowBackground">@color/maya_bg</item>
-        <item name="colorPrimary">@color/maya_primary</item>
+        <item name="android:windowBackground">#14161C</item>
+        <item name="colorPrimary">#1970E1</item>
         <item name="colorOnPrimary">#FFFFFF</item>
         <item name="colorPrimaryContainer">#1A2A44</item>
         <item name="colorOnPrimaryContainer">@color/maya_tint_soft</item>
@@ -714,31 +991,44 @@
         <item name="materialButtonStyle">@style/Widget.Maya.Button</item>
         <item name="android:editTextStyle">@style/Widget.Maya.EditText</item>
 
-        <item name="themeBg">@color/maya_bg</item>
-        <item name="themeSurface">@color/maya_surface</item>
-        <item name="themeCardBg">@color/maya_surface</item>
-        <item name="themeCardBorder">@color/maya_hairline</item>
-        <item name="themeCardGlassStart">#F21F2330</item>
+        <item name="themeBg">#14161C</item>
+        <item name="themeSurface">#F21A1D26</item>
+        <item name="themeCardBg">#F21A1D26</item>
+        <item name="themeCardBorder">#2E3442</item>
+        <item name="themeCardGlassStart">#F2232838</item>
         <item name="themeCardGlassEnd">#F21A1D26</item>
         <item name="themeDockBg">#F50E1016</item>
         <item name="themeDockGlassStart">#F51F2330</item>
         <item name="themeDockGlassEnd">#F50B0C10</item>
         <item name="themeDockBorder">#4D1E90FF</item>
         <item name="themeGlassSpecular">#801E90FF</item>
-        <item name="themeChipBg">@color/maya_surface_raised</item>
+        <item name="themeChipBg">#232838</item>
         <item name="themeInputBg">@color/maya_surface</item>
         <item name="themeGlowBlob1">@drawable/bg_liquid_glow_dark_1</item>
         <item name="themeGlowBlob2">@drawable/bg_liquid_glow_dark_2</item>
         <item name="themeGlowBlob3">@drawable/bg_liquid_glow_dark_3</item>
 
-        <item name="themeTextPrimary">@color/maya_text</item>
-        <item name="themeTextSecondary">@color/maya_text_secondary</item>
-        <item name="themeTextMuted">@color/maya_text_muted</item>
-        <item name="themeAccent1">@color/maya_primary</item>
-        <item name="themeAccent2">@color/maya_light_blue</item>
-        <item name="themeAccent3">@color/maya_violet_light</item>
-        <item name="themeAccent">@color/maya_primary</item>
-        <item name="themeAccentLight">@color/maya_primary_glow</item>
+        <item name="themeTextPrimary">#F8FAFC</item>
+        <item name="themeTextSecondary">#AEB8C8</item>
+        <item name="themeTextMuted">#9DA7B7</item>
+        <item name="themeAccent1">#1E90FF</item>
+        <item name="themeAccent2">#5FC8FF</item>
+        <item name="themeAccent3">#B495F9</item>
+        <item name="themeAccent">#54ABFF</item>
+        <item name="themeAccentLight">#331E90FF</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeAccentFill">#1970E1</item>
+        <item name="themeOnAccent">#FFFFFF</item>
+        <item name="themePlateBorder">#353C4C</item>
+        <item name="themeGlow1">#331E90FF</item>
+        <item name="themeGlow2">#268B5CF6</item>
+
+        <!-- Dark Bento tokens (2026-11-05): button fill/label, plate border, corner glows -->
+        <item name="themeSuccess">#4ADE80</item>
+        <item name="themeWarning">#FBBF24</item>
+        <item name="themeDanger">#F98686</item>
+        <item name="themeInfo">#38BDF8</item>
     </style>
 
     <style name="Theme.JarvisAssistant.MidnightOnyx" parent="Theme.JarvisAssistant.Dark" />

@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Jarvis Chat tab. The original header / message list / composer are unchanged in look;
-  AndroLLM chat features are merged in: conversation drawer (opened from the hamburger),
-  multi-select bar, attachment chips in the composer and an empty-state hint.
+  Jarvis Chat tab - shadcn / 21st.dev redesign (2026-11-05).
+  Top bar: ghost outline icon buttons + centred title, hairline divider. Clean message list
+  (bubbles in item_jarvis_conv_message.xml). Composer: model/persona pills above a rounded pill
+  input with a ghost paperclip and a circular accent send button. All ids from the previous
+  layout are kept (ChatFragment binds them); chatContent padding is set in code (100dp bottom
+  clears the floating dock). Backup: backups/settings-chat-redesign-2026-11-05.
 -->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -20,13 +23,15 @@
     android:paddingEnd="16dp"
     android:paddingBottom="100dp">
 
-    <!-- Top Navigation Header -->
+    <!-- ==================== Top bar ==================== -->
     <ImageButton
         android:id="@+id/btnChatMenu"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:background="@drawable/bg_jarvis_icon_square"
-        android:src="@drawable/ic_menu"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_set_icon_btn"
+        android:src="@drawable/ic_set_menu"
+        android:padding="10dp"
+        android:scaleType="fitCenter"
         app:tint="?attr/themeTextPrimary"
         android:contentDescription="Conversations"
         app:layout_constraintTop_toTopOf="parent"
@@ -40,6 +45,7 @@
         android:gravity="center"
         android:layout_marginStart="12dp"
         android:layout_marginEnd="12dp"
+        android:paddingVertical="2dp"
         android:clickable="true"
         android:focusable="true"
         android:background="?android:attr/selectableItemBackground"
@@ -52,48 +58,60 @@
             android:id="@+id/tvChatTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="JARVIS NEURAL CHAT"
+            android:text="Jarvis"
             android:maxLines="1"
             android:ellipsize="end"
             android:textColor="?attr/themeTextPrimary"
-            android:textSize="17sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.04"
-            android:fontFamily="sans-serif-medium" />
+            android:textSize="16sp"
+            android:fontFamily="@font/inter"
+            android:textFontWeight="600" />
 
         <TextView
             android:id="@+id/tvChatSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="● ONLINE • GEMINI 3.8 LIVE • ACTIVE"
-            android:textColor="?attr/themeAccent"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif"
-            android:layout_marginTop="1dp" />
+            android:layout_marginTop="1dp"
+            android:maxLines="1"
+            android:text="Online · Gemini Live"
+            android:textColor="?attr/themeTextMuted"
+            android:textSize="12sp"
+            android:fontFamily="@font/inter" />
     </LinearLayout>
 
     <ImageButton
         android:id="@+id/btnChatNew"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:background="@drawable/bg_jarvis_icon_square"
-        android:src="@drawable/ic_plus"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_set_icon_btn"
+        android:src="@drawable/ic_set_square_pen"
+        android:padding="10dp"
+        android:scaleType="fitCenter"
         app:tint="?attr/themeTextPrimary"
-        android:contentDescription="New Chat"
+        android:contentDescription="New chat"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Multi-select action bar (replaces the header while messages are selected) -->
+    <!-- Hairline under the top bar -->
+    <View
+        android:id="@+id/viewChatHeaderDivider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginTop="12dp"
+        android:background="?attr/themeCardBorder"
+        app:layout_constraintTop_toBottomOf="@id/btnChatMenu"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Multi-select action bar (replaces the top bar while messages are selected) -->
     <LinearLayout
         android:id="@+id/layoutSelectionBar"
         android:layout_width="0dp"
         android:layout_height="44dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@drawable/bg_jarvis_card"
-        android:paddingStart="12dp"
-        android:paddingEnd="6dp"
+        android:background="@drawable/bg_set_card_md"
+        android:paddingStart="6dp"
+        android:paddingEnd="4dp"
         android:visibility="gone"
         android:elevation="2dp"
         app:layout_constraintTop_toTopOf="parent"
@@ -102,10 +120,12 @@
 
         <ImageButton
             android:id="@+id/btnSelectionClose"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="@null"
-            android:src="@drawable/ic_close"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_set_ghost_circle"
+            android:src="@drawable/ic_set_x"
+            android:padding="9dp"
+            android:scaleType="fitCenter"
             app:tint="?attr/themeTextPrimary"
             android:contentDescription="Cancel selection" />
 
@@ -114,18 +134,21 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="6dp"
             android:text="0 selected"
             android:textColor="?attr/themeTextPrimary"
             android:textSize="14sp"
-            android:fontFamily="sans-serif-medium" />
+            android:fontFamily="@font/inter"
+            android:textFontWeight="500" />
 
         <ImageButton
             android:id="@+id/btnSelectionCopy"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:background="@null"
+            android:background="@drawable/bg_set_ghost_circle"
             android:src="@drawable/ic_copy"
+            android:padding="9dp"
+            android:scaleType="fitCenter"
             app:tint="?attr/themeTextSecondary"
             android:contentDescription="Copy selected" />
 
@@ -133,8 +156,10 @@
             android:id="@+id/btnSelectionShare"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:background="@null"
+            android:background="@drawable/bg_set_ghost_circle"
             android:src="@drawable/ic_jchat_share"
+            android:padding="9dp"
+            android:scaleType="fitCenter"
             app:tint="?attr/themeTextSecondary"
             android:contentDescription="Share selected" />
 
@@ -142,8 +167,10 @@
             android:id="@+id/btnSelectionBookmark"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:background="@null"
+            android:background="@drawable/bg_set_ghost_circle"
             android:src="@drawable/ic_jchat_bookmark"
+            android:padding="9dp"
+            android:scaleType="fitCenter"
             app:tint="?attr/themeTextSecondary"
             android:contentDescription="Bookmark selected" />
 
@@ -151,13 +178,15 @@
             android:id="@+id/btnSelectionDelete"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:background="@null"
+            android:background="@drawable/bg_set_ghost_circle"
             android:src="@drawable/ic_delete"
+            android:padding="9dp"
+            android:scaleType="fitCenter"
             app:tint="?attr/themeTextSecondary"
             android:contentDescription="Delete selected" />
     </LinearLayout>
 
-    <!-- Chat Messages List -->
+    <!-- ==================== Message list ==================== -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvChatMessages"
         android:layout_width="match_parent"
@@ -165,206 +194,245 @@
         android:clipToPadding="false"
         android:paddingTop="12dp"
         android:paddingBottom="12dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="12dp"
-        app:layout_constraintTop_toBottomOf="@id/layoutChatHeader"
+        android:layout_marginBottom="8dp"
+        android:overScrollMode="ifContentScrolls"
+        app:layout_constraintTop_toBottomOf="@id/viewChatHeaderDivider"
         app:layout_constraintBottom_toTopOf="@id/cardInputContainer" />
 
+    <!-- Empty state -->
     <TextView
         android:id="@+id/tvChatEmpty"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
         android:gravity="center"
-        android:padding="24dp"
-        android:background="@drawable/bg_jarvis_action_card"
-        android:text="⚡ JARVIS NEURAL INTERFACE ONLINE&#10;&#10;Ask questions, inspect telemetry, generate code, or analyze files.&#10;Tap + to attach documents or hold the Mic for bidirectional voice."
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="24dp"
+        android:background="@drawable/bg_set_card"
+        android:text="How can I help today?&#10;&#10;Ask a question, generate code or analyse a file. Tap the paperclip to attach documents."
         android:textColor="?attr/themeTextSecondary"
-        android:textSize="13sp"
+        android:textSize="14sp"
+        android:fontFamily="@font/inter"
         android:lineSpacingExtra="4dp"
-        android:letterSpacing="0.03"
-        android:elevation="4dp"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="@id/rvChatMessages"
         app:layout_constraintBottom_toBottomOf="@id/rvChatMessages"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Rich Bottom Message Input Container (Matching Image 3) -->
+    <!-- ==================== Composer ==================== -->
     <LinearLayout
         android:id="@+id/cardInputContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/bg_jarvis_card"
-        android:padding="14dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <!-- Edit-and-resend banner -->
-        <LinearLayout
-            android:id="@+id/layoutEditingBanner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingBottom="8dp"
-            android:visibility="gone">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Editing message — send replaces it and asks Jarvis again"
-                android:textColor="?attr/themeTextMuted"
-                android:textSize="11sp" />
-
-            <ImageButton
-                android:id="@+id/btnCancelEditing"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:background="@null"
-                android:src="@drawable/ic_close"
-                app:tint="?attr/themeTextMuted"
-                android:contentDescription="Cancel editing" />
-        </LinearLayout>
-
-        <!-- Pending attachments (PDF / image OCR / Office / text) -->
-        <HorizontalScrollView
-            android:id="@+id/scrollAttachmentChips"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:scrollbars="none"
-            android:paddingBottom="8dp"
-            android:visibility="gone">
-
-            <LinearLayout
-                android:id="@+id/layoutAttachmentChips"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal" />
-        </HorizontalScrollView>
-
-        <TextView
-            android:id="@+id/tvAttachmentProgress"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingBottom="8dp"
-            android:textColor="?attr/themeTextMuted"
-            android:textSize="11sp"
-            android:visibility="gone" />
-
-        <EditText
-            android:id="@+id/etMessageInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Ask Jarvis anything or execute command..."
-            android:textColorHint="?attr/themeTextMuted"
-            android:textColor="?attr/themeTextPrimary"
-            android:textSize="15sp"
-            android:fontFamily="sans-serif"
-            android:background="@null"
-            android:minLines="1"
-            android:maxLines="4"
-            android:inputType="textCapSentences|textMultiLine"
-            android:paddingBottom="12dp" />
-
+        <!-- Persona / mode pills -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <!-- Chip 1: Jarvis Persona -->
             <LinearLayout
                 android:id="@+id/chipPersona"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="8dp"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:background="@drawable/bg_jarvis_chip"
-                android:paddingStart="12dp"
-                android:paddingEnd="14dp"
-                android:layout_marginEnd="8dp">
+                android:background="@drawable/bg_set_chip"
+                android:paddingStart="10dp"
+                android:paddingEnd="12dp"
+                android:clickable="true"
+                android:focusable="true">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="6dp"
                     android:src="@drawable/ic_nav_chat"
-                    app:tint="?attr/themeTextSecondary"
-                    android:layout_marginEnd="6dp" />
+                    app:tint="?attr/themeTextMuted"
+                    android:contentDescription="@null" />
 
                 <TextView
                     android:id="@+id/tvChipPersona"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Jarvis"
-                    android:textColor="?attr/themeTextPrimary"
+                    android:textColor="?attr/themeTextSecondary"
                     android:textSize="12sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:textStyle="bold" />
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="500" />
             </LinearLayout>
 
-            <!-- Chip 2: Mode / Code -->
             <LinearLayout
                 android:id="@+id/chipMode"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="32dp"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:background="@drawable/bg_jarvis_chip"
-                android:paddingStart="12dp"
-                android:paddingEnd="14dp">
+                android:background="@drawable/bg_set_chip"
+                android:paddingStart="10dp"
+                android:paddingEnd="12dp"
+                android:clickable="true"
+                android:focusable="true">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="6dp"
                     android:src="@drawable/ic_code_chip"
-                    app:tint="?attr/themeTextSecondary"
-                    android:layout_marginEnd="6dp" />
+                    app:tint="?attr/themeTextMuted"
+                    android:contentDescription="@null" />
 
                 <TextView
                     android:id="@+id/tvChipMode"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Code"
-                    android:textColor="?attr/themeTextPrimary"
+                    android:textColor="?attr/themeTextSecondary"
                     android:textSize="12sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:textStyle="bold" />
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="500" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Rounded pill input -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_set_composer"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp">
+
+            <!-- Edit-and-resend banner -->
+            <LinearLayout
+                android:id="@+id/layoutEditingBanner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="10dp"
+                android:paddingEnd="4dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Editing message · sending replaces it and asks Jarvis again"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/inter" />
+
+                <ImageButton
+                    android:id="@+id/btnCancelEditing"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:background="@drawable/bg_set_ghost_circle"
+                    android:src="@drawable/ic_set_x"
+                    android:padding="6dp"
+                    android:scaleType="fitCenter"
+                    app:tint="?attr/themeTextMuted"
+                    android:contentDescription="Cancel editing" />
             </LinearLayout>
 
-            <View
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1" />
+            <!-- Pending attachments (PDF / image OCR / Office / text) -->
+            <HorizontalScrollView
+                android:id="@+id/scrollAttachmentChips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:paddingStart="6dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="6dp"
+                android:clipToPadding="false"
+                android:visibility="gone">
 
-            <!-- Plus attachment button -->
-            <ImageButton
-                android:id="@+id/btnAttach"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="@null"
-                android:src="@drawable/ic_plus"
-                app:tint="?attr/themeTextSecondary"
-                android:layout_marginEnd="8dp"
-                android:contentDescription="Attach" />
+                <LinearLayout
+                    android:id="@+id/layoutAttachmentChips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
 
-            <!-- Send Button -->
-            <ImageButton
-                android:id="@+id/btnSendMessage"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="@drawable/bg_jarvis_pill_button"
-                android:src="@drawable/ic_send_up"
-                app:tint="#FFFFFF"
-                android:contentDescription="Send" />
+            <TextView
+                android:id="@+id/tvAttachmentProgress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="10dp"
+                android:paddingBottom="6dp"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="11sp"
+                android:fontFamily="@font/inter"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="bottom">
+
+                <!-- Ghost attachment button -->
+                <ImageButton
+                    android:id="@+id/btnAttach"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_set_ghost_circle"
+                    android:src="@drawable/ic_set_paperclip"
+                    android:padding="10dp"
+                    android:scaleType="fitCenter"
+                    app:tint="?attr/themeTextSecondary"
+                    android:contentDescription="Attach" />
+
+                <EditText
+                    android:id="@+id/etMessageInput"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="6dp"
+                    android:minHeight="40dp"
+                    android:hint="Message Jarvis"
+                    android:textColorHint="?attr/themeTextMuted"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="15sp"
+                    android:fontFamily="@font/inter"
+                    android:background="@null"
+                    android:gravity="center_vertical"
+                    android:paddingTop="9dp"
+                    android:paddingBottom="9dp"
+                    android:minLines="1"
+                    android:maxLines="5"
+                    android:inputType="textCapSentences|textMultiLine" />
+
+                <!-- Circular accent send button -->
+                <ImageButton
+                    android:id="@+id/btnSendMessage"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_set_send"
+                    android:src="@drawable/ic_set_arrow_up"
+                    android:padding="10dp"
+                    android:scaleType="fitCenter"
+                    app:tint="?attr/themeOnAccent"
+                    android:contentDescription="Send" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Conversation drawer (Jarvis-styled side panel opened from the hamburger) -->
+    <!-- ==================== Conversation drawer ==================== -->
     <FrameLayout
         android:id="@+id/layoutDrawerOverlay"
         android:layout_width="match_parent"
@@ -389,14 +457,14 @@
             android:background="?attr/themeBg"
             android:clickable="true"
             android:focusable="true"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             android:paddingTop="4dp"
             android:paddingBottom="100dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="44dp"
+                android:layout_height="48dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
@@ -408,41 +476,44 @@
                     android:text="Conversations"
                     android:textColor="?attr/themeTextPrimary"
                     android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-medium" />
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
                 <ImageButton
                     android:id="@+id/btnDrawerClose"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
-                    android:background="@drawable/bg_jarvis_icon_square"
-                    android:src="@drawable/ic_close"
+                    android:background="@drawable/bg_set_icon_btn"
+                    android:src="@drawable/ic_set_x"
+                    android:padding="9dp"
+                    android:scaleType="fitCenter"
                     app:tint="?attr/themeTextPrimary"
                     android:contentDescription="Close" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="44dp"
+                android:layout_height="42dp"
                 android:layout_marginTop="10dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:paddingStart="12dp"
-                android:paddingEnd="8dp">
+                android:background="@drawable/bg_set_search"
+                android:paddingStart="14dp"
+                android:paddingEnd="6dp">
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:src="@drawable/ic_search"
-                    app:tint="?attr/themeTextMuted" />
+                    android:src="@drawable/ic_set_search"
+                    app:tint="?attr/themeTextMuted"
+                    android:contentDescription="@null" />
 
                 <EditText
                     android:id="@+id/etDrawerSearch"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="10dp"
                     android:background="@null"
                     android:hint="Search chats and messages"
                     android:imeOptions="actionSearch"
@@ -450,14 +521,17 @@
                     android:maxLines="1"
                     android:textColor="?attr/themeTextPrimary"
                     android:textColorHint="?attr/themeTextMuted"
-                    android:textSize="14sp" />
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter" />
 
                 <ImageButton
                     android:id="@+id/btnDrawerSearchClear"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:background="@null"
-                    android:src="@drawable/ic_close"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/bg_set_ghost_circle"
+                    android:src="@drawable/ic_set_x"
+                    android:padding="7dp"
+                    android:scaleType="fitCenter"
                     app:tint="?attr/themeTextMuted"
                     android:visibility="gone"
                     android:contentDescription="Clear search" />
@@ -466,7 +540,7 @@
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="12dp"
                 android:scrollbars="none">
 
                 <LinearLayout
@@ -477,26 +551,36 @@
                     <TextView
                         android:id="@+id/chipDrawerNewChat"
                         style="@style/JarvisChatDrawerChip"
+                        android:background="@drawable/bg_set_chip"
+                        android:fontFamily="@font/inter"
                         android:text="+ New chat" />
 
                     <TextView
                         android:id="@+id/chipDrawerChats"
                         style="@style/JarvisChatDrawerChip"
+                        android:background="@drawable/bg_set_chip"
+                        android:fontFamily="@font/inter"
                         android:text="Chats" />
 
                     <TextView
                         android:id="@+id/chipDrawerBookmarks"
                         style="@style/JarvisChatDrawerChip"
+                        android:background="@drawable/bg_set_chip"
+                        android:fontFamily="@font/inter"
                         android:text="Bookmarks" />
 
                     <TextView
                         android:id="@+id/chipDrawerArchived"
                         style="@style/JarvisChatDrawerChip"
+                        android:background="@drawable/bg_set_chip"
+                        android:fontFamily="@font/inter"
                         android:text="Archived" />
 
                     <TextView
                         android:id="@+id/chipDrawerHome"
                         style="@style/JarvisChatDrawerChip"
+                        android:background="@drawable/bg_set_chip"
+                        android:fontFamily="@font/inter"
                         android:text="Home" />
                 </LinearLayout>
             </HorizontalScrollView>
@@ -506,7 +590,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="10dp"
                 android:clipToPadding="false" />
 
             <TextView
@@ -518,17 +602,24 @@
                 android:text="Nothing here yet"
                 android:textColor="?attr/themeTextMuted"
                 android:textSize="13sp"
+                android:fontFamily="@font/inter"
                 android:visibility="gone" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?attr/themeCardBorder" />
 
             <TextView
                 android:id="@+id/btnDrawerClearJarvisHistory"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="10dp"
-                android:paddingBottom="6dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="8dp"
                 android:text="Clear Jarvis voice history"
                 android:textColor="?attr/themeTextMuted"
-                android:textSize="12sp"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
                 android:background="?android:attr/selectableItemBackground" />
         </LinearLayout>
     </FrameLayout>

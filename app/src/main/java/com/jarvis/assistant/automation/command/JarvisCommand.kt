@@ -29,7 +29,6 @@ sealed class JarvisCommand {
     object RecallFavoriteSong : JarvisCommand()
     object RecallRoutine : JarvisCommand()
     object GoToBackground : JarvisCommand()
-    data class SetDrivingMode(val enabled: Boolean) : JarvisCommand()
 
     // --- JARVIS INTEGRATED PROTOCOL COMMANDS ---
 
@@ -46,13 +45,6 @@ sealed class JarvisCommand {
     data class TermuxInstallPackage(val packageName: String) : JarvisCommand()
     data class TermuxWriteFile(val path: String, val content: String) : JarvisCommand()
 
-    // 3. Voice Guardian & Biometric Security
-    data class EnrollVoice(val name: String, val role: String = "FAMILY") : JarvisCommand()
-    data class RemoveVoice(val name: String) : JarvisCommand()
-    data class SetVoiceRole(val name: String, val role: String) : JarvisCommand()
-    object ListVoices : JarvisCommand()
-    data class ArmVoiceGuard(val armed: Boolean) : JarvisCommand()
-    object CaptureIntruderPhoto : JarvisCommand()
 
     // 4. Stock Market & Finance
     data class StockQuoteCommand(val symbol: String) : JarvisCommand()

@@ -8,8 +8,8 @@ import android.util.Log
 
 /**
  * JARVIS Phone Call Sentinel.
- * Detects incoming calls and hands them to JarvisDrivingModeManager, which decides whether to
- * announce the caller (voice session or standalone TTS) or, in driving mode, auto-reject + SMS.
+ * Detects incoming calls and hands them to JarvisDrivingModeManager (now only the call helper),
+ * which announces the caller (voice session or standalone TTS) when caller-ID announcement is on.
  */
 class JarvisPhoneReceiver : BroadcastReceiver() {
 
@@ -25,8 +25,7 @@ class JarvisPhoneReceiver : BroadcastReceiver() {
 
             if (state == TelephonyManager.EXTRA_STATE_RINGING && lastState != TelephonyManager.EXTRA_STATE_RINGING) {
                 Log.d("JarvisPhoneReceiver", "Incoming call from: $number")
-                // The announcement itself lives in the manager so a call that is auto-rejected
-                // while driving is not spoken first, and the caller-ID toggle is respected.
+                // The announcement lives in the manager so the caller-ID toggle is respected.
                 try {
                     JarvisDrivingModeManager.getInstance(context)
                         .onIncomingCall(if (number.isNullOrBlank()) "Unknown Caller" else number)

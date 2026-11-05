@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nova aurora blob 3 (violet / blue / fuchsia), blurred by FrostedGlassEffect on Home. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:type="radial"
+        android:gradientRadius="170dp"
+        android:startColor="#33DB2777"
+        android:centerColor="#14DB2777"
+        android:endColor="#00DB2777" />
+</shape>

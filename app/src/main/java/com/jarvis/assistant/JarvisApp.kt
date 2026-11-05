@@ -94,12 +94,6 @@ class JarvisApp : Application() {
     lateinit var termuxBridge: com.jarvis.assistant.automation.termux.TermuxBridge
         private set
 
-    lateinit var voiceGuardian: com.jarvis.assistant.security.guardian.VoiceGuardian
-        private set
-
-    lateinit var watchmanSecurity: com.jarvis.assistant.security.guardian.WatchmanSecurityManager
-        private set
-
     lateinit var financeClient: com.jarvis.assistant.finance.YahooFinanceClient
         private set
 
@@ -121,14 +115,24 @@ class JarvisApp : Application() {
     lateinit var museExperienceEngine: com.jarvis.assistant.ai.learning.MuseExperienceEngine
         private set
 
-    lateinit var drivingModeManager: com.jarvis.assistant.core.JarvisDrivingModeManager
-        private set
-
     override fun onCreate() {
         super.onCreate()
         SecurityManager.verify(this)
         instance = this
         preferences = AppPreferences(this)
+        // 2026-11-05 redesign: switch everyone to the new Nova look once (they can still pick any theme).
+        getSharedPreferences("jarvis_ui_migrations", MODE_PRIVATE).let { m ->
+            if (!m.getBoolean("ui_nova_redesign_applied", false)) {
+                preferences.appTheme = com.jarvis.assistant.util.ThemeManager.THEME_NOVA
+                preferences.customThemeColor = com.jarvis.assistant.util.ThemeManager.NOVA_ACCENT_HEX
+                m.edit().putBoolean("ui_nova_redesign_applied", true).apply()
+            }
+            if (!m.getBoolean("companion_mode_removed", false)) {
+                preferences.migrateAwayFromCompanionMode()
+                com.jarvis.assistant.maya.ui.MayaUiPrefs.setIntimateAgeConfirmed(this, false)
+                m.edit().putBoolean("companion_mode_removed", true).apply()
+            }
+        }
         chatRepository = ChatRepository(preferences, this)
 
         // Memory System
@@ -204,7 +208,6 @@ class JarvisApp : Application() {
         // Mem0 Persistent Memory & MUSE Self-Evolving Agent Core
         mem0ToolBridge = com.jarvis.assistant.ai.memory.Mem0ToolBridge.getInstance(this)
         museExperienceEngine = com.jarvis.assistant.ai.learning.MuseExperienceEngine.getInstance(this, appScope)
-        drivingModeManager = com.jarvis.assistant.core.JarvisDrivingModeManager.getInstance(this)
 
 
         // Automation Systems
@@ -218,8 +221,6 @@ class JarvisApp : Application() {
         macroRepository = com.jarvis.assistant.automation.macro.MacroRepository(this)
         macroEngine = com.jarvis.assistant.automation.macro.MacroEngine(this, macroRepository)
         termuxBridge = com.jarvis.assistant.automation.termux.TermuxBridge(this)
-        voiceGuardian = com.jarvis.assistant.security.guardian.VoiceGuardian(this)
-        watchmanSecurity = com.jarvis.assistant.security.guardian.WatchmanSecurityManager(this)
         financeClient = com.jarvis.assistant.finance.YahooFinanceClient(this)
         gitHubConnector = com.jarvis.assistant.connectors.GitHubConnector(this)
         seoAuditEngine = com.jarvis.assistant.marketing.SeoAuditEngine()
@@ -234,8 +235,8 @@ class JarvisApp : Application() {
             memoryManager = memoryManager,
             macroEngine = macroEngine,
             termuxBridge = termuxBridge,
-            voiceGuardian = voiceGuardian,
-            watchmanSecurity = watchmanSecurity,
+
+
             financeClient = financeClient,
             gitHubConnector = gitHubConnector,
             seoAuditEngine = seoAuditEngine,

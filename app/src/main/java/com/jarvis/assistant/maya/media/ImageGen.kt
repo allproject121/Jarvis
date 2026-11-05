@@ -111,12 +111,15 @@ object ImageGen {
         var lastError: String? = null
         for (p in order) {
             try {
-                val bmp = when (p) {
+                val raw = when (p) {
                     MediaPrefs.PROVIDER_IMAGEN -> viaImagen(context, fullPrompt, dims)
                     MediaPrefs.PROVIDER_GEMINI_IMAGE -> viaGeminiImage(context, fullPrompt, dims)
                     MediaPrefs.PROVIDER_OPENAI -> viaOpenAi(context, fullPrompt, dims)
                     else -> viaPollinations(context, fullPrompt, dims)
                 }
+                // Providers only approximate the aspect ratio (Gemini/OpenAI have fixed sizes), so the
+                // chosen Media Studio size is enforced here: centre-crop to the ratio, then scale.
+                val bmp = fitToSize(raw, dims)
                 val saved = if (save) MediaFiles.saveImage(context, bmp, baseName) else null
                 saved?.let { prefs.addRecentImage(it.ref) }
                 val note = if (attempts.isEmpty()) "" else "Fallback used after: ${attempts.joinToString("; ")}"
@@ -152,7 +155,13 @@ object ImageGen {
         var last: String? = null
         for (model in models) {
             try {
-                return geminiGenerateContentImage(key, model, "$prompt (aspect ratio ${aspectLabel(dims)})")
+                return try {
+                    geminiGenerateContentImage(key, model, "$prompt (aspect ratio ${aspectLabel(dims)})", aspectLabel(dims))
+                } catch (e: ImageGenException) {
+                    // Older image models reject generationConfig.imageConfig - retry without it.
+                    if (e.message?.contains("HTTP 400") == true) geminiGenerateContentImage(key, model, "$prompt (aspect ratio ${aspectLabel(dims)})", null)
+                    else throw e
+                }
             } catch (e: Exception) {
                 last = "$model: ${e.message}"
             }
@@ -160,11 +169,13 @@ object ImageGen {
         throw ImageGenException(last ?: "Gemini image failed")
     }
 
-    private fun geminiGenerateContentImage(key: String, model: String, prompt: String): Bitmap {
+    private fun geminiGenerateContentImage(key: String, model: String, prompt: String, aspect: String?): Bitmap {
         val url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$key"
         val body = JSONObject().apply {
             put("contents", JSONArray().put(JSONObject().put("role", "user").put("parts", JSONArray().put(JSONObject().put("text", prompt)))))
-            put("generationConfig", JSONObject().put("responseModalities", JSONArray().put("IMAGE").put("TEXT")))
+            put("generationConfig", JSONObject().put("responseModalities", JSONArray().put("IMAGE").put("TEXT")).apply {
+                if (aspect != null) put("imageConfig", JSONObject().put("aspectRatio", aspect))
+            })
         }
         val req = Request.Builder().url(url).post(body.toString().toRequestBody(JSON)).build()
         client.newCall(req).execute().use { resp ->
@@ -243,6 +254,29 @@ object ImageGen {
                 val bytes = dl.body?.bytes() ?: throw ImageGenException("OpenAI image download failed")
                 return BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: throw ImageGenException("OpenAI image undecodable")
             }
+        }
+    }
+
+    /** Centre-crops [src] to the aspect ratio of [dims] and scales it to exactly dims.width x dims.height. */
+    private fun fitToSize(src: Bitmap, dims: ImageSize): Bitmap {
+        if (src.width == dims.width && src.height == dims.height) return src
+        return try {
+            val targetRatio = dims.width.toFloat() / dims.height
+            val srcRatio = src.width.toFloat() / src.height
+            var cropW = src.width
+            var cropH = src.height
+            if (srcRatio > targetRatio) cropW = (src.height * targetRatio).toInt().coerceIn(1, src.width)
+            else if (srcRatio < targetRatio) cropH = (src.width / targetRatio).toInt().coerceIn(1, src.height)
+            val x = (src.width - cropW) / 2
+            val y = (src.height - cropH) / 2
+            val cropped = if (cropW != src.width || cropH != src.height) Bitmap.createBitmap(src, x, y, cropW, cropH) else src
+            val out = Bitmap.createScaledBitmap(cropped, dims.width, dims.height, true)
+            if (cropped !== src && cropped !== out) cropped.recycle()
+            if (out !== src) src.recycle()
+            out
+        } catch (e: Throwable) {
+            Log.w(TAG, "fitToSize failed: ${e.message}")
+            src
         }
     }
 

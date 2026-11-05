@@ -27,6 +27,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -35,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +51,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jarvis.assistant.androllm.agent.trace.ToolExecutionTrace
 import com.jarvis.assistant.ui.compose.components.CloudAdaptiveNavigation
 import com.jarvis.assistant.ui.compose.components.CloudAtmosphericBackground
+import com.jarvis.assistant.ui.compose.components.CloudCapsuleButton
 import com.jarvis.assistant.ui.compose.components.CloudChip
 import com.jarvis.assistant.ui.compose.components.CloudGlassCard
 import com.jarvis.assistant.ui.compose.components.StaggeredEntrance
@@ -60,14 +63,9 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Tool Debug — the per-call execution log of the agent tool pipeline
- * (ported from AndroLLM feature/developer ToolDebugScreen). Every row
- * answers: which prompt, which tool, what arguments, did it succeed, what
- * did it return, how long, and what the LLM finally said.
- *
- * Traces are recorded by the agent ToolExecutor, i.e. for the non-Gemini
- * engines while Settings → Agent tools → "Agent pipeline" is on, and for
- * AndroLLM-native tools invoked through JarvisToolDispatcher.
+ * Tool Debug: run any Jarvis tool for real ("Run a tool") and see the log of every tool call
+ * Jarvis made — Gemini Live, the offline brain, chat, this page and adb all go through
+ * JarvisToolDispatcher, which records each call (tool, arguments, status, result, time).
  */
 @Composable
 fun ToolDebugRoute(navigate: (String) -> Unit, back: () -> Unit) {
@@ -104,14 +102,14 @@ private fun ToolDebugScreen(
                     title = {
                         Column {
                             Text(
-                                text = "Tool Execution Log",
+                                text = "Tool Debug",
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.ledger.deskPaper
                                 )
                             )
                             Text(
-                                text = "${traces.size} call(s) • prompt → tool → result → LLM output",
+                                text = "Run a tool • ${traces.size} call(s) logged",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.ledger.lampDeep,
                                     fontWeight = FontWeight.SemiBold
@@ -135,6 +133,12 @@ private fun ToolDebugScreen(
                     .padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                item {
+                    StaggeredEntrance(index = 0) {
+                        RunToolCard(viewModel)
+                    }
+                }
+
                 item {
                     StaggeredEntrance(index = 0) {
                         ToolRegistryStatusCard(
@@ -168,11 +172,7 @@ private fun ToolDebugScreen(
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = if (diagnostics.agentPipelineFlag) {
-                                                "Ask an on-device or cloud-gateway engine something like “Open Discord” or “Search the web for NVIDIA news”. Every tool call — the arguments, status, result, timing and final LLM output — will appear here."
-                                            } else {
-                                                "The agent pipeline is off (Settings → Agent tools). Turn it on to route the LiteRT-LM, local core, Hermes and Cloud Gateway engines through it and log every tool call here. Gemini Live is never routed through it."
-                                            },
+                                            text = "Ask Jarvis something that needs a tool (\"torch on karo\", \"battery kitni hai?\") by voice or chat, or press Run above. Every call — arguments, result, time — appears here. The log is kept in memory until the app restarts.",
                                             style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.ledger.deskInk)
                                         )
                                     }
@@ -216,7 +216,7 @@ private fun ToolRegistryStatusCard(
                         )
                     )
                     Text(
-                        text = "Registered tools • pipeline • prompt injection",
+                        text = "What Jarvis offers right now • tap a tool for its arguments",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = MaterialTheme.ledger.deskInk,
                             fontWeight = FontWeight.SemiBold
@@ -235,29 +235,37 @@ private fun ToolRegistryStatusCard(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 CloudChip(
-                    text = if (diagnostics.agentPipelineFlag) "● Agent pipeline ON" else "○ Agent pipeline OFF",
-                    accentColor = if (diagnostics.agentPipelineFlag) MaterialTheme.ledger.lampGlow else MaterialTheme.ledger.deskInk
-                )
-                CloudChip(
                     text = if (diagnostics.pipelineEnabled) "● Tool calling ON" else "○ Tool calling OFF",
-                    accentColor = if (diagnostics.pipelineEnabled) MaterialTheme.ledger.lampGlow else MaterialTheme.ledger.deskInk
+                    accentColor = if (diagnostics.pipelineEnabled) MaterialTheme.ledger.lampGlow else MaterialTheme.ledger.emberRed
                 )
                 CloudChip(
-                    text = "${diagnostics.registeredCount} registered",
+                    text = "${diagnostics.advertisedCount} offered to Gemini",
+                    accentColor = if (diagnostics.advertisedCount > 0) MaterialTheme.ledger.lampGlow else MaterialTheme.ledger.deskInk
+                )
+                CloudChip(
+                    text = "${diagnostics.offlineToolNames.size} for offline brain",
+                    accentColor = if (diagnostics.offlineToolNames.isNotEmpty()) MaterialTheme.ledger.lampGlow else MaterialTheme.ledger.deskInk
+                )
+                CloudChip(
+                    text = "${diagnostics.tools.count { !it.enabled }} switched off",
                     accentColor = MaterialTheme.ledger.lampDeep
                 )
-                CloudChip(
-                    text = "${diagnostics.advertisedCount} advertised",
-                    accentColor = if (diagnostics.advertisedCount > 0) MaterialTheme.ledger.lampGlow else MaterialTheme.ledger.deskInk
+            }
+            if (diagnostics.offlineToolNames.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Offline brain tools: " + diagnostics.offlineToolNames.joinToString(", "),
+                    style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.deskInk)
                 )
             }
 
+            if (diagnostics.agentPipelineFlag) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = if (diagnostics.advertisementPreview.isNotBlank())
-                    "PROMPT INJECTION — the system prompt advertises these tools:"
+                    "AGENT PIPELINE prompt (LiteRT / Hermes / Cloud Gateway) advertises:"
                 else
-                    "PROMPT INJECTION — nothing advertised (tool calling off, or every tool blocked)",
+                    "AGENT PIPELINE prompt advertises nothing (tool calling off, or every tool blocked)",
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = if (diagnostics.advertisementPreview.isNotBlank()) MaterialTheme.ledger.lampGlow else MaterialTheme.ledger.deskInk,
                     fontWeight = FontWeight.Bold
@@ -276,7 +284,9 @@ private fun ToolRegistryStatusCard(
                 )
             }
 
-            // ── Model tool-call capability (LiteRT-LM planner) ─────────────
+            }
+            // ── Model tool-call capability (LiteRT-LM planner, only when that engine is on) ──
+            if (diagnostics.liteRtEnabled) {
             Spacer(modifier = Modifier.height(12.dp))
             HorizontalDivider(color = MaterialTheme.ledger.deskInk.copy(alpha = 0.15f))
             Spacer(modifier = Modifier.height(8.dp))
@@ -330,6 +340,8 @@ private fun ToolRegistryStatusCard(
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis
                 )
+            }
+
             }
 
             // Registered tools (tap a row to expand its function schema)
@@ -411,6 +423,102 @@ private fun ToolRegistryStatusCard(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * "Run a tool": executes one tool through JarvisToolDispatcher — the exact path Gemini Live and
+ * the offline brain use, with the user's switches and confirmations — and shows the real result.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun RunToolCard(viewModel: ToolDebugViewModel) {
+    val tools by viewModel.runnableTools.collectAsStateWithLifecycle()
+    val run by viewModel.run.collectAsStateWithLifecycle()
+    var name by rememberSaveable { mutableStateOf("get_battery_status") }
+    var args by rememberSaveable { mutableStateOf("{}") }
+    val query = name.trim()
+    val matches = remember(query, tools) {
+        if (query.isEmpty()) tools.take(8)
+        else tools.filter { it.contains(query, ignoreCase = true) && it != query }.take(8)
+    }
+
+    CloudGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp)) {
+        Column {
+            Text(
+                text = "Run a tool",
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.ledger.deskPaper
+                )
+            )
+            Text(
+                text = "Runs on this phone through Jarvis' real tool runner (same as Gemini Live and the offline brain). It really acts: set_flashlight turns the torch on. ${tools.size} tools available.",
+                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.deskInk)
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Tool name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            if (matches.isNotEmpty()) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    matches.forEach { match ->
+                        TextButton(onClick = {
+                            name = match
+                            args = viewModel.argsTemplate(match)
+                        }) {
+                            Text(match, color = MaterialTheme.ledger.lampGlow, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(
+                value = args,
+                onValueChange = { args = it },
+                label = { Text("Arguments (JSON)") },
+                minLines = 2,
+                textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                CloudCapsuleButton(
+                    text = if (run.running) "Running…" else "Run",
+                    enabled = !run.running && query.isNotEmpty(),
+                    onClick = { viewModel.runTool(query, args) }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                TextButton(onClick = { args = viewModel.argsTemplate(query) }) {
+                    Text("Fill arguments", color = MaterialTheme.ledger.lampGlow)
+                }
+            }
+            val success = run.success
+            if (success != null && run.toolName.isNotBlank()) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "${if (success) "✓ Worked" else "✗ Failed"} • ${run.toolName} • ${run.durationMs} ms",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        color = if (success) MaterialTheme.ledger.lampGlow else MaterialTheme.ledger.emberRed,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = run.output,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.ledger.deskPaper,
+                        fontFamily = FontFamily.Monospace
+                    ),
+                    maxLines = 40,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }

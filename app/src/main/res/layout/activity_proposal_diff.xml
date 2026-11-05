@@ -91,7 +91,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="PENDING_USER_APPROVAL"
-                android:textColor="#F59E0B"
+                android:textColor="?attr/themeWarning"
                 android:textStyle="bold"
                 android:textSize="11sp"
                 android:paddingStart="8dp"

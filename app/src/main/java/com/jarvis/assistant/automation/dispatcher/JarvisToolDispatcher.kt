@@ -149,8 +149,20 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
 
     /**
      * Dispatches and executes an AI Tool Call safely across threads.
+     *
+     * Settings gates (Agent & Tools: master switch, per-tool switches, confirmations; Screen
+     * automation: risky taps) run first, outside the execution lock, so a pending confirmation
+     * never blocks other tools. Every call is recorded in the Tool Debug log.
      */
-    suspend fun dispatchTool(toolCall: AiToolCall): AiToolResult = executionMutex.withLock {
+    suspend fun dispatchTool(toolCall: AiToolCall): AiToolResult {
+        val startedAt = System.currentTimeMillis()
+        val hooks = com.jarvis.assistant.androllm.agent.bridge.JarvisDispatcherHooks
+        val result = hooks.preflight(context, toolCall) ?: dispatchToolLocked(toolCall)
+        hooks.recordCall(context, toolCall, result, System.currentTimeMillis() - startedAt)
+        return result
+    }
+
+    private suspend fun dispatchToolLocked(toolCall: AiToolCall): AiToolResult = executionMutex.withLock {
         withContext(Dispatchers.IO) {
             val callId = toolCall.callId
             val name = toolCall.functionName
@@ -409,11 +421,21 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                             withContext(Dispatchers.Main) {
                                 when {
                                     level in 0..100 -> {
-                                        val target = (level.toFloat() / 100f * maxVol).toInt()
+                                        // Unmute first (a muted stream ignores setStreamVolume) and report
+                                        // the level the phone really has, not the one that was asked for.
+                                        if (level > 0 && audioManager.isStreamMute(AudioManager.STREAM_MUSIC)) {
+                                            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE, 0)
+                                        }
+                                        val target = Math.round(level / 100f * maxVol)
                                         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, target, AudioManager.FLAG_SHOW_UI)
-                                        resultJson.put("message", "Volume set to $level%")
+                                        val actual = if (audioManager.isStreamMute(AudioManager.STREAM_MUSIC)) 0
+                                            else Math.round(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) * 100f / maxVol.coerceAtLeast(1))
+                                        resultJson.put("message", "Volume set to $actual%")
                                     }
                                     action == "up" -> {
+                                        if (audioManager.isStreamMute(AudioManager.STREAM_MUSIC)) {
+                                            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE, 0)
+                                        }
                                         audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
                                         resultJson.put("message", "Volume increased")
                                     }
@@ -448,44 +470,6 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                         resultJson.put("is_charging", telem.isCharging)
                         resultJson.put("network_type", telem.networkType)
                         resultJson.put("message", "Battery: ${telem.batteryPercent}%, Charging: ${telem.isCharging}, Network: ${telem.networkType}")
-                    }
-
-                    "set_driving_mode" -> {
-                        val rawMode = args.optString("call_mode", "").trim()
-                        val callMode = com.jarvis.assistant.core.DrivingCallPolicy.normalizeCallMode(rawMode)
-                        if (!args.has("enabled")) {
-                            isSuccess = false
-                            errorMessage = "Missing 'enabled' argument for set_driving_mode"
-                            resultJson.put("success", false)
-                            resultJson.put("message", errorMessage)
-                        } else if (rawMode.isNotEmpty() && callMode == null) {
-                            isSuccess = false
-                            errorMessage = "Unknown call_mode '$rawMode' - use 'announce' or 'auto_reject_sms'."
-                            resultJson.put("success", false)
-                            resultJson.put("message", errorMessage)
-                        } else {
-                            val enabled = args.optBoolean("enabled", false)
-                            val manager = com.jarvis.assistant.core.JarvisDrivingModeManager.getInstance(context)
-                            if (callMode != null) manager.drivingCallMode = callMode
-                            manager.setDrivingMode(enabled)
-                            val actualEnabled = manager.isDrivingMode.value
-                            val actualMode = manager.drivingCallMode
-                            var msg = com.jarvis.assistant.core.DrivingCallPolicy.statusMessage(actualEnabled, actualMode)
-                            if (actualEnabled && actualMode == com.jarvis.assistant.data.preferences.AppPreferences.DRIVING_CALL_MODE_AUTO_REJECT_SMS) {
-                                val canReject = context.checkSelfPermission(android.Manifest.permission.ANSWER_PHONE_CALLS) ==
-                                    android.content.pm.PackageManager.PERMISSION_GRANTED
-                                val canSms = context.checkSelfPermission(android.Manifest.permission.SEND_SMS) ==
-                                    android.content.pm.PackageManager.PERMISSION_GRANTED
-                                if (!canReject) msg += " Note: the phone-call permission isn't granted, so I'll announce calls instead of rejecting them."
-                                else if (!canSms) msg += " Note: SMS permission isn't granted, so calls will be rejected without the auto-reply text."
-                            }
-                            isSuccess = actualEnabled == enabled
-                            if (!isSuccess) errorMessage = msg
-                            resultJson.put("success", isSuccess)
-                            resultJson.put("driving_mode_enabled", actualEnabled)
-                            resultJson.put("call_mode", actualMode.lowercase(java.util.Locale.ROOT))
-                            resultJson.put("message", msg)
-                        }
                     }
 
                     "get_battery_status" -> {
@@ -2091,23 +2075,6 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                 })
             },
             required = listOf("query")
-        )
-
-        tool(
-            name = "set_driving_mode",
-            description = "Turns Jarvis driving mode on or off. While driving, incoming calls are either announced aloud or auto-rejected with an SMS reply.",
-            properties = JSONObject().apply {
-                put("enabled", JSONObject().apply {
-                    put("type", "boolean")
-                    put("description", "true to turn driving mode on, false to turn it off")
-                })
-                put("call_mode", JSONObject().apply {
-                    put("type", "string")
-                    put("enum", JSONArray(listOf("announce", "auto_reject_sms")))
-                    put("description", "Optional: how to handle incoming calls while driving (announce the caller, or reject and send an auto-reply SMS)")
-                })
-            },
-            required = listOf("enabled")
         )
 
         tool(

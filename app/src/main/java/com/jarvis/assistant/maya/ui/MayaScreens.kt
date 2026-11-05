@@ -12,8 +12,6 @@ import android.widget.Toast
 object MayaScreens {
     const val VOICE_ENGINE = "com.jarvis.assistant.maya.brain.VoiceEngineActivity"
     const val CONNECTORS = "com.jarvis.assistant.maya.connectors.ConnectorsActivity"
-    const val BUSINESS = "com.jarvis.assistant.maya.business.BusinessActivity"
-    const val FACES = "com.jarvis.assistant.maya.guardian.FacesActivity"
     const val WIKI = "com.jarvis.assistant.maya.memory.WikiActivity"
     const val MACROS = "com.jarvis.assistant.maya.screen.MacrosActivity"
     const val HUB = "com.jarvis.assistant.maya.hub.HubActivity"

@@ -109,8 +109,8 @@
                     android:layout_height="36dp"
                     android:text="Wave 👋"
                     android:textSize="12sp"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="?attr/themeAccent"
+                    android:textColor="?attr/themeOnAccent"
+                    android:backgroundTint="?attr/themeAccentFill"
                     android:layout_marginEnd="8dp" />
 
                 <Button
@@ -166,7 +166,7 @@
                 android:layout_width="10dp"
                 android:layout_height="10dp"
                 android:src="@drawable/circle_cyan"
-                app:tint="#10B981"
+                app:tint="?attr/themeSuccess"
                 android:contentDescription="Status" />
 
             <TextView
@@ -186,8 +186,8 @@
                 android:layout_height="36dp"
                 android:text="Set As Active"
                 android:textSize="11sp"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="?attr/themeAccent" />
+                android:textColor="?attr/themeOnAccent"
+                android:backgroundTint="?attr/themeAccentFill" />
         </LinearLayout>
     </LinearLayout>
 

@@ -597,7 +597,7 @@
                         app:strokeColor="#10B981"
                         app:strokeWidth="1dp"
                         android:text="🔍 Check Models"
-                        android:textColor="#10B981"
+                        android:textColor="?attr/themeSuccess"
                         android:textSize="11.5sp"
                         android:textAllCaps="false" />
                 </LinearLayout>
@@ -767,7 +767,7 @@
                         app:strokeColor="#10B981"
                         app:strokeWidth="1dp"
                         android:text="🔍 Check Models"
-                        android:textColor="#10B981"
+                        android:textColor="?attr/themeSuccess"
                         android:textSize="11.5sp"
                         android:textAllCaps="false" />
                 </LinearLayout>
@@ -919,7 +919,7 @@
                         app:strokeColor="#10B981"
                         app:strokeWidth="1dp"
                         android:text="🔍 Check Models"
-                        android:textColor="#10B981"
+                        android:textColor="?attr/themeSuccess"
                         android:textSize="11.5sp"
                         android:textAllCaps="false" />
                 </LinearLayout>
@@ -1062,7 +1062,7 @@
                         app:strokeColor="#10B981"
                         app:strokeWidth="1dp"
                         android:text="🔍 Check Models"
-                        android:textColor="#10B981"
+                        android:textColor="?attr/themeSuccess"
                         android:textSize="11.5sp"
                         android:textAllCaps="false" />
                 </LinearLayout>
@@ -1214,7 +1214,7 @@
                         app:strokeColor="#10B981"
                         app:strokeWidth="1dp"
                         android:text="🔍 Check Models"
-                        android:textColor="#10B981"
+                        android:textColor="?attr/themeSuccess"
                         android:textSize="11.5sp"
                         android:textAllCaps="false" />
                 </LinearLayout>
@@ -1411,8 +1411,8 @@
                     android:layout_height="42dp"
                     android:layout_marginTop="10dp"
                     android:text="⚡ TEST PC OLLAMA CONNECTION"
-                    android:textColor="?attr/themeBg"
-                    android:backgroundTint="?attr/themeAccent"
+                    android:textColor="?attr/themeOnAccent"
+                    android:backgroundTint="?attr/themeAccentFill"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     app:cornerRadius="10dp" />
@@ -1937,7 +1937,7 @@
             android:background="@drawable/bg_jarvis_pill_button"
             app:backgroundTint="@null"
             android:text="Save &amp; Apply Configuration"
-            android:textColor="?attr/themeBg"
+            android:textColor="?attr/themeOnAccent"
             android:textSize="15sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"

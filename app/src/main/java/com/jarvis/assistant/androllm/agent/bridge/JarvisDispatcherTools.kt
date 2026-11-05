@@ -35,13 +35,16 @@ class JarvisDispatcherTool(
 
     override suspend fun execute(arguments: JsonObject): ToolResult {
         val args = runCatching { JSONObject(arguments.toString()) }.getOrDefault(JSONObject())
-        val result = dispatcher.dispatchTool(
-            AiToolCall(
-                callId = "agent_${spec.name}_${System.nanoTime()}",
-                functionName = spec.name,
-                arguments = args
+        // The agent pipeline's executor already gated + traced this call (see JarvisDispatcherHooks).
+        val result = kotlinx.coroutines.withContext(JarvisDispatcherHooks.AgentPipelineCall) {
+            dispatcher.dispatchTool(
+                AiToolCall(
+                    callId = "agent_${spec.name}_${System.nanoTime()}",
+                    functionName = spec.name,
+                    arguments = args
+                )
             )
-        )
+        }
         return JarvisToolBridge.toToolResult(result)
     }
 }

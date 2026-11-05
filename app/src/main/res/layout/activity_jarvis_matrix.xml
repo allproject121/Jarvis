@@ -80,7 +80,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="⚡ ALL PROTOCOLS"
-                android:textColor="#FFFFFF"
+                android:textColor="?attr/themeOnAccent"
                 android:background="@drawable/bg_jarvis_pill_button"
                 android:paddingHorizontal="14dp"
                 android:paddingVertical="7dp"
@@ -88,18 +88,6 @@
                 android:textStyle="bold"
                 android:layout_marginEnd="6dp" />
 
-            <TextView
-                android:id="@+id/chipFilterSecurity"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🛡️ SECURITY &amp; APPLOCK"
-                android:textColor="?attr/themeTextSecondary"
-                android:background="@drawable/bg_jarvis_action_card"
-                android:paddingHorizontal="14dp"
-                android:paddingVertical="7dp"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="6dp" />
 
             <TextView
                 android:id="@+id/chipFilterVoice"
@@ -170,7 +158,7 @@
                 android:id="@+id/chipFilterSmartHome"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🏠 SMART HOME &amp; WALLPAPER"
+                android:text="🏠 SMART HOME"
                 android:textColor="?attr/themeTextSecondary"
                 android:background="@drawable/bg_jarvis_action_card"
                 android:paddingHorizontal="14dp"
@@ -274,7 +262,7 @@
                     android:layout_height="36dp"
                     android:gravity="center"
                     android:text="LAUNCH &gt;"
-                    android:textColor="?attr/themeBg"
+                    android:textColor="?attr/themeOnAccent"
                     android:textSize="11sp"
                     android:textStyle="bold"
                     android:fontFamily="monospace"
@@ -314,7 +302,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="RUNTIME ENGINE READY"
-                        android:textColor="#22D3EE"
+                        android:textColor="?attr/themeInfo"
                         android:textSize="10sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -560,7 +548,7 @@
                     android:text="GENERATE DIRECT AI IMAGE (INSTANT)"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/bg_jarvis_pill_button"
-                    android:textColor="#FFFFFF" />
+                    android:textColor="?attr/themeOnAccent" />
 
                 <ProgressBar
                     android:id="@+id/pbAiImageLoading"
@@ -605,7 +593,7 @@
                         android:layout_weight="1"
                         android:text="💾 SAVE TO APP &amp; GALLERY"
                         android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeOnAccent"
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:paddingHorizontal="8dp" />
@@ -682,7 +670,7 @@
                         android:layout_weight="1"
                         android:text="IMAGE MACRO"
                         android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeOnAccent"
                         android:layout_marginEnd="6dp" />
 
                     <Button
@@ -692,7 +680,7 @@
                         android:layout_weight="1"
                         android:text="VIDEO (VEO) MACRO"
                         android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeOnAccent"
                         android:layout_marginStart="6dp" />
                 </LinearLayout>
 
@@ -707,91 +695,6 @@
             </LinearLayout>
             </LinearLayout>
 
-            <!-- SECTION 2: VOICE GUARDIAN & SECURITY -->
-            <LinearLayout
-                android:id="@+id/secVoiceGuardian"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="VOICE GUARDIAN &amp; SECURITY PROTOCOLS"
-                    android:textColor="?attr/themeAccent"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.08"
-                    android:layout_marginBottom="8dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
-                android:layout_marginBottom="18dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="12dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Voice Guardian State"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvGuardStatus"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Status: Armed (Full Protection)"
-                            android:textColor="?attr/themeAccent"
-                            android:textSize="11.5sp"
-                            android:layout_marginTop="2dp" />
-                    </LinearLayout>
-
-                    <Button
-                        android:id="@+id/btnToggleGuard"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="ARM/DISARM"
-                        android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/tvEnrolledVoices"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Enrolled: Boss (Full Admin), Family, Friends"
-                    android:textColor="?attr/themeTextMuted"
-                    android:textSize="12sp"
-                    android:background="@drawable/bg_jarvis_row_item"
-                    android:padding="10dp"
-                    android:layout_marginBottom="10dp" />
-
-                <Button
-                    android:id="@+id/btnTestWatchmanPhoto"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="TEST INTRUDER FRONT CAM SNAP"
-                    android:background="@drawable/bg_jarvis_pill_button"
-                    android:textColor="#FFFFFF" />
-            </LinearLayout>
-            </LinearLayout>
 
             <!-- SECTION 3: TERMUX LINUX COMMAND BRIDGE -->
             <LinearLayout
@@ -836,7 +739,7 @@
                     android:text="EXECUTE NATIVE LINUX (NO APPS NEEDED)"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/bg_jarvis_pill_button"
-                    android:textColor="#FFFFFF" />
+                    android:textColor="?attr/themeOnAccent" />
 
                 <!-- Quick Terminal Chips -->
                 <LinearLayout
@@ -979,7 +882,7 @@
                         android:layout_height="wrap_content"
                         android:text="QUOTE"
                         android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF" />
+                        android:textColor="?attr/themeOnAccent" />
                 </LinearLayout>
 
                 <!-- Quick Tickers -->
@@ -997,7 +900,7 @@
                         android:text="RELIANCE"
                         android:textSize="10sp"
                         android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeOnAccent"
                         android:layout_marginEnd="4dp" />
 
                     <Button
@@ -1008,7 +911,7 @@
                         android:text="TCS"
                         android:textSize="10sp"
                         android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeOnAccent"
                         android:layout_marginEnd="4dp" />
 
                     <Button
@@ -1019,7 +922,7 @@
                         android:text="BITCOIN"
                         android:textSize="10sp"
                         android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeOnAccent"
                         android:layout_marginEnd="4dp" />
 
                     <Button
@@ -1030,7 +933,7 @@
                         android:text="NIFTY"
                         android:textSize="10sp"
                         android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF" />
+                        android:textColor="?attr/themeOnAccent" />
                 </LinearLayout>
 
                 <TextView
@@ -1051,7 +954,7 @@
                     android:text="VIEW TRENDING STOCKS"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/bg_jarvis_pill_button"
-                    android:textColor="#FFFFFF" />
+                    android:textColor="?attr/themeOnAccent" />
             </LinearLayout>
             </LinearLayout>
 
@@ -1104,7 +1007,7 @@
                         android:layout_weight="1"
                         android:text="GENERATE SCRIPT"
                         android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeOnAccent"
                         android:layout_marginEnd="6dp" />
 
                     <Button
@@ -1114,7 +1017,7 @@
                         android:layout_weight="1"
                         android:text="COPY SCRIPT"
                         android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeOnAccent"
                         android:layout_marginStart="6dp" />
                 </LinearLayout>
 
@@ -1192,7 +1095,7 @@
                         android:text="HINDI GREETING"
                         android:textSize="10sp"
                         android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeOnAccent"
                         android:layout_marginEnd="4dp" />
 
                     <Button
@@ -1203,7 +1106,7 @@
                         android:text="SYSTEM STATUS"
                         android:textSize="10sp"
                         android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeOnAccent"
                         android:layout_marginStart="4dp" />
                 </LinearLayout>
 
@@ -1220,7 +1123,7 @@
                         android:layout_weight="1.6"
                         android:text="SPEAK (LOCAL NEURAL)"
                         android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/themeOnAccent"
                         android:layout_marginEnd="6dp" />
 
                     <Button
@@ -1234,92 +1137,6 @@
                         android:layout_marginStart="6dp" />
                 </LinearLayout>
             </LinearLayout>
-            </LinearLayout>
-
-            <!-- SECTION 7: STARK ARC REACTOR LIVE WALLPAPER -->
-            <LinearLayout
-                android:id="@+id/secLiveWallpaper"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="STARK ARC REACTOR LIVE WALLPAPER"
-                    android:textColor="?attr/themeAccent"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.08"
-                    android:layout_marginBottom="8dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
-                android:layout_marginBottom="18dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Sets an interactive cybernetic JARVIS Arc Reactor HUD directly onto your Android Home Screen with real-time touch ripples and gyro HUD rings."
-                    android:textColor="?attr/themeTextMuted"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="10dp" />
-
-                <Button
-                    android:id="@+id/btnApplyLiveWallpaper"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="APPLY STARK ARC REACTOR LIVE WALLPAPER"
-                    android:background="@drawable/bg_jarvis_pill_button"
-                    android:textColor="#FFFFFF" />
-            </LinearLayout>
-            </LinearLayout>
-
-            <!-- SECTION 8: PROTOCOL 7 BIOMETRIC & FACE APPLOCK -->
-            <LinearLayout
-                android:id="@+id/secBiometricAppLock"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="PROTOCOL 7: BIOMETRIC &amp; FACE APPLOCK"
-                    android:textColor="?attr/themeAccent"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.08"
-                    android:layout_marginBottom="8dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_jarvis_card"
-                    android:padding="16dp"
-                    android:layout_marginBottom="18dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Intercepts launches of protected applications and requests hardware Face Unlock, Fingerprint, or PIN verification."
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:layout_marginBottom="10dp" />
-
-                    <Button
-                        android:id="@+id/btnLaunchAppLockTest"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="TEST BIOMETRIC APPLOCK OVERLAY"
-                        android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF" />
-                </LinearLayout>
             </LinearLayout>
 
             <!-- SECTION 9: ON-DEVICE MLKIT BARCODE & QR SCANNER -->
@@ -1353,7 +1170,7 @@
                         android:layout_height="wrap_content"
                         android:text="SCAN SCREEN FOR QR / BARCODES"
                         android:background="@drawable/bg_jarvis_pill_button"
-                        android:textColor="#FFFFFF" />
+                        android:textColor="?attr/themeOnAccent" />
 
                     <TextView
                         android:id="@+id/tvBarcodeScanResult"
@@ -1414,7 +1231,7 @@
                             android:layout_weight="1"
                             android:text="LIGHTS ON"
                             android:background="@drawable/bg_jarvis_pill_button"
-                            android:textColor="#FFFFFF"
+                            android:textColor="?attr/themeOnAccent"
                             android:layout_marginEnd="4dp" />
 
                         <Button
@@ -1424,7 +1241,7 @@
                             android:layout_weight="1"
                             android:text="LIGHTS OFF"
                             android:background="@drawable/bg_jarvis_pill_button"
-                            android:textColor="#FFFFFF"
+                            android:textColor="?attr/themeOnAccent"
                             android:layout_marginStart="4dp" />
                     </LinearLayout>
 
@@ -1440,7 +1257,7 @@
                             android:layout_weight="1"
                             android:text="BLINK STROBE"
                             android:background="@drawable/bg_jarvis_pill_button"
-                            android:textColor="#FFFFFF"
+                            android:textColor="?attr/themeOnAccent"
                             android:layout_marginEnd="4dp" />
 
                         <Button
@@ -1450,7 +1267,7 @@
                             android:layout_weight="1"
                             android:text="PARTY CHASE"
                             android:background="@drawable/bg_jarvis_pill_button"
-                            android:textColor="#FFFFFF"
+                            android:textColor="?attr/themeOnAccent"
                             android:layout_marginStart="4dp" />
                     </LinearLayout>
 
@@ -1467,7 +1284,7 @@
                             android:layout_weight="1"
                             android:text="SETUP IOT / HA"
                             android:background="@drawable/bg_jarvis_pill_button"
-                            android:textColor="#FFFFFF"
+                            android:textColor="?attr/themeOnAccent"
                             android:layout_marginEnd="4dp" />
 
                         <Button
@@ -1477,7 +1294,7 @@
                             android:layout_weight="1"
                             android:text="TEST CONNECTION"
                             android:background="@drawable/bg_jarvis_pill_button"
-                            android:textColor="#FFFFFF"
+                            android:textColor="?attr/themeOnAccent"
                             android:layout_marginStart="4dp" />
                     </LinearLayout>
 

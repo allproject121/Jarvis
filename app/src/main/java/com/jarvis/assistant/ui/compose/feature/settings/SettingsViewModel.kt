@@ -113,7 +113,6 @@ data class SettingsUiState(
     // MCP
     val mcpServers: List<McpServer> = emptyList(),
     // Safety / developer
-    val privacyMode: Boolean = false,
     val developerLinks: Boolean = true
 ) {
     val downloadedModelCount: Int get() = localModels.count { it.ready }
@@ -208,7 +207,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 accessibilityRunning = runCatching { JarvisAccessibilityService.isRunning() }.getOrDefault(false),
                 autoScroll = _state.value.autoScroll,
                 mcpServers = mcpManager.registeredServers().sortedBy { it.name.lowercase() },
-                privacyMode = p.isPrivacyModeEnabled,
                 developerLinks = p.showDeveloperLinks
             )
         }
@@ -549,7 +547,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     // ── Safety / developer ───────────────────────────────────────────────────
 
-    fun setPrivacyMode(enabled: Boolean) = edit { isPrivacyModeEnabled = enabled }
     fun setDeveloperLinks(enabled: Boolean) = edit { showDeveloperLinks = enabled }
 
     fun overlaySettingsIntent(): Intent =

@@ -1,7 +1,5 @@
 ﻿package com.jarvis.assistant.ui.settings
 
-import android.app.WallpaperManager
-import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
@@ -21,11 +19,6 @@ import com.jarvis.assistant.data.backup.BackupManager
 import com.jarvis.assistant.data.model.GeminiConstants
 import com.jarvis.assistant.databinding.FragmentSettingsBinding
 import com.jarvis.assistant.security.AppIdentityVerifier
-import com.jarvis.assistant.security.guardian.EmergencySosManager
-import com.jarvis.assistant.security.guardian.TouchGuardManager
-import com.jarvis.assistant.security.guardian.WatchmanSecurityManager
-import com.jarvis.assistant.social.SocialStoryManager
-import com.jarvis.assistant.ui.facelock.JarvisAppLockActivity
 import com.jarvis.assistant.ui.godseye.GodsEyeActivity
 import com.jarvis.assistant.ui.home.MainActivity
 import com.jarvis.assistant.ui.matrix.JarvisMatrixActivity
@@ -33,10 +26,8 @@ import com.jarvis.assistant.ui.memory.MemoryActivity
 import com.jarvis.assistant.ui.permission.PermissionActivity
 import com.jarvis.assistant.ui.supercore.SuperCoreActivity
 import com.jarvis.assistant.androllm.accessibility.settings.AccessibilitySettingsStore
-import com.jarvis.assistant.ui.voice.VoiceEnrollmentActivity
 import com.jarvis.assistant.util.HudSoundManager
 import com.jarvis.assistant.voice.normalize.NormalizationSettingsStore
-import com.jarvis.assistant.wallpaper.JarvisWallpaperService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -53,7 +44,7 @@ class SettingsFragment : Fragment() {
     private val preferences by lazy { JarvisApp.instance.preferences }
     private val accessibilityStore by lazy { AccessibilitySettingsStore.getInstance(requireContext()) }
     private var isUpdatingSwitchProgrammatically = false
-    /** Maya group (characters, Maya screens, overlay, wallpaper, licences). */
+    /** Media & Extras group (Media studio, "character looks at you", licences). */
     private var mayaRows: com.jarvis.assistant.maya.ui.MayaSettingsRows? = null
 
     override fun onCreateView(
@@ -92,6 +83,17 @@ class SettingsFragment : Fragment() {
             loadUserData()
             setupLocalAiRows()
             mayaRows?.refresh()
+            restoreFloatingAvatar()
+        }
+    }
+
+    /** Floating avatar (TaskProgressOverlay) in "Always on" mode: make sure it is on screen. */
+    private fun restoreFloatingAvatar() {
+        val ctx = context ?: return
+        if (preferences.isTaskOverlayEnabled && preferences.taskOverlayMode == "always" &&
+            com.jarvis.assistant.util.PermissionHelper.hasOverlayPermission(ctx)
+        ) {
+            runCatching { com.jarvis.assistant.ui.agent.TaskProgressOverlay.showOverlay(ctx, forceShow = true) }
         }
     }
 
@@ -109,15 +111,15 @@ class SettingsFragment : Fragment() {
 
     private fun loadUserData() {
         val userName = preferences.userName.ifBlank { "Roshan" }
-        val isCompanion = preferences.isJarvisCompanionMode
-        binding.tvProfileSubtitle.text = if (isCompanion) "JARVIS PROTOCOL â€¢ PERSONAL COMPANION" else "JARVIS OPERATOR â€¢ PRIMARY USER"
-        binding.tvProfilePersonaChip.text = if (isCompanion) "JARVIS MODE" else "${preferences.personality.uppercase(Locale.ROOT)} MODE"
+        // Profile card (2026-11-05 redesign): name + avatar initials, sentence-case subtitle.
+        binding.tvProfileName.text = userName
+        binding.tvProfileInitials.text = userName.trim().take(1).uppercase(Locale.ROOT).ifBlank { "R" }
+        binding.tvProfileSubtitle.text = "Jarvis operator · Primary user"
+        binding.tvProfilePersonaChip.text = "${preferences.personality.replaceFirstChar { it.titlecase(Locale.ROOT) }} mode"
 
         // Switch states
         isUpdatingSwitchProgrammatically = true
         try {
-            binding.switchJarvisMode.isChecked = isCompanion
-            binding.switchPrivacyMode.isChecked = preferences.isPrivacyModeEnabled
             binding.switchDirectAutonomousMode.isChecked = preferences.isDirectAutonomousMode
             binding.switchSilentMode.isChecked = preferences.isSilentExecutionMode
             binding.switchBlurEffect.isChecked = preferences.isBlurEffectEnabled
@@ -151,11 +153,11 @@ class SettingsFragment : Fragment() {
         // Accessibility status badge
         val isAccessibilityActive = com.jarvis.assistant.automation.accessibility.JarvisAccessibilityService.isRunning()
         if (isAccessibilityActive) {
-            binding.tvAccessibilityStatusBadge.text = "ACTIVE"
-            binding.tvAccessibilityStatusBadge.setTextColor(Color.parseColor("#10B981"))
+            binding.tvAccessibilityStatusBadge.text = "Active"
+            binding.tvAccessibilityStatusBadge.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(requireContext(), R.attr.themeAccent))
         } else {
-            binding.tvAccessibilityStatusBadge.text = "INACTIVE"
-            binding.tvAccessibilityStatusBadge.setTextColor(Color.parseColor("#EF4444"))
+            binding.tvAccessibilityStatusBadge.text = "Inactive"
+            binding.tvAccessibilityStatusBadge.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(requireContext(), R.attr.themeTextMuted))
         }
 
         // Model Hub status
@@ -163,53 +165,30 @@ class SettingsFragment : Fragment() {
         val activeModelId = localModelMgr.activeModelId.value
         val activeDescriptor = com.jarvis.assistant.ai.local.LocalAiConfig.AVAILABLE_MODELS.find { it.id == activeModelId }
         val activeModelName = activeDescriptor?.name ?: "Qwen 2.5 (1.5B Instruct)"
-        binding.tvModelHubActiveModel.text = "Active: $activeModelName â€¢ ${com.jarvis.assistant.ai.local.LocalAiConfig.AVAILABLE_MODELS.size} Models Available"
+        binding.tvModelHubActiveModel.text = "Active: $activeModelName · ${com.jarvis.assistant.ai.local.LocalAiConfig.AVAILABLE_MODELS.size} models"
 
         if (localModelMgr.isModelReady(com.jarvis.assistant.ai.local.LocalAiConfig.MODEL_LLAMA_3_2_1B)) {
-            binding.btnDownloadLlama.text = "Loaded & Ready (809 MB)"
+            binding.btnDownloadLlama.text = "Loaded & ready (809 MB)"
             binding.btnDownloadLlama.isEnabled = true
         } else {
-            binding.btnDownloadLlama.text = "Download Weights (809 MB)"
+            binding.btnDownloadLlama.text = "Download weights (809 MB)"
             binding.btnDownloadLlama.isEnabled = true
         }
 
-        // Voice profile status
-        val hasVoiceProfile = preferences.hasOwnerVoiceProfile()
-        if (hasVoiceProfile) {
-            binding.tvProfileVoiceStatus.text = "VOICE ENROLLED"
-            binding.tvProfileVoiceStatus.setTextColor(Color.parseColor("#10B981"))
-            binding.chipProfileVoiceStatus.setBackgroundResource(R.drawable.bg_jarvis_status_badge_green)
-            binding.ivProfileVoiceBadgeIcon.setImageResource(R.drawable.ic_verified_badge)
-            binding.ivProfileVoiceBadgeIcon.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#10B981"))
-        } else {
-            binding.tvProfileVoiceStatus.text = "ENROLL VOICE"
-            binding.tvProfileVoiceStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.accent_sapphire))
-            binding.chipProfileVoiceStatus.setBackgroundResource(R.drawable.bg_jarvis_status_badge)
-            binding.ivProfileVoiceBadgeIcon.setImageResource(R.drawable.ic_settings_owner_voice)
-            binding.ivProfileVoiceBadgeIcon.imageTintList = android.content.res.ColorStateList.valueOf(
-                ContextCompat.getColor(requireContext(), R.color.accent_sapphire)
-            )
-        }
 
         // Section 1: Assistant & Persona
-        val directLabel = if (preferences.isDirectAutonomousMode) "âš¡ Direct Mode" else "Safe Mode"
-        binding.tvCurrentAssistantName.text = "${preferences.assistantName} (${preferences.personality.capitalize(Locale.ROOT)}) â€¢ $directLabel"
+        val directLabel = if (preferences.isDirectAutonomousMode) "⚡ Direct Mode" else "Safe Mode"
+        binding.tvCurrentAssistantName.text = "${preferences.assistantName} (${preferences.personality.capitalize(Locale.ROOT)}) • $directLabel"
         binding.tvVoiceEngineBadge.text = com.jarvis.assistant.ai.router.AiModelMode.fromString(preferences.aiModelMode).displayName
-        binding.tvSecretSettingsBadge.text = if (preferences.isSecretSettingsEnabled) "INTIMACY LV ${preferences.secretIntimacyLevel}" else "DISABLED"
-        binding.tvCurrentLanguage.text = preferences.language.uppercase(Locale.ROOT)
-        binding.tvCurrentPersona.text = if (isCompanion) "JARVIS Companion Mode" else preferences.personality.capitalize(Locale.ROOT)
+        binding.tvCurrentLanguage.text = preferences.language
+        binding.tvCurrentPersona.text = preferences.personality.capitalize(Locale.ROOT)
         binding.switchDirectAutonomousMode.isChecked = preferences.isDirectAutonomousMode
-        binding.tvOwnerVoiceBadge.text = if (hasVoiceProfile) "VERIFIED" else "SETUP"
-        binding.tvOwnerVoiceSubtitle.text = com.jarvis.assistant.audio.OwnerVoiceManager.voiceLockStatusLine(preferences)
         binding.switchSilentMode.isChecked = preferences.isSilentExecutionMode
 
-        // Section 4: Security
-        val isTouchArmed = TouchGuardManager.isArmed()
-        binding.tvTouchGuardBadge.text = if (isTouchArmed) "ARMED" else "DISARMED"
 
         // Section 5: Studio & Theme
-        binding.tvStudioSummary.text = "Arc Reactor, pulse rings & glow"
-        binding.tvCurrentTheme.text = preferences.appTheme.uppercase(Locale.ROOT)
+        binding.tvStudioSummary.text = "Core, pulse rings & glow"
+        binding.tvCurrentTheme.text = preferences.appTheme.replace('_', ' ').lowercase(Locale.ROOT).replaceFirstChar { it.titlecase(Locale.ROOT) }
         binding.switchBlurEffect.isChecked = preferences.isBlurEffectEnabled
         binding.switchBatterySaver.isChecked = preferences.isBatterySaverEnabled
 
@@ -227,17 +206,13 @@ class SettingsFragment : Fragment() {
         binding.cardSettingsCustomizeHome.setOnClickListener {
             HudSoundManager.playTapSound()
             com.jarvis.assistant.ui.home.HomeCardsCustomizationBottomSheet.newInstance().show(
-                parentFragmentManager,
+                childFragmentManager,
                 com.jarvis.assistant.ui.home.HomeCardsCustomizationBottomSheet.TAG
             )
         }
         // Profile Card -> Edit name
         binding.cardProfile.setOnClickListener {
             showEditNameDialog()
-        }
-
-        binding.chipProfileVoiceStatus.setOnClickListener {
-            startActivity(Intent(requireContext(), VoiceEnrollmentActivity::class.java))
         }
 
         // ==================== QUICK PROTOCOLS STRIP ====================
@@ -316,7 +291,7 @@ class SettingsFragment : Fragment() {
         }
 
         // The TTS pipeline reads NormalizationSettingsStore (TextNormalizationPipeline),
-        // so these switches must write there â€” AppPreferences flags were never read.
+        // so these switches must write there — AppPreferences flags were never read.
         binding.switchNormalizeNumbers.setOnCheckedChangeListener { _, isChecked ->
             if (isUpdatingSwitchProgrammatically) return@setOnCheckedChangeListener
             NormalizationSettingsStore.update(requireContext()) { it.copy(numbers = isChecked) }
@@ -344,37 +319,6 @@ class SettingsFragment : Fragment() {
             showPersonaSelectionDialog()
         }
 
-        binding.rowJarvisModeSwitch.setOnClickListener {
-            binding.switchJarvisMode.toggle()
-        }
-
-        binding.switchJarvisMode.setOnCheckedChangeListener { _, isChecked ->
-            if (isUpdatingSwitchProgrammatically) return@setOnCheckedChangeListener
-            HudSoundManager.playTapSound()
-            preferences.activateJarvisCompanionMode(isChecked)
-            loadUserData()
-            (activity as? MainActivity)?.switchExperienceMode(preferences.experienceMode)
-            val msg = if (isChecked) "JARVIS Companion Mode activated â€¢ Sweet voice & Live 3D Companion" else "Jarvis System Mode activated"
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-        }
-
-        binding.rowPrivacyMode.setOnClickListener {
-            binding.switchPrivacyMode.toggle()
-        }
-
-        binding.switchPrivacyMode.setOnCheckedChangeListener { _, isChecked ->
-            if (isUpdatingSwitchProgrammatically) return@setOnCheckedChangeListener
-            HudSoundManager.playTapSound()
-            preferences.isPrivacyModeEnabled = isChecked
-            val msg = if (isChecked) "Privacy Mode ON: Sensitive chat logs & readouts shielded" else "Privacy Mode OFF: Standard display"
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-        }
-
-        binding.rowSecretSettings.setOnClickListener {
-            HudSoundManager.playTapSound()
-            SecretSettingsBottomSheet.newInstance().show(childFragmentManager, SecretSettingsBottomSheet.TAG)
-        }
-
         binding.rowAssistantMemory.setOnClickListener {
             startActivity(Intent(requireContext(), MemoryActivity::class.java))
         }
@@ -394,16 +338,12 @@ class SettingsFragment : Fragment() {
         binding.switchDirectAutonomousMode.setOnCheckedChangeListener { _, isChecked ->
             preferences.isDirectAutonomousMode = isChecked
             val msg = if (isChecked) {
-                "âš¡ Direct Autonomous Execution Mode ACTIVE (Zero confirmations, instant actions)"
+                "⚡ Direct Autonomous Execution Mode ACTIVE (Zero confirmations, instant actions)"
             } else {
                 "Safe Mode active (Commands require confirmation)"
             }
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             loadUserData()
-        }
-
-        binding.rowOwnerVoice.setOnClickListener {
-            startActivity(Intent(requireContext(), VoiceEnrollmentActivity::class.java))
         }
 
         binding.rowSilentMode.setOnClickListener {
@@ -440,44 +380,12 @@ class SettingsFragment : Fragment() {
         }
 
         // ==================== SECTION 3: MESSAGES, DISPATCH & AUTOMATION ====================
-        binding.rowWhatsApp.setOnClickListener {
-            showWhatsAppDialog()
-        }
-
-        binding.rowEmail.setOnClickListener {
-            showEmailDialog()
-        }
-
-        binding.rowSocialStory.setOnClickListener {
-            showSocialMediaDialog()
-        }
-
         binding.rowConnectors.setOnClickListener {
             HudSoundManager.playTapSound()
             com.jarvis.assistant.connectors.AppConnectorsBottomSheet.newInstance().show(childFragmentManager, com.jarvis.assistant.connectors.AppConnectorsBottomSheet.TAG)
         }
 
         // ==================== SECTION 4: SECURITY, GUARDIAN & PRIVACY ====================
-        binding.rowTouchGuard.setOnClickListener {
-            showTouchGuardDialog()
-        }
-
-        binding.rowEmergencySos.setOnClickListener {
-            showEmergencySosDialog()
-        }
-
-        binding.rowWatchman.setOnClickListener {
-            showWatchmanLogDialog()
-        }
-
-        binding.rowPrivacyPolicy.setOnClickListener {
-            startActivity(Intent(requireContext(), PrivacyShieldActivity::class.java))
-        }
-
-        binding.rowAppIdentity.setOnClickListener {
-            showAppIdentityDialog()
-        }
-
         // ==================== SECTION 5: STUDIO, APPEARANCE & SYSTEM ====================
         binding.rowCustomizationStudio.setOnClickListener {
             startActivity(Intent(requireContext(), CustomizationStudioActivity::class.java))
@@ -498,24 +406,8 @@ class SettingsFragment : Fragment() {
             activity?.recreate()
         }
 
-        binding.switchHideAllHomeCards.isChecked = preferences.hideAllHomeCards
-        binding.rowHideAllHomeCards.setOnClickListener {
-            binding.switchHideAllHomeCards.toggle()
-        }
-        binding.switchHideAllHomeCards.setOnCheckedChangeListener { _, isChecked ->
-            preferences.hideAllHomeCards = isChecked
-            val msg = if (isChecked) "Home Screen Cards hidden â€¢ Full-screen Mora active" else "Home Screen Cards restored"
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-        }
-
-        binding.rowHomeWidgetsConfig.setOnClickListener {
-            HudSoundManager.playTapSound()
-            showHomeWidgetsDialog()
-        }
-
-        binding.rowDrivingMode.setOnClickListener {
-            showDrivingModeDialog()
-        }
+        // "Home screen" (cardSettingsCustomizeHome) is the single entry for hide-all, per-card
+        // toggles, widgets, HUD size and the 3D character - see HomeCardsCustomizationBottomSheet.
 
         binding.rowPcPhone.setOnClickListener {
             showPcHubDialog()
@@ -598,15 +490,13 @@ class SettingsFragment : Fragment() {
 
     private fun showAssistantDialog() {
         val directStatus = if (preferences.isDirectAutonomousMode) "ACTIVE (Instant Direct Execution)" else "OFF (Requires Confirmations)"
-        val secretStatus = if (preferences.isSecretSettingsEnabled) "LV ${preferences.secretIntimacyLevel}" else "OFF"
 
         val options = arrayOf(
-            "ðŸ·ï¸ Assistant Name: ${preferences.assistantName}",
-            "ðŸŽ­ Persona: ${preferences.personality.capitalize(Locale.ROOT)}",
-            "âš¡ Direct Autonomous Execution: $directStatus",
-            "ðŸ”’ Secret Settings (Companion / Intimacy): $secretStatus",
-            "ðŸŒ Spoken Language: ${preferences.language}",
-            "ðŸ§  Neural Memory Vault (Mem0 & Muse)"
+            "🏷️ Assistant Name: ${preferences.assistantName}",
+            "🎭 Persona: ${preferences.personality.capitalize(Locale.ROOT)}",
+            "⚡ Direct Autonomous Execution: $directStatus",
+            "🌐 Spoken Language: ${preferences.language}",
+            "🧠 Neural Memory Vault (Mem0 & Muse)"
         )
 
         MaterialAlertDialogBuilder(requireContext())
@@ -622,9 +512,8 @@ class SettingsFragment : Fragment() {
                         Toast.makeText(requireContext(), state, Toast.LENGTH_LONG).show()
                         loadUserData()
                     }
-                    3 -> showSecretSettingsDialog()
-                    4 -> showLanguageDialog()
-                    5 -> startActivity(Intent(requireContext(), MemoryActivity::class.java))
+                    3 -> showLanguageDialog()
+                    4 -> startActivity(Intent(requireContext(), MemoryActivity::class.java))
                 }
             }
             .setPositiveButton("Close", null)
@@ -635,7 +524,6 @@ class SettingsFragment : Fragment() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_hud_assistant_name, null, false)
         val etName = dialogView.findViewById<EditText>(R.id.etDialogAssistantName)
         val btnJarvis = dialogView.findViewById<TextView>(R.id.btnDialogChipJarvis)
-        val btnJarvisCompanion = dialogView.findViewById<TextView>(R.id.btnDialogChipJarvisCompanion)
         val btnFriday = dialogView.findViewById<TextView>(R.id.btnDialogChipFriday)
         val btnEdith = dialogView.findViewById<TextView>(R.id.btnDialogChipEdith)
         val btnCancel = dialogView.findViewById<Button>(R.id.btnDialogCancel)
@@ -646,7 +534,6 @@ class SettingsFragment : Fragment() {
 
         val chips = listOf(
             btnJarvis to "JARVIS",
-            btnJarvisCompanion to "JARVIS",
             btnFriday to "FRIDAY",
             btnEdith to "EDITH"
         )
@@ -689,10 +576,6 @@ class SettingsFragment : Fragment() {
             val newName = etName.text.toString().trim()
             if (newName.isNotEmpty()) {
                 preferences.assistantName = newName
-                if (newName.equals("JARVIS", ignoreCase = true)) {
-                    preferences.activateJarvisCompanionMode(true)
-                    (activity as? MainActivity)?.switchExperienceMode(preferences.experienceMode)
-                }
                 loadUserData()
                 HudSoundManager.playSuccessSound()
                 Toast.makeText(requireContext(), "Assistant identifier set to $newName", Toast.LENGTH_SHORT).show()
@@ -711,41 +594,27 @@ class SettingsFragment : Fragment() {
 
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
-        val cardJarvisCompanion = dialogView.findViewById<View>(R.id.cardDialogPersonaJarvisCompanion)
         val cardJarvis = dialogView.findViewById<View>(R.id.cardDialogPersonaJarvis)
         val cardFriday = dialogView.findViewById<View>(R.id.cardDialogPersonaFriday)
         val cardEdith = dialogView.findViewById<View>(R.id.cardDialogPersonaEdith)
         val cardPari = dialogView.findViewById<View>(R.id.cardDialogPersonaPari)
 
-        val badgeJarvisCompanion = dialogView.findViewById<View>(R.id.badgeDialogPersonaJarvisCompanion)
         val badgeJarvis = dialogView.findViewById<View>(R.id.badgeDialogPersonaJarvis)
         val badgeFriday = dialogView.findViewById<View>(R.id.badgeDialogPersonaFriday)
         val badgeEdith = dialogView.findViewById<View>(R.id.badgeDialogPersonaEdith)
         val badgePari = dialogView.findViewById<View>(R.id.badgeDialogPersonaPari)
 
         val active = preferences.personality.lowercase(Locale.ROOT)
-        val isCompanionActive = preferences.isJarvisCompanionMode || active == GeminiConstants.PERSONALITY_COMPANION.lowercase() || active == "JARVIS"
-
-        badgeJarvisCompanion.visibility = if (isCompanionActive) View.VISIBLE else View.GONE
-        badgeJarvis.visibility = if (!isCompanionActive && active == GeminiConstants.PERSONALITY_ROSHAN.lowercase()) View.VISIBLE else View.GONE
+        badgeJarvis.visibility = if (active == GeminiConstants.PERSONALITY_ROSHAN.lowercase()) View.VISIBLE else View.GONE
         badgeFriday.visibility = if (active == "friday") View.VISIBLE else View.GONE
         badgeEdith.visibility = if (active == GeminiConstants.PERSONALITY_ASSISTANT.lowercase() || active == "edith") View.VISIBLE else View.GONE
         badgePari.visibility = if (active == GeminiConstants.PERSONALITY_GIRLFRIEND.lowercase() || active == "pari") View.VISIBLE else View.GONE
         dialogView.findViewById<View>(R.id.badgeDialogPersonaMaria)?.visibility =
             if (com.jarvis.assistant.data.model.MariaPersona.isActive(preferences.personality)) View.VISIBLE else View.GONE
 
-        cardJarvisCompanion.setOnClickListener {
-            HudSoundManager.playTapSound()
-            preferences.activateJarvisCompanionMode(true)
-            loadUserData()
-            (activity as? MainActivity)?.switchExperienceMode(preferences.experienceMode)
-            Toast.makeText(requireContext(), "JARVIS Companion Mode Activated", Toast.LENGTH_SHORT).show()
-            dialog.dismiss()
-        }
-
         cardJarvis.setOnClickListener {
             HudSoundManager.playTapSound()
-            preferences.activateJarvisCompanionMode(false)
+            preferences.resetToJarvisDefaults()
             preferences.personality = GeminiConstants.PERSONALITY_ROSHAN
             preferences.voice = "Puck"
             preferences.assistantName = "JARVIS"
@@ -757,7 +626,7 @@ class SettingsFragment : Fragment() {
 
         cardFriday.setOnClickListener {
             HudSoundManager.playTapSound()
-            preferences.activateJarvisCompanionMode(false)
+            preferences.resetToJarvisDefaults()
             preferences.personality = "friday"
             preferences.voice = "Aoede"
             preferences.assistantName = "FRIDAY"
@@ -769,7 +638,7 @@ class SettingsFragment : Fragment() {
 
         cardEdith.setOnClickListener {
             HudSoundManager.playTapSound()
-            preferences.activateJarvisCompanionMode(false)
+            preferences.resetToJarvisDefaults()
             preferences.personality = GeminiConstants.PERSONALITY_ASSISTANT
             preferences.voice = "Charon"
             preferences.assistantName = "EDITH"
@@ -781,7 +650,7 @@ class SettingsFragment : Fragment() {
 
         cardPari.setOnClickListener {
             HudSoundManager.playTapSound()
-            preferences.activateJarvisCompanionMode(false)
+            preferences.resetToJarvisDefaults()
             preferences.personality = GeminiConstants.PERSONALITY_GIRLFRIEND
             preferences.voice = "Aoede"
             preferences.assistantName = "PARI"
@@ -831,11 +700,11 @@ class SettingsFragment : Fragment() {
 
     private fun showVoiceEngineDialog() {
         val engines = arrayOf(
-            "ðŸ§  On-Device Local SLM (Qwen 2.5 â€¢ 100% Offline â€¢ llama.cpp)",
-            "ðŸ¤– Hermes Autonomous Agent (Multi-step Tool Calling)",
-            "âš¡ Cloud Gemini Live (Low-latency Bidirectional WebSocket)",
-            "ðŸ”„ Auto Hybrid (Cloud with Zero-delay Local Failover)",
-            "ðŸ’» Workstation PC Core (Ollama 11434 / LAN)"
+            "🧠 On-Device Local SLM (Qwen 2.5 • 100% Offline • llama.cpp)",
+            "🤖 Hermes Autonomous Agent (Multi-step Tool Calling)",
+            "⚡ Cloud Gemini Live (Low-latency Bidirectional WebSocket)",
+            "🔄 Auto Hybrid (Cloud with Zero-delay Local Failover)",
+            "💻 Workstation PC Core (Ollama 11434 / LAN)"
         )
         val engineModes = arrayOf(
             com.jarvis.assistant.ai.router.AiModelMode.LOCAL_OFFLINE,
@@ -859,6 +728,9 @@ class SettingsFragment : Fragment() {
                 dialog.dismiss()
                 Toast.makeText(requireContext(), "Engine configured: ${chosenMode.displayName}", Toast.LENGTH_SHORT).show()
             }
+            .setPositiveButton("Advanced engine") { _, _ ->
+                com.jarvis.assistant.maya.ui.MayaScreens.open(requireContext(), com.jarvis.assistant.maya.ui.MayaScreens.VOICE_ENGINE, "Voice engine")
+            }
             .setNeutralButton("Manage Local Models") { _, _ ->
                 showLocalModelManagerDialog()
             }
@@ -871,7 +743,7 @@ class SettingsFragment : Fragment() {
         val models = com.jarvis.assistant.ai.local.LocalAiConfig.AVAILABLE_MODELS
         val modelItems = models.map { m ->
             val ready = modelManager.isModelReady(m.id)
-            val status = if (ready) "âœ… READY (Installed)" else "â¬‡ï¸ Download (${m.formattedSize})"
+            val status = if (ready) "✅ READY (Installed)" else "⬇️ Download (${m.formattedSize})"
             "${m.name}\n$status"
         }.toTypedArray()
 
@@ -897,9 +769,9 @@ class SettingsFragment : Fragment() {
                 } else {
                     MaterialAlertDialogBuilder(requireContext())
                         .setTitle("Download ${selectedModel.name}")
-                        .setMessage("Download on-device GGUF weights (${selectedModel.formattedSize})?\n\n${selectedModel.description}\n\nâ€¢ Zero cloud dependency\nâ€¢ 20+ tokens/second on Dimensity 7200\nâ€¢ Full device control & WhatsApp offline")
+                        .setMessage("Download on-device GGUF weights (${selectedModel.formattedSize})?\n\n${selectedModel.description}\n\n• Zero cloud dependency\n• 20+ tokens/second on Dimensity 7200\n• Full device control & WhatsApp offline")
                         .setPositiveButton("Start Download") { _, _ ->
-                            Toast.makeText(requireContext(), "Starting download of ${selectedModel.name}â€¦", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Starting download of ${selectedModel.name}…", Toast.LENGTH_SHORT).show()
                             modelManager.setActiveModel(selectedModel.id)
                             modelManager.downloadModel(selectedModel.id)
                             showActiveDownloadProgressDialog(selectedModel)
@@ -931,11 +803,11 @@ class SettingsFragment : Fragment() {
                         dialog.setMessage("Downloading GGUF weights...\n\nProgress: ${state.progressPercent}%\nDownloaded: ${dlMb} MB / ${totMb} MB\n\nYou can keep this dialog open or tap 'Run in Background'.")
                     }
                     is com.jarvis.assistant.ai.local.ModelDownloadState.Completed -> {
-                        dialog.setMessage("âœ… Download & GGUF header verification complete!\n\n${model.name} is installed and ready for 100% offline inference.")
+                        dialog.setMessage("✅ Download & GGUF header verification complete!\n\n${model.name} is installed and ready for 100% offline inference.")
                         Toast.makeText(requireContext(), "${model.name} is ready for offline use!", Toast.LENGTH_LONG).show()
                     }
                     is com.jarvis.assistant.ai.local.ModelDownloadState.Error -> {
-                        dialog.setMessage("âŒ Download failed:\n${state.message}\n\nPlease check your internet connection and try again.")
+                        dialog.setMessage("❌ Download failed:\n${state.message}\n\nPlease check your internet connection and try again.")
                     }
                     else -> {}
                 }
@@ -943,38 +815,12 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    private fun showSecretSettingsDialog() {
-        val levels = arrayOf("Friendly (Normal Care)", "Romantic (Affectionate Partner)", "Intense 18+ (Deep Companion)")
-        val currentLevel = (preferences.secretIntimacyLevel - 1).coerceIn(0, 2)
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Secret Settings (Companion Mode)")
-            .setSingleChoiceItems(levels, currentLevel) { dialog, which ->
-                preferences.secretIntimacyLevel = which + 1
-                preferences.isSecretSettingsEnabled = true
-                preferences.personality = GeminiConstants.PERSONALITY_GIRLFRIEND
-                loadUserData()
-                dialog.dismiss()
-                Toast.makeText(requireContext(), "Companion Mode set to ${levels[which]}", Toast.LENGTH_SHORT).show()
-            }
-            .setNeutralButton(if (preferences.isSecretSettingsEnabled) "Disable Secret Mode" else "Keep Disabled") { _, _ ->
-                preferences.isSecretSettingsEnabled = false
-                preferences.personality = GeminiConstants.PERSONALITY_ASSISTANT
-                loadUserData()
-                Toast.makeText(requireContext(), "Restored standard Jarvis Assistant", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
     private fun showSkillsDialog() {
         val skillOptions = arrayOf(
-            "ðŸŽ¨ ChatGPT Image Generator (Autonomous Macro)",
-            "ðŸŽ¬ Gemini Video & Image Creator (Veo & Imagen Macro)",
-            "ðŸ’¬ WhatsApp Hands-Free Voice Dispatcher",
-            "ðŸŽ™ï¸ PocketTTS On-Device Voice Engine",
-            "ðŸš¨ Touch Guard Anti-Theft Sentinel",
-            "ðŸ“‹ View All Autonomous Macros & Directives"
+            "🎨 ChatGPT Image Generator (Autonomous Macro)",
+            "🎬 Gemini Video & Image Creator (Veo & Imagen Macro)",
+            "🎙️ PocketTTS On-Device Voice Engine",
+            "📋 View All Autonomous Macros & Directives"
         )
 
         MaterialAlertDialogBuilder(requireContext())
@@ -983,10 +829,8 @@ class SettingsFragment : Fragment() {
                 when (which) {
                     0 -> runMacroFromSettings("chatgpt image", "image prompt", "Futuristic cyberpunk warrior with neon armor")
                     1 -> runMacroFromSettings("gemini image", "image prompt", "Majestic dragon flying over hyper-tech city")
-                    2 -> showWhatsAppDialog()
-                    3 -> showVoiceEngineDialog()
-                    4 -> showTouchGuardDialog()
-                    5 -> {
+                    2 -> showVoiceEngineDialog()
+                    3 -> {
                         (activity as? MainActivity)?.selectTab(MainActivity.TAB_UPDATES)
                     }
                 }
@@ -1013,7 +857,7 @@ class SettingsFragment : Fragment() {
                 val promptText = input.text.toString().trim()
                 val repo = com.jarvis.assistant.automation.macro.MacroRepository(requireContext())
                 val engine = com.jarvis.assistant.automation.macro.MacroEngine(requireContext(), repo)
-                Toast.makeText(requireContext(), "Executing macro '$macroName'â€¦", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Executing macro '$macroName'…", Toast.LENGTH_SHORT).show()
                 lifecycleScope.launch {
                     val result = withContext(Dispatchers.Default) {
                         engine.executeMacroByName(macroName, mapOf(paramKey to promptText))
@@ -1057,394 +901,21 @@ class SettingsFragment : Fragment() {
             .show()
     }
 
-    private fun showEmailDialog() {
-        val layout = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(40, 20, 40, 10)
-        }
-
-        val etSig = EditText(requireContext()).apply {
-            hint = "Email signature (e.g. Sent via Jarvis AI)"
-            setText(preferences.emailSignature)
-        }
-
-        layout.addView(TextView(requireContext()).apply { text = "Signature:"; setTextColor(Color.LTGRAY); textSize = 13f })
-        layout.addView(etSig)
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Email Configuration")
-            .setView(layout)
-            .setPositiveButton("Save") { _, _ ->
-                preferences.emailSignature = etSig.text.toString().trim()
-                Toast.makeText(requireContext(), "Email configuration updated", Toast.LENGTH_SHORT).show()
-            }
-            .setNeutralButton("Send Test Mail") { _, _ ->
-                try {
-                    val intent = Intent(Intent.ACTION_SENDTO).apply {
-                        data = Uri.parse("mailto:")
-                        putExtra(Intent.EXTRA_SUBJECT, "Test dispatch from Jarvis")
-                        putExtra(Intent.EXTRA_TEXT, "Hello,\n\nThis is a verified test email.\n\n${preferences.emailSignature}")
-                    }
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    Toast.makeText(requireContext(), "No email client installed", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun showWhatsAppDialog() {
-        val items = arrayOf(
-            "Auto-read incoming WhatsApp messages",
-            "Ask me before Jarvis sends a reply or WhatsApp message",
-            "Screen calls & announce caller names"
-        )
-        val checked = booleanArrayOf(
-            preferences.isWhatsAppReaderEnabled,
-            preferences.isMessageAutoReplyConfirmEnabled,
-            preferences.isCallerIdAnnouncementEnabled
-        )
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Messages & WhatsApp Automation")
-            .setMultiChoiceItems(items, checked) { _, which, isChecked ->
-                when (which) {
-                    0 -> preferences.isWhatsAppReaderEnabled = isChecked
-                    1 -> preferences.isMessageAutoReplyConfirmEnabled = isChecked
-                    2 -> preferences.isCallerIdAnnouncementEnabled = isChecked
-                }
-            }
-            .setPositiveButton("Done") { _, _ ->
-                Toast.makeText(requireContext(), "WhatsApp settings saved", Toast.LENGTH_SHORT).show()
-            }
-            .setNeutralButton("Notification Access") { _, _ ->
-                try {
-                    startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-                } catch (_: Exception) {}
-            }
-            .show()
-    }
-
-    private fun showSocialMediaDialog() {
-        lifecycleScope.launch {
-            val story = SocialStoryManager.generateDailyStory(requireContext())
-            withContext(Dispatchers.Main) {
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Social Media & Daily Dispatch")
-                    .setMessage(story)
-                    .setPositiveButton("Copy Story") { _, _ ->
-                        val clipboard = requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Jarvis Story", story))
-                        Toast.makeText(requireContext(), "Story copied to clipboard!", Toast.LENGTH_SHORT).show()
-                    }
-                    .setNeutralButton("Generate Caption") { _, _ ->
-                        lifecycleScope.launch {
-                            val caption = SocialStoryManager.generateDynamicSocialCaption(requireContext(), "Building the Stark Ecosystem")
-                            withContext(Dispatchers.Main) {
-                                val clipboard = requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Caption", caption))
-                                Toast.makeText(requireContext(), "Caption copied: $caption", Toast.LENGTH_LONG).show()
-                            }
-                        }
-                    }
-                    .setNegativeButton("Close", null)
-                    .show()
-            }
-        }
-    }
-
     private fun showConnectorsDialog() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Connected Accounts & Connectors")
             .setMessage(
-                "â€¢ GitHub Integration: Active (Roshan Tiwari)\n" +
-                "â€¢ Telegram Bridge: Active (Bot Controller)\n" +
-                "â€¢ Notion Workspace: Synchronized\n" +
-                "â€¢ Spotify & YouTube Music: Hands-free playback ready\n" +
-                "â€¢ Termux Command Bridge: Granted"
+                "• GitHub Integration: Active (Roshan Tiwari)\n" +
+                "• Telegram Bridge: Active (Bot Controller)\n" +
+                "• Notion Workspace: Synchronized\n" +
+                "• Spotify & YouTube Music: Hands-free playback ready\n" +
+                "• Termux Command Bridge: Granted"
             )
             .setPositiveButton("Manage") { _, _ ->
                 Toast.makeText(requireContext(), "All connectors are healthy.", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Close", null)
             .show()
-    }
-
-    private fun showTouchGuardDialog() {
-        val isArmed = TouchGuardManager.isArmed()
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Touch Guard Sentinel")
-            .setMessage(
-                "Touch Guard monitors your phone with the accelerometer sensor.\n\n" +
-                "If anyone picks up or moves the phone while you are away, Touch Guard sounds a loud siren alarm and takes an intruder selfie.\n\n" +
-                "Current Status: ${if (isArmed) "ðŸ”´ ARMED" else "âšª DISARMED"}"
-            )
-            .setPositiveButton(if (isArmed) "DISARM" else "ARM SENTRY") { _, _ ->
-                if (isArmed) {
-                    TouchGuardManager.disarm(requireContext())
-                } else {
-                    TouchGuardManager.arm(requireContext(), preferences.isTouchGuardStealth)
-                }
-                loadUserData()
-            }
-            .setNeutralButton("Stealth: ${if (preferences.isTouchGuardStealth) "ON" else "OFF"}") { _, _ ->
-                preferences.isTouchGuardStealth = !preferences.isTouchGuardStealth
-                Toast.makeText(requireContext(), "Stealth mode: ${preferences.isTouchGuardStealth}", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Close", null)
-            .show()
-    }
-
-    private fun showEmergencySosDialog() {
-        val etContacts = EditText(requireContext()).apply {
-            hint = "Emergency numbers (e.g. 112, 100, 9876543210)"
-            setText(preferences.emergencySosContacts)
-        }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Emergency SOS")
-            .setMessage("Set trusted contact numbers for emergency location broadcast:")
-            .setView(etContacts)
-            .setPositiveButton("Save Contacts") { _, _ ->
-                preferences.emergencySosContacts = etContacts.text.toString().trim()
-                Toast.makeText(requireContext(), "Emergency contacts saved", Toast.LENGTH_SHORT).show()
-            }
-            .setNeutralButton("TEST SOS DISPATCH") { _, _ ->
-                val typed = etContacts.text.toString().trim()
-                if (typed.isNotBlank() && typed != preferences.emergencySosContacts) {
-                    preferences.emergencySosContacts = typed
-                }
-                startSosDispatch()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    /**
-     * Sends the SOS SMS with the phone's real location. Refuses when no
-     * emergency contacts are configured; asks for SMS / location permission
-     * first when missing (location denied -> "location unavailable").
-     */
-    private fun startSosDispatch() {
-        if (EmergencySosManager.configuredContacts().isEmpty()) {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("No Emergency Contacts")
-                .setMessage("SOS was not sent because no emergency contacts are configured. Add at least one phone number in Emergency SOS and tap Save Contacts.")
-                .setPositiveButton("Add Contacts") { _, _ -> showEmergencySosDialog() }
-                .setNegativeButton("Close", null)
-                .show()
-            return
-        }
-        val missing = listOf(
-            android.Manifest.permission.SEND_SMS,
-            android.Manifest.permission.ACCESS_FINE_LOCATION,
-            android.Manifest.permission.ACCESS_COARSE_LOCATION
-        ).filter {
-            ContextCompat.checkSelfPermission(requireContext(), it) != android.content.pm.PackageManager.PERMISSION_GRANTED
-        }
-        if (missing.isNotEmpty()) {
-            sosPermissionLauncher.launch(missing.toTypedArray())
-        } else {
-            dispatchSosWithLocation()
-        }
-    }
-
-    private val sosPermissionLauncher = registerForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
-    ) {
-        val ctx = context ?: return@registerForActivityResult
-        if (ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.SEND_SMS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(ctx, "SMS permission denied - SOS message not sent.", Toast.LENGTH_LONG).show()
-            return@registerForActivityResult
-        }
-        dispatchSosWithLocation()
-    }
-
-    private fun dispatchSosWithLocation() {
-        val appContext = requireContext().applicationContext
-        Toast.makeText(appContext, "Getting your location for SOS (up to 10 s)...", Toast.LENGTH_SHORT).show()
-        EmergencySosManager.fetchCurrentLocation(appContext, timeoutMs = 10_000L) { location ->
-            EmergencySosManager.triggerSos(appContext, EmergencySosManager.formatLocation(location))
-        }
-    }
-
-    private fun showWatchmanLogDialog() {
-        val photos = WatchmanSecurityManager(requireContext()).listIntruderPhotos()
-        if (photos.isEmpty()) {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Who Tried To Get In (Watchman)")
-                .setMessage("No intruder attempts detected. All systems secure.")
-                .setPositiveButton("OK", null)
-                .show()
-        } else {
-            val items = photos.take(10).map { f ->
-                val date = SimpleDateFormat("dd MMM, HH:mm:ss", Locale.US).format(Date(f.lastModified()))
-                "$date â€” Intruder Attempt"
-            }.toTypedArray()
-
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Who Tried To Get In (${photos.size} Attempts)")
-                .setItems(items) { _, which ->
-                    val chosen = photos[which]
-                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(androidx.core.content.FileProvider.getUriForFile(
-                            requireContext(),
-                            "${requireContext().packageName}.provider",
-                            chosen
-                        ), "image/jpeg")
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    try {
-                        startActivity(intent)
-                    } catch (_: Exception) {
-                        Toast.makeText(requireContext(), "Saved at: ${chosen.name}", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                .setPositiveButton("Close", null)
-                .show()
-        }
-    }
-
-    private fun showAppIdentityDialog() {
-        val report = AppIdentityVerifier.report(requireContext())
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("App Identity & Verification")
-            .setMessage(report)
-            .setPositiveButton("Close", null)
-            .show()
-    }
-    private fun showHomeWidgetsDialog() {
-        val options = arrayOf(
-            "Show 3D Mora Cyber Character",
-            "Clean Immersion View (Hide all cards)",
-            "Live Weather Card",
-            "Stark Telemetry HUD",
-            "Quick Actions Strip (Screen/Memories/Lang)",
-            "Tactical Protocols Hub",
-            "Updates & Announcements Feed",
-            "Voice Status Indicator & Hint"
-        )
-        val checkedItems = booleanArrayOf(
-            preferences.orbEntityType == "mora_cyber",
-            preferences.hideAllHomeCards,
-            preferences.showWeatherWidget,
-            preferences.showTelemetryWidget,
-            preferences.showQuickActionsWidget,
-            preferences.showProtocolsWidget,
-            preferences.showUpdatesWidget,
-            preferences.showStatusIndicatorWidget
-        )
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Home Screen HUD & 3D Character")
-            .setMultiChoiceItems(options, checkedItems) { _, which, isChecked ->
-                HudSoundManager.playTapSound()
-                when (which) {
-                    0 -> {
-                        preferences.userExplicitlyChoseEntity = true
-                        preferences.orbEntityType = if (isChecked) "mora_cyber" else "orb"
-                        if (isChecked) {
-                            com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(requireContext(), com.jarvis.assistant.util.ModelVaultManager.BUILTIN_MORA.id)
-                        }
-                    }
-                    1 -> {
-                        preferences.hideAllHomeCards = isChecked
-                        binding.switchHideAllHomeCards.isChecked = isChecked
-                    }
-                    2 -> preferences.showWeatherWidget = isChecked
-                    3 -> preferences.showTelemetryWidget = isChecked
-                    4 -> preferences.showQuickActionsWidget = isChecked
-                    5 -> preferences.showProtocolsWidget = isChecked
-                    6 -> preferences.showUpdatesWidget = isChecked
-                    7 -> preferences.showStatusIndicatorWidget = isChecked
-                }
-            }
-            .setPositiveButton("Apply") { _, _ ->
-                binding.switchHideAllHomeCards.isChecked = preferences.hideAllHomeCards
-                Toast.makeText(requireContext(), "Home HUD settings applied", Toast.LENGTH_SHORT).show()
-            }
-            .show()
-    }
-
-    private fun showDrivingModeDialog() {
-        val manager = com.jarvis.assistant.core.JarvisDrivingModeManager.getInstance(requireContext())
-        val isDriving = manager.isDrivingMode.value
-        val autoCar = preferences.isDrivingModeAutoCarEnabled
-        val announceCaller = preferences.isCallerIdAnnouncementEnabled
-        val autoReject = manager.drivingCallMode == com.jarvis.assistant.data.preferences.AppPreferences.DRIVING_CALL_MODE_AUTO_REJECT_SMS
-
-        val items = mutableListOf(
-            if (isDriving) "Exit Driving Mode" else "Activate Driving Mode Now",
-            "Auto-Engage on Car Bluetooth: " + if (autoCar) "ON" else "OFF",
-            "Caller ID Voice Announcement: " + if (announceCaller) "ON" else "OFF",
-            "Open Google Maps Navigation",
-            "When a call comes while driving: " + if (autoReject) "Auto-reject + SMS reply" else "Announce caller"
-        )
-        // The SMS text only matters for auto-reject.
-        if (autoReject) items.add("Auto-reply SMS text: \"${manager.autoReplyText}\"")
-
-        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Driving Mode Sentinel")
-            .setItems(items.toTypedArray()) { _, which ->
-                when (which) {
-                    4 -> showDrivingCallModeDialog()
-                    5 -> showDrivingAutoReplyTextDialog()
-                    0 -> {
-                        manager.setDrivingMode(!isDriving)
-                        val newState = if (!isDriving) "ENGAGED" else "DISENGAGED"
-                        android.widget.Toast.makeText(requireContext(), "Driving Mode $newState", android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                    1 -> {
-                        preferences.isDrivingModeAutoCarEnabled = !autoCar
-                        android.widget.Toast.makeText(requireContext(), "Auto-Car Bluetooth: " + if (!autoCar) "Enabled" else "Disabled", android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                    2 -> {
-                        preferences.isCallerIdAnnouncementEnabled = !announceCaller
-                        android.widget.Toast.makeText(requireContext(), "Caller ID Voice: " + if (!announceCaller) "Enabled" else "Disabled", android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                    3 -> {
-                        try {
-                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("geo:0,0?q=gas+station+nearby")).apply {
-                                setPackage("com.google.android.apps.maps")
-                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                            startActivity(intent)
-                        } catch (_: Exception) {
-                            val webIntent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://maps.google.com")).apply {
-                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                            startActivity(webIntent)
-                        }
-                    }
-                }
-            }
-            .setPositiveButton("Close", null)
-            .show()
-    }
-
-    /** "When a call comes while driving": Announce caller / Auto-reject + SMS reply. */
-    private fun showDrivingCallModeDialog() {
-        DrivingCallSettings.showCallModeDialog(
-            requireContext(),
-            requestPermissions = { missing -> drivingCallPermissionLauncher.launch(missing) },
-            onChanged = { if (_binding != null) showDrivingModeDialog() }
-        )
-    }
-
-    private fun showDrivingAutoReplyTextDialog() {
-        DrivingCallSettings.showAutoReplyTextDialog(requireContext()) {
-            if (_binding != null) showDrivingModeDialog()
-        }
-    }
-
-    private val drivingCallPermissionLauncher = registerForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
-    ) {
-        val ctx = context ?: return@registerForActivityResult
-        // Enables auto-reject only when call control + SMS were granted; otherwise reverts to Announce.
-        Toast.makeText(ctx, DrivingCallSettings.applyAfterPermissionResult(ctx), Toast.LENGTH_LONG).show()
-        if (_binding != null) showDrivingModeDialog()
     }
 
     private fun showPcHubDialog() {
@@ -1473,30 +944,90 @@ class SettingsFragment : Fragment() {
                         startActivity(android.content.Intent(requireContext(), ApiConnectionActivity::class.java))
                     }
                     .setNeutralButton("Retry Ping") { _, _ -> showPcHubDialog() }
-                    .setNegativeButton("Close", null)
+                    .setNegativeButton("Hub & Termux") { _, _ ->
+                        com.jarvis.assistant.maya.ui.MayaScreens.open(requireContext(), com.jarvis.assistant.maya.ui.MayaScreens.HUB, "Hub")
+                    }
                     .show()
             }
         }
     }
 
+    /**
+     * Single Backup & restore flow (also used by Memory → Wiki → Backup and the export_backup tool):
+     * Export = system "Save to" picker (Downloads, Drive, ...), Restore = system file picker.
+     * Engine: [BackupManager] (settings, both memory stores, chats, rules, macros; never API keys).
+     */
     private fun showBackupRestoreDialog() {
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Backup & Restore")
-            .setMessage("Export all your persistent memories, settings, and conversations to an offline JSON backup, or restore from a previous backup.")
-            .setPositiveButton("Export Backup") { _, _ ->
-                lifecycleScope.launch {
-                    val result = BackupManager.exportBackup(requireContext())
-                    withContext(Dispatchers.Main) {
-                        result.onSuccess { file ->
-                            Toast.makeText(requireContext(), "Backup exported to:\n${file.name} in Downloads", Toast.LENGTH_LONG).show()
-                        }.onFailure { e ->
-                            Toast.makeText(requireContext(), "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                }
+            .setTitle("Backup & restore")
+            .setMessage(
+                "Export saves ONE file with your settings, memories, chats, rules, wiki, notices and custom macros. " +
+                    "You choose where (Downloads, Drive, ...).\n\nRestore reads that file back and then restarts Jarvis.\n\n" +
+                    "API keys, tokens and passwords are never put in the backup - re-enter them after restoring on a new phone."
+            )
+            .setPositiveButton("Export") { _, _ ->
+                runCatching { backupExportLauncher.launch(BackupManager.suggestedFileName()) }
+                    .onFailure { Toast.makeText(requireContext(), "No file picker available: ${it.message}", Toast.LENGTH_LONG).show() }
             }
             .setNeutralButton("Restore") { _, _ ->
-                Toast.makeText(requireContext(), "To restore, place a valid Jarvis_Backup_*.json in Downloads.", Toast.LENGTH_LONG).show()
+                runCatching { backupRestoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream", "*/*")) }
+                    .onFailure { Toast.makeText(requireContext(), "No file picker available: ${it.message}", Toast.LENGTH_LONG).show() }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private val backupExportLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        val appCtx = requireContext().applicationContext
+        Toast.makeText(appCtx, "Creating backup...", Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch {
+            val result = BackupManager.exportToUri(appCtx, uri)
+            val ctx = context ?: return@launch
+            result.onSuccess { summary ->
+                MaterialAlertDialogBuilder(ctx)
+                    .setTitle("Backup saved")
+                    .setMessage(summary.describe())
+                    .setPositiveButton("OK", null)
+                    .show()
+            }.onFailure { e ->
+                Toast.makeText(ctx, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private val backupRestoreLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        val ctx = context ?: return@registerForActivityResult
+        MaterialAlertDialogBuilder(ctx)
+            .setTitle("Restore this backup?")
+            .setMessage("Settings and saved lists (macros, watches) in the file replace your current ones; memories, chats, rules, wiki and notices are merged. Restart Jarvis afterwards.")
+            .setPositiveButton("Restore") { _, _ ->
+                val appCtx = ctx.applicationContext
+                Toast.makeText(appCtx, "Restoring...", Toast.LENGTH_SHORT).show()
+                lifecycleScope.launch {
+                    val result = BackupManager.restoreFromUri(appCtx, uri)
+                    val c = context ?: return@launch
+                    result.onSuccess { report ->
+                        MaterialAlertDialogBuilder(c)
+                            .setTitle("Backup restored")
+                            .setMessage(report.describe() + "\n\nRestart Jarvis now so every screen loads the restored data.")
+                            .setCancelable(false)
+                            .setPositiveButton("Restart now") { _, _ -> BackupManager.restartApp(requireActivity()) }
+                            .setNegativeButton("Later", null)
+                            .show()
+                    }.onFailure { e ->
+                        MaterialAlertDialogBuilder(c)
+                            .setTitle("Restore failed")
+                            .setMessage(e.message ?: "This file is not a Jarvis backup.")
+                            .setPositiveButton("OK", null)
+                            .show()
+                    }
+                }
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -1552,7 +1083,7 @@ class SettingsFragment : Fragment() {
 
     /**
      * Builds the "ON-DEVICE AI, MODELS & AGENT" card: Jarvis-styled rows that open each merged
-     * AndroLLM page inside Jarvis. MCP is not repeated here â€” it lives in the existing MCP
+     * AndroLLM page inside Jarvis. MCP is not repeated here — it lives in the existing MCP
      * accordion above ("Manage Servers"). Rebuilt on resume so badges stay current.
      */
     private fun setupLocalAiRows() {
@@ -1568,12 +1099,12 @@ class SettingsFragment : Fragment() {
 
         data class Row(val icon: Int, val title: String, val subtitle: String, val badge: String?, val onClick: () -> Unit)
         val rows = listOf(
-            Row(R.drawable.ic_code_chip, "Code Studio", "AI coding IDE â€¢ projects, editor, AI edit, Auto-Fix, preview & terminal",
-                "NEW") { com.jarvis.assistant.codestudio.CodeStudioActivity.open(ctx) },
+            Row(R.drawable.ic_code_chip, "Code Studio", "AI coding IDE • projects, editor, AI edit, Auto-Fix, preview & terminal",
+                "New") { com.jarvis.assistant.codestudio.CodeStudioActivity.open(ctx) },
             Row(R.drawable.ic_code_chip, "AI Engines", "LiteRT-LM on-device engine & cloud gateway",
-                if (liteRtOn) "LITERT ON" else null) { openAndroLlmSection(AndroLlmPageActivity.Section.ENGINES) },
-            Row(R.drawable.ic_androllm_layers, "Models & Downloads", "Full model manager â€¢ Hugging Face, import, benchmark",
-                "MODELS") { openAndroLlmRoute(routes.MODELS) },
+                if (liteRtOn) "LiteRT on" else null) { openAndroLlmSection(AndroLlmPageActivity.Section.ENGINES) },
+            Row(R.drawable.ic_androllm_layers, "Models & Downloads", "Full model manager • Hugging Face, import, benchmark",
+                "Models") { openAndroLlmRoute(routes.MODELS) },
             Row(R.drawable.ic_settings_db, "Model Defaults & Storage", "Default local model, downloads & disk usage",
                 null) { openAndroLlmSection(AndroLlmPageActivity.Section.MODELS) },
             Row(R.drawable.ic_chat_bubble, "Chat & Attachments", "Chat behaviour, attachments & export",
@@ -1595,7 +1126,7 @@ class SettingsFragment : Fragment() {
             Row(R.drawable.ic_settings_connectors, "Cloud Providers", "Cloud gateway models, keys & usage",
                 null) { openAndroLlmRoute(routes.CLOUD) },
             Row(R.drawable.ic_settings_pc, "Developer & Diagnostics", "Runtime registry, LiteRT diagnostics, benchmarks",
-                "DEV") { openAndroLlmRoute(routes.DEVELOPER) }
+                "Dev") { openAndroLlmRoute(routes.DEVELOPER) }
         )
 
         val inflater = LayoutInflater.from(ctx)
@@ -1690,7 +1221,7 @@ class SettingsFragment : Fragment() {
                     )
                     com.jarvis.assistant.mcp.McpManager.getInstance(requireContext())
                         .registerServer(server)
-                    Toast.makeText(requireContext(), "MCP Server '${server.name}' saved. Connectingâ€¦", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "MCP Server '${server.name}' saved. Connecting…", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -1704,11 +1235,15 @@ class SettingsFragment : Fragment() {
         val servers = mcpManager.registeredServers()
         val states = mcpManager.states.value
         val density = resources.displayMetrics.density
+        val ctx = requireContext()
+        val colorPrimary = com.jarvis.assistant.util.ThemeManager.attrColor(ctx, R.attr.themeTextPrimary, Color.WHITE)
+        val colorMuted = com.jarvis.assistant.util.ThemeManager.attrColor(ctx, R.attr.themeTextMuted)
+        val colorAccent = com.jarvis.assistant.util.ThemeManager.attrColor(ctx, R.attr.themeAccent, colorPrimary)
 
         if (servers.isEmpty()) {
             val tvEmpty = TextView(requireContext()).apply {
                 text = "No custom MCP servers configured. Tap below to connect desktop or remote MCP tools."
-                setTextColor(Color.parseColor("#94A3B8"))
+                setTextColor(colorMuted)
                 textSize = 11f
                 setPadding(0, (6 * density).toInt(), 0, (6 * density).toInt())
             }
@@ -1719,7 +1254,7 @@ class SettingsFragment : Fragment() {
         for (server in servers) {
             val card = LinearLayout(requireContext()).apply {
                 orientation = LinearLayout.VERTICAL
-                setBackgroundResource(R.drawable.bg_jarvis_row_item)
+                setBackgroundResource(R.drawable.bg_set_card_md)
                 setPadding((12 * density).toInt(), (10 * density).toInt(), (12 * density).toInt(), (10 * density).toInt())
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -1734,7 +1269,7 @@ class SettingsFragment : Fragment() {
 
             val tvName = TextView(requireContext()).apply {
                 text = server.name
-                setTextColor(Color.WHITE)
+                setTextColor(colorPrimary)
                 textSize = 13f
                 paint.isFakeBoldText = true
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
@@ -1743,26 +1278,24 @@ class SettingsFragment : Fragment() {
 
             val state = states[server.id]
             val (statusText, statusColor) = when (state) {
-                is com.jarvis.assistant.mcp.McpManager.State.Connected -> ("● CONNECTED (" + state.toolCount + " TOOLS)") to "#4ADE80"
-                is com.jarvis.assistant.mcp.McpManager.State.Connecting -> "● CONNECTING..." to "#F59E0B"
-                is com.jarvis.assistant.mcp.McpManager.State.Failed -> "● OFFLINE" to "#EF4444"
-                else -> "● DISCONNECTED" to "#94A3B8"
+                is com.jarvis.assistant.mcp.McpManager.State.Connected -> ("● Connected · " + state.toolCount + " tools") to colorAccent
+                is com.jarvis.assistant.mcp.McpManager.State.Connecting -> "● Connecting…" to colorMuted
+                is com.jarvis.assistant.mcp.McpManager.State.Failed -> "● Offline" to Color.parseColor("#EF4444")
+                else -> "● Disconnected" to colorMuted
             }
 
             val tvState = TextView(requireContext()).apply {
                 text = statusText
-                setTextColor(Color.parseColor(statusColor))
-                textSize = 10f
-                paint.isFakeBoldText = true
+                setTextColor(statusColor)
+                textSize = 11f
             }
             rowHeader.addView(tvState)
             card.addView(rowHeader)
 
             val tvUrl = TextView(requireContext()).apply {
                 text = server.url
-                setTextColor(Color.parseColor("#64748B"))
+                setTextColor(colorMuted)
                 textSize = 11f
-                typeface = android.graphics.Typeface.MONOSPACE
                 setPadding(0, (2 * density).toInt(), 0, (4 * density).toInt())
             }
             card.addView(tvUrl)
@@ -1772,13 +1305,14 @@ class SettingsFragment : Fragment() {
             }
 
             val btnReconnect = com.google.android.material.button.MaterialButton(requireContext(), null, com.google.android.material.R.attr.borderlessButtonStyle).apply {
-                text = "⚡ PING / RECONNECT"
-                textSize = 10f
-                setTextColor(Color.parseColor("#22D3EE"))
+                text = "Reconnect"
+                isAllCaps = false
+                textSize = 12f
+                setTextColor(colorAccent)
                 setOnClickListener {
                     com.jarvis.assistant.util.HudSoundManager.playTapSound()
-                    tvState.text = "● CONNECTING..."
-                    tvState.setTextColor(Color.parseColor("#F59E0B"))
+                    tvState.text = "● Connecting…"
+                    tvState.setTextColor(colorMuted)
                     viewLifecycleOwner.lifecycleScope.launch {
                         mcpManager.reconnect(server.id)
                         renderMcpServersList()
@@ -1788,9 +1322,10 @@ class SettingsFragment : Fragment() {
             btnRow.addView(btnReconnect)
 
             val btnDelete = com.google.android.material.button.MaterialButton(requireContext(), null, com.google.android.material.R.attr.borderlessButtonStyle).apply {
-                text = "✕ DELETE"
-                textSize = 10f
-                setTextColor(Color.parseColor("#EF4444"))
+                text = "Delete"
+                isAllCaps = false
+                textSize = 12f
+                setTextColor(colorMuted)
                 setOnClickListener {
                     com.jarvis.assistant.util.HudSoundManager.playTapSound()
                     mcpManager.unregisterServer(server.id)
@@ -1822,7 +1357,7 @@ class SettingsFragment : Fragment() {
                 if (metrics != null && _binding != null) {
                     val usedRam = metrics.totalRamMb - metrics.availableRamMb
                     binding.tvTelemetryRam.text = "${usedRam}MB"
-                    binding.tvTelemetryThreadingProfile.text = "${metrics.cpuCores}T â€¢ ${metrics.deviceModel.take(12)}"
+                    binding.tvTelemetryThreadingProfile.text = "${metrics.cpuCores}T • ${metrics.deviceModel.take(12)}"
                 }
             }
         }
@@ -1860,21 +1395,21 @@ class SettingsFragment : Fragment() {
                         binding.tvDownloadProgressLlama.visibility = View.VISIBLE
                         binding.tvDownloadProgressLlama.text = "Model ready and verified (GGUF magic valid)"
                         binding.btnDownloadLlama.isEnabled = true
-                        binding.btnDownloadLlama.text = "Loaded & Ready (809 MB)"
+                        binding.btnDownloadLlama.text = "Loaded & ready (809 MB)"
                     }
                     is com.jarvis.assistant.ai.local.ModelDownloadState.Error -> {
                         binding.progressBarLlama.visibility = View.GONE
                         binding.tvDownloadProgressLlama.visibility = View.VISIBLE
                         binding.tvDownloadProgressLlama.text = "Download error: ${state.message}"
                         binding.btnDownloadLlama.isEnabled = true
-                        binding.btnDownloadLlama.text = "Retry Download"
+                        binding.btnDownloadLlama.text = "Retry download"
                     }
                     is com.jarvis.assistant.ai.local.ModelDownloadState.Idle -> {
                         if (localModelManager.isModelReady(com.jarvis.assistant.ai.local.LocalAiConfig.MODEL_LLAMA_3_2_1B)) {
                             binding.progressBarLlama.visibility = View.GONE
                             binding.tvDownloadProgressLlama.visibility = View.VISIBLE
                             binding.tvDownloadProgressLlama.text = "Model ready on device"
-                            binding.btnDownloadLlama.text = "Loaded & Ready (809 MB)"
+                            binding.btnDownloadLlama.text = "Loaded & ready (809 MB)"
                         }
                     }
                 }

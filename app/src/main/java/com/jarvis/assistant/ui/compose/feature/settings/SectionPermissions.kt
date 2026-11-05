@@ -21,6 +21,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.BrightnessMedium
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.DoNotDisturbOn
+import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Event
@@ -310,7 +316,7 @@ private fun PermissionAccessCard(
                 PermissionState.NEEDS_SETTINGS -> {
                     Spacer(modifier = Modifier.height(12.dp))
                     CloudCapsuleButton(
-                        text = if (handler.id == "accessibility") "Enable Accessibility" else "Open Settings",
+                        text = if (handler.id == "accessibility") "Enable Accessibility" else "Allow in Android settings",
                         onClick = onOpenSettings,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -367,6 +373,12 @@ private fun permissionIconFor(id: String): ImageVector = when (id) {
     "location" -> Icons.Filled.Place
     "bluetooth" -> Icons.Filled.Bluetooth
     "alarms" -> Icons.Filled.Alarm
+    "phone" -> Icons.Filled.Call
+    "overlay" -> Icons.Filled.Layers
+    "dnd" -> Icons.Filled.DoNotDisturbOn
+    "write_settings" -> Icons.Filled.BrightnessMedium
+    "usage" -> Icons.Filled.QueryStats
+    "battery" -> Icons.Filled.BatteryChargingFull
     else -> Icons.Filled.Notifications
 }
 

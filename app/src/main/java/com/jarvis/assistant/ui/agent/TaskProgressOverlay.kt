@@ -50,6 +50,29 @@ class TaskProgressOverlay(private val context: Context) {
 
         /** True while the floating task overlay is attached to the window (read by the Dynamic Island). */
         fun isShowing(): Boolean = instance?.attached == true
+
+        /** Hold this long (without dragging) to close the floating avatar. */
+        private const val LONG_PRESS_CLOSE_MS = 900L
+
+        // ---- Floating avatar size (Settings -> Floating avatars & overlay -> Avatar size) ----
+        private const val SIZE_PREFS = "jarvis_overlay_avatar_prefs"
+        private const val KEY_AVATAR_SIZE_DP = "avatar_size_dp"
+        /** Box size the avatar HTML pages are designed for. */
+        const val BASE_AVATAR_SIZE_DP = 88
+        const val MIN_AVATAR_SIZE_DP = 56
+        const val MAX_AVATAR_SIZE_DP = 200
+
+        fun avatarSizeDp(context: Context): Int =
+            context.applicationContext.getSharedPreferences(SIZE_PREFS, Context.MODE_PRIVATE)
+                .getInt(KEY_AVATAR_SIZE_DP, BASE_AVATAR_SIZE_DP)
+                .coerceIn(MIN_AVATAR_SIZE_DP, MAX_AVATAR_SIZE_DP)
+
+        /** Saves the size and resizes the live overlay (if it exists). */
+        fun setAvatarSizeDp(context: Context, sizeDp: Int) {
+            context.applicationContext.getSharedPreferences(SIZE_PREFS, Context.MODE_PRIVATE)
+                .edit().putInt(KEY_AVATAR_SIZE_DP, sizeDp.coerceIn(MIN_AVATAR_SIZE_DP, MAX_AVATAR_SIZE_DP)).apply()
+            instance?.applyAvatarSize()
+        }
     }
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -112,6 +135,7 @@ class TaskProgressOverlay(private val context: Context) {
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
+                applyAvatarZoom()
                 if (url?.contains("custom_3d") == true) {
                     val b64 = com.jarvis.assistant.util.CustomAvatarHelper.getBase64(context)
                     if (!b64.isNullOrEmpty()) {
@@ -123,8 +147,8 @@ class TaskProgressOverlay(private val context: Context) {
         visibility = View.VISIBLE
     }
     private val params = WindowManager.LayoutParams(
-        dp(88),
-        dp(88),
+        dp(BASE_AVATAR_SIZE_DP),
+        dp(BASE_AVATAR_SIZE_DP),
         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
@@ -146,7 +170,14 @@ class TaskProgressOverlay(private val context: Context) {
     private var currentEdge = ""
     private var dragging = false
     private var lastTapAt = 0L
+    private var longPressFired = false
     private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
+    /** Long-press (no drag) closes the floating avatar and turns the overlay setting off. */
+    private val longPressClose = Runnable {
+        if (dragging) return@Runnable
+        longPressFired = true
+        closeByUser()
+    }
 
     val isAttached: Boolean get() = attached
 
@@ -159,7 +190,7 @@ class TaskProgressOverlay(private val context: Context) {
         pill.addView(progress, LinearLayout.LayoutParams(-1, dp(3)).apply { topMargin = dp(4); bottomMargin = dp(1) })
         pill.addView(progressText, matchWrap())
         root.addView(pill, FrameLayout.LayoutParams(-1, -2))
-        root.addView(avatar, FrameLayout.LayoutParams(dp(88), dp(88), Gravity.CENTER))
+        root.addView(avatar, FrameLayout.LayoutParams(avatarPx(), avatarPx(), Gravity.CENTER))
         pill.isClickable = true
         pill.setOnTouchListener { _, event -> handleOverlayTouch(event) }
         avatar.setOnTouchListener { _, event -> handleOverlayTouch(event) }
@@ -228,8 +259,8 @@ class TaskProgressOverlay(private val context: Context) {
                 } else {
                     applyEdgeInternal(preferences.taskOverlayEdge)
                 }
-                params.width = if (avatarMode) dp(88) else minOf(dp(236), context.resources.displayMetrics.widthPixels - dp(16))
-                params.height = if (avatarMode) dp(88) else WindowManager.LayoutParams.WRAP_CONTENT
+                params.width = if (avatarMode) avatarPx() else minOf(dp(236), context.resources.displayMetrics.widthPixels - dp(16))
+                params.height = if (avatarMode) avatarPx() else WindowManager.LayoutParams.WRAP_CONTENT
                 windowManager.addView(root, params)
                 attached = true
             } catch (_: Exception) {
@@ -250,6 +281,7 @@ class TaskProgressOverlay(private val context: Context) {
             mainHandler.post { remove() }
             return
         }
+        mainHandler.removeCallbacks(longPressClose)
         if (attached) {
             try { windowManager.removeView(root) } catch (_: Exception) {}
             attached = false
@@ -315,13 +347,18 @@ class TaskProgressOverlay(private val context: Context) {
                 startX = location[0]
                 startY = location[1]
                 dragging = false
+                longPressFired = false
+                mainHandler.removeCallbacks(longPressClose)
+                mainHandler.postDelayed(longPressClose, LONG_PRESS_CLOSE_MS)
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
+                if (longPressFired) return true
                 val dx = event.rawX - downRawX
                 val dy = event.rawY - downRawY
                 if (dragging || kotlin.math.abs(dx) > touchSlop || kotlin.math.abs(dy) > touchSlop) {
                     dragging = true
+                    mainHandler.removeCallbacks(longPressClose)
                     params.gravity = Gravity.TOP or Gravity.LEFT
                     params.x = startX + dx.toInt()
                     params.y = startY + dy.toInt()
@@ -332,6 +369,11 @@ class TaskProgressOverlay(private val context: Context) {
                 return false
             }
             MotionEvent.ACTION_UP -> {
+                mainHandler.removeCallbacks(longPressClose)
+                if (longPressFired) {
+                    longPressFired = false
+                    return true
+                }
                 if (dragging) {
                     dragging = false
                     clampPosition()
@@ -351,6 +393,7 @@ class TaskProgressOverlay(private val context: Context) {
                 return false
             }
             MotionEvent.ACTION_CANCEL -> {
+                mainHandler.removeCallbacks(longPressClose)
                 dragging = false
                 return false
             }
@@ -387,8 +430,8 @@ class TaskProgressOverlay(private val context: Context) {
     private fun applyMode() {
         pill.visibility = if (avatarMode) View.GONE else View.VISIBLE
         avatar.visibility = if (avatarMode) View.VISIBLE else View.GONE
-        params.width = if (avatarMode) dp(88) else minOf(dp(236), context.resources.displayMetrics.widthPixels - dp(16))
-        params.height = if (avatarMode) dp(88) else WindowManager.LayoutParams.WRAP_CONTENT
+        params.width = if (avatarMode) avatarPx() else minOf(dp(236), context.resources.displayMetrics.widthPixels - dp(16))
+        params.height = if (avatarMode) avatarPx() else WindowManager.LayoutParams.WRAP_CONTENT
         if (JarvisApp.instance.preferences.taskOverlayFreePosition) clampPosition()
         if (attached) {
             try { windowManager.updateViewLayout(root, params) } catch (_: Exception) {}
@@ -397,8 +440,8 @@ class TaskProgressOverlay(private val context: Context) {
 
     private fun clampPosition() {
         val metrics = context.resources.displayMetrics
-        val overlayWidth = root.width.takeIf { it > 0 } ?: params.width.takeIf { it > 0 } ?: dp(88)
-        val overlayHeight = root.height.takeIf { it > 0 } ?: params.height.takeIf { it > 0 } ?: dp(88)
+        val overlayWidth = params.width.takeIf { it > 0 } ?: root.width.takeIf { it > 0 } ?: avatarPx()
+        val overlayHeight = params.height.takeIf { it > 0 } ?: root.height.takeIf { it > 0 } ?: avatarPx()
         params.gravity = Gravity.TOP or Gravity.LEFT
         params.x = params.x.coerceIn(0, (metrics.widthPixels - overlayWidth).coerceAtLeast(0))
         params.y = params.y.coerceIn(dp(24), (metrics.heightPixels - overlayHeight).coerceAtLeast(dp(24)))
@@ -412,4 +455,44 @@ class TaskProgressOverlay(private val context: Context) {
 
     private fun matchWrap() = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
     private fun dp(value: Int) = (value * context.resources.displayMetrics.density).toInt()
+
+    private fun avatarPx(): Int = dp(avatarSizeDp(context))
+
+    /** Scales the avatar page so the character fills the chosen box (pages are drawn for 88 dp). */
+    private fun applyAvatarZoom() {
+        val zoom = avatarSizeDp(context).toFloat() / BASE_AVATAR_SIZE_DP
+        val z = String.format(java.util.Locale.US, "%.3f", zoom)
+        avatar.evaluateJavascript(
+            "(function(){var d=document.documentElement;if(d){d.style.zoom='" + z + "';}" +
+                "window.dispatchEvent(new Event('resize'));})()",
+            null
+        )
+    }
+
+    /** Re-applies the saved size to the live overlay (called from the Settings size slider). */
+    fun applyAvatarSize() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            mainHandler.post { applyAvatarSize() }
+            return
+        }
+        val size = avatarPx()
+        (avatar.layoutParams as? FrameLayout.LayoutParams)?.let { lp ->
+            lp.width = size
+            lp.height = size
+            avatar.layoutParams = lp
+        }
+        applyAvatarZoom()
+        applyMode()
+    }
+
+    /** Long-press: hide the floating avatar and switch the setting off (turn it on again in Settings). */
+    private fun closeByUser() {
+        runCatching { JarvisApp.instance.preferences.isTaskOverlayEnabled = false }
+        remove()
+        android.widget.Toast.makeText(
+            context,
+            "Floating avatar closed. Turn it on again in Settings > Floating avatars & overlay.",
+            android.widget.Toast.LENGTH_LONG
+        ).show()
+    }
 }

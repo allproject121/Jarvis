@@ -119,13 +119,13 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
         currentFilterMode = mode
 
         binding.chipFilterAll.setBackgroundResource(if (mode == FilterMode.ALL) R.drawable.bg_jarvis_pill_active else R.drawable.bg_themed2_pill_inactive)
-        binding.chipFilterAll.setTextColor(if (mode == FilterMode.ALL) Color.WHITE else themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
+        binding.chipFilterAll.setTextColor(if (mode == FilterMode.ALL) com.jarvis.assistant.util.ThemeManager.onAccentColor(requireContext()) else themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
 
         binding.chipFilterConnected.setBackgroundResource(if (mode == FilterMode.CONNECTED) R.drawable.bg_jarvis_pill_active else R.drawable.bg_themed2_pill_inactive)
-        binding.chipFilterConnected.setTextColor(if (mode == FilterMode.CONNECTED) Color.WHITE else themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
+        binding.chipFilterConnected.setTextColor(if (mode == FilterMode.CONNECTED) com.jarvis.assistant.util.ThemeManager.onAccentColor(requireContext()) else themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
 
         binding.chipFilterDisconnected.setBackgroundResource(if (mode == FilterMode.DISCONNECTED) R.drawable.bg_jarvis_pill_active else R.drawable.bg_themed2_pill_inactive)
-        binding.chipFilterDisconnected.setTextColor(if (mode == FilterMode.DISCONNECTED) Color.WHITE else themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
+        binding.chipFilterDisconnected.setTextColor(if (mode == FilterMode.DISCONNECTED) com.jarvis.assistant.util.ThemeManager.onAccentColor(requireContext()) else themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
 
         populateConnectorsList()
     }

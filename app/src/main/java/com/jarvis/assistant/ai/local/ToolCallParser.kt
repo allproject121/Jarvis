@@ -86,12 +86,90 @@ object ToolCallParser {
         return clean.replace("</tool_call>", "").trim()
     }
 
-    /** Removes `<think>…</think>` blocks, and an unfinished `<think>` up to the end of the text. */
+    /**
+     * Removes `<think>…</think>` blocks, an unfinished `<think>` up to the end of the text, and
+     * (reasoning models whose prompt already opened the block) everything before a lone `</think>`.
+     */
     fun stripThinking(text: String): String {
-        val closed = THINK_BLOCK_REGEX.replace(text, "")
+        var closed = THINK_BLOCK_REGEX.replace(text, "")
+        val loneClose = closed.lastIndexOf("</think>")
+        if (loneClose >= 0) closed = closed.substring(loneClose + "</think>".length)
         val openIdx = closed.indexOf("<think>")
         return if (openIdx >= 0) closed.substring(0, openIdx) else closed
     }
+
+    /**
+     * Chat-template control tags a small on-device model sometimes writes as plain text when it does
+     * not stop at its end-of-turn token (e.g. "…questions</|im_end|>
+<|im_start|>user
+it's always").
+     * Everything from the first one on is the model inventing the next turn, never part of the answer.
+     */
+    private val TURN_LEAK_MARKERS = listOf(
+        "<|im_end|>", "</|im_end|>", "<|im_start|>", "<|endoftext|>", "<|end|>",
+        "<|eot_id|>", "<|start_header_id|>", "<|end_of_text|>",
+        "<end_of_turn>", "<start_of_turn>",
+        "<｜User｜>", "<｜Assistant｜>", "<｜end▁of▁sentence｜>",
+        "<|user|>", "<|assistant|>", "<|system|>"
+    )
+
+    /** Longest marker, used to hold back a stream tail that may be the start of one. */
+    private val MAX_MARKER_LEN = TURN_LEAK_MARKERS.maxOf { it.length }
+
+    /** Index of the first leaked turn marker in [text], or -1. */
+    fun findTurnLeak(text: String): Int {
+        var best = -1
+        for (m in TURN_LEAK_MARKERS) {
+            val i = text.indexOf(m)
+            if (i >= 0 && (best < 0 || i < best)) best = i
+        }
+        return best
+    }
+
+    /** [text] cut before the first leaked turn marker (whole text when there is none). */
+    fun cutAtTurnLeak(text: String): String {
+        val i = findTurnLeak(text)
+        return if (i >= 0) text.substring(0, i) else text
+    }
+
+    /**
+     * How much of a streaming buffer is safe to show: a trailing `<…` that could still grow into a
+     * turn marker or `<think>` / `<tool_call>` tag is held back until the next tokens decide it.
+     */
+    fun safeStreamLength(text: String): Int {
+        val lt = text.lastIndexOf('<')
+        if (lt < 0 || text.length - lt > MAX_MARKER_LEN) return text.length
+        val tail = text.substring(lt)
+        if (tail.contains('>')) return text.length
+        val candidates = TURN_LEAK_MARKERS + listOf("<think>", "</think>", TOOL_CALL_OPEN, "</tool_call>")
+        return if (candidates.any { it.startsWith(tail) }) lt else text.length
+    }
+
+    /**
+     * The part of a streaming on-device reply that is safe to show right now, untrimmed at the end so
+     * consecutive deltas keep their spaces. A reply that starts as a bare JSON object is held back
+     * entirely (it is usually a tool call written without tags) until [final].
+     */
+    fun streamVisibleText(raw: String, final: Boolean): String {
+        var t = cutAtTurnLeak(stripThinking(raw))
+        val tc = t.indexOf(TOOL_CALL_OPEN)
+        if (tc >= 0) t = t.substring(0, tc)
+        if (!final) {
+            t = t.substring(0, safeStreamLength(t))
+            if (t.trimStart().startsWith("{")) return ""
+        } else {
+            t = cleanConversationalText(t)
+            if (parseToolCall(t) != null) return ""
+        }
+        return t.trimStart()
+    }
+
+    /**
+     * Text of an on-device model's reply that may be shown/spoken: no thinking, no tool-call payload,
+     * nothing from a leaked fake turn onwards.
+     */
+    fun cleanLocalModelText(rawText: String): String =
+        cleanConversationalText(cutAtTurnLeak(stripThinking(rawText))).trim()
 
     /** Returns the first complete `{...}` object starting at or after [from], or null if it is not finished yet. */
     private fun extractBalancedJson(text: String, from: Int): String? {

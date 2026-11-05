@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: lets adb (shell holds android.permission.DUMP, normal apps cannot) drive test hooks
+     and read results from logcat. Nothing here ships in release builds. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Offline brain: typed command -> logcat OfflineBrainTest -->
+        <receiver
+            android:name="com.jarvis.assistant.debug.OfflineBrainDebugReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="com.jarvis.assistant.debug.OFFLINE_BRAIN" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Run one tool through JarvisToolDispatcher -> logcat JarvisToolTest -->
+        <receiver
+            android:name="com.jarvis.assistant.debug.ToolTestReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="com.jarvis.assistant.debug.RUN_TOOL" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Real Gemini text + Live check with the saved key/model -> logcat GeminiTest -->
+        <receiver
+            android:name="com.jarvis.assistant.debug.GeminiTestReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="com.jarvis.assistant.debug.GEMINI_TEST" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Open a Settings page like its row does: am start -n com.jarvis.assistant/.debug.DebugOpenActivity -->
+        <activity
+            android:name="com.jarvis.assistant.debug.DebugOpenActivity"
+            android:exported="true"
+            android:permission="android.permission.DUMP"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.NoDisplay" />
+    </application>
+</manifest>

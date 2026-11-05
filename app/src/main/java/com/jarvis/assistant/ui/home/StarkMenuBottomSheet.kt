@@ -11,7 +11,6 @@ import com.jarvis.assistant.ui.chat.ChatHistoryBottomSheet
 import com.jarvis.assistant.ui.godseye.GodsEyeActivity
 import com.jarvis.assistant.ui.memory.MemoryActivity
 import com.jarvis.assistant.ui.settings.CustomizationStudioActivity
-import com.jarvis.assistant.ui.voice.VoiceEnrollmentActivity
 import com.jarvis.assistant.util.HudSoundManager
 
 class StarkMenuBottomSheet : BottomSheetDialogFragment() {
@@ -79,12 +78,6 @@ class StarkMenuBottomSheet : BottomSheetDialogFragment() {
         }
 
         // 6. Voice Profile Enrollment
-        binding.menuItemVoice.setOnClickListener {
-            HudSoundManager.playTapSound()
-            dismiss()
-            startActivity(Intent(requireContext(), VoiceEnrollmentActivity::class.java))
-        }
-
         // 7. JARVIS Agent Matrix & Protocols
         binding.menuItemMatrixHub.setOnClickListener {
             HudSoundManager.playTapSound()
@@ -92,37 +85,7 @@ class StarkMenuBottomSheet : BottomSheetDialogFragment() {
             startActivity(Intent(requireContext(), com.jarvis.assistant.ui.matrix.JarvisMatrixActivity::class.java))
         }
 
-        // 8. Stark Arc Reactor Live Wallpaper
-        binding.menuItemWallpaper.setOnClickListener {
-            HudSoundManager.playTapSound()
-            dismiss()
-            try {
-                val intent = Intent(android.app.WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).apply {
-                    putExtra(
-                        android.app.WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
-                        android.content.ComponentName(requireContext(), com.jarvis.assistant.wallpaper.JarvisWallpaperService::class.java)
-                    )
-                }
-                startActivity(intent)
-            } catch (e: Exception) {
-                try {
-                    startActivity(Intent(android.app.WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER))
-                } catch (e2: Exception) {
-                    android.widget.Toast.makeText(requireContext(), "JARVIS Live Wallpaper is ready in Wallpaper settings", android.widget.Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-
         // 9. Protocol 7 Biometric AppLock
-        binding.menuItemAppLock.setOnClickListener {
-            HudSoundManager.playTapSound()
-            dismiss()
-            val intent = Intent(requireContext(), com.jarvis.assistant.ui.facelock.JarvisAppLockActivity::class.java).apply {
-                putExtra(com.jarvis.assistant.ui.facelock.JarvisAppLockActivity.EXTRA_APP_LABEL, "JARVIS Core Security")
-                putExtra(com.jarvis.assistant.ui.facelock.JarvisAppLockActivity.EXTRA_PACKAGE_NAME, requireContext().packageName)
-            }
-            startActivity(intent)
-        }
     }
 
     override fun onDestroyView() {

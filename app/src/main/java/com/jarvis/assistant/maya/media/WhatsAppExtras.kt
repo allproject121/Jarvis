@@ -156,12 +156,7 @@ object WhatsAppExtras {
             put("installed_package", installedPackage(context) ?: JSONObject.NULL)
             put("accessibility_running", JarvisAccessibilityService.isRunning())
             put("notification_access", JarvisNotificationListener.isNotificationServiceEnabled(context))
-            put("auto_reply_enabled", prefs.autoReplyEnabled)
-            put("support_mode", prefs.autoReplySupportMode)
-            put("away_message", prefs.autoReplyAwayMessage)
-            put("handled_contacts", JSONArray(prefs.handledContacts().keys.toList()))
             put("recent_unread", JSONArray(recent.take(10).map { JSONObject().put("from", it.sender).put("text", it.text).put("at", it.timestamp) }))
-            put("replies_sent_this_session", WhatsAppAutoReplyEngine.repliesSent())
         }
     }
 

@@ -22,6 +22,7 @@ object JarvisThreadManager {
 
     private const val ABSOLUTE_MAX_THREADS = 10
     private const val UI_RESERVE_CORES = 2
+    const val INFERENCE_THREAD_PRIORITY = 5
 
     /**
      * Executes [block] with the calling thread temporarily demoted to [Process.THREAD_PRIORITY_BACKGROUND].
@@ -33,7 +34,10 @@ object JarvisThreadManager {
     inline fun <T> withBackgroundInferencePriority(block: () -> T): T {
         val tid = Process.myTid()
         val previous = runCatching { Process.getThreadPriority(tid) }.getOrDefault(0)
-        runCatching { Process.setThreadPriority(tid, Process.THREAD_PRIORITY_BACKGROUND) }
+        // Nice 5, not THREAD_PRIORITY_BACKGROUND (10): Android moves threads at >= 10 into the
+        // "background" cgroup, which is pinned to the slow little cores, and llama.cpp's worker
+        // threads inherit that. Replies took 50-200 s there. At 5 the UI (nice -10/-4) still wins.
+        runCatching { Process.setThreadPriority(tid, INFERENCE_THREAD_PRIORITY) }
         return try {
             block()
         } finally {

@@ -17,8 +17,14 @@ object ThemeManager {
 
     /** The Maya companion look (deep charcoal-navy, electric-blue neon, Inter). Dark only. */
     const val THEME_MAYA = "maya"
+    /** 2026-11-05 redesign: Dark Bento (violet-tinted near-black, indigo cards, violet accent). Default theme. */
+    const val THEME_NOVA = "nova"
+    const val NOVA_ACCENT_HEX = "#9A8CFF"
+    const val NOVA_BG_HEX = "#090812"
     const val MAYA_ACCENT_HEX = "#1E90FF"
     const val MAYA_BG_HEX = "#14161C"
+    /** Pearl White page ground: soft grey so the white bento cards read as cards. */
+    const val PEARL_BG_HEX = "#F1F3F7"
 
     /** True when the Maya theme is the active Jarvis theme. */
     fun isMayaTheme(): Boolean = currentThemeKey() == THEME_MAYA
@@ -83,6 +89,7 @@ object ThemeManager {
             "dark", "obsidian" -> Color.parseColor("#00F0FF")
             THEME_ANDROLLM_NIGHT -> Color.parseColor("#7A5CFF")
             THEME_ANDROLLM_PARCHMENT -> Color.parseColor("#D97757")
+            THEME_NOVA -> Color.parseColor(NOVA_ACCENT_HEX)
             THEME_MAYA -> Color.parseColor(MAYA_ACCENT_HEX)
             "custom" -> {
                 try {
@@ -104,7 +111,7 @@ object ThemeManager {
     /** Background colour for the selected theme (used for windows, surfaces, etc.). */
     fun getThemeBgColor(themeKey: String, customHex: String?): Int {
         return when (themeKey.lowercase()) {
-            "pearl_white", "white", "light" -> Color.parseColor("#F8FAFC")
+            "pearl_white", "white", "light" -> Color.parseColor(PEARL_BG_HEX)
             "sunset" -> Color.parseColor("#FFF0EA")
             "stealth", "black", "oled" -> Color.parseColor("#000000")
             "white_dark", "monochrome" -> Color.parseColor("#07070A")
@@ -118,6 +125,7 @@ object ThemeManager {
             "dark", "obsidian" -> Color.parseColor("#060812")
             THEME_ANDROLLM_NIGHT -> Color.parseColor("#000000")
             THEME_ANDROLLM_PARCHMENT -> Color.parseColor("#F5F4ED")
+            THEME_NOVA -> Color.parseColor(NOVA_BG_HEX)
             THEME_MAYA -> Color.parseColor(MAYA_BG_HEX)
             "custom" -> {
                 try {
@@ -127,7 +135,7 @@ object ThemeManager {
                     val s = hsv[1]
                     val v = hsv[2]
                     if (s < 0.15f) {
-                        if (v > 0.65f) Color.parseColor("#F8FAFC") else Color.parseColor("#000000")
+                        if (v > 0.65f) Color.parseColor(PEARL_BG_HEX) else Color.parseColor("#000000")
                     } else {
                         // Hue-based background
                         val h = hsv[0]
@@ -156,7 +164,7 @@ object ThemeManager {
         val hex = customHex ?: "#00F0FF"
         val (themeRes, bgColor, isLight) = when (themeKey) {
             "pearl_white", "white", "light" ->
-                Triple(R.style.Theme_JarvisAssistant_PearlWhite, Color.parseColor("#F8FAFC"), true)
+                Triple(R.style.Theme_JarvisAssistant_PearlWhite, Color.parseColor(PEARL_BG_HEX), true)
 
             "sunset" ->
                 Triple(R.style.Theme_JarvisAssistant_Sunset, Color.parseColor("#FFF0EA"), true)
@@ -197,6 +205,9 @@ object ThemeManager {
             THEME_ANDROLLM_PARCHMENT ->
                 Triple(R.style.Theme_JarvisAssistant_AndroLlmParchment, Color.parseColor("#F5F4ED"), true)
 
+            THEME_NOVA ->
+                Triple(R.style.Theme_JarvisAssistant_Nova, Color.parseColor(NOVA_BG_HEX), false)
+
             THEME_MAYA ->
                 Triple(R.style.Theme_JarvisAssistant_Maya, Color.parseColor(MAYA_BG_HEX), false)
 
@@ -209,7 +220,7 @@ object ThemeManager {
                     val v = hsv[2]
                     if (s < 0.15f) {
                         if (v > 0.65f) {
-                            Triple(R.style.Theme_JarvisAssistant_PearlWhite, Color.parseColor("#F8FAFC"), true)
+                            Triple(R.style.Theme_JarvisAssistant_PearlWhite, Color.parseColor(PEARL_BG_HEX), true)
                         } else {
                             Triple(R.style.Theme_JarvisAssistant_Stealth, Color.parseColor("#000000"), false)
                         }
@@ -236,6 +247,24 @@ object ThemeManager {
         return ThemeSpec(themeRes, bgColor, isLight)
     }
 
+    /**
+     * "Frosted Glass Blur FX": when on, overlay the theme with its JarvisGlassOverlay.* twin
+     * (res/values/styles_glass.xml) — same hue, much lower card/dock alpha — so the blurred glow
+     * behind the cards actually shows through. Before this the cards were ~95% opaque and the
+     * toggle had no visible effect on screens (it only blurred dialog backdrops).
+     */
+    private fun applyGlassOverlay(activity: Activity, themeRes: Int) {
+        if (!FrostedGlassEffect.isBlurEnabled()) return
+        try {
+            val entry = activity.resources.getResourceEntryName(themeRes)
+            val suffix = entry.removePrefix("Theme.JarvisAssistant").trimStart('.').ifBlank { "Dark" }
+            val overlay = activity.resources.getIdentifier("JarvisGlassOverlay.$suffix", "style", activity.packageName)
+            if (overlay != 0) activity.theme.applyStyle(overlay, true)
+        } catch (e: Throwable) {
+            android.util.Log.w("ThemeManager", "Glass overlay not applied: ${e.message}")
+        }
+    }
+
     /** Apply the theme resources and window colours. */
     fun applyTheme(activity: Activity) {
         val spec = currentThemeSpec()
@@ -245,6 +274,7 @@ object ThemeManager {
 
         try {
             activity.setTheme(themeRes)
+            applyGlassOverlay(activity, themeRes)
             activity.window.setBackgroundDrawable(ColorDrawable(bgColor))
             activity.window.decorView.setBackgroundColor(bgColor)
             @Suppress("DEPRECATION")
@@ -286,6 +316,22 @@ object ThemeManager {
         } catch (_: Exception) {
             fallback
         }
+    }
+
+    /** Fill of primary buttons / active pills in the current theme (`?attr/themeAccentFill`). */
+    @JvmStatic
+    fun accentFillColor(context: Context): Int =
+        attrColor(context, R.attr.themeAccentFill, attrColor(context, R.attr.themeAccent, Color.parseColor("#6352F5")))
+
+    /**
+     * Label/icon colour for anything drawn on [accentFillColor] (`?attr/themeOnAccent`).
+     * Falls back to a luminance pick so a button label never matches its own fill.
+     */
+    @JvmStatic
+    fun onAccentColor(context: Context): Int {
+        val fill = accentFillColor(context)
+        val fallback = if (androidx.core.graphics.ColorUtils.calculateLuminance(fill) > 0.18) Color.parseColor("#0B0A12") else Color.WHITE
+        return attrColor(context, R.attr.themeOnAccent, fallback)
     }
 
     /** Apply background colour to any view based on the current theme. */
