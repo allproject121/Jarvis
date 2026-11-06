@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- AI Persona - Dark Bento layout (2026-11-05 bento-all): page title + subtitle, profile bento card,
+     persona bento cards (icon plate + pill + 18sp title), name + voice sections as bento cards with
+     rounded inner plates (8dp gaps) instead of hairline dividers. All ids/types unchanged. -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -8,7 +11,7 @@
     android:focusable="true"
     android:focusableInTouchMode="true">
 
-    <!-- Top App Bar -->
+    <!-- Header -->
     <LinearLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
@@ -23,9 +26,11 @@
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="@drawable/bg_jarvis_icon_square"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_set_icon_btn"
+            android:padding="9dp"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_back"
             app:tint="?attr/themeTextPrimary"
             android:contentDescription="Back" />
@@ -35,24 +40,26 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:layout_marginStart="14dp">
+            android:layout_marginStart="12dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="AI Persona"
                 android:textColor="?attr/themeTextPrimary"
-                android:textSize="20sp"
-                android:fontFamily="sans-serif-medium"
-                android:textStyle="bold" />
+                android:textSize="26sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
+                android:letterSpacing="-0.02" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:text="Choose your companion personality"
                 android:textColor="?attr/themeTextMuted"
-                android:textSize="12sp"
-                android:fontFamily="sans-serif" />
+                android:textSize="13sp"
+                android:fontFamily="@font/inter" />
         </LinearLayout>
     </LinearLayout>
 
@@ -60,8 +67,9 @@
         android:id="@+id/scrollPersona"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:clipToPadding="false"
         android:scrollbars="none"
         android:descendantFocusability="beforeDescendants"
         app:layout_constraintTop_toBottomOf="@id/topBar"
@@ -71,55 +79,59 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="8dp"
+            android:paddingTop="4dp"
             android:paddingBottom="24dp">
 
-            <com.google.android.material.card.MaterialCardView
+            <!-- Operator profile bento card -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="14dp"
-                app:cardBackgroundColor="?attr/themeCardBg"
-                app:strokeColor="?attr/themeCardBorder"
-                app:strokeWidth="1dp"
-                app:cardCornerRadius="18dp">
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_nova_card"
+                android:padding="20dp">
 
-                <LinearLayout
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Your operator profile"
+                    android:singleLine="true"
+                        android:maxLines="1"
+                        android:textColor="?attr/themeTextSecondary"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500"
+                        android:background="@drawable/bg_set_badge"
+                        android:drawableStart="@drawable/bg_bento_dot"
+                        android:drawablePadding="6dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="3dp"
+                        android:paddingBottom="3dp" />
+
+                <TextView
+                    android:id="@+id/tvPersonaPreview"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:layout_marginTop="12dp"
+                    android:text="Jarvis Pro · Charon"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="22sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="YOUR OPERATOR PROFILE"
-                        android:textColor="?attr/themeAccent"
-                        android:textSize="10sp"
-                        android:letterSpacing="0.08"
-                        android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/tvPersonaGreeting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Ready to help, Roshan."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter" />
+            </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/tvPersonaPreview"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="7dp"
-                        android:text="Jarvis Pro · Charon"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvPersonaGreeting"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp"
-                        android:text="Ready to help, Roshan."
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- 1. Jarvis Pro (Default) -->
             <LinearLayout
                 android:id="@+id/cardPersonaJarvis"
                 android:layout_width="match_parent"
@@ -127,21 +139,25 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:layout_marginBottom="12dp">
+                android:layout_marginBottom="10dp">
 
                 <FrameLayout
-                    android:layout_width="48dp"
-                    android:layout_height="48dp">
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_gravity="top"
+                    android:background="@drawable/bg_set_icon_tile">
                     <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/bg_jarvis_avatar"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
                         android:src="@drawable/ic_nav_home"
                         app:tint="?attr/themeAccent"
-                        android:padding="12dp"
                         android:contentDescription="Jarvis" />
                 </FrameLayout>
 
@@ -152,58 +168,57 @@
                     android:orientation="vertical"
                     android:layout_marginStart="14dp">
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Jarvis Pro"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="16sp"
-                            android:fontFamily="sans-serif-medium"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="DEFAULT AI"
-                            android:singleLine="true"
-                            android:maxLines="1"
-                            android:textColor="?attr/themeAccent"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium"
-                            android:background="@drawable/bg_jarvis_chip"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="6dp"
-                            android:paddingTop="2dp"
-                            android:paddingBottom="2dp"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:text="Default AI"
+                        android:singleLine="true"
+                        android:maxLines="1"
+                        android:textColor="?attr/themeTextSecondary"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500"
+                        android:background="@drawable/bg_set_badge"
+                        android:drawableStart="@drawable/bg_bento_dot"
+                        android:drawablePadding="6dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="3dp"
+                        android:paddingBottom="3dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Jarvis Pro"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="18sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
+                        android:maxLines="2"
+                        android:ellipsize="end" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
                         android:text="Intelligent, witty &amp; strategic assistant by Roshan"
                         android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:fontFamily="sans-serif"
-                        android:layout_marginTop="2dp" />
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter" />
                 </LinearLayout>
 
                 <RadioButton
                     android:id="@+id/rbSelectJarvis"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    app:buttonTint="?attr/themeAccent"
                     android:clickable="false"
                     android:focusable="false" />
             </LinearLayout>
 
-            <!-- 2. Girlfriend Mode (Pari) -->
             <LinearLayout
                 android:id="@+id/cardPersonaGirlfriend"
                 android:layout_width="match_parent"
@@ -211,21 +226,25 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:layout_marginBottom="12dp">
+                android:layout_marginBottom="10dp">
 
                 <FrameLayout
-                    android:layout_width="48dp"
-                    android:layout_height="48dp">
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_gravity="top"
+                    android:background="@drawable/bg_set_icon_tile">
                     <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/bg_jarvis_avatar"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
                         android:src="@drawable/ic_nav_chat"
-                        app:tint="#EC4899"
-                        android:padding="12dp"
+                        app:tint="?attr/themeAccent2"
                         android:contentDescription="Girlfriend" />
                 </FrameLayout>
 
@@ -236,58 +255,57 @@
                     android:orientation="vertical"
                     android:layout_marginStart="14dp">
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Girlfriend Mode (Pari)"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="16sp"
-                            android:fontFamily="sans-serif-medium"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="SWEET"
-                            android:singleLine="true"
-                            android:maxLines="1"
-                            android:textColor="#EC4899"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium"
-                            android:background="@drawable/bg_jarvis_chip"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="6dp"
-                            android:paddingTop="2dp"
-                            android:paddingBottom="2dp"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:text="Sweet"
+                        android:singleLine="true"
+                        android:maxLines="1"
+                        android:textColor="?attr/themeTextSecondary"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500"
+                        android:background="@drawable/bg_set_badge"
+                        android:drawableStart="@drawable/bg_bento_dot"
+                        android:drawablePadding="6dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="3dp"
+                        android:paddingBottom="3dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Girlfriend Mode (Pari)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="18sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
+                        android:maxLines="2"
+                        android:ellipsize="end" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
                         android:text="Caring, warm, affectionate Hinglish companion"
                         android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:fontFamily="sans-serif"
-                        android:layout_marginTop="2dp" />
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter" />
                 </LinearLayout>
 
                 <RadioButton
                     android:id="@+id/rbSelectGirlfriend"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    app:buttonTint="?attr/themeAccent"
                     android:clickable="false"
                     android:focusable="false" />
             </LinearLayout>
 
-            <!-- 3. Boyfriend Mode (Kabir) -->
             <LinearLayout
                 android:id="@+id/cardPersonaBoyfriend"
                 android:layout_width="match_parent"
@@ -295,21 +313,25 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:layout_marginBottom="12dp">
+                android:layout_marginBottom="10dp">
 
                 <FrameLayout
-                    android:layout_width="48dp"
-                    android:layout_height="48dp">
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_gravity="top"
+                    android:background="@drawable/bg_set_icon_tile">
                     <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/bg_jarvis_avatar"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
                         android:src="@drawable/ic_settings_shield"
                         app:tint="?attr/themeInfo"
-                        android:padding="12dp"
                         android:contentDescription="Boyfriend" />
                 </FrameLayout>
 
@@ -320,58 +342,57 @@
                     android:orientation="vertical"
                     android:layout_marginStart="14dp">
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Boyfriend Mode (Kabir)"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="16sp"
-                            android:fontFamily="sans-serif-medium"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="CHARMING"
-                            android:singleLine="true"
-                            android:maxLines="1"
-                            android:textColor="?attr/themeInfo"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium"
-                            android:background="@drawable/bg_jarvis_chip"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="6dp"
-                            android:paddingTop="2dp"
-                            android:paddingBottom="2dp"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:text="Charming"
+                        android:singleLine="true"
+                        android:maxLines="1"
+                        android:textColor="?attr/themeTextSecondary"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500"
+                        android:background="@drawable/bg_set_badge"
+                        android:drawableStart="@drawable/bg_bento_dot"
+                        android:drawablePadding="6dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="3dp"
+                        android:paddingBottom="3dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Boyfriend Mode (Kabir)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="18sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
+                        android:maxLines="2"
+                        android:ellipsize="end" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
                         android:text="Charismatic, protective &amp; supportive partner"
                         android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:fontFamily="sans-serif"
-                        android:layout_marginTop="2dp" />
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter" />
                 </LinearLayout>
 
                 <RadioButton
                     android:id="@+id/rbSelectBoyfriend"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    app:buttonTint="?attr/themeAccent"
                     android:clickable="false"
                     android:focusable="false" />
             </LinearLayout>
 
-            <!-- 4. Roshan Mode -->
             <LinearLayout
                 android:id="@+id/cardPersonaRoshan"
                 android:layout_width="match_parent"
@@ -379,21 +400,25 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:layout_marginBottom="20dp">
+                android:layout_marginBottom="16dp">
 
                 <FrameLayout
-                    android:layout_width="48dp"
-                    android:layout_height="48dp">
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_gravity="top"
+                    android:background="@drawable/bg_set_icon_tile">
                     <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/bg_jarvis_avatar"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
                         android:src="@drawable/ic_code_chip"
                         app:tint="?attr/themeSuccess"
-                        android:padding="12dp"
                         android:contentDescription="Roshan Mode" />
                 </FrameLayout>
 
@@ -404,94 +429,123 @@
                     android:orientation="vertical"
                     android:layout_marginStart="14dp">
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Roshan Mode"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="16sp"
-                            android:fontFamily="sans-serif-medium"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="NEURAL CORE"
-                            android:singleLine="true"
-                            android:maxLines="1"
-                            android:textColor="?attr/themeSuccess"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium"
-                            android:background="@drawable/bg_jarvis_chip"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="6dp"
-                            android:paddingTop="2dp"
-                            android:paddingBottom="2dp"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:text="Neural core"
+                        android:singleLine="true"
+                        android:maxLines="1"
+                        android:textColor="?attr/themeTextSecondary"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500"
+                        android:background="@drawable/bg_set_badge"
+                        android:drawableStart="@drawable/bg_bento_dot"
+                        android:drawablePadding="6dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="3dp"
+                        android:paddingBottom="3dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Roshan Mode"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="18sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
+                        android:maxLines="2"
+                        android:ellipsize="end" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
                         android:text="Ultra-fast code architecture, research &amp; deep reasoning"
                         android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:fontFamily="sans-serif"
-                        android:layout_marginTop="2dp" />
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter" />
                 </LinearLayout>
 
                 <RadioButton
                     android:id="@+id/rbSelectRoshan"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    app:buttonTint="?attr/themeAccent"
                     android:clickable="false"
                     android:focusable="false" />
             </LinearLayout>
 
-            <!-- Configuration Section -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="User Name (Default: Roshan)"
-                android:textColor="?attr/themeTextMuted"
-                android:textSize="13sp"
-                android:fontFamily="sans-serif-medium"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
-
+            <!-- Your name bento card -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
+                android:padding="18dp"
                 android:layout_marginBottom="16dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="How should this persona address you?"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:textStyle="bold" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <FrameLayout
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_set_icon_tile">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_nav_chat"
+                        app:tint="?attr/themeAccent"
+                        android:contentDescription="@null" />
+                </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Your name"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="How this persona addresses you (default: Roshan)"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="14dp"
+                    app:hintEnabled="false"
                     app:boxBackgroundMode="outline"
-                    app:boxCornerRadiusTopStart="12dp"
-                    app:boxCornerRadiusTopEnd="12dp"
-                    app:boxCornerRadiusBottomStart="12dp"
-                    app:boxCornerRadiusBottomEnd="12dp"
+                    app:boxBackgroundColor="?attr/themeInputBg"
+                    app:boxStrokeWidth="1dp"
+                    app:boxCornerRadiusTopStart="14dp"
+                    app:boxCornerRadiusTopEnd="14dp"
+                    app:boxCornerRadiusBottomStart="14dp"
+                    app:boxCornerRadiusBottomEnd="14dp"
                     app:boxStrokeColor="?attr/themeAccent">
 
                     <com.google.android.material.textfield.TextInputEditText
@@ -502,116 +556,165 @@
                         android:text="Roshan"
                         android:inputType="textPersonName"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="14sp"
-                        android:fontFamily="sans-serif" />
+                        android:textColorHint="?attr/themeTextMuted"
+                        android:textSize="15sp"
+                        android:fontFamily="@font/inter" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
-            <!-- Voice Selection Card -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Voice Tone"
-                android:textColor="?attr/themeTextMuted"
-                android:textSize="13sp"
-                android:fontFamily="sans-serif-medium"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
-
-            <RadioGroup
-                android:id="@+id/rgVoiceGroup"
+            <!-- Voice tone bento card -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="vertical"
                 android:background="@drawable/bg_jarvis_card"
-                android:padding="14dp"
-                android:layout_marginBottom="24dp">
+                android:padding="18dp"
+                android:layout_marginBottom="8dp">
 
-                <RadioButton
-                    android:id="@+id/rbVoiceAoede"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Aoede (Warm, expressive female voice)"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="13sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?attr/themeCardBorder" />
+                    <FrameLayout
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_set_icon_tile">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_settings_shield"
+                        app:tint="?attr/themeAccent"
+                        android:contentDescription="@null" />
+                </FrameLayout>
 
-                <RadioButton
-                    android:id="@+id/rbVoiceKore"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Kore (Gentle, calm female voice)"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="13sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp" />
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?attr/themeCardBorder" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Voice tone"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
 
-                <RadioButton
-                    android:id="@+id/rbVoiceFenrir"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Fenrir (Deep, protective charismatic male voice)"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="13sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Live voice used by this persona"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?attr/themeCardBorder" />
-
-                <RadioButton
-                    android:id="@+id/rbVoicePuck"
+                <RadioGroup
+                    android:id="@+id/rgVoiceGroup"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Puck (Crisp, modern dynamic male voice)"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="13sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp" />
+                    android:layout_marginTop="6dp">
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?attr/themeCardBorder" />
+                    <RadioButton
+                        android:id="@+id/rbVoiceAoede"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:minHeight="52dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="12dp"
+                        android:text="Aoede (Warm, expressive female voice)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500"
+                        app:buttonTint="?attr/themeAccent" />
 
-                <RadioButton
-                    android:id="@+id/rbVoiceCharon"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Charon (Distinguished butler male voice)"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="13sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp" />
-            </RadioGroup>
+                    <RadioButton
+                        android:id="@+id/rbVoiceKore"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:minHeight="52dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="12dp"
+                        android:text="Kore (Gentle, calm female voice)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500"
+                        app:buttonTint="?attr/themeAccent" />
+
+                    <RadioButton
+                        android:id="@+id/rbVoiceFenrir"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:minHeight="52dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="12dp"
+                        android:text="Fenrir (Deep, protective charismatic male voice)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500"
+                        app:buttonTint="?attr/themeAccent" />
+
+                    <RadioButton
+                        android:id="@+id/rbVoicePuck"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:minHeight="52dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="12dp"
+                        android:text="Puck (Crisp, modern dynamic male voice)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500"
+                        app:buttonTint="?attr/themeAccent" />
+
+                    <RadioButton
+                        android:id="@+id/rbVoiceCharon"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:minHeight="52dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="12dp"
+                        android:text="Charon (Distinguished butler male voice)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500"
+                        app:buttonTint="?attr/themeAccent" />
+
+                </RadioGroup>
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>
 
-    <!-- Bottom Action Bar -->
+    <!-- Bottom action bar -->
     <LinearLayout
         android:id="@+id/layoutBottomBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         android:paddingTop="12dp"
         android:paddingBottom="20dp"
         android:background="?attr/themeBg"
@@ -620,14 +723,16 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnActivatePersona"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
+            android:layout_height="52dp"
             android:background="@drawable/bg_jarvis_pill_button"
             app:backgroundTint="@null"
-            android:text="Activate Persona"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="Activate persona"
             android:textColor="?attr/themeOnAccent"
             android:textSize="15sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-medium"
+            android:fontFamily="@font/inter"
+            android:textFontWeight="600"
             android:textAllCaps="false" />
     </LinearLayout>
 

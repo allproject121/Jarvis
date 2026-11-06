@@ -61,8 +61,8 @@ class ApiConnectionActivity : AppCompatActivity() {
         binding.etLocalHostModel.setText(preferences.localHostModel)
 
         if (!preferences.canStoreApiKeySecurely) {
-            binding.tvLiveStatus.text = "SECURE STORAGE UNAVAILABLE • API KEY DISABLED"
-            binding.viewStatusDot.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#EF4444"))
+            binding.tvLiveStatus.text = "Secure storage unavailable · API key disabled"
+            binding.viewStatusDot.backgroundTintList = ColorStateList.valueOf(com.jarvis.assistant.util.ThemeManager.attrColor(this@ApiConnectionActivity, R.attr.themeDanger, Color.parseColor("#EF4444")))
         }
 
         when (preferences.aiModel) {
@@ -74,11 +74,11 @@ class ApiConnectionActivity : AppCompatActivity() {
         if (!preferences.canStoreApiKeySecurely) {
             // Keep the secure-storage warning set above.
         } else if (preferences.apiKey.isNotBlank()) {
-            binding.tvLiveStatus.text = "KEY CONFIGURED • READY"
-            binding.viewStatusDot.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#22C55E"))
+            binding.tvLiveStatus.text = "Key configured · ready"
+            binding.viewStatusDot.backgroundTintList = ColorStateList.valueOf(com.jarvis.assistant.util.ThemeManager.attrColor(this@ApiConnectionActivity, R.attr.themeSuccess, Color.parseColor("#22C55E")))
         } else {
-            binding.tvLiveStatus.text = "NO API KEY • ENTER KEY BELOW"
-            binding.viewStatusDot.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#EAB308"))
+            binding.tvLiveStatus.text = "No API key · enter it below"
+            binding.viewStatusDot.backgroundTintList = ColorStateList.valueOf(com.jarvis.assistant.util.ThemeManager.attrColor(this@ApiConnectionActivity, R.attr.themeWarning, Color.parseColor("#EAB308")))
         }
 
         if (preferences.customEndpoint.isNotBlank()) {
@@ -515,7 +515,7 @@ class ApiConnectionActivity : AppCompatActivity() {
     private fun testLocalHost(endpoint: String) {
         binding.btnTestLocalHost.isEnabled = false
         binding.tvLocalHostStatus.text = "Testing connection to $endpoint..."
-        binding.tvLocalHostStatus.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this, R.attr.themeAccent, Color.parseColor("#38BDF8")))
+        binding.tvLocalHostStatus.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this@ApiConnectionActivity, R.attr.themeAccent, Color.parseColor("#38BDF8")))
 
         lifecycleScope.launch {
             val client = com.jarvis.assistant.network.LocalHostLlmClient()
@@ -524,15 +524,15 @@ class ApiConnectionActivity : AppCompatActivity() {
                 binding.btnTestLocalHost.isEnabled = true
                 if (info.isOnline) {
                     val modelsStr = if (info.availableModels.isNotEmpty()) info.availableModels.joinToString(", ") else "None"
-                    binding.tvLocalHostStatus.text = "✅ CONNECTED (${info.pingMs}ms)\nActive: ${info.activeModel}\nAvailable: $modelsStr"
-                    binding.tvLocalHostStatus.setTextColor(Color.parseColor("#22C55E"))
+                    binding.tvLocalHostStatus.text = "✅ Connected (${info.pingMs}ms)\nActive: ${info.activeModel}\nAvailable: $modelsStr"
+                    binding.tvLocalHostStatus.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this@ApiConnectionActivity, R.attr.themeSuccess, Color.parseColor("#22C55E")))
                     if (binding.etLocalHostModel.text.isNullOrBlank() && info.activeModel.isNotBlank()) {
                         binding.etLocalHostModel.setText(info.activeModel)
                     }
                     Snackbar.make(binding.root, "Local Host AI is Online! Found ${info.availableModels.size} model(s).", Snackbar.LENGTH_LONG).show()
                 } else {
-                    binding.tvLocalHostStatus.text = "❌ CONNECTION FAILED (${info.pingMs}ms)\n${info.error ?: "Check PC Wi-Fi or firewall"}"
-                    binding.tvLocalHostStatus.setTextColor(Color.parseColor("#EF4444"))
+                    binding.tvLocalHostStatus.text = "❌ Connection failed (${info.pingMs}ms)\n${info.error ?: "Check PC Wi-Fi or firewall"}"
+                    binding.tvLocalHostStatus.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this@ApiConnectionActivity, R.attr.themeDanger, Color.parseColor("#EF4444")))
                     Snackbar.make(binding.root, "Could not reach Ollama at $endpoint.", Snackbar.LENGTH_LONG).show()
                 }
             }
@@ -542,7 +542,7 @@ class ApiConnectionActivity : AppCompatActivity() {
     private fun testConnection(apiKey: String) {
         binding.btnTestConnection.isEnabled = false
         binding.tvPingResult.text = "Testing ping..."
-        binding.viewStatusDot.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#3B82F6"))
+        binding.viewStatusDot.backgroundTintList = ColorStateList.valueOf(com.jarvis.assistant.util.ThemeManager.attrColor(this@ApiConnectionActivity, R.attr.themeInfo, Color.parseColor("#3B82F6")))
 
         lifecycleScope.launch {
             val startTime = System.currentTimeMillis()
@@ -567,14 +567,14 @@ class ApiConnectionActivity : AppCompatActivity() {
             if (result.first) {
                 val ping = result.second
                 binding.tvPingResult.text = "Ping: ${ping}ms • Valid"
-                binding.tvLiveStatus.text = "CONNECTED • MODELS AVAILABLE (3.8 Live, 3.1 Flash, 2.0 Flash)"
-                binding.viewStatusDot.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#22C55E"))
+                binding.tvLiveStatus.text = "Connected · models available (3.8 Live, 3.1 Flash, 2.0 Flash)"
+                binding.viewStatusDot.backgroundTintList = ColorStateList.valueOf(com.jarvis.assistant.util.ThemeManager.attrColor(this@ApiConnectionActivity, R.attr.themeSuccess, Color.parseColor("#22C55E")))
                 Snackbar.make(binding.root, "Gemini models verified! Ping: ${ping}ms", Snackbar.LENGTH_LONG).show()
             } else {
                 val code = result.second
                 binding.tvPingResult.text = if (code == -1) "Network Timeout" else "HTTP $code Error"
-                binding.tvLiveStatus.text = "FAILED • INVALID KEY OR NETWORK"
-                binding.viewStatusDot.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#EF4444"))
+                binding.tvLiveStatus.text = "Failed · invalid key or network"
+                binding.viewStatusDot.backgroundTintList = ColorStateList.valueOf(com.jarvis.assistant.util.ThemeManager.attrColor(this@ApiConnectionActivity, R.attr.themeDanger, Color.parseColor("#EF4444")))
                 Snackbar.make(binding.root, "Connection failed. Please verify API key.", Snackbar.LENGTH_LONG).show()
             }
         }

@@ -1,0 +1,388 @@
+/*
+ * Jarvis phone layout for God's Eye (see jarvis-mobile.js).
+ * Everything is scoped to html.jv-phone, which the script sets below 760 px,
+ * so landscape / tablet keep the upstream desktop cockpit.
+ * Accent colours come from the active Jarvis theme (window.__JARVIS_THEME__).
+ */
+:root {
+  --jv-accent: #A78BFA;
+  --jv-accent-fill: #6352F5;
+  --jv-on-accent: #FFFFFF;
+  --jv-bg: #090812;
+  --jv-card: rgba(23, 21, 46, 0.92);
+  --jv-border: rgba(255, 255, 255, 0.10);
+  --jv-text: #F9F9FA;
+  --jv-text-muted: #9391A2;
+  --jv-gap: 10px;
+  --jv-chipbar-h: 44px;
+  --jv-chipbar-bottom: 14px;
+  --jv-voice-h: 88px;
+  --jv-stack-bottom: calc(var(--jv-chipbar-bottom) + var(--jv-chipbar-h) + var(--jv-gap));
+}
+
+#jv-chipbar, #jv-scrim { display: none; }
+
+/* ---------- chip bar ---------- */
+html.jv-phone #jv-chipbar {
+  display: flex;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: var(--jv-chipbar-bottom);
+  height: var(--jv-chipbar-h);
+  padding: 0 12px;
+  gap: 8px;
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  z-index: 70;
+  -webkit-overflow-scrolling: touch;
+}
+html.jv-phone #jv-chipbar::-webkit-scrollbar { display: none; }
+
+html.jv-phone .jv-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px 0 10px;
+  border-radius: 18px;
+  border: 1px solid var(--jv-border);
+  background: var(--jv-card);
+  color: var(--jv-text);
+  font: 600 13px/1 Inter, system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+html.jv-phone .jv-chip svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: var(--jv-accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+html.jv-phone .jv-chip.active {
+  background: var(--jv-accent-fill);
+  border-color: transparent;
+  color: var(--jv-on-accent);
+}
+html.jv-phone .jv-chip.active svg { stroke: var(--jv-on-accent); }
+
+/* ---------- scrim behind an open sheet ---------- */
+html.jv-phone.jv-sheet-active #jv-scrim {
+  display: block;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.28);
+  z-index: 64;
+}
+
+/* ---------- side stacks become one bottom sheet ---------- */
+html.jv-phone #left-panel-stack,
+html.jv-phone #right-context-rail {
+  display: none !important;
+}
+html.jv-phone #left-panel-stack.jv-has-open,
+html.jv-phone #right-context-rail.jv-has-open {
+  display: block !important;
+  position: fixed !important;
+  left: 8px !important;
+  right: 8px !important;
+  top: auto !important;
+  bottom: var(--jv-stack-bottom) !important;
+  width: auto !important;
+  max-width: none !important;
+  max-height: 58vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  transform: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 66 !important;
+  border-radius: 20px;
+  overscroll-behavior: contain;
+}
+html.jv-phone #left-panel-stack > *:not(.jv-open),
+html.jv-phone #right-context-rail > *:not(.jv-open) {
+  display: none !important;
+}
+html.jv-phone #left-panel-stack > .jv-open,
+html.jv-phone #right-context-rail > .jv-open {
+  display: block !important;
+  position: relative !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  border-radius: 20px !important;
+  background: var(--jv-card) !important;
+  border: 1px solid var(--jv-border) !important;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.45) !important;
+}
+html.jv-phone #right-context-rail > #pp-toggles.jv-open { display: flex !important; flex-direction: column; }
+
+/* ---------- command dock: only the Jarvis voice pill (Places / Style are chips) ---------- */
+html.jv-phone #command-dock {
+  display: block !important;
+  left: 12px !important;
+  right: 12px !important;
+  bottom: var(--jv-stack-bottom) !important;
+  width: auto !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  z-index: 62 !important;
+}
+html.jv-phone #command-dock > #location-bar,
+html.jv-phone #command-dock > #control-panel { display: none !important; }
+html.jv-phone.jv-sheet-active #command-dock { visibility: hidden !important; }
+html.jv-phone #command-dock > #gev-voice-control {
+  display: grid !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: var(--jv-voice-h) !important;
+  margin: 0 !important;
+  padding: 6px 16px 6px 6px !important;
+  border-radius: calc(var(--jv-voice-h) / 2) !important;
+  background: var(--jv-card) !important;
+  border: 1px solid var(--jv-border) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+html.jv-phone #gev-voice-control .gev-voice-cost { display: none !important; }
+html.jv-phone #gev-voice-control .gev-voice-kicker,
+html.jv-phone #gev-voice-control #gev-voice-status {
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  max-width: none !important;
+}
+
+/* ---------- Jarvis-built sheets: Places, Style ---------- */
+#jv-proxy-sheet { display: none; }
+html.jv-phone #jv-proxy-sheet.jv-open {
+  display: block;
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  bottom: var(--jv-stack-bottom);
+  max-height: 58vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 16px 8px;
+  border-radius: 20px;
+  background: var(--jv-card);
+  border: 1px solid var(--jv-border);
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  color: var(--jv-text);
+  font: 400 14px/1.4 Inter, system-ui, sans-serif;
+  z-index: 66;
+}
+html.jv-phone #jv-proxy-sheet .jv-sheet-title {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+html.jv-phone #jv-proxy-sheet .jv-group { margin-bottom: 14px; }
+html.jv-phone #jv-proxy-sheet .jv-group-title {
+  font-size: 12px;
+  color: var(--jv-text-muted);
+  margin-bottom: 8px;
+}
+html.jv-phone #jv-proxy-sheet .jv-group-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+html.jv-phone #jv-proxy-sheet .jv-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 18px;
+  border: 1px solid var(--jv-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--jv-text);
+  font: 500 13px/1 Inter, system-ui, sans-serif;
+}
+html.jv-phone #jv-proxy-sheet .jv-pill.active {
+  background: var(--jv-accent-fill);
+  border-color: transparent;
+  color: var(--jv-on-accent);
+}
+html.jv-phone #jv-proxy-sheet .jv-pill svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+html.jv-phone #jv-proxy-sheet .jv-search {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+html.jv-phone #jv-proxy-sheet .jv-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 20px;
+  border: 1px solid var(--jv-border);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--jv-text);
+  font: 400 14px Inter, system-ui, sans-serif;
+  outline: none;
+}
+html.jv-phone #jv-proxy-sheet .jv-search input:focus { border-color: var(--jv-accent); }
+html.jv-phone #jv-proxy-sheet .jv-search .jv-pill { min-height: 40px; }
+
+/* ---------- top: logo beside Jarvis' native Back + menu (every orientation) ---------- */
+#title-bar {
+  left: 104px !important;
+  top: 4px !important;
+  right: auto !important;
+  transform: scale(0.72) !important;
+  transform-origin: left top !important;
+  z-index: 55 !important;
+}
+html.jv-phone #top-center-actions {
+  left: auto !important;
+  right: 10px !important;
+  top: 10px !important;
+  transform: none !important;
+  z-index: 60 !important;
+}
+
+/*
+ * ---------- HUD: all four upstream corners, compact ----------
+ *   top-left  (classification, mode, sector)  | top-right (REC time, orbit, pass)
+ *   loading chips centred under the top-left block (it runs ~115 px tall)
+ *   bottom-left (MGRS, lat/lon)  | bottom-right (GSD, NIIRS, ALT, SUN)   above the voice pill
+ *   credits (left) and Power-up keys chip (right) above those
+ */
+:root {
+  --jv-hud-top: 58px;
+  --jv-hud-bottom: calc(var(--jv-stack-bottom) + var(--jv-voice-h) + 8px);
+  --jv-above-hud: calc(var(--jv-hud-bottom) + 60px);
+}
+html.jv-phone #intel-hud .hud-corner {
+  display: flex !important;
+  position: absolute !important;
+  width: auto !important;
+  max-width: none !important;
+  font-size: 8.5px !important;
+  line-height: 1.35 !important;
+  opacity: 0.85;
+  overflow: hidden !important;
+  pointer-events: none;
+}
+html.jv-phone #intel-hud .hud-corner * {
+  font-size: 8.5px !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0.05em !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}
+html.jv-phone #intel-hud .hud-top-left {
+  top: var(--jv-hud-top) !important;
+  bottom: auto !important;
+  left: 12px !important;
+  right: auto !important;
+  width: calc(58vw - 12px) !important;
+}
+html.jv-phone #intel-hud .hud-top-right {
+  top: var(--jv-hud-top) !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: 12px !important;
+  width: calc(42vw - 24px) !important;
+  justify-content: flex-end !important;
+  text-align: right !important;
+}
+html.jv-phone #intel-hud .hud-bottom-left {
+  top: auto !important;
+  bottom: var(--jv-hud-bottom) !important;
+  left: 12px !important;
+  right: auto !important;
+  width: calc(55vw - 12px) !important;
+}
+html.jv-phone #intel-hud .hud-bottom-right {
+  top: auto !important;
+  bottom: var(--jv-hud-bottom) !important;
+  left: auto !important;
+  right: 12px !important;
+  width: calc(45vw - 24px) !important;
+  justify-content: flex-end !important;
+  text-align: right !important;
+}
+html.jv-phone.jv-sheet-active #intel-hud { opacity: 0.35; }
+
+html.jv-phone #global-loading-status,
+html.jv-phone #traffic-sync-chip,
+html.jv-phone #cctv-sync-chip {
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) scale(0.85) !important;
+  transform-origin: top center;
+  z-index: 59 !important;
+}
+html.jv-phone #global-loading-status { top: 182px !important; }
+html.jv-phone #traffic-sync-chip { top: 214px !important; }
+html.jv-phone #cctv-sync-chip { top: 240px !important; }
+
+/* ---------- credits (left) + Power-up keys chip (right), above the bottom HUD ---------- */
+html.jv-phone .cesium-widget-credits {
+  left: 12px !important;
+  right: auto !important;
+  bottom: var(--jv-above-hud) !important;
+  max-width: calc(55vw - 12px) !important;
+  font-size: 8px !important;
+  line-height: 12px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  opacity: 0.55;
+  z-index: 58 !important;
+}
+html.jv-phone .cesium-widget-credits img { max-height: 12px !important; width: auto !important; }
+html.jv-phone #key-setup-chip {
+  left: auto !important;
+  right: 12px !important;
+  top: auto !important;
+  bottom: var(--jv-above-hud) !important;
+  transform: scale(0.85) !important;
+  transform-origin: right bottom !important;
+  z-index: 58 !important;
+}
+html.jv-phone.jv-sheet-active #key-setup-chip { visibility: hidden !important; }
+
+/* Bigger hit targets for touch inside open sheets. */
+html.jv-phone .jv-open button,
+html.jv-phone .jv-open [role="button"],
+html.jv-phone .jv-open input[type="checkbox"] + label { min-height: 32px; }

@@ -1,65 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Voice chat history bottom sheet - Dark Bento pass 2026-11-05 (bento-all, backup backups/bento-all-2026-11-05):
+     bento sheet surface + handle, 24sp title with muted subtitle, danger ghost "clear" pill,
+     list of bento bubbles (item_chat_turn), no hairline dividers. Ids and view types unchanged. -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/themeBg"
+    android:background="@drawable/bg_bento_x_sheet"
     android:orientation="vertical"
-    android:paddingTop="12dp">
+    android:paddingTop="10dp">
 
     <View
-        android:layout_width="40dp"
+        android:layout_width="36dp"
         android:layout_height="4dp"
-        android:background="?attr/themeCardBorder"
+        android:background="@drawable/bg_bento_x_handle"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="12dp" />
+        android:layout_marginBottom="14dp" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="20dp"
-        android:paddingBottom="12dp">
+        android:paddingBottom="8dp">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/tvChatHistoryTitleBento"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:maxLines="1"
+            android:ellipsize="end"
             android:text="@string/chat_history_title"
             android:textColor="?attr/themeTextPrimary"
-            android:textSize="17sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.05"
+            android:textSize="24sp"
+            android:fontFamily="@font/inter"
+            android:textFontWeight="600"
+            android:letterSpacing="-0.02"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintEnd_toStartOf="@id/btnClearHistory"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="12dp"
+            android:text="Recent voice conversations with Jarvis"
+            android:textColor="?attr/themeTextMuted"
+            android:textSize="13sp"
+            android:fontFamily="@font/inter"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnClearHistory"
+            app:layout_constraintTop_toBottomOf="@id/tvChatHistoryTitleBento" />
 
         <Button
             android:id="@+id/btnClearHistory"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:background="@drawable/bg_set_chip"
+            app:backgroundTint="@null"
             android:text="@string/clear_history"
+            android:textAllCaps="false"
             android:textColor="?attr/themeDanger"
-            android:textSize="12sp"
+            android:textSize="13sp"
+            android:fontFamily="@font/inter"
+            android:textFontWeight="500"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?attr/themeCardBorder" />
 
     <TextView
         android:id="@+id/tvEmptyHistory"
         android:layout_width="match_parent"
-        android:layout_height="240dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="12dp"
         android:gravity="center"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="40dp"
+        android:background="@drawable/bg_nova_card"
         android:text="@string/no_history"
-        android:textColor="?attr/themeTextMuted"
+        android:textColor="?attr/themeTextSecondary"
         android:textSize="14sp"
+        android:fontFamily="@font/inter"
         android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView

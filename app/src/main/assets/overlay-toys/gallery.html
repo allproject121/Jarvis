@@ -5,17 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; background: transparent; font-family: sans-serif; }
-    body { padding: 14px 16px 18px; }
-    #gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    /* Dark Bento tiles (2026-11-05 bento-all): plate fill + hairline from the active Jarvis theme
+       (window.setGalleryTheme), selected = accent ring + soft accent wash. */
+    html, body { margin: 0; min-height: 100%; background: transparent; font-family: "Inter", "Roboto", sans-serif; }
+    body { padding: 12px 16px 20px; }
+    #gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
     .avatar-card {
-      min-height: 104px; padding: 7px 4px 8px; border-radius: 16px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-      background: rgba(120, 130, 160, .10); border: 1px solid rgba(140, 150, 180, .22);
+      min-height: 108px; padding: 8px 4px 10px; border-radius: 18px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      background: var(--plate, rgba(120, 130, 160, .10)); border: 1px solid var(--plate-border, rgba(140, 150, 180, .22));
       color: var(--label, #475569); cursor: pointer; -webkit-tap-highlight-color: transparent;
+      font-family: inherit;
     }
-    .avatar-card.selected { border: 2px solid var(--accent, #8b5cf6); background: rgba(139, 92, 246, .13); box-shadow: 0 0 0 2px rgba(139, 92, 246, .10); }
-    .avatar-name { font-size: 11px; line-height: 15px; text-transform: capitalize; }
+    .avatar-card:active { transform: scale(.97); }
+    .avatar-card.selected { border-color: var(--accent, #8b5cf6); background: var(--accent-soft, rgba(139, 92, 246, .13)); box-shadow: inset 0 0 0 1px var(--accent, #8b5cf6); }
+    .avatar-name { font-size: 12px; line-height: 16px; font-weight: 500; text-transform: capitalize; }
     .avatar-card.selected .avatar-name::after { content: "  ✓"; color: var(--accent, #8b5cf6); font-weight: 700; }
     .avatar-image { width: 72px; height: 68px; display: block; }
   </style>
@@ -57,7 +61,7 @@
     }
     function customIcon(thumb) {
       if (thumb && thumb.startsWith("data:")) {
-        return `<img class="avatar-image" style="width:58px;height:58px;object-fit:cover;border-radius:50%;box-shadow:0 0 12px rgba(56,189,248,0.6);border:2px solid #38bdf8;margin:2px auto;" src="${thumb}" alt="Custom 3D" />`;
+        return `<img class="avatar-image" style="width:58px;height:58px;object-fit:cover;border-radius:50%;border:2px solid var(--accent, #8b5cf6);margin:2px auto;" src="${thumb}" alt="Custom 3D" />`;
       }
       return `<svg class="avatar-image" viewBox="0 0 80 70"><defs><linearGradient id="g-c3d" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#38bdf8"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><circle cx="40" cy="35" r="26" fill="url(#g-c3d)" stroke="#38bdf8" stroke-width="2"/><text x="40" y="41" font-size="16" font-family="sans-serif" font-weight="bold" fill="#ffffff" text-anchor="middle">3D</text></svg>`;
     }
@@ -80,9 +84,13 @@
       document.querySelectorAll(".avatar-card").forEach(card => card.classList.remove("selected"));
       document.getElementById(`avatar-${name}`)?.classList.add("selected");
     };
-    window.setGalleryTheme = (label, accent) => {
-      document.documentElement.style.setProperty("--label", label);
-      document.documentElement.style.setProperty("--accent", accent);
+    window.setGalleryTheme = (label, accent, plate, plateBorder, accentSoft) => {
+      const root = document.documentElement.style;
+      root.setProperty("--label", label);
+      root.setProperty("--accent", accent);
+      if (plate) root.setProperty("--plate", plate);
+      if (plateBorder) root.setProperty("--plate-border", plateBorder);
+      if (accentSoft) root.setProperty("--accent-soft", accentSoft);
     };
     window.JarvisAvatarPicker?.pageReady();
   </script>

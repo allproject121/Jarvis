@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Memory row - Dark Bento (2026-11-05 bento-all): 16dp bento card, category pill, ghost icon buttons, 8dp gaps. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    android:background="@drawable/bg_card_futuristic"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_set_card_md"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:paddingStart="16dp"
+    android:paddingEnd="10dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="16dp">
 
-    <!-- Header: Category & Date & Actions -->
+    <!-- Header: category pill, date, actions -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -19,14 +23,15 @@
             android:id="@+id/tvMemoryCategory"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_badge_action"
+            android:background="@drawable/bg_set_badge"
             android:paddingHorizontal="10dp"
-            android:paddingVertical="4dp"
-            android:text="PREFERENCES"
+            android:paddingVertical="3dp"
+            android:text="Preferences"
             android:textColor="?attr/themeAccent"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.05" />
+            android:textSize="11sp"
+            android:fontFamily="@font/inter"
+            android:textFontWeight="600"
+            android:maxLines="1" />
 
         <TextView
             android:id="@+id/tvMemoryDate"
@@ -34,39 +39,48 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:layout_weight="1"
-            android:text="Sep 12, 2026 • 15:30"
+            android:text="Sep 12, 2026 - 15:30"
             android:textColor="?attr/themeTextMuted"
-            android:textSize="11sp" />
+            android:textSize="12sp"
+            android:fontFamily="@font/inter"
+            android:maxLines="1"
+            android:ellipsize="end" />
 
         <ImageButton
             android:id="@+id/btnEditMemory"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="@drawable/bg_set_icon_btn"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_edit"
             app:tint="?attr/themeTextSecondary"
             android:contentDescription="Edit" />
 
         <ImageButton
             android:id="@+id/btnDeleteMemory"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginStart="4dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_set_icon_btn"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_delete"
             app:tint="?attr/themeDanger"
             android:contentDescription="Delete" />
     </LinearLayout>
 
-    <!-- Content / Fact Text -->
+    <!-- Fact text -->
     <TextView
         android:id="@+id/tvMemoryFact"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
+        android:layout_marginEnd="6dp"
         android:text="Favorite song is Believer."
         android:textColor="?attr/themeTextPrimary"
-        android:textSize="14sp"
+        android:textSize="15sp"
+        android:fontFamily="@font/inter"
         android:lineSpacingExtra="3dp" />
 
 </LinearLayout>

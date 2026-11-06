@@ -64,6 +64,8 @@ class ApiRegistryBottomSheet : BottomSheetDialogFragment() {
                 val behavior = BottomSheetBehavior.from(it)
                 behavior.state = BottomSheetBehavior.STATE_EXPANDED
                 behavior.skipCollapsed = true
+                // Dark Bento: let bg_bento_x_sheet's rounded top show instead of the default sheet surface
+                it.setBackgroundColor(Color.TRANSPARENT)
             }
         }
 
@@ -73,7 +75,7 @@ class ApiRegistryBottomSheet : BottomSheetDialogFragment() {
         btnPingAllApis = view.findViewById(R.id.btnPingAllApis)
         tvTotalApiCount = view.findViewById(R.id.tvTotalApiCount)
 
-        tvTotalApiCount.text = "${PlanetaryApiRegistry.APIS.size} FEEDS"
+        tvTotalApiCount.text = "${PlanetaryApiRegistry.APIS.size} feeds"
 
         adapter = ApiRegistryAdapter(
             apis = PlanetaryApiRegistry.APIS.toMutableList(),
@@ -130,6 +132,24 @@ class ApiRegistryBottomSheet : BottomSheetDialogFragment() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
+        // Dark Bento pills: checked = accent fill + on-accent text, idle = plate + hairline
+        val ctx = requireContext()
+        val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
+        val chipBg = android.content.res.ColorStateList(states, intArrayOf(
+            ThemeManager.accentFillColor(ctx), ThemeManager.attrColor(ctx, R.attr.themeChipBg, Color.DKGRAY)))
+        val chipText = android.content.res.ColorStateList(states, intArrayOf(
+            ThemeManager.onAccentColor(ctx), ThemeManager.attrColor(ctx, R.attr.themeTextPrimary, Color.WHITE)))
+        val chipStroke = android.content.res.ColorStateList(states, intArrayOf(
+            Color.TRANSPARENT, ThemeManager.attrColor(ctx, R.attr.themePlateBorder, Color.GRAY)))
+        for (i in 0 until chipGroupCategories.childCount) {
+            (chipGroupCategories.getChildAt(i) as? Chip)?.apply {
+                chipBackgroundColor = chipBg
+                setTextColor(chipText)
+                chipStrokeColor = chipStroke
+                isCheckedIconVisible = false
+            }
+        }
+
         chipGroupCategories.setOnCheckedChangeListener { _, checkedId ->
             activeCategory = when (checkedId) {
                 R.id.chipAviation -> ApiCategory.AVIATION
@@ -161,7 +181,7 @@ class ApiRegistryBottomSheet : BottomSheetDialogFragment() {
     private fun setupPingAll() {
         btnPingAllApis.setOnClickListener {
             btnPingAllApis.isEnabled = false
-            btnPingAllApis.text = "PINGING..."
+            btnPingAllApis.text = "Pinging\u2026"
             lifecycleScope.launch {
                 val currentList = adapter.getCurrentList()
                 for ((index, api) in currentList.withIndex()) {
@@ -170,7 +190,7 @@ class ApiRegistryBottomSheet : BottomSheetDialogFragment() {
                     PlanetaryApiRegistry.testApiPing(api)
                     adapter.notifyItemChanged(index)
                 }
-                btnPingAllApis.text = "⚡ PING ALL"
+                btnPingAllApis.text = "Ping all"
                 btnPingAllApis.isEnabled = true
             }
         }
@@ -200,8 +220,9 @@ class ApiRegistryBottomSheet : BottomSheetDialogFragment() {
             val item = apis[position]
 
             holder.tvApiName.text = item.name
-            holder.tvCategoryBadge.text = item.category.name
-            holder.tvCategoryBadge.setTextColor(Color.parseColor(item.category.badgeColor))
+            holder.tvCategoryBadge.text = item.category.displayName.lowercase().replaceFirstChar { it.uppercase() }
+            // Dark Bento: neutral pill badge instead of per-category neon text
+            holder.tvCategoryBadge.setTextColor(ThemeManager.attrColor(holder.itemView.context, R.attr.themeTextSecondary, Color.LTGRAY))
 
             holder.tvAuthBadge.text = item.authRequirement.label
             holder.tvApiShortSummary.text = item.shortSummary
@@ -209,7 +230,7 @@ class ApiRegistryBottomSheet : BottomSheetDialogFragment() {
             holder.tvDetailHindi.text = item.detailedDescriptionHindi
             holder.tvDetailEnglish.text = item.detailedDescriptionEnglish
             holder.tvGodsEyeRole.text = item.godsEyeRole
-            holder.tvProvider.text = "PROVIDER: ${item.provider}"
+            holder.tvProvider.text = "Provider: ${item.provider}"
             holder.tvEndpointUrl.text = item.endpointUrl
             holder.tvVoiceCommand.text = item.voiceCommand
 
@@ -217,9 +238,9 @@ class ApiRegistryBottomSheet : BottomSheetDialogFragment() {
             val ctx = holder.itemView.context
             val accentColor = ThemeManager.attrColor(ctx, R.attr.themeAccent, Color.parseColor("#00E5FF"))
             val dotColor = when {
-                item.lastStatus == "OK" -> Color.parseColor("#00E676")
-                item.lastStatus.startsWith("HTTP") -> Color.parseColor("#F59E0B")
-                item.lastStatus.contains("ERR") || item.lastStatus.contains("TIMEOUT") -> Color.parseColor("#FF3D00")
+                item.lastStatus == "OK" -> ThemeManager.attrColor(ctx, R.attr.themeSuccess, Color.parseColor("#00E676"))
+                item.lastStatus.startsWith("HTTP") -> ThemeManager.attrColor(ctx, R.attr.themeWarning, Color.parseColor("#F59E0B"))
+                item.lastStatus.contains("ERR") || item.lastStatus.contains("TIMEOUT") -> ThemeManager.attrColor(ctx, R.attr.themeDanger, Color.parseColor("#FF3D00"))
                 item.lastStatus == "TESTING..." -> accentColor
                 else -> accentColor
             }
@@ -230,7 +251,7 @@ class ApiRegistryBottomSheet : BottomSheetDialogFragment() {
 
             // Detail toggle state
             holder.layoutDetailContainer.visibility = if (item.isExpanded) View.VISIBLE else View.GONE
-            holder.btnToggleDetail.text = if (item.isExpanded) "CLOSE ▴" else "DETAIL ▾"
+            holder.btnToggleDetail.text = if (item.isExpanded) "Close ▴" else "Details ▾"
 
             val toggleAction = View.OnClickListener {
                 item.isExpanded = !item.isExpanded
@@ -242,7 +263,7 @@ class ApiRegistryBottomSheet : BottomSheetDialogFragment() {
             // Ping test button
             holder.btnTestPing.setOnClickListener {
                 holder.tvPingResultDetail.text = "Testing live HTTP ping..."
-                holder.tvPingStatus.text = "PINGING..."
+                holder.tvPingStatus.text = "Pinging\u2026"
                 holder.tvPingStatus.setTextColor(accentColor)
                 onPingClick(item, position)
             }

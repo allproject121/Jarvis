@@ -169,6 +169,14 @@ object JarvisChatBridge {
         val text = outgoing.trim()
         if (text.isEmpty()) return false
         val entry = repository.beginPendingSend(conversationId, text)
+        // The conversation service usually runs in standby (no Gemini Live session). A text sent
+        // there was silently dropped and the chat showed "Jarvis is replying…" forever. Without a
+        // live session the chat now answers through the text brain (Gemini text → offline model).
+        if (!(JarvisConversationService.isServiceRunning() && JarvisConversationService.isSessionOn.value)) {
+            repository.lastSentConversationId = conversationId
+            scope.launch(Dispatchers.IO) { answerWithTextBrain(entry, text) }
+            return true
+        }
         val delivered = deliver(text, startSession)
         if (delivered) {
             repository.lastSentConversationId = conversationId
@@ -202,6 +210,41 @@ object JarvisChatBridge {
         delay(SETUP_GRACE_MS)
         JarvisConversationService.sendTextMessage(text)
         return true
+    }
+
+    /**
+     * Answers a chat-tab message without a Gemini Live session: the same router the offline voice
+     * engine uses (phone commands first, then the AI model mode — Auto Hybrid = Gemini text with
+     * offline-brain failover). The reply is stored like a Live reply.
+     */
+    private suspend fun answerWithTextBrain(entry: ChatRepository.PendingSend, text: String) {
+        val app = JarvisApp.instance
+        val prefs = app.preferences
+        val router = com.jarvis.assistant.ai.router.ModelRouter.getInstance(app, scope)
+        val raw = StringBuilder()
+        val reply = try {
+            val system = runCatching {
+                com.jarvis.assistant.util.PromptGenerator.generateSystemPrompt(
+                    personality = prefs.personality,
+                    userName = prefs.userName.ifBlank { "Roshan" },
+                    language = prefs.language
+                )
+            }.getOrDefault("")
+            router.routeConversationalQuery(
+                userPrompt = text,
+                systemPrompt = system,
+                openAiApiKey = runCatching { prefs.openAiApiKey }.getOrDefault("")
+            ).collect { raw.append(it) }
+            com.jarvis.assistant.ai.local.ToolCallParser.cleanConversationalText(raw.toString()).trim()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "Text brain failed: ${e.message}", e)
+            ""
+        }
+        val answer = reply.ifBlank { "Abhi jawab nahi mil paya. Internet ya API key check karke dobara bhejo." }
+        Log.i(TAG, "Text brain replied via ${router.lastActiveProviderName.value} (${answer.length} chars)")
+        repository.completeTextReply(entry, answer, router.lastActiveProviderName.value)
     }
 
     /** Forgets a send that will never be answered here (e.g. its conversation was deleted). */

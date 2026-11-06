@@ -83,6 +83,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import com.jarvis.assistant.ui.compose.designsystem.BentoIconPlate
+import com.jarvis.assistant.ui.compose.designsystem.BentoSectionHeader
+import com.jarvis.assistant.ui.compose.designsystem.bentoTokens
 
 /** Fallback scope for the backend singletons (JarvisApp normally creates them first). */
 private val dashboardFallbackScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -242,9 +245,9 @@ private fun ModelStatusCard(telemetry: HomeTelemetry, onClick: () -> Unit) {
                 Text(
                     text = if (telemetry.activeModelDownloaded || telemetry.isModelLoaded) telemetry.activeModelName
                     else "Download a local model",
-                    color = MaterialTheme.ledger.deskPaper,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
+                    color = bentoTokens().text,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -261,11 +264,11 @@ private fun ModelStatusCard(telemetry: HomeTelemetry, onClick: () -> Unit) {
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            Icon(
-                Icons.Filled.Psychology,
-                contentDescription = null,
-                tint = if (telemetry.isModelLoaded) MaterialTheme.ledger.lampGlow else MaterialTheme.ledger.deskInk,
-                modifier = Modifier.size(34.dp)
+            BentoIconPlate(
+                icon = Icons.Filled.Psychology,
+                size = 48.dp,
+                iconSize = 26.dp,
+                tint = if (telemetry.isModelLoaded) bentoTokens().accent else bentoTokens().muted
             )
         }
     }
@@ -276,13 +279,7 @@ private fun EngineHealthCard(telemetry: HomeTelemetry, liteRt: LiteRtStatus) {
     val state = telemetry.engineState
     CloudGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(
-                "ENGINE HEALTH",
-                color = MaterialTheme.ledger.deskPaper,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.96.sp
-            )
+            BentoSectionHeader(title = "Engine health", subtitle = "Local engines on this phone", icon = Icons.Filled.Speed)
             EngineLine(
                 name = "llama.cpp • CPU",
                 status = when (state) {
@@ -364,15 +361,16 @@ private fun StorageRow(telemetry: HomeTelemetry) {
 private fun MiniStat(title: String, icon: ImageVector, value: String, fraction: Float) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.ledger.lampDeep, modifier = Modifier.size(14.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(title, color = MaterialTheme.ledger.deskInk, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
+            BentoIconPlate(icon = icon, size = 28.dp, iconSize = 15.dp)
+            Spacer(Modifier.width(8.dp))
+            Text(title, color = bentoTokens().text2, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
         }
         Spacer(Modifier.height(6.dp))
         Text(
             value,
-            color = MaterialTheme.ledger.deskPaper,
-            fontSize = 13.sp,
+            color = bentoTokens().text,
+            fontSize = 18.sp,
+            lineHeight = 22.sp,
             fontWeight = FontWeight.SemiBold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
@@ -382,8 +380,8 @@ private fun MiniStat(title: String, icon: ImageVector, value: String, fraction: 
         LinearProgressIndicator(
             progress = { animated },
             modifier = Modifier.fillMaxWidth().height(5.dp),
-            color = MaterialTheme.ledger.lampDeep,
-            trackColor = MaterialTheme.ledger.deskHairline
+            color = bentoTokens().accentFill,
+            trackColor = bentoTokens().plate
         )
     }
 }

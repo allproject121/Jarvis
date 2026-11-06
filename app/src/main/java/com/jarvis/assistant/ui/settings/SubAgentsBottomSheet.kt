@@ -87,9 +87,22 @@ class SubAgentsBottomSheet : BottomSheetDialogFragment() {
 
         // 5. Maya sub-agent brains: per-role provider / model / key (coding, research, mission, eyes).
         (binding.root as? android.widget.LinearLayout)?.let { root ->
-            val btn = android.widget.Button(requireContext()).apply {
+            // Dark Bento plate button (2026-11-05 bento-all): chip fill + plate hairline, theme text.
+            val ctx = requireContext()
+            val btn = com.google.android.material.button.MaterialButton(ctx).apply {
                 text = "Sub-agent brains & Voice engine…"
                 isAllCaps = false
+                textSize = 14f
+                insetTop = 0
+                insetBottom = 0
+                cornerRadius = (16 * resources.displayMetrics.density).toInt()
+                strokeWidth = (1 * resources.displayMetrics.density).toInt()
+                backgroundTintList = android.content.res.ColorStateList.valueOf(
+                    com.jarvis.assistant.util.ThemeManager.attrColor(ctx, com.jarvis.assistant.R.attr.themeChipBg, android.graphics.Color.DKGRAY))
+                strokeColor = android.content.res.ColorStateList.valueOf(
+                    com.jarvis.assistant.util.ThemeManager.attrColor(ctx, com.jarvis.assistant.R.attr.themePlateBorder, android.graphics.Color.GRAY))
+                setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(ctx, com.jarvis.assistant.R.attr.themeTextPrimary, android.graphics.Color.WHITE))
+                minHeight = (52 * resources.displayMetrics.density).toInt()
                 setOnClickListener {
                     HudSoundManager.playTapSound()
                     dismiss()
@@ -100,8 +113,8 @@ class SubAgentsBottomSheet : BottomSheetDialogFragment() {
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                val m = (16 * resources.displayMetrics.density).toInt()
-                setMargins(m, m / 2, m, m)
+                // root already pads 16dp sides; just the 12dp bento gap above
+                setMargins(0, (12 * resources.displayMetrics.density).toInt(), 0, 0)
             }
             root.addView(btn, lp)
         }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento segmented pill for RadioButtons (2026-11-05 bento-all):
+     checked = accent fill (label set to ?attr/themeOnAccent in code), idle = plate + hairline. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true" android:drawable="@drawable/bg_bento_x_chip_on" />
+    <item android:drawable="@drawable/bg_set_chip" />
+</selector>

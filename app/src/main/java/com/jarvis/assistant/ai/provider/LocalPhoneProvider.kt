@@ -54,6 +54,10 @@ class LocalPhoneProvider private constructor(
         /** Tool result text fed back to the model (keeps follow-up steps cheap to read). */
         private const val MAX_TOOL_RESULT_CHARS = 700
 
+        /** Qwen3 2507 Instruct recommended sampling. */
+        private const val QWEN_TOP_K = 20
+        private const val QWEN_TOP_P = 0.8f
+
         @Volatile
         private var instance: LocalPhoneProvider? = null
 
@@ -225,6 +229,76 @@ class LocalPhoneProvider private constructor(
         }
     }
 
+    /** One diagnostic generation with llama.cpp's own timings (debug audit only, never used by Jarvis). */
+    data class DiagResult(
+        val text: String,
+        val promptTokens: Int,
+        val cacheN: Int,
+        val promptN: Long,
+        val promptMs: Double,
+        val promptPerSecond: Double,
+        val predictedN: Long,
+        val predictedMs: Double,
+        val predictedPerSecond: Double,
+        val wallMs: Long,
+        val stopReason: String
+    )
+
+    /**
+     * Diagnostics: runs [prompt] once on the chat slot (so prompt-cache reuse is real) without tools
+     * being executed, and returns the raw text plus llama.cpp's timings: cache_n = tokens reused from
+     * the cache, prompt_n = tokens actually read this time.
+     */
+    suspend fun diagnosticComplete(prompt: String, nPredict: Int, useChatSlot: Boolean = true): DiagResult? = withContext(Dispatchers.IO) {
+        if (!initialize()) return@withContext null
+        generationMutex.withLock {
+            val instance = nativeModel ?: return@withLock null
+            val family = com.jarvis.assistant.ai.compat.ModelFamily.resolveFromModelId(loadedModelId)
+            val params = InferenceParameters.of(prompt)
+                .withCachePrompt(true)
+                .let { if (slotsEnabled) it.withSlotId(if (useChatSlot) SLOT_CHAT else SLOT_QUIET) else it }
+                .withTemperature(currentConfig.temperature)
+                .withTopK(currentConfig.topK)
+                .withTopP(currentConfig.topP)
+                .withNPredict(nPredict)
+                .withStopStrings(*(family.stopTokens.toTypedArray()))
+            val tokens = runCatching { instance.encode(prompt).size }.getOrDefault(-1)
+            val t0 = System.currentTimeMillis()
+            val r = JarvisThreadManager.withBackgroundInferencePriority { instance.completeWithStats(params) }
+            val wall = System.currentTimeMillis() - t0
+            val t = r.timings
+            DiagResult(
+                text = r.text ?: "",
+                promptTokens = tokens,
+                cacheN = t?.cacheN ?: -1,
+                promptN = t?.promptN ?: -1,
+                promptMs = t?.promptMs ?: -1.0,
+                promptPerSecond = t?.promptPerSecond ?: -1.0,
+                predictedN = t?.predictedN ?: -1,
+                predictedMs = t?.predictedMs ?: -1.0,
+                predictedPerSecond = t?.predictedPerSecond ?: -1.0,
+                wallMs = wall,
+                stopReason = r.stopReason?.toString() ?: ""
+            )
+        }
+    }
+
+    /**
+     * Diagnostics: the chat template stored inside the GGUF file and what llama.cpp renders with it for
+     * a sample conversation, to compare against Jarvis' hand-written template.
+     */
+    suspend fun diagnosticTemplate(messagesJson: String): Pair<String, String> = withContext(Dispatchers.IO) {
+        if (!initialize()) return@withContext "" to ""
+        val file = modelManager.getModelFile(loadedModelId)
+        val embedded = runCatching {
+            net.ladenthin.llama.GgufInspector.read(file.toPath()).chatTemplate.orElse("<none>")
+        }.getOrElse { "error: ${it.message}" }
+        val rendered = generationMutex.withLock {
+            runCatching { nativeModel?.applyTemplate(messagesJson) ?: "" }.getOrElse { "error: ${it.message}" }
+        }
+        embedded to rendered
+    }
+
     private suspend fun primeChatSlot(): Boolean {
         if (!generationMutex.tryLock()) return false
         try {
@@ -299,9 +373,13 @@ class LocalPhoneProvider private constructor(
         val loopCapable = modelFamily == com.jarvis.assistant.ai.compat.ModelFamily.QWEN2P5 ||
             modelFamily == com.jarvis.assistant.ai.compat.ModelFamily.QWEN2 ||
             modelFamily == com.jarvis.assistant.ai.compat.ModelFamily.QWEN3
+        // Qwen's own recommended sampling (top_k 20, top_p 0.8). The wider 40/0.9 made the 4B model
+        // ramble and write broken tool JSON more often in the Nov 6 phone audit.
+        val stepTopK = if (loopCapable) QWEN_TOP_K else currentConfig.topK
+        val stepTopP = if (loopCapable) QWEN_TOP_P else currentConfig.topP
 
         // Tools: the constant everyday set (cached prompt prefix) + up to 6 picked for THIS request
-        // from all ~280 Jarvis tools.
+        // from all Jarvis tools (~140 offline-visible).
         val coreTools = availableTools.ifEmpty { toolDispatcher.getOfflineToolSchemas() }
         val extraTools = if (availableTools.isNotEmpty()) emptyList() else runCatching {
             val coreNames = coreTools.map { it.optJSONObject("function")?.optString("name").orEmpty() }.toSet()
@@ -319,6 +397,7 @@ class LocalPhoneProvider private constructor(
         var emittedAny = false
         var steps = 0
         var lastToolMessage: String? = null
+        var unusableToolCall = false
 
         val telemetry = com.jarvis.assistant.telemetry.TelemetryRepository.getInstance(context)
         try {
@@ -349,8 +428,8 @@ class LocalPhoneProvider private constructor(
                     .withCachePrompt(true)
                     .let { if (slotsEnabled) it.withSlotId(SLOT_CHAT) else it }
                     .withTemperature(currentConfig.temperature)
-                    .withTopK(currentConfig.topK)
-                    .withTopP(currentConfig.topP)
+                    .withTopK(stepTopK)
+                    .withTopP(stepTopP)
                     .withNPredict(
                         if (modelFamily == com.jarvis.assistant.ai.compat.ModelFamily.DEEPSEEK) maxOf(currentConfig.maxTokens, 1024)
                         else currentConfig.maxTokens
@@ -389,7 +468,12 @@ class LocalPhoneProvider private constructor(
                     generationMutex.unlock()
                     telemetry.endGeneration(activeId)
                 }
-                if (stepTool == null) stepTool = ToolCallParser.parseToolCall(acc.toString())
+                // Reply finished: now (and only now) broken tool JSON may be repaired.
+                if (stepTool == null) stepTool = ToolCallParser.parseToolCallLenient(acc.toString())
+                if (stepTool == null && ToolCallParser.stripThinking(acc.toString()).contains("<tool_call>")) {
+                    Log.w(TAG, "Unusable tool call from offline model: ${acc.toString().take(300)}")
+                    unusableToolCall = true
+                }
                 emitVisible(final = true)
                 Log.i(TAG, "Offline step ${steps + 1} reply: ${stepVisible.take(160)}" + (stepTool?.let { " | tool ${it.functionName} ${it.arguments}" } ?: ""))
 
@@ -424,8 +508,16 @@ class LocalPhoneProvider private constructor(
             emit(AiStreamChunk(token = " Sir, offline core error: ${e.message}", isComplete = false))
             emittedAny = true
         }
-        // The model went quiet after a tool ran: say what the tool reported.
-        if (!emittedAny && lastToolMessage != null) emit(AiStreamChunk(token = lastToolMessage, isComplete = false))
+        // Never end with an empty reply (the audit found silent turns): say what the tool reported, or
+        // that the request was not understood.
+        if (!emittedAny) {
+            val fallback = lastToolMessage ?: if (unusableToolCall) {
+                "Sir, ye kaam main theek se samajh nahi paaya. Thoda alag tarike se boliye."
+            } else {
+                "Sir, abhi jawab nahi ban paaya. Kripya dobara poochiye."
+            }
+            emit(AiStreamChunk(token = fallback, isComplete = false))
+        }
         emit(AiStreamChunk(token = "", isComplete = true))
     }.flowOn(Dispatchers.IO)
 

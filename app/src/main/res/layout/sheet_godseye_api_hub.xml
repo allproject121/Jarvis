@@ -1,230 +1,236 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- God's Eye sensors & API hub sheet - Dark Bento layout (2026-11-05 bento-all).
+     Every android:id and view type is unchanged (GodsEyeApiHubBottomSheet binds them). -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?attr/themeBg"
-    android:paddingTop="12dp">
+    android:background="@drawable/bg_bento_x_sheet"
+    android:paddingTop="10dp">
 
-    <!-- Top Drag Handle -->
+    <!-- Drag handle -->
     <View
-        android:layout_width="48dp"
+        android:layout_width="36dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:background="?attr/themeCardBorder"
-        android:layout_marginBottom="12dp" />
+        android:background="@drawable/bg_bento_x_handle"
+        android:layout_marginBottom="14dp" />
 
-    <!-- Hub Header -->
-    <RelativeLayout
+    <!-- Header: title + muted subtitle, ghost close button -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="18dp"
-        android:paddingBottom="12dp">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="14dp">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_alignParentStart="true"
-            android:layout_toStartOf="@id/btnHubClose"
-            android:layout_centerVertical="true">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_code_chip"
-                    app:tint="?attr/themeAccent"
-                    android:contentDescription="API Hub Icon" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="PLANETARY SENSORS &amp; API HUB"
-                    android:textColor="?attr/themeAccent"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.08"
-                    android:layout_marginStart="8dp" />
-            </LinearLayout>
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Direct access to all planetary intelligence &amp; sensor feeds"
-                android:textColor="?attr/themeTextSecondary"
-                android:textSize="11sp"
-                android:layout_marginTop="2dp" />
+                android:text="Sensors &amp; API hub"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="26sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
+                android:letterSpacing="-0.02" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Live feeds you can pull straight onto the globe"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter" />
         </LinearLayout>
 
         <ImageButton
             android:id="@+id/btnHubClose"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:background="@drawable/bg_godseye_hud_back"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_set_icon_btn"
             android:src="@drawable/ic_close"
-            android:padding="7dp"
-            app:tint="?attr/themeTextSecondary"
+            android:scaleType="fitCenter"
+            android:padding="11dp"
+            app:tint="?attr/themeTextPrimary"
             android:contentDescription="Close Hub" />
-    </RelativeLayout>
+    </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?attr/themeCardBorder" />
-
-    <!-- Scrollable Sensor Sections -->
+    <!-- Scrollable sections -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
+        android:clipToPadding="false"
         android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp">
+        android:paddingBottom="24dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- ========================================== -->
-            <!-- 0. AUTO-CYCLE SENTINEL PATROL MODE         -->
-            <!-- ========================================== -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="14dp"
-                app:cardBackgroundColor="?attr/themeCardBg"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                app:strokeColor="?attr/themeAccent"
-                app:strokeWidth="1.5dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:src="@drawable/ic_auto_cycle"
-                            app:tint="?attr/themeAccent"
-                            android:contentDescription="Auto Patrol" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="10dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="AUTONOMOUS SENTINEL TOUR"
-                                android:textColor="?attr/themeAccent"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                android:fontFamily="monospace" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Automatically cycles through flights, live CCTV, earthquakes, space launches &amp; storms"
-                                android:textColor="?attr/themeTextSecondary"
-                                android:textSize="10.5sp"
-                                android:layout_marginTop="2dp" />
-                        </LinearLayout>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnToggleAutoTourHub"
-                            android:layout_width="wrap_content"
-                            android:layout_height="36dp"
-                            android:text="START ⟳"
-                            android:textColor="?attr/themeOnAccent"
-                            android:textSize="11sp"
-                            android:textStyle="bold"
-                            android:fontFamily="monospace"
-                            android:backgroundTint="?attr/themeAccentFill"
-                            app:cornerRadius="8dp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ========================================== -->
-            <!-- 1. SPACE ROCKET LAUNCHES (LAUNCH LIBRARY 2) -->
-            <!-- ========================================== -->
+            <!-- ===== 0. Sentinel tour ===== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_godseye_hud_card"
-                android:padding="14dp"
-                android:layout_marginBottom="14dp">
+                android:background="@drawable/bg_jarvis_card"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp"
+                android:layout_marginBottom="12dp">
 
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🚀 ORBITAL ROCKET LAUNCHES"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true" />
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:padding="10dp"
+                        android:src="@drawable/ic_auto_cycle"
+                        app:tint="?attr/themeAccent"
+                        android:contentDescription="Auto Patrol" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="LL2 v2.3"
-                        android:textColor="?attr/themeAccent"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:background="?attr/themeAccentLight"
-                        android:paddingHorizontal="6dp"
-                        android:paddingVertical="2dp"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true" />
-                </RelativeLayout>
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="8dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sentinel tour"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Auto-cycles every live layer"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnToggleAutoTourHub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:minWidth="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:paddingHorizontal="18dp"
+                        android:text="Start"
+                        android:textAllCaps="false"
+                        android:textColor="?attr/themeOnAccent"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
+                        app:backgroundTint="?attr/themeAccentFill"
+                        app:cornerRadius="22dp" />
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Real-time upcoming orbital missions: SpaceX, ISRO, NASA, ESA with countdowns &amp; pads."
-                    android:textColor="?attr/themeTextSecondary"
-                    android:textSize="11sp"
-                    android:layout_marginTop="4dp" />
+                    android:layout_marginTop="12dp"
+                    android:text="Flies through flights, live CCTV, earthquakes, space launches and storms on its own."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter" />
+            </LinearLayout>
+
+            <!-- ===== 1. Rocket launches ===== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_card"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp"
+                android:layout_marginBottom="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:gravity="center"
+                        android:text="🚀"
+                        android:textSize="18sp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Rocket launches"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Launch Library 2 · v2.3"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Upcoming SpaceX, ISRO, NASA and ESA missions with countdowns and pads."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter" />
 
                 <Button
                     android:id="@+id/btnConnectLaunches"
                     android:layout_width="match_parent"
-                    android:layout_height="38dp"
-                    android:text="DIRECT CONNECT • FETCH LAUNCHES"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="14dp"
+                    android:text="Fetch launches"
+                    android:textAllCaps="false"
                     android:textColor="?attr/themeOnAccent"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:background="@drawable/bg_godseye_hud_back"
-                    android:backgroundTint="?attr/themeAccentFill"
-                    android:layout_marginTop="10dp" />
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:background="@drawable/bg_jarvis_pill_button"
+                    app:backgroundTint="@null" />
 
                 <ProgressBar
                     android:id="@+id/pbLaunches"
@@ -233,7 +239,7 @@
                     android:indeterminate="true"
                     android:indeterminateTint="?attr/themeAccent"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="10dp"
                     android:visibility="gone" />
 
                 <LinearLayout
@@ -241,66 +247,80 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="10dp" />
             </LinearLayout>
 
-            <!-- ========================================== -->
-            <!-- 2. WORLDWIDE LIVE RADIO (RADIO BROWSER)    -->
-            <!-- ========================================== -->
+            <!-- ===== 2. Live radio ===== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_godseye_hud_card"
-                android:padding="14dp"
-                android:layout_marginBottom="14dp">
+                android:background="@drawable/bg_jarvis_card"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp"
+                android:layout_marginBottom="12dp">
 
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📻 WORLDWIDE LIVE RADIO"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true" />
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:gravity="center"
+                        android:text="📻"
+                        android:textSize="18sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="30,000+ STATIONS"
-                        android:textColor="?attr/themeSuccess"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:background="?attr/themeChipBg"
-                        android:paddingHorizontal="6dp"
-                        android:paddingVertical="2dp"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true" />
-                </RelativeLayout>
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Live radio"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="30,000+ stations worldwide"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Direct audio streaming from planetary broadcast transmitters around the world."
-                    android:textColor="?attr/themeTextSecondary"
-                    android:textSize="11sp"
-                    android:layout_marginTop="4dp" />
+                    android:layout_marginTop="12dp"
+                    android:text="Stream broadcast stations from around the world."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter" />
 
-                <!-- Radio Playback Controller Bar (when playing) -->
+                <!-- Now-playing bar (shown while a station plays) -->
                 <LinearLayout
                     android:id="@+id/layoutRadioPlayer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:background="?attr/themeAccentLight"
-                    android:padding="8dp"
-                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="8dp"
+                    android:paddingVertical="8dp"
+                    android:layout_marginTop="12dp"
                     android:visibility="gone">
 
                     <TextView
@@ -309,59 +329,85 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Playing: ..."
-                        android:textColor="?attr/themeAccent"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter"
+                        android:drawableStart="@drawable/bg_bento_dot"
+                        android:drawablePadding="8dp"
+                        android:gravity="center_vertical"
                         android:singleLine="true"
                         android:ellipsize="end" />
 
                     <Button
                         android:id="@+id/btnStopRadio"
                         android:layout_width="wrap_content"
-                        android:layout_height="32dp"
-                        android:text="STOP"
+                        android:layout_height="36dp"
+                        android:layout_marginStart="8dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingHorizontal="16dp"
+                        android:text="Stop"
+                        android:textAllCaps="false"
                         android:textColor="?attr/themeDanger"
-                        android:textSize="10sp"
-                        android:background="@drawable/bg_godseye_hud_back" />
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
+                        android:background="@drawable/bg_set_chip"
+                        app:backgroundTint="@null" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginTop="10dp">
+                    android:layout_marginTop="14dp">
 
                     <Button
                         android:id="@+id/btnConnectRadioGlobal"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
+                        android:layout_height="40dp"
                         android:layout_weight="1"
-                        android:text="TOP GLOBAL"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="8dp"
+                        android:text="Global"
+                        android:textAllCaps="false"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="10sp"
-                        android:background="@drawable/bg_godseye_hud_card"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter"
+                        android:background="@drawable/bg_set_chip"
+                        app:backgroundTint="@null"
                         android:layout_marginEnd="4dp" />
 
                     <Button
                         android:id="@+id/btnConnectRadioIndia"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
+                        android:layout_height="40dp"
                         android:layout_weight="1"
-                        android:text="INDIA STATIONS"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="8dp"
+                        android:text="India"
+                        android:textAllCaps="false"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="10sp"
-                        android:background="@drawable/bg_godseye_hud_card"
-                        android:layout_marginHorizontal="2dp" />
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter"
+                        android:background="@drawable/bg_set_chip"
+                        app:backgroundTint="@null"
+                        android:layout_marginHorizontal="4dp" />
 
                     <Button
                         android:id="@+id/btnConnectRadioAmbient"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
+                        android:layout_height="40dp"
                         android:layout_weight="1"
-                        android:text="AMBIENT"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="8dp"
+                        android:text="Ambient"
+                        android:textAllCaps="false"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="10sp"
-                        android:background="@drawable/bg_godseye_hud_card"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter"
+                        android:background="@drawable/bg_set_chip"
+                        app:backgroundTint="@null"
                         android:layout_marginStart="4dp" />
                 </LinearLayout>
 
@@ -370,9 +416,9 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:indeterminate="true"
-                    android:indeterminateTint="#10B981"
+                    android:indeterminateTint="?attr/themeAccent"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="10dp"
                     android:visibility="gone" />
 
                 <LinearLayout
@@ -380,87 +426,104 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="10dp" />
             </LinearLayout>
 
-            <!-- ========================================== -->
-            <!-- 3. AIRCRAFT INTEL & ROUTE (ADSBdb)         -->
-            <!-- ========================================== -->
+            <!-- ===== 3. Aircraft lookup ===== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_godseye_hud_card"
-                android:padding="14dp"
-                android:layout_marginBottom="14dp">
+                android:background="@drawable/bg_jarvis_card"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp"
+                android:layout_marginBottom="12dp">
 
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="✈️ AIRCRAFT INTEL &amp; ROUTE LOOKUP"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true" />
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:gravity="center"
+                        android:text="✈️"
+                        android:textSize="18sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="ADSBdb"
-                        android:textColor="?attr/themeWarning"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:background="?attr/themeChipBg"
-                        android:paddingHorizontal="6dp"
-                        android:paddingVertical="2dp"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true" />
-                </RelativeLayout>
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Aircraft lookup"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Registration and route · ADSBdb"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Decode airframe registration, owner/operator, and flight route by callsign or hex."
-                    android:textColor="?attr/themeTextSecondary"
-                    android:textSize="11sp"
-                    android:layout_marginTop="4dp" />
+                    android:layout_marginTop="12dp"
+                    android:text="Decode the airframe, owner / operator and route from a callsign or hex code."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginTop="8dp">
+                    android:layout_marginTop="14dp">
 
                     <EditText
                         android:id="@+id/etAircraftQuery"
                         android:layout_width="0dp"
-                        android:layout_height="40dp"
+                        android:layout_height="48dp"
                         android:layout_weight="1"
-                        android:hint="Callsign (e.g. AIC101) or Hex (e.g. 800b4a)"
+                        android:hint="Callsign (AIC101) or hex (800b4a)"
                         android:textColor="?attr/themeTextPrimary"
                         android:textColorHint="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:background="@drawable/bg_godseye_hud_back"
-                        android:paddingHorizontal="10dp"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter"
+                        android:background="@drawable/bg_bento_x_input"
+                        android:paddingHorizontal="14dp"
                         android:singleLine="true"
                         android:inputType="textCapCharacters" />
 
                     <Button
                         android:id="@+id/btnLookupAircraft"
                         android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:text="LOOKUP"
-                        android:textColor="#0F141C"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:background="@drawable/bg_godseye_hud_back"
-                        android:backgroundTint="#F59E0B"
+                        android:layout_height="44dp"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="18dp"
+                        android:text="Look up"
+                        android:textAllCaps="false"
+                        android:textColor="?attr/themeOnAccent"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
+                        android:background="@drawable/bg_jarvis_pill_button"
+                        app:backgroundTint="@null"
                         android:layout_marginStart="8dp" />
                 </LinearLayout>
 
@@ -469,9 +532,9 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:indeterminate="true"
-                    android:indeterminateTint="#F59E0B"
+                    android:indeterminateTint="?attr/themeAccent"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="10dp"
                     android:visibility="gone" />
 
                 <TextView
@@ -479,81 +542,95 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:fontFamily="monospace"
-                    android:background="?attr/themeInputBg"
-                    android:padding="10dp"
-                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="12dp"
+                    android:layout_marginTop="10dp"
                     android:visibility="gone" />
             </LinearLayout>
 
-            <!-- ========================================== -->
-            <!-- 4. NOAA CYCLONES & HURRICANES               -->
-            <!-- ========================================== -->
+            <!-- ===== 4. Tropical cyclones ===== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_godseye_hud_card"
-                android:padding="14dp"
-                android:layout_marginBottom="14dp">
+                android:background="@drawable/bg_jarvis_card"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp"
+                android:layout_marginBottom="12dp">
 
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🌀 NOAA TROPICAL CYCLONES"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true" />
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:gravity="center"
+                        android:text="🌀"
+                        android:textSize="18sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="NHC / CPHC"
-                        android:textColor="?attr/themeInfo"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:background="?attr/themeAccentLight"
-                        android:paddingHorizontal="6dp"
-                        android:paddingVertical="2dp"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true" />
-                </RelativeLayout>
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tropical cyclones"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="NOAA NHC / CPHC"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Direct telemetry of active hurricanes, cyclones, central pressure mb &amp; wind intensities."
-                    android:textColor="?attr/themeTextSecondary"
-                    android:textSize="11sp"
-                    android:layout_marginTop="4dp" />
+                    android:layout_marginTop="12dp"
+                    android:text="Active hurricanes and cyclones with central pressure and wind intensity."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter" />
 
                 <Button
                     android:id="@+id/btnConnectCyclones"
                     android:layout_width="match_parent"
-                    android:layout_height="38dp"
-                    android:text="SCAN ACTIVE CYCLONES"
-                    android:textColor="#0F141C"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:background="@drawable/bg_godseye_hud_back"
-                    android:backgroundTint="#38BDF8"
-                    android:layout_marginTop="10dp" />
+                    android:layout_height="44dp"
+                    android:layout_marginTop="14dp"
+                    android:text="Scan active cyclones"
+                    android:textAllCaps="false"
+                    android:textColor="?attr/themeOnAccent"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:background="@drawable/bg_jarvis_pill_button"
+                    app:backgroundTint="@null" />
 
                 <ProgressBar
                     android:id="@+id/pbCyclones"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:indeterminate="true"
-                    android:indeterminateTint="#38BDF8"
+                    android:indeterminateTint="?attr/themeAccent"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="10dp"
                     android:visibility="gone" />
 
                 <TextView
@@ -561,81 +638,95 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:fontFamily="monospace"
-                    android:background="?attr/themeInputBg"
-                    android:padding="10dp"
-                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="12dp"
+                    android:layout_marginTop="10dp"
                     android:visibility="gone" />
             </LinearLayout>
 
-            <!-- ========================================== -->
-            <!-- 5. GDELT REAL-TIME GEO INTELLIGENCE         -->
-            <!-- ========================================== -->
+            <!-- ===== 5. GDELT geo-intel ===== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_godseye_hud_card"
-                android:padding="14dp"
-                android:layout_marginBottom="14dp">
+                android:background="@drawable/bg_jarvis_card"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp"
+                android:layout_marginBottom="12dp">
 
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🌐 GDELT REAL-TIME GEO-INTEL"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true" />
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:gravity="center"
+                        android:text="🌐"
+                        android:textSize="18sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="GDELT 2.0"
-                        android:textColor="?attr/themeAccent3"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:background="?attr/themeChipBg"
-                        android:paddingHorizontal="6dp"
-                        android:paddingVertical="2dp"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true" />
-                </RelativeLayout>
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Geo-intel news"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="GDELT 2.0 · real time"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Real-time planetary news &amp; security event feeds across thousands of international news sources."
-                    android:textColor="?attr/themeTextSecondary"
-                    android:textSize="11sp"
-                    android:layout_marginTop="4dp" />
+                    android:layout_marginTop="12dp"
+                    android:text="News and security events from thousands of international sources."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter" />
 
                 <Button
                     android:id="@+id/btnConnectNews"
                     android:layout_width="match_parent"
-                    android:layout_height="38dp"
-                    android:text="PULL GEO-INTELLIGENCE"
-                    android:textColor="#0F141C"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:background="@drawable/bg_godseye_hud_back"
-                    android:backgroundTint="#A855F7"
-                    android:layout_marginTop="10dp" />
+                    android:layout_height="44dp"
+                    android:layout_marginTop="14dp"
+                    android:text="Pull geo-intel"
+                    android:textAllCaps="false"
+                    android:textColor="?attr/themeOnAccent"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:background="@drawable/bg_jarvis_pill_button"
+                    app:backgroundTint="@null" />
 
                 <ProgressBar
                     android:id="@+id/pbNews"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:indeterminate="true"
-                    android:indeterminateTint="#A855F7"
+                    android:indeterminateTint="?attr/themeAccent"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="10dp"
                     android:visibility="gone" />
 
                 <LinearLayout
@@ -643,62 +734,74 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="10dp" />
             </LinearLayout>
 
-            <!-- ========================================== -->
-            <!-- 6. WORLDWIDE REAL CCTV SURVEILLANCE        -->
-            <!-- ========================================== -->
+            <!-- ===== 6. Live CCTV ===== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_godseye_hud_card"
-                android:padding="14dp"
-                android:layout_marginBottom="14dp">
+                android:background="@drawable/bg_jarvis_card"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp"
+                android:layout_marginBottom="12dp">
 
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📹 WORLDWIDE LIVE CCTV FEEDS"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true" />
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:gravity="center"
+                        android:text="📹"
+                        android:textSize="18sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="LIVE FEEDS"
-                        android:textColor="?attr/themeSuccess"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:background="?attr/themeChipBg"
-                        android:paddingHorizontal="6dp"
-                        android:paddingVertical="2dp"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true" />
-                </RelativeLayout>
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Live CCTV"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Verified street and highway cameras"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Real verified live street &amp; highway cameras. Select any camera to engage 3D globe tracking &amp; live frame projection."
-                    android:textColor="?attr/themeTextSecondary"
-                    android:textSize="11sp"
-                    android:layout_marginTop="4dp" />
+                    android:layout_marginTop="12dp"
+                    android:text="Pick a camera to fly the globe there and project its live frame."
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter" />
 
                 <LinearLayout
                     android:id="@+id/containerCctvPresets"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginTop="10dp" />
+                    android:layout_marginTop="12dp" />
             </LinearLayout>
 
         </LinearLayout>

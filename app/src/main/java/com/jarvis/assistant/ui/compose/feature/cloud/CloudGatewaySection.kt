@@ -74,6 +74,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.jarvis.assistant.ui.compose.designsystem.BentoPillShape
+import com.jarvis.assistant.ui.compose.designsystem.bentoSecondaryBorder
+import com.jarvis.assistant.ui.compose.designsystem.bentoSecondaryButtonColors
+import com.jarvis.assistant.ui.compose.designsystem.BentoFieldShape
+import com.jarvis.assistant.ui.compose.designsystem.bentoFieldColors
 
 /**
  * View model for the optional AndroLLM OpenAI-compatible gateway: custom
@@ -359,12 +364,12 @@ internal fun GatewayProvidersCard(vm: GatewayViewModel) {
                                 .fillMaxWidth()
                                 .padding(start = 32.dp, top = 6.dp)
                         ) {
-                            OutlinedButton(onClick = { vm.testConnection(provider.id) }, enabled = busy == null) {
+                            OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = { vm.testConnection(provider.id) }, enabled = busy == null) {
                                 if (busy == provider.id) {
                                     CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
                                 } else Text("Test")
                             }
-                            OutlinedButton(onClick = { vm.refreshModels(provider.id) }, enabled = busy == null) { Text("Models") }
+                            OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = { vm.refreshModels(provider.id) }, enabled = busy == null) { Text("Models") }
                             IconButton(onClick = {
                                 draft = ProviderDraft(provider.id, provider.name, provider.baseUrl, provider.apiKeyHeader)
                             }) { Icon(Icons.Filled.Edit, contentDescription = "Edit", tint = MaterialTheme.ledger.deskInk) }
@@ -432,7 +437,7 @@ internal fun GatewayProvidersCard(vm: GatewayViewModel) {
             }
 
             Spacer(Modifier.height(10.dp))
-            OutlinedButton(
+            OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(),
                 onClick = { draft = ProviderDraft(null, "", "", "Authorization") },
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -555,8 +560,10 @@ private fun ProviderDialog(
         title = { Text(if (draft.id == null) "Add gateway provider" else "Edit ${draft.name}") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, singleLine = true)
+                OutlinedTextField(shape = BentoFieldShape, colors = bentoFieldColors(), value = name, onValueChange = { name = it }, label = { Text("Name") }, singleLine = true)
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = url,
                     onValueChange = { url = it.trim() },
                     label = { Text("Base URL (e.g. https://openrouter.ai/api)") },
@@ -564,6 +571,8 @@ private fun ProviderDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
                 )
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = key,
                     onValueChange = { key = it },
                     label = { Text(if (draft.id == null) "API key (optional)" else "API key (blank = keep)") },
@@ -571,6 +580,8 @@ private fun ProviderDialog(
                     visualTransformation = PasswordVisualTransformation()
                 )
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = header,
                     onValueChange = { header = it.trim() },
                     label = { Text("Auth header") },
@@ -600,20 +611,26 @@ private fun CustomModelDialog(
         title = { Text("Custom model • $providerName") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Display name") }, singleLine = true)
+                OutlinedTextField(shape = BentoFieldShape, colors = bentoFieldColors(), value = name, onValueChange = { name = it }, label = { Text("Display name") }, singleLine = true)
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = id,
                     onValueChange = { id = it.trim() },
                     label = { Text("Model id (e.g. openai/gpt-4o-mini)") },
                     singleLine = true
                 )
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = url,
                     onValueChange = { url = it.trim() },
                     label = { Text("Alternate base URL (optional)") },
                     singleLine = true
                 )
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = key,
                     onValueChange = { key = it },
                     label = { Text("Model-scoped API key (optional)") },
@@ -665,8 +682,8 @@ internal fun LazyListScope.gatewayUsageItems(
                     )
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = onExport) { Text("Export CSV") }
-                    OutlinedButton(onClick = onClear) { Text("Clear") }
+                    OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = onExport) { Text("Export CSV") }
+                    OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = onClear) { Text("Clear") }
                 }
             }
         }

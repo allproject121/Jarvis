@@ -143,6 +143,12 @@ import com.jarvis.assistant.ui.compose.model.Model
 import com.jarvis.assistant.ui.compose.navigation.ComposeRoutes
 import com.jarvis.assistant.ui.compose.theme.ledger
 import org.json.JSONObject
+import com.jarvis.assistant.ui.compose.designsystem.BentoChip
+import com.jarvis.assistant.ui.compose.designsystem.BentoPillShape
+import com.jarvis.assistant.ui.compose.designsystem.bentoSecondaryBorder
+import com.jarvis.assistant.ui.compose.designsystem.bentoSecondaryButtonColors
+import com.jarvis.assistant.ui.compose.designsystem.BentoTopBar
+import com.jarvis.assistant.ui.compose.designsystem.BentoCardCompat
 
 /**
  * Model Manager — Installed models (GGUF + LiteRT), Download queue (pause / resume / cancel),
@@ -187,8 +193,9 @@ private fun ModelsScreen(
                 if (tab.route != ComposeRoutes.MODELS) navigate(tab.route)
             },
             topBar = {
-                TopAppBar(
-                    title = { Text("Model Manager", fontWeight = FontWeight.Bold, color = MaterialTheme.ledger.deskPaper) },
+                BentoTopBar(
+                    title = "Model Manager",
+                    subtitle = "On-device models, catalog & downloads",
                     actions = {
                         Box {
                             IconButton(onClick = { sortMenuExpanded = true }) {
@@ -222,8 +229,7 @@ private fun ModelsScreen(
                                 tint = MaterialTheme.ledger.deskInk
                             )
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                    }
                 )
             }
         ) { padding ->
@@ -516,7 +522,7 @@ private fun InstalledModelsTab(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Browse Catalog")
                     }
-                    OutlinedButton(onClick = onImport) {
+                    OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = onImport) {
                         Icon(Icons.Default.Folder, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Import")
@@ -733,7 +739,7 @@ private fun InstalledLiteRtCard(
     onBenchmark: (() -> Unit)? = null
 ) {
     var confirmDelete by remember { mutableStateOf(false) }
-    ElevatedCard(
+    BentoCardCompat(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.ledger.deskWalnut),
@@ -782,7 +788,7 @@ private fun InstalledLiteRtCard(
             }
             Spacer(modifier = Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onTogglePreferred, modifier = Modifier.weight(1f)) {
+                OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = onTogglePreferred, modifier = Modifier.weight(1f)) {
                     Icon(if (isPreferred) Icons.Default.Star else Icons.Default.StarBorder, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(if (isPreferred) "Preferred" else "Set preferred")
@@ -867,7 +873,7 @@ private fun ModelStatusDashboard(
         LocalEngineState.Uninitialized -> Triple("No Model", MaterialTheme.ledger.deskInk, false)
     }
 
-    Card(
+    BentoCardCompat(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.ledger.deskWalnut),
         shape = RoundedCornerShape(16.dp)
@@ -896,7 +902,7 @@ private fun ModelStatusDashboard(
                     )
                 }
                 if (engineState is LocalEngineState.Ready || engineState is LocalEngineState.Generating) {
-                    OutlinedButton(
+                    OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(),
                         onClick = onUnload,
                         enabled = engineState !is LocalEngineState.Generating
                     ) {
@@ -922,7 +928,7 @@ private fun ModelStatusDashboard(
             }
             if (engineState is LocalEngineState.Error) {
                 Spacer(modifier = Modifier.height(12.dp))
-                OutlinedButton(onClick = onRetry) {
+                OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = onRetry) {
                     Text("Retry Load", style = MaterialTheme.typography.labelMedium)
                 }
             }
@@ -1043,7 +1049,7 @@ private fun DownloadCard(
     val running = row.status == DownloadRowStatus.DOWNLOADING || row.status == DownloadRowStatus.VERIFYING
     var confirmCancel by remember { mutableStateOf(false) }
 
-    Card(
+    BentoCardCompat(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.ledger.deskWalnut)
     ) {
@@ -1149,14 +1155,14 @@ private fun DownloadCard(
             ) {
                 when (row.status) {
                     DownloadRowStatus.DOWNLOADING, DownloadRowStatus.QUEUED -> {
-                        OutlinedButton(onClick = onPause, modifier = Modifier.weight(1f)) {
+                        OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = onPause, modifier = Modifier.weight(1f)) {
                             Icon(Icons.Default.Pause, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("Pause")
                         }
                     }
                     DownloadRowStatus.VERIFYING -> {
-                        OutlinedButton(onClick = {}, enabled = false, modifier = Modifier.weight(1f)) {
+                        OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = {}, enabled = false, modifier = Modifier.weight(1f)) {
                             Text("Verifying…")
                         }
                     }
@@ -1276,7 +1282,7 @@ private fun CatalogTab(
         item(key = "format_chips") {
             ChipRow {
                 CatalogFormatFilter.values().forEach { option ->
-                    FilterChip(
+                    BentoChip(
                         selected = data.formatFilter == option,
                         onClick = { viewModel.updateFormatFilter(option) },
                         label = { Text(option.label) }
@@ -1288,7 +1294,7 @@ private fun CatalogTab(
         item(key = "sort_chips") {
             ChipRow {
                 JarvisCatalogSort.values().forEach { option ->
-                    FilterChip(
+                    BentoChip(
                         selected = data.catalogSort == option,
                         onClick = { viewModel.updateCatalogSort(option) },
                         label = { Text(option.label) }
@@ -1300,7 +1306,7 @@ private fun CatalogTab(
         item(key = "filter_chips") {
             ChipRow {
                 JarvisCatalogFilter.values().forEach { filter ->
-                    FilterChip(
+                    BentoChip(
                         selected = data.catalogFilter == filter,
                         onClick = { viewModel.updateCatalogFilter(filter) },
                         label = { Text(filter.label) }
@@ -1422,7 +1428,7 @@ private fun CatalogModelCard(
     val wide = wideSize()
     val d = row.descriptor
     val subtitle = "${d.quantization.removePrefix("GGUF").trim()} • ${d.formattedSize}".trim(' ', '•')
-    ElevatedCard(
+    BentoCardCompat(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight(),
@@ -1555,7 +1561,7 @@ private fun LiteRtCatalogCard(
     val m = row.model
     val wide = wideSize()
     val subtitle = "${m.quantization} • ${m.sizeBytes.formatSize()}"
-    ElevatedCard(
+    BentoCardCompat(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight(),
@@ -1680,7 +1686,7 @@ private fun CatalogModelAction(
         label = "catalogAction"
     ) { state ->
         when (state) {
-            CatalogActionState.INSTALLED -> OutlinedButton(
+            CatalogActionState.INSTALLED -> OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(),
                 onClick = {},
                 enabled = false,
                 modifier = modifier
@@ -1766,7 +1772,7 @@ private fun HuggingFaceTab(
         Column(modifier = Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             ChipRow {
                 RemoteSearchFormat.values().forEach { f ->
-                    FilterChip(
+                    BentoChip(
                         selected = hf.format == f,
                         onClick = { viewModel.setHfFormat(f) },
                         label = { Text(f.label) }
@@ -1775,7 +1781,7 @@ private fun HuggingFaceTab(
             }
             ChipRow {
                 SortBy.values().forEach { s ->
-                    FilterChip(
+                    BentoChip(
                         selected = hf.sort == s,
                         onClick = { viewModel.setHfSort(s) },
                         label = { Text(s.label) }
@@ -1796,7 +1802,7 @@ private fun HuggingFaceTab(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(hf.error, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
-                    OutlinedButton(onClick = { viewModel.searchHf() }) { Text("Retry") }
+                    OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = { viewModel.searchHf() }) { Text("Retry") }
                 }
             }
             hf.searched && hf.results.isEmpty() -> Box(
@@ -1836,7 +1842,7 @@ private fun HuggingFaceTab(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun HfResultCard(summary: RemoteModelSummary, onClick: () -> Unit) {
-    Card(
+    BentoCardCompat(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
@@ -2046,7 +2052,7 @@ private fun FirstLaunchRecommendationDialog(
                             Text(m.name, fontWeight = FontWeight.Bold)
                             Text("${ModelArtifactFormat.LITERTLM.label} • ${m.sizeBytes.formatSize()}", style = MaterialTheme.typography.labelSmall)
                             rec.reasons.take(3).forEach { Text("• $it", style = MaterialTheme.typography.labelSmall) }
-                            OutlinedButton(onClick = { onDownloadLiteRt(m) }) { Text("Download LiteRT model") }
+                            OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = { onDownloadLiteRt(m) }) { Text("Download LiteRT model") }
                         }
                     }
                 }
@@ -2146,7 +2152,7 @@ private fun CatalogLoadingPlaceholder() {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(4) {
-            ElevatedCard(
+            BentoCardCompat(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.ledger.deskWalnut),
                 elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
@@ -2196,7 +2202,7 @@ private fun HardwareDiagnosticsTab(hardwareInfo: DeviceHardwareInfo?) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            Card(
+            BentoCardCompat(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.ledger.deskWalnut)
             ) {

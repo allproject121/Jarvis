@@ -125,10 +125,10 @@ class BypassIdeActivity : AppCompatActivity() {
         val prefs = app.preferences
         val mode = prefs.aiExecutionMode
         if (mode == MultiModelAiRouter.MODE_ALL_TOGETHER) {
-            binding.btnAiEngineSelector.text = "🌐 MODE: ALL TOGETHER ▾"
+            binding.btnAiEngineSelector.text = "Mode: all together ▾"
         } else {
             val provider = prefs.selectedAiProvider.uppercase(Locale.ROOT)
-            binding.btnAiEngineSelector.text = "🎯 MODE: SINGLE ($provider) ▾"
+            binding.btnAiEngineSelector.text = "Mode: single ($provider) ▾"
         }
     }
 
@@ -222,10 +222,12 @@ class BypassIdeActivity : AppCompatActivity() {
         val isAccessEnabled = JarvisAccessibilityService.isEnabled()
         val tag = "ROOT: ${rootLabel()} · A11Y: ${if (isAccessEnabled) "ON" else "OFF (TAP)"}"
         binding.tvBypassSecurityTag.text = tag
+        // Bento: status pill text uses theme success/warning instead of holo colours.
         binding.tvBypassSecurityTag.setTextColor(
-            ContextCompat.getColor(
+            ThemeManager.attrColor(
                 this,
-                if (isAccessEnabled) android.R.color.holo_green_light else android.R.color.holo_orange_light
+                if (isAccessEnabled) R.attr.themeSuccess else R.attr.themeWarning,
+                ContextCompat.getColor(this, if (isAccessEnabled) android.R.color.holo_green_light else android.R.color.holo_orange_light)
             )
         )
         if (isAccessEnabled) {
@@ -294,8 +296,9 @@ class BypassIdeActivity : AppCompatActivity() {
         currentSubTab = tab
 
         // Update tab styles
-        val activeBg = R.drawable.bg_jarvis_pill_button
-        val inactiveBg = R.drawable.bg_jarvis_icon_square
+        // Bento pill tabs: active = accent-fill pill, idle = plate pill with hairline.
+        val activeBg = R.drawable.bg_bento_x_chip_on
+        val inactiveBg = R.drawable.bg_set_chip
         val activeColor = ThemeManager.onAccentColor(this)
         val inactiveColor = ThemeManager.attrColor(this, R.attr.themeTextSecondary, ContextCompat.getColor(this, R.color.text_muted))
 
@@ -537,7 +540,11 @@ class BypassIdeActivity : AppCompatActivity() {
         val isAccess = JarvisAccessibilityService.isEnabled()
         binding.tvAccessAgentStatus.text = if (isAccess) "ON" else "OFF"
         binding.tvAccessAgentStatus.setTextColor(
-            ContextCompat.getColor(this, if (isAccess) android.R.color.holo_green_light else android.R.color.holo_orange_light)
+            ThemeManager.attrColor(
+                this,
+                if (isAccess) R.attr.themeSuccess else R.attr.themeWarning,
+                ContextCompat.getColor(this, if (isAccess) android.R.color.holo_green_light else android.R.color.holo_orange_light)
+            )
         )
 
         binding.tvRouterAgentDetail.text = "Last provider used: ${activeProviderName()}"

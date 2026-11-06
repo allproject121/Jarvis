@@ -72,7 +72,9 @@ class OverlayAvatarActivity : AppCompatActivity() {
         updateControlsState(isEnabled)
 
         modeGroup.check(if (preferences.taskOverlayMode == "working") R.id.rbOverlayWorking else R.id.rbOverlayAlways)
+        styleModePills()
         modeGroup.setOnCheckedChangeListener { _, checkedId ->
+            styleModePills()
             preferences.taskOverlayMode = if (checkedId == R.id.rbOverlayWorking) "working" else "always"
             if (preferences.isTaskOverlayEnabled && PermissionHelper.hasOverlayPermission(this)) {
                 TaskProgressOverlay.showOverlay(this, forceShow = true)
@@ -181,11 +183,12 @@ class OverlayAvatarActivity : AppCompatActivity() {
             val isActive = preferences.taskOverlayAvatar == "custom_3d"
             if (isActive) {
                 btnActivateCustomAvatar.text = "✓ Active"
-                btnActivateCustomAvatar.setBackgroundResource(R.drawable.bg_jarvis_chip)
-                btnActivateCustomAvatar.setTextColor(ThemeManager.attrColor(this, R.attr.themeAccent, android.graphics.Color.parseColor("#38bdf8")))
+                // Dark Bento selected pill: accent fill + on-accent label
+                btnActivateCustomAvatar.setBackgroundResource(R.drawable.bg_bento_x_chip_on)
+                btnActivateCustomAvatar.setTextColor(ThemeManager.onAccentColor(this))
             } else {
                 btnActivateCustomAvatar.text = "Use As Avatar"
-                btnActivateCustomAvatar.setBackgroundResource(R.drawable.bg_jarvis_row_item)
+                btnActivateCustomAvatar.setBackgroundResource(R.drawable.bg_set_chip)
                 val typedValue = android.util.TypedValue()
                 theme.resolveAttribute(R.attr.themeTextPrimary, typedValue, true)
                 btnActivateCustomAvatar.setTextColor(typedValue.data)
@@ -304,7 +307,8 @@ class OverlayAvatarActivity : AppCompatActivity() {
                 super.onPageFinished(view, url)
                 selectInGallery(preferences.taskOverlayAvatar)
                 avatarGallery.evaluateJavascript(
-                    "window.setGalleryTheme && window.setGalleryTheme('#${themeColor(R.attr.themeTextPrimary)}', '#${themeColor(R.attr.themeAccent)}')",
+                    "window.setGalleryTheme && window.setGalleryTheme('#${themeColor(R.attr.themeTextPrimary)}', '#${themeColor(R.attr.themeAccent)}', " +
+                        "'${themeRgba(R.attr.themeChipBg)}', '${themeRgba(R.attr.themePlateBorder)}', '${themeRgba(R.attr.themeAccentLight)}')",
                     null
                 )
             }
@@ -317,6 +321,25 @@ class OverlayAvatarActivity : AppCompatActivity() {
         val base64 = if (hasCustom) CustomAvatarHelper.getBase64(this) ?: "" else ""
         avatarGallery.evaluateJavascript("window.setCustomAvatarAvailable && window.setCustomAvatarAvailable($hasCustom, '$base64')", null)
         avatarGallery.evaluateJavascript("window.setSelectedAvatar && window.setSelectedAvatar('$name')", null)
+    }
+
+    /** Dark Bento mode chips (2026-11-05 bento-all): checked pill gets the on-accent label, idle the secondary text. */
+    private fun styleModePills() {
+        val on = ThemeManager.onAccentColor(this)
+        val off = ThemeManager.attrColor(this, R.attr.themeTextSecondary)
+        for (i in 0 until modeGroup.childCount) {
+            (modeGroup.getChildAt(i) as? android.widget.RadioButton)?.let { it.setTextColor(if (it.isChecked) on else off) }
+        }
+    }
+
+    /** CSS rgba() for a theme colour attr, keeping alpha (gallery tile plate / hairline). */
+    private fun themeRgba(attribute: Int): String {
+        val value = android.util.TypedValue()
+        theme.resolveAttribute(attribute, value, true)
+        val c = value.data
+        return String.format(java.util.Locale.US, "rgba(%d,%d,%d,%.3f)",
+            android.graphics.Color.red(c), android.graphics.Color.green(c), android.graphics.Color.blue(c),
+            android.graphics.Color.alpha(c) / 255f)
     }
 
     private fun themeColor(attribute: Int): String {

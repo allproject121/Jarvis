@@ -1,6 +1,8 @@
 package com.jarvis.assistant.ui.settings
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -11,9 +13,10 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.SeekBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
+import androidx.appcompat.widget.SwitchCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import com.jarvis.assistant.JarvisApp
@@ -39,6 +42,33 @@ class CustomizationStudioActivity : AppCompatActivity() {
     private var companionCount = 0
     private var companionType = "orb"
     private var hasUserChangedEntityInStudio = false
+    /** Home tab "3D character" switch: flipped by the user this session (wins on Save). */
+    private var homeCharacterTouched = false
+    /** True while code (not the user) sets the "3D character" switch. */
+    private var syncingHomeCharacter = false
+    /** True while "Show everything" flips many switches (one tap sound, not sixteen). */
+    private var bulkHomeUpdate = false
+
+    // ---- Dark Bento state styling (same look as Media Studio: accent pill when selected) ----
+    private fun stylePill(view: TextView, selected: Boolean) {
+        view.setBackgroundResource(if (selected) R.drawable.bg_bento_studio_chip_on else R.drawable.bg_bento_studio_chip_off)
+        view.setTextColor(
+            if (selected) ThemeManager.onAccentColor(this)
+            else ThemeManager.attrColor(this, R.attr.themeTextPrimary, Color.WHITE)
+        )
+    }
+
+    private fun stylePlate(view: View, selected: Boolean) {
+        view.setBackgroundResource(if (selected) R.drawable.bg_bento_studio_plate_on else R.drawable.bg_jarvis_row_item)
+    }
+
+    /** Puts the Home tab "3D character" switch in line with an explicitly picked entity. */
+    private fun syncHomeCharacterSwitch(entity: String) {
+        homeCharacterTouched = false
+        syncingHomeCharacter = true
+        binding.switchCharacter3d.isChecked = entity != "orb" && entity != "arc_reactor"
+        syncingHomeCharacter = false
+    }
 
     private val pickStudioMediaLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
@@ -48,6 +78,8 @@ class CustomizationStudioActivity : AppCompatActivity() {
                 val newItem = com.jarvis.assistant.util.ModelVaultManager.importModelFromUri(this, uri)
                 if (ok || newItem != null) {
                     selectedEntityType = "custom_3d"
+                    hasUserChangedEntityInStudio = true
+                    syncHomeCharacterSwitch("custom_3d")
                     updateEntityTypeUI("custom_3d")
                     refreshCustomMediaStatusUI()
                     renderSavedModelsList()
@@ -129,13 +161,8 @@ class CustomizationStudioActivity : AppCompatActivity() {
             }
 
             val isActive = item.id == activeId
-            if (isActive) {
-                cardView.setBackgroundResource(R.drawable.bg_jarvis_chip)
-                tvActive.visibility = View.VISIBLE
-            } else {
-                cardView.setBackgroundResource(R.drawable.bg_jarvis_row_item)
-                tvActive.visibility = View.GONE
-            }
+            stylePlate(cardView, isActive)
+            tvActive.visibility = if (isActive) View.VISIBLE else View.GONE
 
             if (!item.isBuiltin) {
                 btnDelete.visibility = View.VISIBLE
@@ -166,6 +193,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
                 hasUserChangedEntityInStudio = true
                 com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, item.id)
                 selectedEntityType = item.category
+                syncHomeCharacterSwitch(selectedEntityType)
                 updateEntityTypeUI(selectedEntityType)
                 populateVaultCardsUI()
                 refreshCustomMediaStatusUI()
@@ -219,7 +247,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             setupTabNavigation()
             setupOrbTabControls()
             setupThemeTabControls()
-            setupWidgetTabControls()
+            setupHomeTabControls()
             setupAudioTabControls()
             setupActionButtons()
             lifecycleScope.launch {
@@ -306,14 +334,25 @@ class CustomizationStudioActivity : AppCompatActivity() {
         val scaleProg = ((preferences.orbScale - 0.70f) / 0.05f).roundToInt().coerceIn(0, 12)
         binding.sliderOrbScale.progress = scaleProg
         binding.tvOrbScaleVal.text = String.format("%.2fx", getCurrentScale())
-        // 4. Widgets
+        // 4. Home screen tab (moved here from the old "Home screen" sheet). Same prefs
+        //    HomeFragment.applyCustomizationPreferences reads on resume; written on Save.
         binding.switchHideAllCards.isChecked = preferences.hideAllHomeCards
-        binding.switchTelemetryWidget.isChecked = preferences.showTelemetryWidget
-        binding.switchWeatherWidget.isChecked = preferences.showWeatherWidget
-        binding.switchQuickActionsWidget.isChecked = preferences.showQuickActionsWidget
-        binding.switchProtocolsWidget.isChecked = preferences.showProtocolsWidget
-        binding.switchUpdatesWidget.isChecked = preferences.showUpdatesWidget
+        syncHomeCharacterSwitch(preferences.orbEntityType)
         binding.switchStatusIndicatorWidget.isChecked = preferences.showStatusIndicatorWidget
+        binding.switchWeatherWidget.isChecked = preferences.showWeatherWidget
+        binding.switchTelemetryWidget.isChecked = preferences.showTelemetryWidget
+        binding.swHomeAiDashboard.isChecked = com.jarvis.assistant.androllm.HomeDashboardPrefs.isEnabled(this)
+        binding.switchQuickActionsWidget.isChecked = preferences.showQuickActionsWidget
+        binding.switchScreenShare.isChecked = preferences.showScreenShareButton
+        binding.switchMemories.isChecked = preferences.showMemoriesButton
+        binding.switchLanguage.isChecked = preferences.showLanguageButton
+        binding.switchProtocolsWidget.isChecked = preferences.showProtocolsWidget
+        binding.switchPocketTtsCard.isChecked = preferences.showPocketTtsCard
+        binding.switchMatrixCard.isChecked = preferences.showMatrixCard
+        binding.switchUpdatesWidget.isChecked = preferences.showUpdatesWidget
+        binding.switchUpdateAgent.isChecked = preferences.showUpdateAgentCard
+        binding.switchUpdateVoice.isChecked = preferences.showUpdateVoiceCard
+        binding.switchUpdateGodsEye.isChecked = preferences.showUpdateGodsEyeCard
         binding.switchBlurEffectStudio.isChecked = preferences.isBlurEffectEnabled
 
         // 5. Audio & Vosk
@@ -478,28 +517,23 @@ class CustomizationStudioActivity : AppCompatActivity() {
             Triple(binding.tabChipLiveAi, binding.containerTabLiveAi, "LIVE_AI"),
             Triple(binding.tabChipArc, binding.containerTabArc, "ARC"),
             Triple(binding.tabChipTheme, binding.containerTabTheme, "THEME"),
-            Triple(binding.tabChipWidgets, binding.containerTabWidgets, "WIDGETS"),
+            Triple(binding.tabChipWidgets, binding.containerTabWidgets, "HOME_SCREEN"),
             Triple(binding.tabChipAudio, binding.containerTabAudio, "AUDIO")
         )
 
         fun selectTab(selectedIdx: Int, playAudio: Boolean = true) {
             if (playAudio) HudSoundManager.playTapSound()
             tabs.forEachIndexed { index, (chip, container, _) ->
-                if (index == selectedIdx) {
-                    chip.setBackgroundResource(R.drawable.bg_jarvis_chip)
-                    chip.setTextColor(ContextCompat.getColor(this, R.color.accent_sapphire))
-                    container.visibility = View.VISIBLE
-                } else {
-                    chip.setBackgroundResource(R.drawable.bg_jarvis_row_item)
-                    chip.setTextColor(Color.parseColor("#94A3B8"))
-                    container.visibility = View.GONE
-                }
+                stylePill(chip, index == selectedIdx)
+                container.visibility = if (index == selectedIdx) View.VISIBLE else View.GONE
             }
 
+            // Browsing a tab only switches the live preview; the entity is written on Save.
+            // (setActiveVaultItemId writes orbEntityType at once, which used to flip the Home
+            // 3D character to the orb just by opening the Studio.)
             when (selectedIdx) {
                 0 -> {
                     selectedEntityType = "orb"
-                    com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this@CustomizationStudioActivity, com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ORB.id)
                     updateEntityTypeUI("orb")
                     applyPreviewOrbParams()
                 }
@@ -516,7 +550,6 @@ class CustomizationStudioActivity : AppCompatActivity() {
                 }
                 2 -> {
                     selectedEntityType = "arc_reactor"
-                    com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this@CustomizationStudioActivity, com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ARC_REACTOR.id)
                     updateEntityTypeUI("arc_reactor")
                     applyPreviewOrbParams()
                 }
@@ -530,12 +563,17 @@ class CustomizationStudioActivity : AppCompatActivity() {
         binding.tabChipWidgets.setOnClickListener { selectTab(4) }
         binding.tabChipAudio.setOnClickListener { selectTab(5) }
 
-        val initTabIdx = when (selectedEntityType) {
+        val openHomeTab = intent?.getStringExtra(EXTRA_INITIAL_TAB) == TAB_HOME_SCREEN
+        val initTabIdx = if (openHomeTab) 4 else when (selectedEntityType) {
             "hinata_anime", "ai_girl", "custom_3d" -> 1
             "arc_reactor" -> 2
             else -> 0
         }
         selectTab(initTabIdx, playAudio = false)
+        if (openHomeTab) {
+            // Opened from Home / Stark menu "Customize": bring the Home screen tab into view.
+            binding.scrollStudio.post { binding.scrollStudio.smoothScrollTo(0, binding.scrollStudioTabs.top) }
+        }
     }
 
     private fun setupOrbTabControls() {
@@ -779,6 +817,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             hasUserChangedEntityInStudio = true
             selectedEntityType = "orb"
             com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ORB.id)
+            syncHomeCharacterSwitch("orb")
             updateEntityTypeUI("orb")
             populateVaultCardsUI()
             applyPreviewOrbParams()
@@ -788,6 +827,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             hasUserChangedEntityInStudio = true
             selectedEntityType = "ai_girl"
             com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, com.jarvis.assistant.util.ModelVaultManager.BUILTIN_LIVE_COMPANION.id)
+            syncHomeCharacterSwitch("ai_girl")
             updateEntityTypeUI("ai_girl")
             populateVaultCardsUI()
             applyPreviewOrbParams()
@@ -797,6 +837,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             hasUserChangedEntityInStudio = true
             selectedEntityType = "arc_reactor"
             com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ARC_REACTOR.id)
+            syncHomeCharacterSwitch("arc_reactor")
             updateEntityTypeUI("arc_reactor")
             populateVaultCardsUI()
             applyPreviewOrbParams()
@@ -809,6 +850,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             if (custom != null) {
                 com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, custom.id)
             }
+            syncHomeCharacterSwitch("custom_3d")
             updateEntityTypeUI("custom_3d")
             populateVaultCardsUI()
             applyPreviewOrbParams()
@@ -844,15 +886,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             binding.btnEntityArcReactor to "arc_reactor",
             binding.btnEntityCustom3d to "custom_3d"
         )
-        entities.forEach { (view, key) ->
-            if (key == entity) {
-                view.setBackgroundResource(R.drawable.bg_jarvis_chip)
-                view.setTextColor(ContextCompat.getColor(this, R.color.accent_sapphire))
-            } else {
-                view.setBackgroundResource(R.drawable.bg_jarvis_row_item)
-                view.setTextColor(Color.parseColor("#94A3B8"))
-            }
-        }
+        entities.forEach { (view, key) -> stylePill(view, key == entity) }
         binding.tvPreviewPresetName.text = when(entity) {
             "mora_cyber" -> "ENTITY: MORA (REDMAGIC CYBER COMPANION)"
             "hinata_anime" -> "ENTITY: HINATA (ANIME COMPANION)"
@@ -871,15 +905,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             binding.btnPulseOverdrive to "overdrive",
             binding.btnPulseStealth to "stealth"
         )
-        chips.forEach { (view, key) ->
-            if (key == mode) {
-                view.setBackgroundResource(R.drawable.bg_jarvis_chip)
-                view.setTextColor(ContextCompat.getColor(this, R.color.accent_sapphire))
-            } else {
-                view.setBackgroundResource(R.drawable.bg_jarvis_row_item)
-                view.setTextColor(Color.parseColor("#94A3B8"))
-            }
-        }
+        chips.forEach { (view, key) -> stylePill(view, key == mode) }
     }
 
     private fun updatePresetUI(activeKey: String) {
@@ -895,13 +921,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             binding.presetLight to listOf("light", "pearl_white")
         )
 
-        presetViews.forEach { (view, keys) ->
-            if (keys.contains(lowerKey)) {
-                view.setBackgroundResource(R.drawable.bg_jarvis_chip)
-            } else {
-                view.setBackgroundResource(R.drawable.bg_jarvis_row_item)
-            }
-        }
+        presetViews.forEach { (view, keys) -> stylePill(view, keys.contains(lowerKey)) }
 
         val displayLabel = if (lowerKey == "crimson" || lowerKey == "red") "CRIMSON RED" else if (lowerKey == "white") "ARC WHITE" else activeKey.uppercase()
         binding.tvPreviewPresetName.text = "CORE: $displayLabel"
@@ -922,15 +942,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             binding.btnCompanionDrone to "drone",
             binding.btnCompanionWisp to "wisp"
         )
-        styles.forEach { (btn, type) ->
-            if (type == companionType) {
-                btn.setBackgroundResource(R.drawable.bg_jarvis_chip)
-                btn.setTextColor(ContextCompat.getColor(this, R.color.accent_sapphire))
-            } else {
-                btn.setBackgroundResource(R.drawable.bg_jarvis_row_item)
-                btn.setTextColor(Color.parseColor("#94A3B8"))
-            }
-        }
+        styles.forEach { (btn, type) -> stylePill(btn, type == companionType) }
     }
 
     private fun setupThemeTabControls() {
@@ -976,47 +988,64 @@ class CustomizationStudioActivity : AppCompatActivity() {
             binding.cardThemeMaya to listOf(ThemeManager.THEME_MAYA)
         )
 
-        cards.forEach { (card, keys) ->
-            if (keys.contains(lowerKey)) {
-                card.setBackgroundResource(R.drawable.bg_jarvis_chip)
-            } else {
-                card.setBackgroundResource(R.drawable.bg_jarvis_row_item)
-            }
+        cards.forEach { (card, keys) -> stylePlate(card, keys.contains(lowerKey)) }
+    }
+
+    /** Every card switch on the Home screen tab (one control per pref; written on Save). */
+    private fun homeCardSwitches(): List<SwitchCompat> = listOf(
+        binding.switchStatusIndicatorWidget,
+        binding.switchWeatherWidget,
+        binding.switchTelemetryWidget,
+        binding.swHomeAiDashboard,
+        binding.switchQuickActionsWidget,
+        binding.switchScreenShare,
+        binding.switchMemories,
+        binding.switchLanguage,
+        binding.switchProtocolsWidget,
+        binding.switchPocketTtsCard,
+        binding.switchMatrixCard,
+        binding.switchUpdatesWidget,
+        binding.switchUpdateAgent,
+        binding.switchUpdateVoice,
+        binding.switchUpdateGodsEye
+    )
+
+    /** Rows tagged "toggleRow" in the layout toggle their switch when tapped anywhere. */
+    private fun bindToggleRows(root: View) {
+        if (root is android.view.ViewGroup) {
+            for (i in 0 until root.childCount) bindToggleRows(root.getChildAt(i))
+        }
+        val row = root.parent as? View ?: return
+        if (root is SwitchCompat && row.tag == "toggleRow") {
+            row.setOnClickListener { root.toggle() }
         }
     }
 
-    private fun setupWidgetTabControls() {
-        binding.switchHideAllCards.setOnCheckedChangeListener { _, isChecked ->
-            preferences.hideAllHomeCards = isChecked
+    private fun setupHomeTabControls() {
+        bindToggleRows(binding.root)
+
+        // 3D character (Home): On = Mora 3D character, Off = arc-reactor orb. Saved with the entity on Save.
+        binding.switchCharacter3d.setOnCheckedChangeListener { _, isChecked ->
+            if (syncingHomeCharacter) return@setOnCheckedChangeListener
             HudSoundManager.playTapSound()
+            homeCharacterTouched = true
+            hasUserChangedEntityInStudio = true
+            selectedEntityType = if (isChecked) "mora_cyber" else "orb"
+            updateEntityTypeUI(selectedEntityType)
+            applyPreviewOrbParams()
         }
-        binding.switchTelemetryWidget.setOnCheckedChangeListener { _, isChecked ->
-            preferences.showTelemetryWidget = isChecked
-            HudSoundManager.playTapSound()
+
+        (homeCardSwitches() + binding.switchHideAllCards + binding.switchBlurEffectStudio).forEach { sw ->
+            sw.setOnCheckedChangeListener { _, _ -> if (!bulkHomeUpdate) HudSoundManager.playTapSound() }
         }
-        binding.switchWeatherWidget.setOnCheckedChangeListener { _, isChecked ->
-            preferences.showWeatherWidget = isChecked
+
+        binding.btnShowAllHomeCards.setOnClickListener {
             HudSoundManager.playTapSound()
-        }
-        binding.switchQuickActionsWidget.setOnCheckedChangeListener { _, isChecked ->
-            preferences.showQuickActionsWidget = isChecked
-            HudSoundManager.playTapSound()
-        }
-        binding.switchProtocolsWidget.setOnCheckedChangeListener { _, isChecked ->
-            preferences.showProtocolsWidget = isChecked
-            HudSoundManager.playTapSound()
-        }
-        binding.switchUpdatesWidget.setOnCheckedChangeListener { _, isChecked ->
-            preferences.showUpdatesWidget = isChecked
-            HudSoundManager.playTapSound()
-        }
-        binding.switchStatusIndicatorWidget.setOnCheckedChangeListener { _, isChecked ->
-            preferences.showStatusIndicatorWidget = isChecked
-            HudSoundManager.playTapSound()
-        }
-        binding.switchBlurEffectStudio.setOnCheckedChangeListener { _, isChecked ->
-            preferences.isBlurEffectEnabled = isChecked
-            HudSoundManager.playTapSound()
+            bulkHomeUpdate = true
+            binding.switchHideAllCards.isChecked = false
+            homeCardSwitches().forEach { it.isChecked = true }
+            bulkHomeUpdate = false
+            Toast.makeText(this, "Every home card is on. Tap Apply & save to keep it.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -1128,13 +1157,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             binding.cardPersonaFriday to "friday",
             binding.cardPersonaEdith to "edith"
         )
-        cards.forEach { (card, key) ->
-            if (key.equals(persona, ignoreCase = true)) {
-                card.setBackgroundResource(R.drawable.bg_jarvis_chip)
-            } else {
-                card.setBackgroundResource(R.drawable.bg_jarvis_row_item)
-            }
-        }
+        cards.forEach { (card, key) -> stylePlate(card, key.equals(persona, ignoreCase = true)) }
     }
 
     private fun updatePromptTemplateUI(activeId: String) {
@@ -1145,14 +1168,13 @@ class CustomizationStudioActivity : AppCompatActivity() {
             Triple(binding.cardTemplateExecutiveSummary, binding.badgeTemplateExecutiveSummary, "summarize_text")
         )
         templates.forEach { (card, badge, id) ->
+            stylePlate(card, id == activeId)
             if (id == activeId) {
-                card.setBackgroundResource(R.drawable.bg_jarvis_chip)
-                badge.text = "ACTIVE"
-                badge.setTextColor(Color.parseColor("#10B981"))
+                badge.text = "Active"
+                badge.setTextColor(ThemeManager.attrColor(this, R.attr.themeSuccess, Color.parseColor("#10B981")))
             } else {
-                card.setBackgroundResource(R.drawable.bg_jarvis_row_item)
-                badge.text = "APPLY"
-                badge.setTextColor(ThemeManager.getThemeAccentColor(this))
+                badge.text = "Apply"
+                badge.setTextColor(ThemeManager.attrColor(this, R.attr.themeAccent, ThemeManager.getThemeAccentColor(this)))
             }
         }
     }
@@ -1163,15 +1185,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             binding.btnNameChipJarvis to "JARVIS",
             binding.btnNameChipFriday to "FRIDAY"
         )
-        chips.forEach { (chip, key) ->
-            if (key == upper) {
-                chip.setBackgroundResource(R.drawable.bg_jarvis_chip)
-                chip.setTextColor(ThemeManager.getThemeAccentColor(this))
-            } else {
-                chip.setBackgroundResource(R.drawable.bg_jarvis_row_item)
-                chip.setTextColor(ContextCompat.getColor(this, R.color.text_primary))
-            }
-        }
+        chips.forEach { (chip, key) -> stylePill(chip, key == upper) }
     }
 
     private fun setupActionButtons() {
@@ -1220,7 +1234,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
 
             binding.tvOrbSpeedVal.text = "1.0x"
             binding.tvOrbGlowVal.text = "1.0x"
-            binding.tvOrbScaleVal.text = "1.0x"
+            binding.tvOrbScaleVal.text = "1.00x"
             binding.tvHudVolumeVal.text = "80%"
             binding.tvVoskVal.text = "0.65"
 
@@ -1238,6 +1252,15 @@ class CustomizationStudioActivity : AppCompatActivity() {
 
         binding.btnApplyAndSave.setOnClickListener {
             try {
+                // Home tab "3D character" switch flipped this session: it decides the Home entity.
+                if (homeCharacterTouched) {
+                    selectedEntityType = when {
+                        !binding.switchCharacter3d.isChecked -> "orb"
+                        selectedEntityType != "orb" && selectedEntityType != "arc_reactor" -> selectedEntityType
+                        else -> "mora_cyber"
+                    }
+                    hasUserChangedEntityInStudio = true
+                }
                 // Save Orb Settings & Entity Type
                 if (hasUserChangedEntityInStudio || preferences.orbEntityType != "mora_cyber") {
                     preferences.userExplicitlyChoseEntity = true
@@ -1273,14 +1296,23 @@ class CustomizationStudioActivity : AppCompatActivity() {
 
                 // Save Theme
                 preferences.appTheme = selectedTheme
-                // Save Widgets & HUD Overlays
+                // Save Home screen tab (HomeFragment re-reads these in onResume)
                 preferences.hideAllHomeCards = binding.switchHideAllCards.isChecked
-                preferences.showTelemetryWidget = binding.switchTelemetryWidget.isChecked
-                preferences.showWeatherWidget = binding.switchWeatherWidget.isChecked
-                preferences.showQuickActionsWidget = binding.switchQuickActionsWidget.isChecked
-                preferences.showProtocolsWidget = binding.switchProtocolsWidget.isChecked
-                preferences.showUpdatesWidget = binding.switchUpdatesWidget.isChecked
                 preferences.showStatusIndicatorWidget = binding.switchStatusIndicatorWidget.isChecked
+                preferences.showWeatherWidget = binding.switchWeatherWidget.isChecked
+                preferences.showTelemetryWidget = binding.switchTelemetryWidget.isChecked
+                com.jarvis.assistant.androllm.HomeDashboardPrefs.setEnabled(this, binding.swHomeAiDashboard.isChecked)
+                preferences.showQuickActionsWidget = binding.switchQuickActionsWidget.isChecked
+                preferences.showScreenShareButton = binding.switchScreenShare.isChecked
+                preferences.showMemoriesButton = binding.switchMemories.isChecked
+                preferences.showLanguageButton = binding.switchLanguage.isChecked
+                preferences.showProtocolsWidget = binding.switchProtocolsWidget.isChecked
+                preferences.showPocketTtsCard = binding.switchPocketTtsCard.isChecked
+                preferences.showMatrixCard = binding.switchMatrixCard.isChecked
+                preferences.showUpdatesWidget = binding.switchUpdatesWidget.isChecked
+                preferences.showUpdateAgentCard = binding.switchUpdateAgent.isChecked
+                preferences.showUpdateVoiceCard = binding.switchUpdateVoice.isChecked
+                preferences.showUpdateGodsEyeCard = binding.switchUpdateGodsEye.isChecked
                 preferences.isBlurEffectEnabled = binding.switchBlurEffectStudio.isChecked
 
                 // Save Audio & Vosk
@@ -1353,12 +1385,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
                     topMargin = (4 * resources.displayMetrics.density).toInt()
                     bottomMargin = (4 * resources.displayMetrics.density).toInt()
                 }
-                setBackgroundResource(
-                    if (model.isActive && selectedEntityType == "custom_3d")
-                        R.drawable.bg_jarvis_chip
-                    else
-                        R.drawable.bg_jarvis_row_item
-                )
+                stylePlate(this, model.isActive && selectedEntityType == "custom_3d")
                 setPadding(
                     (12 * resources.displayMetrics.density).toInt(),
                     (10 * resources.displayMetrics.density).toInt(),
@@ -1377,12 +1404,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             val titleText = android.widget.TextView(this).apply {
                 text = "${model.name} [${model.format.uppercase()}]"
                 textSize = 12f
-                setTextColor(
-                    if (model.isActive && selectedEntityType == "custom_3d")
-                        ContextCompat.getColor(this@CustomizationStudioActivity, R.color.accent_sapphire)
-                    else
-                        Color.WHITE
-                )
+                setTextColor(ThemeManager.attrColor(this@CustomizationStudioActivity, R.attr.themeTextPrimary, Color.WHITE))
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
             }
 
@@ -1391,10 +1413,11 @@ class CustomizationStudioActivity : AppCompatActivity() {
                 text = "$activeBadge${model.formattedSize}"
                 textSize = 10.5f
                 setTextColor(
-                    if (model.isActive && selectedEntityType == "custom_3d")
-                        Color.parseColor("#38BDF8")
-                    else
-                        Color.parseColor("#94A3B8")
+                    ThemeManager.attrColor(
+                        this@CustomizationStudioActivity,
+                        if (model.isActive && selectedEntityType == "custom_3d") R.attr.themeAccent else R.attr.themeTextMuted,
+                        Color.GRAY
+                    )
                 )
             }
 
@@ -1408,12 +1431,13 @@ class CustomizationStudioActivity : AppCompatActivity() {
                 textSize = 10.5f
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
                 setTextColor(
-                    if (model.isActive && selectedEntityType == "custom_3d")
-                        Color.parseColor("#10B981")
-                    else
-                        ContextCompat.getColor(this@CustomizationStudioActivity, R.color.accent_sapphire)
+                    ThemeManager.attrColor(
+                        this@CustomizationStudioActivity,
+                        if (model.isActive && selectedEntityType == "custom_3d") R.attr.themeSuccess else R.attr.themeAccent,
+                        Color.GRAY
+                    )
                 )
-                setBackgroundResource(R.drawable.bg_jarvis_chip)
+                setBackgroundResource(R.drawable.bg_bento_studio_chip_off)
                 setPadding(
                     (12 * resources.displayMetrics.density).toInt(),
                     (6 * resources.displayMetrics.density).toInt(),
@@ -1424,6 +1448,8 @@ class CustomizationStudioActivity : AppCompatActivity() {
                     HudSoundManager.playTapSound()
                     com.jarvis.assistant.util.CustomAvatarHelper.setActiveModel(this@CustomizationStudioActivity, model.id)
                     selectedEntityType = "custom_3d"
+                    hasUserChangedEntityInStudio = true
+                    syncHomeCharacterSwitch("custom_3d")
                     updateEntityTypeUI("custom_3d")
                     binding.previewOrbWebView.evaluateJavascript(
                         "if(window.JarvisOrb){ window.JarvisOrb.setEntityType('custom_3d'); window.JarvisOrb.loadCustom3DModel(); }",
@@ -1442,7 +1468,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
                 text = "✕"
                 textSize = 13f
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
-                setTextColor(Color.parseColor("#EF4444"))
+                setTextColor(ThemeManager.attrColor(this@CustomizationStudioActivity, R.attr.themeDanger, Color.parseColor("#EF4444")))
                 setPadding(
                     (12 * resources.displayMetrics.density).toInt(),
                     (6 * resources.displayMetrics.density).toInt(),
@@ -1504,6 +1530,14 @@ class CustomizationStudioActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "CustomizationStudio"
+
+        /** Intent extra: which tab to open on (currently only [TAB_HOME_SCREEN]). */
+        const val EXTRA_INITIAL_TAB = "studio_initial_tab"
+        const val TAB_HOME_SCREEN = "home_screen"
+
+        /** Studio opened on its Home screen tab (cards, 3D character, HUD size, compact stage). */
+        fun homeScreenIntent(context: Context): Intent =
+            Intent(context, CustomizationStudioActivity::class.java).putExtra(EXTRA_INITIAL_TAB, TAB_HOME_SCREEN)
     }
 
     /** Home/Chat tab style: Jarvis classic (default) or the AndroLLM screen inside the same tab. */
@@ -1521,10 +1555,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
         binding.rgChatStyle.setOnCheckedChangeListener { _, id ->
             style.setChatStyle(this, if (id == R.id.rbChatStyleAndroLlm) style.ANDROLLM else style.JARVIS)
         }
-        binding.swHomeAiDashboard.isChecked = com.jarvis.assistant.androllm.HomeDashboardPrefs.isEnabled(this)
-        binding.swHomeAiDashboard.setOnCheckedChangeListener { _, checked ->
-            com.jarvis.assistant.androllm.HomeDashboardPrefs.setEnabled(this, checked)
-        }
+        // swHomeAiDashboard now lives on the Home screen tab (loaded in loadInitialPreferences, saved on Save).
         binding.swShowAiHubTab.isChecked = style.showAiHubTab(this)
         binding.swShowAiHubTab.setOnCheckedChangeListener { _, checked -> style.setShowAiHubTab(this, checked) }
         binding.swShowAndroSplash.isChecked = style.showSplash(this)

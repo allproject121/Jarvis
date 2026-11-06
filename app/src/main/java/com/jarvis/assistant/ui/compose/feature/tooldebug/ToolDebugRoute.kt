@@ -61,6 +61,13 @@ import com.jarvis.assistant.ui.compose.theme.ledger
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.jarvis.assistant.ui.compose.designsystem.BentoTopBar
+import androidx.compose.ui.unit.sp
+import com.jarvis.assistant.ui.compose.designsystem.BentoIconPlate
+import com.jarvis.assistant.ui.compose.designsystem.BentoSectionHeader
+import com.jarvis.assistant.ui.compose.designsystem.bentoTokens
+import com.jarvis.assistant.ui.compose.designsystem.BentoFieldShape
+import com.jarvis.assistant.ui.compose.designsystem.bentoFieldColors
 
 /**
  * Tool Debug: run any Jarvis tool for real ("Run a tool") and see the log of every tool call
@@ -89,7 +96,9 @@ private fun ToolDebugScreen(
             currentRoute = ComposeRoutes.DEVELOPER,
             onTabSelected = { tab -> if (tab.route != ComposeRoutes.DEVELOPER) navigate(tab.route) },
             topBar = {
-                TopAppBar(
+                BentoTopBar(
+                    title = "Tool Debug",
+                    subtitle = "Run a tool • ${traces.size} call(s) logged",
                     navigationIcon = {
                         IconButton(onClick = back) {
                             Icon(
@@ -99,30 +108,11 @@ private fun ToolDebugScreen(
                             )
                         }
                     },
-                    title = {
-                        Column {
-                            Text(
-                                text = "Tool Debug",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.ledger.deskPaper
-                                )
-                            )
-                            Text(
-                                text = "Run a tool • ${traces.size} call(s) logged",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.ledger.lampDeep,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            )
-                        }
-                    },
                     actions = {
                         IconButton(onClick = { viewModel.clear() }) {
                             Icon(Icons.Filled.Clear, contentDescription = "Clear log", tint = MaterialTheme.ledger.deskInk)
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                    }
                 )
             }
         ) { padding ->
@@ -156,19 +146,13 @@ private fun ToolDebugScreen(
                                 Spacer(modifier = Modifier.height(24.dp))
                                 CloudGlassCard(modifier = Modifier.fillMaxWidth()) {
                                     Column(modifier = Modifier.padding(4.dp)) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Bolt,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.ledger.lampGlow,
-                                            modifier = Modifier.size(28.dp)
-                                        )
+                                        BentoIconPlate(icon = Icons.Filled.Bolt)
                                         Spacer(modifier = Modifier.height(10.dp))
                                         Text(
                                             text = "No tool executions yet",
-                                            style = MaterialTheme.typography.titleMedium.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.ledger.deskPaper
-                                            )
+                                            color = bentoTokens().text,
+                                            fontSize = 19.sp,
+                                            fontWeight = FontWeight.SemiBold
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
@@ -207,22 +191,12 @@ private fun ToolRegistryStatusCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Tool Registry",
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.ledger.deskPaper
-                        )
-                    )
-                    Text(
-                        text = "What Jarvis offers right now • tap a tool for its arguments",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.ledger.deskInk,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    )
-                }
+                BentoSectionHeader(
+                    title = "Tool Registry",
+                    subtitle = "What Jarvis offers right now • tap a tool for its arguments",
+                    icon = Icons.Filled.Bolt,
+                    modifier = Modifier.weight(1f)
+                )
                 IconButton(onClick = onRefresh, modifier = Modifier.size(32.dp)) {
                     Icon(Icons.Filled.Refresh, contentDescription = "Refresh tool registry", tint = MaterialTheme.ledger.deskInk, modifier = Modifier.size(18.dp))
                 }
@@ -447,19 +421,15 @@ private fun RunToolCard(viewModel: ToolDebugViewModel) {
 
     CloudGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp)) {
         Column {
-            Text(
-                text = "Run a tool",
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.ledger.deskPaper
-                )
-            )
-            Text(
-                text = "Runs on this phone through Jarvis' real tool runner (same as Gemini Live and the offline brain). It really acts: set_flashlight turns the torch on. ${tools.size} tools available.",
-                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.deskInk)
+            BentoSectionHeader(
+                title = "Run a tool",
+                subtitle = "Runs on this phone through Jarvis' real tool runner (same as Gemini Live and the offline brain). It really acts: set_flashlight turns the torch on. ${tools.size} tools available.",
+                icon = Icons.Filled.Bolt
             )
             Spacer(modifier = Modifier.height(10.dp))
             OutlinedTextField(
+                shape = BentoFieldShape,
+                colors = bentoFieldColors(),
                 value = name,
                 onValueChange = { name = it },
                 label = { Text("Tool name") },
@@ -480,6 +450,8 @@ private fun RunToolCard(viewModel: ToolDebugViewModel) {
             }
             Spacer(modifier = Modifier.height(6.dp))
             OutlinedTextField(
+                shape = BentoFieldShape,
+                colors = bentoFieldColors(),
                 value = args,
                 onValueChange = { args = it },
                 label = { Text("Arguments (JSON)") },
@@ -535,9 +507,9 @@ private fun TraceCard(trace: ToolExecutionTrace) {
             ) {
                 Text(
                     text = trace.toolName,
-                    style = MaterialTheme.typography.titleSmall.copy(
+                    style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.ledger.deskPaper
+                        color = bentoTokens().text
                     ),
                     modifier = Modifier.weight(1f),
                     maxLines = 1,

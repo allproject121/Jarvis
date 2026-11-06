@@ -40,6 +40,10 @@ import androidx.compose.ui.unit.sp
 import com.jarvis.assistant.ui.compose.theme.AndroLLMTheme
 import com.jarvis.assistant.ui.compose.theme.ledger
 import kotlinx.coroutines.delay
+import androidx.compose.foundation.border
+import com.jarvis.assistant.ui.compose.designsystem.BentoPill
+import com.jarvis.assistant.ui.compose.designsystem.BentoStatTile
+import com.jarvis.assistant.ui.compose.designsystem.bentoTokens
 
 /** Tone of the hero delta line: up (good), down (bad), or neutral (idle). */
 enum class StatsDeltaTone {
@@ -103,15 +107,11 @@ fun DeveloperStatsCard(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.ledger.deskPaper
-                    )
+                    color = bentoTokens().text,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
-                CloudChip(
-                    text = timeFrame,
-                    accentColor = MaterialTheme.ledger.lampDeep
-                )
+                BentoPill(text = timeFrame)
             }
 
             // Hero metric — small label, huge value, delta line.
@@ -153,41 +153,12 @@ fun DeveloperStatsCard(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 subStats.take(2).forEach { stat ->
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.ledger.deskInk.copy(alpha = 0.08f))
-                            .padding(16.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stat.value,
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.ledger.deskPaper
-                                )
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = stat.label,
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = MaterialTheme.ledger.deskInk
-                                ),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = stat.subLabel,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = MaterialTheme.ledger.deskInk
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                    BentoStatTile(
+                        value = stat.value,
+                        unit = stat.label,
+                        label = stat.subLabel,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
 
@@ -195,8 +166,9 @@ fun DeveloperStatsCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(bentoTokens().accentSoft)
+                    .border(1.dp, bentoTokens().plateBorder, RoundedCornerShape(18.dp))
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -206,7 +178,7 @@ fun DeveloperStatsCard(
                         text = rankTitle,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = bentoTokens().accent
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -214,7 +186,7 @@ fun DeveloperStatsCard(
                     Text(
                         text = rankSubtitle,
                         style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            color = bentoTokens().text2
                         ),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
@@ -265,9 +237,9 @@ private fun StaggeredBarChart(
     levels: List<Float>,
     modifier: Modifier = Modifier
 ) {
-    val lampDeep = MaterialTheme.ledger.lampDeep
-    val lampGlow = MaterialTheme.ledger.lampGlow
-    val track = MaterialTheme.ledger.deskInk.copy(alpha = 0.12f)
+    val lampDeep = bentoTokens().accentFill
+    val lampGlow = bentoTokens().accent
+    val track = bentoTokens().plate
 
     Row(
         modifier = modifier,

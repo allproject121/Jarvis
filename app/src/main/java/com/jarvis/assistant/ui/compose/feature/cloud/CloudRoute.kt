@@ -82,6 +82,9 @@ import com.jarvis.assistant.ui.compose.components.SectionHeader
 import com.jarvis.assistant.ui.compose.components.StaggeredEntrance
 import com.jarvis.assistant.ui.compose.components.bounceClick
 import com.jarvis.assistant.ui.compose.theme.ledger
+import com.jarvis.assistant.ui.compose.designsystem.BentoTopBar
+import com.jarvis.assistant.ui.compose.designsystem.BentoFieldShape
+import com.jarvis.assistant.ui.compose.designsystem.bentoFieldColors
 
 private const val PAGE_PROVIDERS = "providers"
 private const val PAGE_MODELS = "models"
@@ -128,33 +131,13 @@ fun CloudRoute(navigate: (String) -> Unit, back: () -> Unit) {
             containerColor = Color.Transparent,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                TopAppBar(
-                    title = {
-                        when (page) {
-                            PAGE_MODELS -> Column {
-                                Text(
-                                    text = "Cloud Models",
-                                    color = MaterialTheme.ledger.deskPaper,
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                                Text(
-                                    text = modelsFor.title,
-                                    color = MaterialTheme.ledger.deskInk,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                            }
-                            PAGE_USAGE -> Text(
-                                text = "Cloud Usage",
-                                color = MaterialTheme.ledger.deskPaper,
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                            else -> Text(
-                                text = "Cloud Brains",
-                                color = MaterialTheme.ledger.deskPaper,
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                        }
+                BentoTopBar(
+                    title = when (page) {
+                        PAGE_MODELS -> "Cloud Models"
+                        PAGE_USAGE -> "Cloud Usage"
+                        else -> "Cloud Brains"
                     },
+                    subtitle = if (page == PAGE_MODELS) modelsFor.title else "Providers, models & usage",
                     navigationIcon = {
                         IconButton(onClick = {
                             if (page != PAGE_PROVIDERS) page = PAGE_PROVIDERS else back()
@@ -198,8 +181,7 @@ fun CloudRoute(navigate: (String) -> Unit, back: () -> Unit) {
                             }
                             else -> Unit
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                    }
                 )
             }
         ) { padding ->
@@ -723,6 +705,8 @@ private fun ApiKeyFormDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = apiKey,
                     onValueChange = { apiKey = it },
                     label = { Text("API key") },
@@ -793,6 +777,8 @@ private fun LocalHostFormDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = url,
                     onValueChange = { url = it },
                     label = { Text("Server URL") },
@@ -803,6 +789,8 @@ private fun LocalHostFormDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = modelTag,
                     onValueChange = { modelTag = it },
                     label = { Text("Model tag") },

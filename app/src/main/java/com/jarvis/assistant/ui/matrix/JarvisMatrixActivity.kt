@@ -103,10 +103,11 @@ class JarvisMatrixActivity : AppCompatActivity() {
         fun selectCategory(activeChip: android.widget.TextView, visibleSections: List<View>?) {
             HudSoundManager.playTapSound()
             chips.forEach { chip ->
-                chip.setBackgroundResource(com.jarvis.assistant.R.drawable.bg_jarvis_row_item)
+                // Bento pills: idle = plate pill + hairline, active = accent-fill pill.
+                chip.setBackgroundResource(com.jarvis.assistant.R.drawable.bg_set_chip)
                 chip.setTextColor(ThemeManager.attrColor(this, R.attr.themeTextSecondary, ContextCompat.getColor(this, R.color.text_muted)))
             }
-            activeChip.setBackgroundResource(com.jarvis.assistant.R.drawable.bg_jarvis_pill_button)
+            activeChip.setBackgroundResource(com.jarvis.assistant.R.drawable.bg_bento_x_chip_on)
             activeChip.setTextColor(ThemeManager.onAccentColor(this))
 
             allSections.forEach { section ->
@@ -126,10 +127,10 @@ class JarvisMatrixActivity : AppCompatActivity() {
     private fun checkAccessibilityStatus() {
         if (!JarvisAccessibilityService.isEnabled()) {
             binding.tvMacroStatus.text = "⚠️ Accessibility Service OFF. Tap macro button to enable."
-            binding.tvMacroStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_orange_light))
+            binding.tvMacroStatus.setTextColor(ThemeManager.attrColor(this, R.attr.themeWarning, ContextCompat.getColor(this, android.R.color.holo_orange_light)))
         } else {
             binding.tvMacroStatus.text = "✅ JARVIS Accessibility Service is ACTIVE."
-            binding.tvMacroStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
+            binding.tvMacroStatus.setTextColor(ThemeManager.attrColor(this, R.attr.themeSuccess, ContextCompat.getColor(this, android.R.color.holo_green_light)))
         }
     }
 
@@ -662,7 +663,7 @@ class JarvisMatrixActivity : AppCompatActivity() {
                 val tools = registry.getAllTools()
                 withContext(Dispatchers.Main) {
                     binding.containerDynamicToolsList.removeAllViews()
-                    binding.tvDynamicToolsCount.text = "${tools.size} DYNAMIC SCRIPTS ACTIVE"
+                    binding.tvDynamicToolsCount.text = "${tools.size} scripts active"
 
                     if (tools.isEmpty()) {
                         val emptyTv = android.widget.TextView(this@JarvisMatrixActivity).apply {
@@ -678,11 +679,12 @@ class JarvisMatrixActivity : AppCompatActivity() {
                                 orientation = android.widget.LinearLayout.HORIZONTAL
                                 gravity = android.view.Gravity.CENTER_VERTICAL
                                 setBackgroundResource(R.drawable.bg_jarvis_row_item)
-                                setPadding(24, 20, 24, 20)
+                                val d = resources.displayMetrics.density
+                                setPadding((14 * d).toInt(), (12 * d).toInt(), (10 * d).toInt(), (12 * d).toInt())
                                 val params = android.widget.LinearLayout.LayoutParams(
                                     android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                                     android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-                                ).apply { bottomMargin = 12 }
+                                ).apply { bottomMargin = (8 * resources.displayMetrics.density).toInt() }
                                 layoutParams = params
                             }
 
@@ -705,7 +707,7 @@ class JarvisMatrixActivity : AppCompatActivity() {
                             val verTv = android.widget.TextView(this@JarvisMatrixActivity).apply {
                                 text = "v${tool.version}"
                                 textSize = 9.5f
-                                setTextColor(android.graphics.Color.parseColor("#22D3EE"))
+                                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeAccent, android.graphics.Color.parseColor("#22D3EE")))
                                 setPadding(12, 0, 0, 0)
                             }
                             titleRow.addView(nameTv)
@@ -721,7 +723,8 @@ class JarvisMatrixActivity : AppCompatActivity() {
                             infoLayout.addView(descTv)
 
                             val runBtn = com.google.android.material.button.MaterialButton(this@JarvisMatrixActivity, null, com.google.android.material.R.attr.borderlessButtonStyle).apply {
-                                text = "TEST"
+                                text = "Test"
+                                isAllCaps = false
                                 textSize = 10f
                                 setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeAccent, ContextCompat.getColor(this@JarvisMatrixActivity, R.color.primary_cyan)))
                                 setPadding(16, 0, 16, 0)
@@ -838,7 +841,7 @@ class JarvisMatrixActivity : AppCompatActivity() {
         val operationalCount = connectors.count {
             manager.computeConnectorStatus(it) == ConnectorStatus.OPERATIONAL
         }
-        binding.tvConnectorsOperationalBadge.text = "$operationalCount / ${connectors.size} OPERATIONAL"
+        binding.tvConnectorsOperationalBadge.text = "$operationalCount / ${connectors.size} operational"
 
         binding.containerConnectorsPreview.removeAllViews()
 
@@ -850,11 +853,12 @@ class JarvisMatrixActivity : AppCompatActivity() {
                 orientation = android.widget.LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
                 setBackgroundResource(R.drawable.bg_jarvis_row_item)
-                setPadding(24, 18, 24, 18)
+                val d = resources.displayMetrics.density
+                setPadding((14 * d).toInt(), (12 * d).toInt(), (12 * d).toInt(), (12 * d).toInt())
                 val params = android.widget.LinearLayout.LayoutParams(
                     android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                     android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply { bottomMargin = 10 }
+                ).apply { bottomMargin = (8 * resources.displayMetrics.density).toInt() }
                 layoutParams = params
             }
 
@@ -895,7 +899,7 @@ class JarvisMatrixActivity : AppCompatActivity() {
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
                 setPadding(18, 8, 18, 8)
                 // Neutral bento badge: coloured status ink must not sit on the accent fill.
-                setBackgroundResource(R.drawable.bg_jarvis_status_badge)
+                setBackgroundResource(R.drawable.bg_set_badge)
                 setTextColor(
                     when (status) {
                         ConnectorStatus.OPERATIONAL -> ThemeManager.attrColor(context, R.attr.themeSuccess, android.graphics.Color.parseColor("#4ADE80"))
@@ -933,11 +937,12 @@ class JarvisMatrixActivity : AppCompatActivity() {
                 orientation = android.widget.LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
                 setBackgroundResource(R.drawable.bg_jarvis_row_item)
-                setPadding(24, 18, 24, 18)
+                val d = resources.displayMetrics.density
+                setPadding((14 * d).toInt(), (12 * d).toInt(), (12 * d).toInt(), (12 * d).toInt())
                 val params = android.widget.LinearLayout.LayoutParams(
                     android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                     android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply { bottomMargin = 10 }
+                ).apply { bottomMargin = (8 * resources.displayMetrics.density).toInt() }
                 layoutParams = params
             }
 
@@ -961,7 +966,7 @@ class JarvisMatrixActivity : AppCompatActivity() {
             val catTv = android.widget.TextView(this).apply {
                 text = category
                 textSize = 9f
-                setTextColor(android.graphics.Color.parseColor("#A855F7"))
+                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextMuted, android.graphics.Color.parseColor("#A855F7")))
                 setPadding(12, 0, 0, 0)
             }
             titleRow.addView(nameTv)
@@ -978,11 +983,14 @@ class JarvisMatrixActivity : AppCompatActivity() {
             infoLayout.addView(descTv)
 
             val readyBadge = android.widget.TextView(this).apply {
-                text = "ACTIVE"
-                textSize = 9.5f
+                text = "Active"
+                textSize = 10.5f
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
-                setTextColor(android.graphics.Color.parseColor("#4ADE80"))
-                setPadding(12, 6, 12, 6)
+                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeSuccess, android.graphics.Color.parseColor("#4ADE80")))
+                // Bento neutral pill badge
+                setBackgroundResource(R.drawable.bg_set_badge)
+                val d = resources.displayMetrics.density
+                setPadding((10 * d).toInt(), (3 * d).toInt(), (10 * d).toInt(), (3 * d).toInt())
             }
 
             itemView.addView(infoLayout)

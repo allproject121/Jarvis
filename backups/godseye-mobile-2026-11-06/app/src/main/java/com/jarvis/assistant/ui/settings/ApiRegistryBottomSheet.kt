@@ -1,0 +1,318 @@
+package com.jarvis.assistant.ui.settings
+
+import android.content.Intent
+import android.graphics.Color
+import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
+import com.jarvis.assistant.R
+import com.jarvis.assistant.data.model.PlanetaryApiRegistry
+import com.jarvis.assistant.data.model.PlanetaryApiRegistry.ApiCategory
+import com.jarvis.assistant.data.model.PlanetaryApiRegistry.ApiEntry
+import com.jarvis.assistant.ui.godseye.GodsEyeActivity
+import com.jarvis.assistant.util.ThemeManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
+
+class ApiRegistryBottomSheet : BottomSheetDialogFragment() {
+
+    private lateinit var rvApis: RecyclerView
+    private lateinit var etSearchApis: EditText
+    private lateinit var chipGroupCategories: ChipGroup
+    private lateinit var btnPingAllApis: MaterialButton
+    private lateinit var tvTotalApiCount: TextView
+    private lateinit var adapter: ApiRegistryAdapter
+
+    private var activeCategory: ApiCategory = ApiCategory.ALL
+    private var searchQuery: String = ""
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return inflater.inflate(R.layout.sheet_api_registry, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Make dialog expand properly
+        dialog?.setOnShowListener { dialogInterface ->
+            val d = dialogInterface as? BottomSheetDialog
+            val bottomSheet = d?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+            bottomSheet?.let {
+                val behavior = BottomSheetBehavior.from(it)
+                behavior.state = BottomSheetBehavior.STATE_EXPANDED
+                behavior.skipCollapsed = true
+                // Dark Bento: let bg_bento_x_sheet's rounded top show instead of the default sheet surface
+                it.setBackgroundColor(Color.TRANSPARENT)
+            }
+        }
+
+        rvApis = view.findViewById(R.id.rvApis)
+        etSearchApis = view.findViewById(R.id.etSearchApis)
+        chipGroupCategories = view.findViewById(R.id.chipGroupCategories)
+        btnPingAllApis = view.findViewById(R.id.btnPingAllApis)
+        tvTotalApiCount = view.findViewById(R.id.tvTotalApiCount)
+
+        tvTotalApiCount.text = "${PlanetaryApiRegistry.APIS.size} feeds"
+
+        adapter = ApiRegistryAdapter(
+            apis = PlanetaryApiRegistry.APIS.toMutableList(),
+            onPingClick = { api, position ->
+                lifecycleScope.launch {
+                    PlanetaryApiRegistry.testApiPing(api)
+                    adapter.notifyItemChanged(position)
+                }
+            },
+            onViewRawDataClick = { api, tvRawDataBox ->
+                lifecycleScope.launch {
+                    tvRawDataBox.visibility = View.VISIBLE
+                    tvRawDataBox.text = "⚡ Fetching live telemetry payload from ${api.provider}..."
+                    val snippet = withContext(Dispatchers.IO) {
+                        PlanetaryApiRegistry.fetchRawDataSnippet(api)
+                    }
+                    tvRawDataBox.text = snippet
+                }
+            },
+            onConnectGlobeClick = { api ->
+                val intent = Intent(requireContext(), GodsEyeActivity::class.java).apply {
+                    val action = JSONObject().apply {
+                        val cam = JSONObject().apply {
+                            put("latitude", api.targetLat)
+                            put("longitude", api.targetLon)
+                            put("altitude", api.targetAlt)
+                        }
+                        put("camera", cam)
+                        if (!api.layerId.isNullOrEmpty()) {
+                            put("enable_layers", JSONArray().put(api.layerId))
+                        }
+                    }
+                    putExtra(GodsEyeActivity.EXTRA_ACTION_JSON, action.toString())
+                }
+                startActivity(intent)
+                dismiss()
+            }
+        )
+
+        rvApis.layoutManager = LinearLayoutManager(requireContext())
+        rvApis.adapter = adapter
+
+        setupSearchAndFilters()
+        setupPingAll()
+    }
+
+    private fun setupSearchAndFilters() {
+        etSearchApis.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                searchQuery = s?.toString()?.trim().orEmpty()
+                applyFilter()
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
+        // Dark Bento pills: checked = accent fill + on-accent text, idle = plate + hairline
+        val ctx = requireContext()
+        val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
+        val chipBg = android.content.res.ColorStateList(states, intArrayOf(
+            ThemeManager.accentFillColor(ctx), ThemeManager.attrColor(ctx, R.attr.themeChipBg, Color.DKGRAY)))
+        val chipText = android.content.res.ColorStateList(states, intArrayOf(
+            ThemeManager.onAccentColor(ctx), ThemeManager.attrColor(ctx, R.attr.themeTextPrimary, Color.WHITE)))
+        val chipStroke = android.content.res.ColorStateList(states, intArrayOf(
+            Color.TRANSPARENT, ThemeManager.attrColor(ctx, R.attr.themePlateBorder, Color.GRAY)))
+        for (i in 0 until chipGroupCategories.childCount) {
+            (chipGroupCategories.getChildAt(i) as? Chip)?.apply {
+                chipBackgroundColor = chipBg
+                setTextColor(chipText)
+                chipStrokeColor = chipStroke
+                isCheckedIconVisible = false
+            }
+        }
+
+        chipGroupCategories.setOnCheckedChangeListener { _, checkedId ->
+            activeCategory = when (checkedId) {
+                R.id.chipAviation -> ApiCategory.AVIATION
+                R.id.chipCctv -> ApiCategory.CCTV
+                R.id.chipSpace -> ApiCategory.SPACE
+                R.id.chipWeather -> ApiCategory.WEATHER
+                R.id.chipSeismic -> ApiCategory.SEISMIC
+                R.id.chipDefense -> ApiCategory.DEFENSE
+                R.id.chipAudio -> ApiCategory.AUDIO
+                else -> ApiCategory.ALL
+            }
+            applyFilter()
+        }
+    }
+
+    private fun applyFilter() {
+        val filtered = PlanetaryApiRegistry.APIS.filter { api ->
+            val matchesCategory = activeCategory == ApiCategory.ALL || api.category == activeCategory
+            val matchesQuery = searchQuery.isEmpty() ||
+                    api.name.contains(searchQuery, ignoreCase = true) ||
+                    api.shortSummary.contains(searchQuery, ignoreCase = true) ||
+                    api.provider.contains(searchQuery, ignoreCase = true) ||
+                    api.category.name.contains(searchQuery, ignoreCase = true)
+            matchesCategory && matchesQuery
+        }
+        adapter.updateList(filtered)
+    }
+
+    private fun setupPingAll() {
+        btnPingAllApis.setOnClickListener {
+            btnPingAllApis.isEnabled = false
+            btnPingAllApis.text = "Pinging\u2026"
+            lifecycleScope.launch {
+                val currentList = adapter.getCurrentList()
+                for ((index, api) in currentList.withIndex()) {
+                    api.lastStatus = "TESTING..."
+                    adapter.notifyItemChanged(index)
+                    PlanetaryApiRegistry.testApiPing(api)
+                    adapter.notifyItemChanged(index)
+                }
+                btnPingAllApis.text = "Ping all"
+                btnPingAllApis.isEnabled = true
+            }
+        }
+    }
+
+    // --- RECYCLER VIEW ADAPTER ---
+    class ApiRegistryAdapter(
+        private var apis: List<ApiEntry>,
+        private val onPingClick: (ApiEntry, Int) -> Unit,
+        private val onViewRawDataClick: (ApiEntry, TextView) -> Unit,
+        private val onConnectGlobeClick: (ApiEntry) -> Unit
+    ) : RecyclerView.Adapter<ApiRegistryAdapter.ViewHolder>() {
+
+        fun getCurrentList(): List<ApiEntry> = apis
+
+        fun updateList(newList: List<ApiEntry>) {
+            apis = newList
+            notifyDataSetChanged()
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val v = LayoutInflater.from(parent.context).inflate(R.layout.item_api_registry, parent, false)
+            return ViewHolder(v)
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            val item = apis[position]
+
+            holder.tvApiName.text = item.name
+            holder.tvCategoryBadge.text = item.category.displayName.lowercase().replaceFirstChar { it.uppercase() }
+            // Dark Bento: neutral pill badge instead of per-category neon text
+            holder.tvCategoryBadge.setTextColor(ThemeManager.attrColor(holder.itemView.context, R.attr.themeTextSecondary, Color.LTGRAY))
+
+            holder.tvAuthBadge.text = item.authRequirement.label
+            holder.tvApiShortSummary.text = item.shortSummary
+
+            holder.tvDetailHindi.text = item.detailedDescriptionHindi
+            holder.tvDetailEnglish.text = item.detailedDescriptionEnglish
+            holder.tvGodsEyeRole.text = item.godsEyeRole
+            holder.tvProvider.text = "Provider: ${item.provider}"
+            holder.tvEndpointUrl.text = item.endpointUrl
+            holder.tvVoiceCommand.text = item.voiceCommand
+
+            // Status indicator dot
+            val ctx = holder.itemView.context
+            val accentColor = ThemeManager.attrColor(ctx, R.attr.themeAccent, Color.parseColor("#00E5FF"))
+            val dotColor = when {
+                item.lastStatus == "OK" -> ThemeManager.attrColor(ctx, R.attr.themeSuccess, Color.parseColor("#00E676"))
+                item.lastStatus.startsWith("HTTP") -> ThemeManager.attrColor(ctx, R.attr.themeWarning, Color.parseColor("#F59E0B"))
+                item.lastStatus.contains("ERR") || item.lastStatus.contains("TIMEOUT") -> ThemeManager.attrColor(ctx, R.attr.themeDanger, Color.parseColor("#FF3D00"))
+                item.lastStatus == "TESTING..." -> accentColor
+                else -> accentColor
+            }
+            holder.dotStatus.backgroundTintList = android.content.res.ColorStateList.valueOf(dotColor)
+
+            holder.tvPingStatus.text = if (item.lastLatencyMs >= 0) "${item.lastStatus} (${item.lastLatencyMs}ms)" else item.lastStatus
+            holder.tvPingStatus.setTextColor(dotColor)
+
+            // Detail toggle state
+            holder.layoutDetailContainer.visibility = if (item.isExpanded) View.VISIBLE else View.GONE
+            holder.btnToggleDetail.text = if (item.isExpanded) "Close ▴" else "Details ▾"
+
+            val toggleAction = View.OnClickListener {
+                item.isExpanded = !item.isExpanded
+                notifyItemChanged(position)
+            }
+            holder.layoutHeader.setOnClickListener(toggleAction)
+            holder.btnToggleDetail.setOnClickListener(toggleAction)
+
+            // Ping test button
+            holder.btnTestPing.setOnClickListener {
+                holder.tvPingResultDetail.text = "Testing live HTTP ping..."
+                holder.tvPingStatus.text = "Pinging\u2026"
+                holder.tvPingStatus.setTextColor(accentColor)
+                onPingClick(item, position)
+            }
+
+            if (item.lastLatencyMs >= 0) {
+                holder.tvPingResultDetail.text = "Response: ${item.lastStatus} • ${item.lastLatencyMs}ms roundtrip"
+            } else {
+                holder.tvPingResultDetail.text = "Tap to verify live server connection"
+            }
+
+            // View Raw Data Payload button
+            holder.btnViewRawData.setOnClickListener {
+                if (holder.tvRawDataBox.visibility == View.VISIBLE) {
+                    holder.tvRawDataBox.visibility = View.GONE
+                } else {
+                    onViewRawDataClick(item, holder.tvRawDataBox)
+                }
+            }
+
+            // Connect to Globe button
+            holder.btnConnectGlobe.setOnClickListener {
+                onConnectGlobeClick(item)
+            }
+        }
+
+        override fun getItemCount(): Int = apis.size
+
+        class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val layoutHeader: View = view.findViewById(R.id.layoutHeader)
+            val dotStatus: View = view.findViewById(R.id.dotStatus)
+            val tvCategoryBadge: TextView = view.findViewById(R.id.tvCategoryBadge)
+            val tvAuthBadge: TextView = view.findViewById(R.id.tvAuthBadge)
+            val tvApiName: TextView = view.findViewById(R.id.tvApiName)
+            val tvApiShortSummary: TextView = view.findViewById(R.id.tvApiShortSummary)
+            val tvPingStatus: TextView = view.findViewById(R.id.tvPingStatus)
+            val btnToggleDetail: TextView = view.findViewById(R.id.btnToggleDetail)
+
+            val layoutDetailContainer: View = view.findViewById(R.id.layoutDetailContainer)
+            val tvDetailHindi: TextView = view.findViewById(R.id.tvDetailHindi)
+            val tvDetailEnglish: TextView = view.findViewById(R.id.tvDetailEnglish)
+            val tvGodsEyeRole: TextView = view.findViewById(R.id.tvGodsEyeRole)
+            val tvProvider: TextView = view.findViewById(R.id.tvProvider)
+            val tvEndpointUrl: TextView = view.findViewById(R.id.tvEndpointUrl)
+            val tvVoiceCommand: TextView = view.findViewById(R.id.tvVoiceCommand)
+            val btnTestPing: MaterialButton = view.findViewById(R.id.btnTestPing)
+            val btnViewRawData: MaterialButton = view.findViewById(R.id.btnViewRawData)
+            val btnConnectGlobe: MaterialButton = view.findViewById(R.id.btnConnectGlobe)
+            val tvPingResultDetail: TextView = view.findViewById(R.id.tvPingResultDetail)
+            val tvRawDataBox: TextView = view.findViewById(R.id.tvRawDataBox)
+        }
+    }
+}

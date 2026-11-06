@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento dropdown chevron (2026-11-05 bento-all), muted theme text colour. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="18dp"
+    android:height="18dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M6,9l6,6 6,-6"
+        android:strokeWidth="2"
+        android:strokeColor="?attr/themeTextMuted"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

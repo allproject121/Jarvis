@@ -64,6 +64,9 @@ import com.jarvis.assistant.ui.compose.components.CloudCapsuleButton
 import com.jarvis.assistant.ui.compose.components.CloudChip
 import com.jarvis.assistant.ui.compose.components.CloudGlassCard
 import com.jarvis.assistant.ui.compose.theme.ledger
+import com.jarvis.assistant.ui.compose.designsystem.BentoBadge
+import com.jarvis.assistant.ui.compose.designsystem.BentoIconPlate
+import com.jarvis.assistant.ui.compose.designsystem.bentoTokens
 
 /**
  * Settings → Permissions & Access (ported from AndroLLM's
@@ -233,10 +236,9 @@ private fun PermissionAccessCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = handler.title,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.ledger.deskPaper
-                        )
+                        color = bentoTokens().text,
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                     Text(
                         text = handler.description,
@@ -265,7 +267,7 @@ private fun PermissionAccessCard(
                     Text(
                         text = if (handler.needsSettingsScreen) "✓ Enabled" else "✓ Granted",
                         style = MaterialTheme.typography.labelMedium.copy(
-                            color = MaterialTheme.ledger.lampDeep,
+                            color = bentoTokens().success,
                             fontWeight = FontWeight.SemiBold
                         )
                     )
@@ -331,34 +333,22 @@ private fun PermissionAccessCard(
 /** The live status chip (✓ Granted / ○ Not enabled / ⚠ Blocked / …). */
 @Composable
 private fun PermissionStatusChip(state: PermissionState) {
+    val bento = bentoTokens()
     val (text, color) = when (state) {
-        PermissionState.GRANTED -> "✓ Granted" to MaterialTheme.ledger.lampDeep
-        PermissionState.DENIED -> "○ Not enabled" to MaterialTheme.ledger.lampAmber
-        PermissionState.PERMANENTLY_DENIED -> "⚠ Blocked" to MaterialTheme.ledger.emberRed
-        PermissionState.NEEDS_SETTINGS -> "○ Needs settings" to MaterialTheme.ledger.lampAmber
-        PermissionState.NOT_REQUIRED -> "Not required" to MaterialTheme.ledger.deskInk
-        PermissionState.UNAVAILABLE -> "Unavailable" to MaterialTheme.ledger.deskInk
+        PermissionState.GRANTED -> "Granted" to bento.success
+        PermissionState.DENIED -> "Not enabled" to bento.accentFill
+        PermissionState.PERMANENTLY_DENIED -> "Blocked" to bento.danger
+        PermissionState.NEEDS_SETTINGS -> "Needs settings" to bento.accentFill
+        PermissionState.NOT_REQUIRED -> "Not required" to bento.muted
+        PermissionState.UNAVAILABLE -> "Unavailable" to bento.muted
     }
-    CloudChip(text = text, accentColor = color)
+    BentoBadge(text = text, dot = color)
 }
 
 /** Feature glyph in a soft lamp-halo well. */
 @Composable
 private fun PermissionIconBox(id: String) {
-    Box(
-        modifier = Modifier
-            .size(44.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.ledger.lampHalo.copy(alpha = 0.28f)),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = permissionIconFor(id),
-            contentDescription = null,
-            tint = MaterialTheme.ledger.lampDeep,
-            modifier = Modifier.size(24.dp)
-        )
-    }
+    BentoIconPlate(icon = permissionIconFor(id), size = 44.dp, iconSize = 22.dp)
 }
 
 private fun permissionIconFor(id: String): ImageVector = when (id) {

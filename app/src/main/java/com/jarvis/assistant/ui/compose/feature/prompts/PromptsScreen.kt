@@ -100,6 +100,14 @@ import com.jarvis.assistant.ui.compose.components.StaggeredEntrance
 import com.jarvis.assistant.ui.compose.components.bounceClick
 import com.jarvis.assistant.ui.compose.navigation.ComposeRoutes
 import com.jarvis.assistant.ui.compose.theme.ledger
+import com.jarvis.assistant.ui.compose.designsystem.BentoChip
+import com.jarvis.assistant.ui.compose.designsystem.BentoPillShape
+import com.jarvis.assistant.ui.compose.designsystem.bentoSecondaryBorder
+import com.jarvis.assistant.ui.compose.designsystem.bentoSecondaryButtonColors
+import com.jarvis.assistant.ui.compose.designsystem.BentoTopBar
+import com.jarvis.assistant.ui.compose.designsystem.BentoFieldShape
+import com.jarvis.assistant.ui.compose.designsystem.bentoFieldColors
+import com.jarvis.assistant.ui.compose.designsystem.BentoCardCompat
 
 /**
  * Prompt Studio — guided 4-step wizard (Template → Form → Preview → Send) plus
@@ -131,29 +139,13 @@ fun PromptsRoute(navigate: (String) -> Unit, back: () -> Unit) {
             currentRoute = ComposeRoutes.PROMPTS,
             onTabSelected = { tab -> if (tab.route != ComposeRoutes.PROMPTS) navigate(tab.route) },
             topBar = {
-                TopAppBar(
-                    title = {
-                        Column {
-                            Text(
-                                text = "Prompt Studio",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.ledger.deskPaper
-                                )
-                            )
-                            Text(
-                                text = when (studioState.wizardStep) {
-                                    WizardStep.TEMPLATE -> "${StudioTemplateLibrary.templates.size} templates • ${uiState.favoriteCount} favorites"
-                                    WizardStep.FORM -> studioState.selectedTemplate?.title ?: "Details"
-                                    WizardStep.PREVIEW -> "Preview • ${studioState.previewMode.label}"
-                                    WizardStep.SEND -> "Ready to send"
-                                },
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.ledger.lampDeep,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            )
-                        }
+                BentoTopBar(
+                    title = "Prompt Studio",
+                    subtitle = when (studioState.wizardStep) {
+                        WizardStep.TEMPLATE -> "${StudioTemplateLibrary.templates.size} templates • ${uiState.favoriteCount} favorites"
+                        WizardStep.FORM -> studioState.selectedTemplate?.title ?: "Details"
+                        WizardStep.PREVIEW -> "Preview • ${studioState.previewMode.label}"
+                        WizardStep.SEND -> "Ready to send"
                     },
                     navigationIcon = {
                         IconButton(onClick = {
@@ -169,8 +161,7 @@ fun PromptsRoute(navigate: (String) -> Unit, back: () -> Unit) {
                         IconButton(onClick = { viewModel.setWizardStep(WizardStep.TEMPLATE) }) {
                             Icon(Icons.Filled.Close, contentDescription = "Reset", tint = MaterialTheme.ledger.deskInk)
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                    }
                 )
             }
         ) { padding ->
@@ -298,7 +289,7 @@ private fun StudioStepper(currentStep: WizardStep, modifier: Modifier = Modifier
 private fun PreviewModeTabs(selected: PreviewMode, onSelect: (PreviewMode) -> Unit, modifier: Modifier = Modifier) {
     Row(modifier = modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         PreviewMode.entries.forEach { mode ->
-            FilterChip(selected = selected == mode, onClick = { onSelect(mode) }, label = { Text(mode.label) })
+            BentoChip(selected = selected == mode, onClick = { onSelect(mode) }, label = { Text(mode.label) })
         }
     }
 }
@@ -328,8 +319,8 @@ private fun TemplateGalleryStep(
         // Studio / Library switch
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = !showLibrary, onClick = { showLibrary = false }, label = { Text("Studio templates") })
-                FilterChip(
+                BentoChip(selected = !showLibrary, onClick = { showLibrary = false }, label = { Text("Studio templates") })
+                BentoChip(
                     selected = showLibrary,
                     onClick = { showLibrary = true },
                     label = { Text("Prompt library • ${PromptLibraryData.prompts.size}") }
@@ -352,14 +343,14 @@ private fun TemplateGalleryStep(
             StaggeredEntrance(0) {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     item {
-                        FilterChip(
+                        BentoChip(
                             selected = studioCategoryFilter == null,
                             onClick = { viewModel.selectStudioCategory(null) },
                             label = { Text("All") }
                         )
                     }
                     items(categories) { cat ->
-                        FilterChip(
+                        BentoChip(
                             selected = studioCategoryFilter == cat,
                             onClick = { viewModel.selectStudioCategory(if (studioCategoryFilter == cat) null else cat) },
                             label = { Text(cat.label) }
@@ -452,7 +443,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.libraryItems(
     item {
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(state.categories) { cat ->
-                FilterChip(
+                BentoChip(
                     selected = state.selectedCategory == cat,
                     onClick = { viewModel.selectCategory(cat) },
                     label = { Text(cat.label) }
@@ -681,7 +672,7 @@ private fun TemplateFormStep(
             StaggeredEntrance(1) {
                 Column {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        OutlinedButton(onClick = { viewModel.resetForm() }, modifier = Modifier.weight(1f)) {
+                        OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = { viewModel.resetForm() }, modifier = Modifier.weight(1f)) {
                             Text("Reset")
                         }
                         Button(onClick = onNext, modifier = Modifier.weight(1f)) {
@@ -791,7 +782,7 @@ private fun FieldRenderer(
                 }
             }
             PromptFieldType.FILE -> {
-                OutlinedButton(onClick = onFilePick, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = onFilePick, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Filled.Description, null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Choose file")
@@ -839,7 +830,7 @@ private fun PreviewStep(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         if (template != null) {
-            Card(
+            BentoCardCompat(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.ledger.deskWalnut),
                 border = BorderStroke(1.dp, MaterialTheme.ledger.deskHairline),
                 modifier = Modifier.fillMaxWidth()
@@ -905,8 +896,8 @@ private fun PreviewStep(
                             colors = fieldColors
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
-                            OutlinedButton(onClick = { viewModel.resetForm() }) { Text("Reset") }
-                            OutlinedButton(onClick = { copyToClipboard(context, previewText, "Copied") }) { Text("Copy") }
+                            OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = { viewModel.resetForm() }) { Text("Reset") }
+                            OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = { copyToClipboard(context, previewText, "Copied") }) { Text("Copy") }
                             Button(onClick = {
                                 viewModel.updateRawPrompt(previewText)
                                 viewModel.setPreviewMode(PreviewMode.PREVIEW)
@@ -946,7 +937,7 @@ private fun PreviewStep(
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-            OutlinedButton(onClick = { viewModel.resetWizard() }, modifier = Modifier.weight(1f)) {
+            OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(), onClick = { viewModel.resetWizard() }, modifier = Modifier.weight(1f)) {
                 Text("Start over")
             }
             Button(
@@ -972,7 +963,7 @@ private fun PreviewStep(
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.ledger.deskPaper)
             )
             studioState.history.take(5).forEach { session ->
-                Card(
+                BentoCardCompat(
                     modifier = Modifier
                         .fillMaxWidth()
                         .bounceClick { viewModel.duplicateSession(session) },
@@ -1032,6 +1023,8 @@ private fun StudioSettingsCard(
             val defaultTitle = settings.defaultTemplateId?.let { StudioTemplateLibrary.byId(it)?.title } ?: "None"
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = defaultTitle,
                     onValueChange = {},
                     readOnly = true,

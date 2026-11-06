@@ -43,6 +43,8 @@ import kotlinx.coroutines.launch
 import com.jarvis.assistant.ui.compose.components.CloudCapsuleButton
 import com.jarvis.assistant.ui.compose.components.CloudGlassCard
 import com.jarvis.assistant.ui.compose.theme.ledger
+import com.jarvis.assistant.ui.compose.designsystem.BentoFieldShape
+import com.jarvis.assistant.ui.compose.designsystem.bentoFieldColors
 
 /**
  * "MCP Servers" — backed by Jarvis' [com.jarvis.assistant.mcp.McpManager].
@@ -246,6 +248,8 @@ private fun AddMcpServerDialog(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Name") },
@@ -254,6 +258,8 @@ private fun AddMcpServerDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = url,
                     onValueChange = { url = it },
                     label = { Text("URL (http://…/mcp)") },
@@ -262,6 +268,8 @@ private fun AddMcpServerDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = token,
                     onValueChange = { token = it },
                     label = { Text("Bearer token (optional)") },

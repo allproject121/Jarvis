@@ -1,102 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento skills sheet (2026-11-05 bento-all): page title + muted subtitle, one bento card per skill
+     (emoji icon plate, 18sp title, muted subtitle, pill action), Macros &amp; Watches as a plate button. -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/bg_jarvis_menu_glass"
-    android:paddingStart="20dp"
-    android:paddingEnd="20dp"
-    android:paddingTop="16dp"
+    android:background="@drawable/bg_bento_x_sheet"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="10dp"
     android:paddingBottom="24dp">
 
     <!-- Handle -->
     <View
-        android:layout_width="44dp"
+        android:layout_width="36dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:background="@drawable/bg_jarvis_row_item"
-        android:layout_marginBottom="14dp" />
+        android:background="@drawable/bg_bento_x_handle"
+        android:layout_marginBottom="18dp" />
 
     <!-- Header -->
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp">
+        android:layout_marginBottom="16dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <FrameLayout
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_jarvis_icon_square">
-
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_sparkle"
-                    app:tint="?attr/themeAccent"
-                    android:contentDescription="Skills" />
-            </FrameLayout>
-
-            <LinearLayout
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginStart="12dp">
+                android:text="Skills"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="26sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
+                android:letterSpacing="-0.02" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="INSTALLED SKILLS &amp; PLAYBOOKS"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.06"
-                    android:fontFamily="sans-serif-medium" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Automated capabilities, tools &amp; macros"
-                    android:textColor="?attr/themeTextMuted"
-                    android:textSize="11.5sp"
-                    android:fontFamily="sans-serif"
-                    android:layout_marginTop="1dp" />
-            </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Installed skills, tools and playbooks."
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter" />
         </LinearLayout>
 
         <ImageButton
             android:id="@+id/btnCloseSkills"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:background="@drawable/bg_jarvis_icon_square"
-            android:src="@drawable/ic_close"
-            android:padding="8dp"
-            app:tint="?attr/themeTextMuted"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_set_icon_btn"
+            android:src="@drawable/ic_set_x"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            app:tint="?attr/themeTextPrimary"
             android:contentDescription="Close" />
-    </RelativeLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?attr/themeCardBorder"
-        android:layout_marginBottom="12dp" />
+    </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:maxHeight="520dp"
+        android:overScrollMode="never"
         android:scrollbars="none">
 
         <LinearLayout
@@ -104,162 +80,353 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- SKILL 1: CHATGPT IMAGE MACRO -->
+            <!-- Skill: ChatGPT image macro -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="14dp"
-                android:layout_marginBottom="10dp">
+                android:background="@drawable/bg_set_card"
+                android:padding="18dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_set_icon_tile"
+                        android:gravity="center"
+                        android:text="🎨"
+                        android:textSize="18sp"
+                        android:importantForAccessibility="no" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ChatGPT Image Generator"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="Accessibility workflow"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="🎨 ChatGPT Image Generator"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Autonomous accessibility workflow that launches ChatGPT app, types image prompt, and captures output."
-                    android:textColor="?attr/themeTextMuted"
-                    android:textSize="11.5sp"
-                    android:layout_marginTop="4dp" />
+                    android:layout_marginTop="12dp"
+                    android:text="Launches the ChatGPT app, types your image prompt and captures the output."
+                    android:textColor="?attr/themeTextSecondary"
+                    android:textSize="13sp"
+                    android:lineSpacingExtra="2dp"
+                    android:fontFamily="@font/inter" />
 
                 <Button
                     android:id="@+id/btnRunChatGptSkill"
-                    android:layout_width="match_parent"
-                    android:layout_height="38dp"
-                    android:text="RUN CHATGPT IMAGE SKILL"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/bg_jarvis_pill_button"
-                    android:textColor="?attr/themeOnAccent" />
-            </LinearLayout>
-
-            <!-- SKILL 2: GEMINI VIDEO & IMAGE -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="14dp"
-                android:layout_marginBottom="10dp">
-
-                <TextView
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🎬 Gemini Veo Video &amp; Image Creator"
-                    android:textColor="?attr/themeTextPrimary"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="14dp"
+                    android:minWidth="120dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:text="Run image skill"
+                    android:textAllCaps="false"
                     android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Generates cinematic videos and high-fidelity visuals using Google Veo and Imagen workflows."
-                    android:textColor="?attr/themeTextMuted"
-                    android:textSize="11.5sp"
-                    android:layout_marginTop="4dp" />
-
-                <Button
-                    android:id="@+id/btnRunGeminiSkill"
-                    android:layout_width="match_parent"
-                    android:layout_height="38dp"
-                    android:text="RUN GEMINI VEO SKILL"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/bg_jarvis_pill_button"
-                    android:textColor="?attr/themeOnAccent" />
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:textColor="?attr/themeOnAccent"
+                    app:backgroundTint="?attr/themeAccentFill"
+                    app:cornerRadius="22dp" />
             </LinearLayout>
 
-            <!-- SKILL 3: WHATSAPP VOICE DISPATCHER -->
+            <!-- Skill: Gemini video and image -->
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="14dp"
-                android:layout_marginBottom="10dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="💬 WhatsApp Instant Voice Dispatcher"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Sends WhatsApp text messages directly to contacts hands-free via voice or tool calls."
-                    android:textColor="?attr/themeTextMuted"
-                    android:textSize="11.5sp"
-                    android:layout_marginTop="4dp" />
-
-                <Button
-                    android:id="@+id/btnRunWhatsAppSkill"
-                    android:layout_width="match_parent"
-                    android:layout_height="38dp"
-                    android:text="TEST WHATSAPP DISPATCH"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/bg_jarvis_row_item"
-                    android:textColor="?attr/themeTextPrimary" />
-            </LinearLayout>
-
-            <!-- SKILL 4: POCKETTTS ON-DEVICE NEURAL SYNTHESIS -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="14dp"
-                android:layout_marginBottom="10dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🎙️ PocketTTS On-Device Voice"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="High-performance neural speech synthesis running natively on device with zero cloud latency."
-                    android:textColor="?attr/themeTextMuted"
-                    android:textSize="11.5sp"
-                    android:layout_marginTop="4dp" />
-
-                <Button
-                    android:id="@+id/btnRunPocketTtsSkill"
-                    android:layout_width="match_parent"
-                    android:layout_height="38dp"
-                    android:text="TEST ON-DEVICE VOICE SYNTHESIS"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/bg_jarvis_row_item"
-                    android:textColor="?attr/themeTextPrimary" />
-            </LinearLayout>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnOpenMacrosWatches"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Macros &amp; Watches (record, play, watch screen)"
-                android:textAllCaps="false" />
+                android:orientation="vertical"
+                android:background="@drawable/bg_set_card"
+                android:padding="18dp">
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_set_icon_tile"
+                        android:gravity="center"
+                        android:text="🎬"
+                        android:textSize="18sp"
+                        android:importantForAccessibility="no" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Gemini Veo Video &amp; Image"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="Veo + Imagen workflows"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Generates cinematic videos and high-fidelity visuals using Google Veo and Imagen."
+                    android:textColor="?attr/themeTextSecondary"
+                    android:textSize="13sp"
+                    android:lineSpacingExtra="2dp"
+                    android:fontFamily="@font/inter" />
+
+                <Button
+                    android:id="@+id/btnRunGeminiSkill"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="14dp"
+                    android:minWidth="120dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:text="Run Veo skill"
+                    android:textAllCaps="false"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:textColor="?attr/themeOnAccent"
+                    app:backgroundTint="?attr/themeAccentFill"
+                    app:cornerRadius="22dp" />
+            </LinearLayout>
+
+            <!-- Skill: WhatsApp voice dispatcher -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_set_card"
+                android:padding="18dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_set_icon_tile"
+                        android:gravity="center"
+                        android:text="💬"
+                        android:textSize="18sp"
+                        android:importantForAccessibility="no" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="WhatsApp Voice Dispatcher"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="Hands-free messaging"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Sends WhatsApp messages to contacts hands-free via voice or tool calls."
+                    android:textColor="?attr/themeTextSecondary"
+                    android:textSize="13sp"
+                    android:lineSpacingExtra="2dp"
+                    android:fontFamily="@font/inter" />
+
+                <Button
+                    android:id="@+id/btnRunWhatsAppSkill"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="14dp"
+                    android:minWidth="120dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:text="Test dispatch"
+                    android:textAllCaps="false"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:textColor="?attr/themeTextPrimary"
+                    app:backgroundTint="?attr/themeChipBg"
+                    app:strokeColor="?attr/themePlateBorder"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="22dp" />
+            </LinearLayout>
+
+            <!-- Skill: PocketTTS on-device voice -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_set_card"
+                android:padding="18dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_set_icon_tile"
+                        android:gravity="center"
+                        android:text="🎙️"
+                        android:textSize="18sp"
+                        android:importantForAccessibility="no" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="PocketTTS On-Device Voice"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="Neural speech, no cloud"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Neural speech synthesis running natively on the device with zero cloud latency."
+                    android:textColor="?attr/themeTextSecondary"
+                    android:textSize="13sp"
+                    android:lineSpacingExtra="2dp"
+                    android:fontFamily="@font/inter" />
+
+                <Button
+                    android:id="@+id/btnRunPocketTtsSkill"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="14dp"
+                    android:minWidth="120dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:text="Test voice"
+                    android:textAllCaps="false"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:textColor="?attr/themeTextPrimary"
+                    app:backgroundTint="?attr/themeChipBg"
+                    app:strokeColor="?attr/themePlateBorder"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="22dp" />
+            </LinearLayout>
+
+            <!-- Macros &amp; Watches -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnOpenMacrosWatches"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="12dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="Macros &amp; Watches · record, play, watch screen"
+                android:textAllCaps="false"
+                android:textSize="14sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
+                android:textColor="?attr/themeTextPrimary"
+                android:maxLines="1"
+                android:ellipsize="end"
+                app:backgroundTint="?attr/themeChipBg"
+                app:strokeColor="?attr/themePlateBorder"
+                app:strokeWidth="1dp"
+                app:cornerRadius="16dp" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

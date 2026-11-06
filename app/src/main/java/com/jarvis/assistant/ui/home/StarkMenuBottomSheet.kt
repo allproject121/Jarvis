@@ -46,7 +46,7 @@ class StarkMenuBottomSheet : BottomSheetDialogFragment() {
         binding.menuItemCustomizeHome.setOnClickListener {
             HudSoundManager.playTapSound()
             dismiss()
-            HomeCardsCustomizationBottomSheet.newInstance().show(parentFragmentManager, HomeCardsCustomizationBottomSheet.TAG)
+            startActivity(CustomizationStudioActivity.homeScreenIntent(requireContext()))
         }
 
         // 2. Stark HUD Customization Studio

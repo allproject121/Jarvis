@@ -67,8 +67,130 @@ class GodsEyeActivity : AppCompatActivity() {
         private const val REQ_WEBVIEW_MEDIA = 4717
         private const val LOCAL_HOST_NAME = "localhost"
 
+        private const val MENU_API_KEYS = 1
+        private const val MENU_ROTATE = 2
+        private const val MENU_MY_LOCATION = 3
+        private const val MENU_HERO = 4
+        private const val MENU_TOUR = 5
+        private const val MENU_RELOAD = 6
+
+        /** No GPS fix: open over India (the user's country) instead of the bundle's Austin default. */
+        private const val FALLBACK_LAT = 22.0
+        private const val FALLBACK_LON = 79.0
+        private const val FALLBACK_ALT_M = 4_500_000.0
+
+        /**
+         * Names Jarvis / the AI use for layers -> the console's real layer ids
+         * (dataManager ids in the bundled 0.2.1 build). Anything else passes through.
+         */
+        private val LAYER_ALIASES = mapOf(
+            "aircraft" to "flights", "planes" to "flights", "plane" to "flights", "flight" to "flights",
+            "military-flights" to "military", "military-aircraft" to "military",
+            "ships" to "ais-live-vessels", "ship" to "ais-live-vessels", "vessels" to "ais-live-vessels",
+            "boats" to "ais-live-vessels", "ais" to "ais-live-vessels", "marine_traffic" to "ais-live-vessels",
+            "cameras" to "cctv", "camera" to "cctv", "video" to "cctv",
+            "fires" to "local-firms", "fire" to "local-firms", "firms" to "local-firms", "hotspots" to "local-firms",
+            "wildfires" to "fire-perimeters",
+            "satellite" to "satellites", "iss" to "satellites",
+            "launches" to "rocket-launches", "space" to "rocket-launches", "rockets" to "rocket-launches",
+            "quake" to "earthquakes", "quakes" to "earthquakes", "seismic" to "earthquakes",
+            "radar" to "weather-radar", "rain" to "weather-radar", "weather" to "weather-radar",
+            "clouds" to "weather-satellite", "lightning" to "weather-lightning",
+            "cyclones" to "weather-cyclones", "cyclone" to "weather-cyclones", "hurricanes" to "weather-cyclones",
+            "subsea-cables" to "telegeography-submarine-cables", "cables" to "telegeography-submarine-cables",
+            "subsea" to "telegeography-submarine-cables", "submarine-cables" to "telegeography-submarine-cables",
+            "datacenters" to "local-datacenters", "datacenter" to "local-datacenters", "data-centers" to "local-datacenters",
+            "dams" to "local-dams", "hydro-dams" to "local-dams", "dam" to "local-dams",
+            "installations" to "military-installations", "bases" to "military-installations",
+            "imagery" to "recent-imagery", "streetview" to "street-level", "street" to "street-level",
+            "alpr" to "alpr-cameras", "adsb" to "local-adsb"
+        )
+
+        /** Upstream share-link tokens (hash `l=c,f,s`) that callers sometimes pass as layer ids. */
+        private val HASH_LAYER_TOKENS = mapOf("c" to "cctv", "f" to "flights", "s" to "satellites")
+
+        fun normalizeLayerId(raw: String): String {
+            val key = raw.trim().lowercase().replace('_', '-').replace(' ', '-')
+            return LAYER_ALIASES[key] ?: HASH_LAYER_TOKENS[key] ?: key
+        }
+
+        private fun normalizeLayerList(value: Any?): JSONArray? {
+            val raw = when (value) {
+                null, JSONObject.NULL -> return null
+                is JSONArray -> (0 until value.length()).map { value.optString(it) }
+                else -> value.toString().split(',')
+            }
+            val out = JSONArray()
+            raw.map { it.trim() }.filter { it.isNotEmpty() }.forEach { id ->
+                // "all" / "everything" stay as-is: the dispatcher script expands them.
+                out.put(if (id.equals("all", true) || id.equals("everything", true)) id.lowercase() else normalizeLayerId(id))
+            }
+            return out
+        }
+
+        /**
+         * Bring every sender's action into the one shape the console's
+         * `__executeGodsEyeAction` reads: flat lat/lon/alt/heading/pitch, real
+         * layer ids, `cameraId`, and a `fly_to_location` command for a place
+         * name without coordinates. Several senders used a nested `camera:{}`
+         * object or old layer names that the page silently ignored.
+         */
+        fun normalizeAction(actionJson: String): JSONObject {
+            val act = JSONObject(actionJson)
+            act.optJSONObject("camera")?.let { cam ->
+                fun copy(from: List<String>, to: String) {
+                    if (act.has(to)) return
+                    from.firstOrNull { cam.has(it) }?.let { act.put(to, cam.get(it)) }
+                }
+                copy(listOf("latitude", "lat"), "lat")
+                copy(listOf("longitude", "lon", "lng"), "lon")
+                copy(listOf("altitude", "altitude_m", "alt", "height"), "alt")
+                copy(listOf("heading", "heading_deg"), "heading")
+                copy(listOf("pitch", "pitch_deg"), "pitch")
+                copy(listOf("duration"), "duration")
+                act.remove("camera")
+            }
+            for (key in listOf("cctv", "camera_id", "cctv_id")) {
+                if (act.has(key) && !act.has("cameraId")) act.put("cameraId", act.optString(key))
+                act.remove(key)
+            }
+            for (key in listOf("layers", "enable_layers", "disable_layers")) {
+                if (act.has(key)) normalizeLayerList(act.opt(key))?.let { act.put(key, it) }
+            }
+            val place = act.optString("location").ifBlank { act.optString("place") }.trim()
+            val hasCoords = act.has("lat") && act.has("lon")
+            if (place.isNotEmpty() && !hasCoords && !act.has("action") && !act.has("name")) {
+                act.put("action", "fly_to_location")
+                act.put("args", JSONObject().put("query", place))
+            }
+            act.remove("location")
+            act.remove("place")
+            return act
+        }
+
+        /**
+         * Each tool path used to dispatch the same action two or three times
+         * (handler, executeTool, then launchOrUpdateGodsEye). One trace id runs once.
+         */
+        private val recentTraceIds = object : LinkedHashMap<String, Long>(64, 0.75f, false) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Long>?): Boolean = size > 64
+        }
+
+        private fun isDuplicateTrace(traceId: String): Boolean = synchronized(recentTraceIds) {
+            if (traceId.isBlank()) return false
+            val now = System.currentTimeMillis()
+            val seen = recentTraceIds[traceId]
+            recentTraceIds[traceId] = now
+            seen != null && now - seen < 20_000L
+        }
+
         @Volatile
         var activeInstance: GodsEyeActivity? = null
+            private set
+
+        /** True only while God's Eye is on screen (activeInstance stays set while it is in the background). */
+        @Volatile
+        var isInForeground: Boolean = false
             private set
 
         private val actionReceipts = java.util.concurrent.ConcurrentHashMap<String, JSONObject>()
@@ -76,9 +198,52 @@ class GodsEyeActivity : AppCompatActivity() {
         var latestGlobeState: JSONObject? = null
             private set
 
+        private val pendingCommands = java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.CompletableFuture<JSONObject>>()
+
         fun getActionReceipt(traceId: String): JSONObject? = actionReceipts[traceId]
 
-        fun awaitActionReceipt(traceId: String, timeoutMs: Long = 250): JSONObject? {
+        /**
+         * Run one of the console's own commands (the realtime tool set: fly_to_location,
+         * track_entity, get_entity_context, analyst_query, control_cctv, ...) and wait
+         * for its result. Returns null when God's Eye is not open or the page does
+         * not answer in time. Never call on the main thread.
+         */
+        fun runPageCommand(name: String, args: JSONObject, timeoutMs: Long = 8_000L): JSONObject? {
+            val instance = activeInstance ?: return null
+            if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
+                Log.w(TAG, "runPageCommand($name) called on the main thread; refusing to block it")
+                return null
+            }
+            val id = "cmd-" + System.nanoTime()
+            val future = java.util.concurrent.CompletableFuture<JSONObject>()
+            pendingCommands[id] = future
+            instance.runOnUiThread { instance.evaluatePageCommand(id, name, args) }
+            return try {
+                future.get(timeoutMs, TimeUnit.MILLISECONDS)
+            } catch (e: Exception) {
+                Log.w(TAG, "Page command $name timed out / failed: ${e.message}")
+                null
+            } finally {
+                pendingCommands.remove(id)
+            }
+        }
+
+        private fun completePageCommand(id: String, resultJson: String) {
+            val future = pendingCommands[id] ?: return
+            val obj = try {
+                JSONObject(resultJson)
+            } catch (_: Exception) {
+                JSONObject().put("ok", false).put("raw", resultJson.take(2000))
+            }
+            future.complete(obj)
+        }
+
+        fun awaitActionReceipt(traceId: String, timeoutMs: Long = 1_500): JSONObject? {
+            // Only a loaded, visible console can acknowledge; never stall the UI thread waiting.
+            if (activeInstance?.isInitialPageLoaded != true ||
+                android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
+                return actionReceipts[traceId]
+            }
             val start = System.currentTimeMillis()
             while (System.currentTimeMillis() - start < timeoutMs) {
                 val receipt = actionReceipts[traceId]
@@ -115,9 +280,27 @@ class GodsEyeActivity : AppCompatActivity() {
             }
             return true
         }
+
+        /** God's Eye exists but sits behind another screen: bring it forward without re-sending anything. */
+        fun bringToFront(context: android.content.Context) {
+            if (activeInstance == null || isInForeground) return
+            try {
+                context.startActivity(Intent(context, GodsEyeActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                })
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not bring God's Eye to front: ${e.message}")
+            }
+        }
+
+        fun onGodsEyeClosed() {
+            latestGlobeState = null
+            actionReceipts.clear()
+        }
     }
 
     private lateinit var binding: ActivityGodsEyeBinding
+    @Volatile
     private var isInitialPageLoaded = false
     private var pendingAction: String? = null
 
@@ -202,13 +385,73 @@ class GodsEyeActivity : AppCompatActivity() {
         }
 
         val targetUrl = intent?.getStringExtra(EXTRA_VIEW_URL) ?: intent?.dataString
+        // Opened from the dock / Home with nothing to show: start over the user, not over Austin.
+        openAtStartLocation = savedInstanceState == null && actionJson.isNullOrBlank() && targetUrl.isNullOrBlank()
         loadGodsEye(targetUrl)
+    }
+
+    private var openAtStartLocation = false
+
+    /** Last known phone position (no fresh GPS fix is requested), or null without permission / a fix. */
+    private fun lastKnownLocation(): android.location.Location? {
+        val fine = hasOsPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
+        val coarse = hasOsPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+        if (!fine && !coarse) return null
+        val lm = getSystemService(android.content.Context.LOCATION_SERVICE) as? android.location.LocationManager ?: return null
+        return try {
+            lm.getProviders(true)
+                .mapNotNull { provider -> lm.getLastKnownLocation(provider) }
+                .maxByOrNull { it.time }
+        } catch (e: SecurityException) {
+            null
+        }
+    }
+
+    /**
+     * Fly to the phone's last known position, or over India when there is none.
+     * Moves the camera directly: the console's action executor would pop a
+     * "Jarvis Action Executed" card for what is just the opening view.
+     */
+    private fun flyToStartLocation(announce: Boolean = false, afterBoot: Boolean = false) {
+        val loc = lastKnownLocation()
+        val lat = loc?.latitude ?: FALLBACK_LAT
+        val lon = loc?.longitude ?: FALLBACK_LON
+        val alt = if (loc != null) 60_000.0 else FALLBACK_ALT_M
+        // afterBoot: let the console restore its saved view first, then move to the user.
+        val delayMs = if (afterBoot) 2000 else 0
+        binding.webViewGodsEye.evaluateJavascript(
+            """
+            (function() {
+                var n = 0;
+                (function go() {
+                    var v = window.__godsEyeView && window.__godsEyeView.viewer;
+                    if (v && window.Cesium) {
+                        setTimeout(function() {
+                            v.camera.flyTo({
+                                destination: Cesium.Cartesian3.fromDegrees($lon, $lat, $alt),
+                                orientation: { heading: 0, pitch: Cesium.Math.toRadians(-90), roll: 0 },
+                                duration: 1.5
+                            });
+                        }, $delayMs);
+                    } else if (n++ < 80) {
+                        setTimeout(go, 250);
+                    }
+                })();
+            })();
+            """.trimIndent(),
+            null
+        )
+        if (announce && loc == null) {
+            Toast.makeText(this, "Location not available, showing India", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun setupButtons() {
         binding.btnBack.setOnClickListener {
             finish()
         }
+
+        binding.btnGodsEyeMenu.setOnClickListener { showGodsEyeMenu(it) }
 
         binding.btnApiHub.setOnClickListener {
             val hubSheet = GodsEyeApiHubBottomSheet()
@@ -248,13 +491,43 @@ class GodsEyeActivity : AppCompatActivity() {
         }
     }
 
+    /** The toolbar used to hold five buttons; on a phone they covered the console, so they live here now. */
+    private fun showGodsEyeMenu(anchor: View) {
+        val popup = android.widget.PopupMenu(this, anchor)
+        val menu = popup.menu
+        menu.add(0, MENU_API_KEYS, 0, "API keys & providers")
+        menu.add(0, MENU_ROTATE, 1, if (resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) "Portrait view" else "Landscape view")
+        menu.add(0, MENU_MY_LOCATION, 2, "Go to my location")
+        menu.add(0, MENU_HERO, 3, "Hero scene")
+        menu.add(0, MENU_TOUR, 4, if (isAutoTourActive) "Stop auto tour" else "Start auto tour")
+        menu.add(0, MENU_RELOAD, 5, "Reload")
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                MENU_API_KEYS -> binding.btnApiHub.performClick()
+                MENU_ROTATE -> toggleScreenOrientation()
+                MENU_MY_LOCATION -> flyToStartLocation(announce = true)
+                MENU_HERO -> triggerHeroDemoMode()
+                MENU_TOUR -> toggleAutoTour()
+                MENU_RELOAD -> binding.btnReload.performClick()
+            }
+            true
+        }
+        popup.show()
+    }
+
     private fun setupBackNavigation() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (binding.webViewGodsEye.canGoBack()) {
-                    binding.webViewGodsEye.goBack()
-                } else {
-                    finish()
+                // An open phone sheet closes first, like any bottom sheet.
+                binding.webViewGodsEye.evaluateJavascript(
+                    "(function(){ return !!(window.__jarvisCloseSheet && window.__jarvisCloseSheet()); })();"
+                ) { closed ->
+                    if (closed == "true") return@evaluateJavascript
+                    if (binding.webViewGodsEye.canGoBack()) {
+                        binding.webViewGodsEye.goBack()
+                    } else {
+                        finish()
+                    }
                 }
             }
         })
@@ -435,115 +708,113 @@ class GodsEyeActivity : AppCompatActivity() {
                     }
                     view?.evaluateJavascript(postScript, null)
 
-                    // Auto-enable only essential core surveillance layers on startup (CCTV, Flights, Satellites), keep others OFF
+                    // A plain open with nothing switched on gets the core layers. It never switches
+                    // layers OFF: that used to wipe the layers a Jarvis command had just enabled.
                     val autoLayersScript = """
                         (function() {
                             if (window.__jarvisLayersAutoActivated) return;
                             var checkCount = 0;
-                            function autoActivateAll() {
-                                if (window.__godsEyeView && window.__godsEyeView.dataManager && typeof window.__godsEyeView.dataManager.getAll === 'function') {
+                            function autoActivate() {
+                                var dm = window.__godsEyeView && window.__godsEyeView.dataManager;
+                                if (dm && typeof dm.getAll === 'function') {
+                                    window.__jarvisLayersAutoActivated = true;
                                     try {
-                                        window.__jarvisLayersAutoActivated = true;
-                                        var layers = window.__godsEyeView.dataManager.getAll();
-                                        console.log('[Jarvis] Activating default core layers (cctv, flights, satellites) and disabling clutter...');
-                                        var defaultCore = ['cctv', 'flights', 'satellites'];
-                                        for (var i = 0; i < layers.length; i++) {
-                                            var l = layers[i];
-                                            if (!l) continue;
-                                            if (defaultCore.indexOf(l.id) >= 0) {
-                                                try { window.__godsEyeView.dataManager.setEnabled(l.id, true, { origin: 'external' }); } catch(e) {}
-                                            } else {
-                                                try { window.__godsEyeView.dataManager.setEnabled(l.id, false, { origin: 'external' }); } catch(e) {}
-                                            }
+                                        var anyOn = dm.getAll().some(function(l) { return l && l.enabled && String(l.id).indexOf('bhote') === -1; });
+                                        if (!anyOn) {
+                                            ['cctv', 'flights', 'satellites'].forEach(function(id) {
+                                                try { dm.setEnabled(id, true, { origin: 'external' }); } catch(e) {}
+                                            });
                                         }
-                                        // Guarantee Event Reconstruction is disabled and dismissed
-                                        try { window.__godsEyeView.dataManager.setEnabled('bhote-koshi-2026', false, { origin: 'external' }); } catch(e) {}
-                                        try { window.__godsEyeView.dataManager.setEnabled('bhote-koshi-locator', false, { origin: 'external' }); } catch(e) {}
-                                        try {
-                                            var panel = document.getElementById('bhote-koshi-event-panel');
-                                            if (panel) {
-                                                var closeBtn = panel.querySelector('[data-action="close"], .bhote-event-icon-btn');
-                                                if (closeBtn) closeBtn.click(); else panel.remove();
-                                            }
-                                        } catch(e) {}
+                                        // Event Reconstruction demo stays off and dismissed
+                                        try { dm.setEnabled('bhote-koshi-2026', false, { origin: 'external' }); } catch(e) {}
+                                        try { dm.setEnabled('bhote-koshi-locator', false, { origin: 'external' }); } catch(e) {}
+                                        var panel = document.getElementById('bhote-koshi-event-panel');
+                                        if (panel) {
+                                            var closeBtn = panel.querySelector('[data-action="close"], .bhote-event-icon-btn');
+                                            if (closeBtn) closeBtn.click(); else panel.remove();
+                                        }
                                     } catch(err) {
                                         console.warn('[Jarvis] Auto-activate error:', err);
                                     }
                                 } else if (checkCount < 40) {
                                     checkCount++;
-                                    setTimeout(autoActivateAll, 250);
+                                    setTimeout(autoActivate, 250);
                                 }
                             }
-                            autoActivateAll();
+                            autoActivate();
                         })();
                     """.trimIndent()
                     view?.evaluateJavascript(autoLayersScript, null)
 
-                    // =====================================================================
-                    // ULTRA-HD GRAPHICS ENGINE CALIBRATION & HIGH-DPI SHARPENING PIPELINE
-                    // =====================================================================
-                    val graphicsUpgradeScript = """
+                    // Rendering budget. The bundle asks for 60 fps, SSE 1.25 and a 300-tile cache;
+                    // on a phone (RAM-starved, thermally capped) that means heat, jank and WebView
+                    // restarts, so phones get Cesium's normal detail at 30 fps. Tablets keep it sharp.
+                    val isPhone = resources.configuration.smallestScreenWidthDp < 600
+                    val graphicsScript = """
                         (function() {
+                            var phone = $isPhone;
                             var retries = 0;
-                            function applyGraphicsUpgrade() {
+                            function applyGraphics() {
                                 try {
                                     if (window.__godsEyeView && window.__godsEyeView.viewer) {
                                         var v = window.__godsEyeView.viewer;
-                                        
-                                        // 1. Force 1.0x Full Native Pixel Resolution (remove 0.65x mobile downsampling)
                                         v.resolutionScale = 1.0;
-                                        v.targetFrameRate = 60;
-                                        
-                                        // 2. High-Density Tile Mipmapping for Globe & Satellite Basemaps
+                                        v.targetFrameRate = phone ? 30 : 60;
                                         if (v.scene && v.scene.globe) {
-                                            v.scene.globe.maximumScreenSpaceError = 1.2; // Default 2.0; lower forces ultra-crisp zoom tiles
-                                            v.scene.globe.tileCacheSize = 250;
+                                            v.scene.globe.maximumScreenSpaceError = phone ? 2.0 : 1.25;
+                                            v.scene.globe.tileCacheSize = phone ? 120 : 300;
                                         }
-                                        
-                                        // 3. Google Photorealistic 3D Tiles High-LOD Threshold
                                         if (window.__godsEyeView.tileset) {
-                                            window.__godsEyeView.tileset.maximumScreenSpaceError = 6; // Default 16; forces high-poly 3D models
+                                            window.__godsEyeView.tileset.maximumScreenSpaceError = phone ? 16 : 8;
                                         }
-                                        
-                                        // 4. Hardware Anti-Aliasing (FXAA)
                                         if (v.scene && v.scene.postProcessStages) {
                                             v.scene.postProcessStages.fxaa.enabled = true;
                                         }
-                                        
-                                        // 5. Activate GPU Unsharp-Mask Edge Sharpening
-                                        var sm = window.__godsEyeView.styleManager;
-                                        if (sm && typeof sm.setSharpenEnabled === 'function') {
-                                            sm.setSharpenEnabled(true);
-                                            if (typeof sm.setSharpenIntensity === 'function') sm.setSharpenIntensity(45);
-                                        } else {
-                                            var sharpenBtn = document.querySelector('[data-action="sharpen"], #sharpen-btn, .sharpen-btn');
-                                            if (sharpenBtn && !sharpenBtn.classList.contains('active')) sharpenBtn.click();
-                                        }
-                                        
-                                        // Request a render update to immediately redraw in high-res
                                         if (v.scene && typeof v.scene.requestRender === 'function') {
                                             v.scene.requestRender();
                                         }
-                                        console.log('[Jarvis Graphics] Ultra-HD 1.0x Resolution + SSE 1.2 + GPU Sharpening Successfully Calibrated.');
                                     } else if (retries < 30) {
                                         retries++;
-                                        setTimeout(applyGraphicsUpgrade, 300);
+                                        setTimeout(applyGraphics, 300);
                                     }
                                 } catch(e) {
                                     console.warn('[Jarvis Graphics] Calibration error:', e);
                                 }
                             }
-                            applyGraphicsUpgrade();
+                            applyGraphics();
                         })();
                     """.trimIndent()
-                    view?.evaluateJavascript(graphicsUpgradeScript, null)
+                    view?.evaluateJavascript(graphicsScript, null)
 
-                    val currentUrl = view?.url ?: url.orEmpty()
-                    if (currentUrl.contains("#")) {
-                        val initialHash = currentUrl.substringAfter("#")
-                        val hashJson = JSONObject.quote(initialHash)
-                        view?.evaluateJavascript(
-                            "(function() { var h = $hashJson; window.location.hash = h; if (window.__godsEyeView && typeof window.__godsEyeView.navigateToHash === 'function') { window.__godsEyeView.navigateToHash(h); } else { window.__pendingGodsEyeActions = window.__pendingGodsEyeActions || []; window.__pendingGodsEyeActions.push({ hash: h }); } })();", null)
+                    // Cesium cannot recover a lost WebGL context (low RAM / GPU reset): the globe
+                    // stays white and every render throws. Reload in place - the URL hash keeps
+                    // the view - at most twice in two minutes so a sick GPU cannot loop.
+                    view?.evaluateJavascript(
+                        """
+                        (function() {
+                            if (window.__jarvisContextGuard) return;
+                            window.__jarvisContextGuard = true;
+                            document.addEventListener('webglcontextlost', function(ev) {
+                                console.warn("[Jarvis] WebGL context lost - reloading God's Eye");
+                                var now = Date.now(), log = [];
+                                try { log = JSON.parse(sessionStorage.getItem('jv-ctx-reloads') || '[]'); } catch(e) {}
+                                log = log.filter(function(t) { return now - t < 120000; });
+                                if (log.length >= 2) return;
+                                log.push(now);
+                                try { sessionStorage.setItem('jv-ctx-reloads', JSON.stringify(log)); } catch(e) {}
+                                setTimeout(function() { location.reload(); }, 1200);
+                            }, true);
+                        })();
+                        """.trimIndent(),
+                        null
+                    )
+
+                    // The page applies its own URL hash on boot (tools.js navigateToHash at 800 ms);
+                    // re-applying it here made every hash navigation run twice.
+
+                    if (openAtStartLocation) {
+                        openAtStartLocation = false
+                        flyToStartLocation(afterBoot = true)
                     }
 
                     pendingAction?.let { action ->
@@ -690,15 +961,40 @@ class GodsEyeActivity : AppCompatActivity() {
             prefs.godsEyeMapillaryToken.trim().takeIf { it.isNotBlank() }?.let {
                 append("window.__MAPILLARY_CLIENT_TOKEN__=").append(JSONObject.quote(it)).append(";")
             }
+            append("window.__JARVIS_THEME__=").append(jarvisThemeJson()).append(";")
             append("</script>")
+            // Must wrap fetch() before the console's modules run.
+            append("<script src=\"/jarvis-bridge.js\"></script>")
         }
         val marker = "<head>"
-        val patched = if (html.contains(marker)) {
+        var patched = if (html.contains(marker)) {
             html.replaceFirst(marker, marker + bootstrap)
         } else {
             bootstrap + html
         }
+        // Phone layout goes last in <head> so it overrides the bundle's own CSS.
+        val phoneLayout = "<link rel=\"stylesheet\" href=\"/jarvis-mobile.css\"><script src=\"/jarvis-mobile.js\"></script>"
+        patched = if (patched.contains("</head>")) {
+            patched.replaceFirst("</head>", "$phoneLayout</head>")
+        } else {
+            patched + phoneLayout
+        }
         return patched.toByteArray(Charsets.UTF_8)
+    }
+
+    /**
+     * Accent colours of the active Jarvis theme for the God's Eye phone chrome.
+     * Only the accents: the console's panels are drawn for a dark glass card,
+     * so a light theme's card / text colours would make them unreadable.
+     */
+    private fun jarvisThemeJson(): String {
+        fun hex(attr: Int, fallback: String): String =
+            String.format("#%06X", 0xFFFFFF and themeAttr(attr, Color.parseColor(fallback)))
+        return JSONObject().apply {
+            put("accent", hex(com.jarvis.assistant.R.attr.themeAccent, "#A78BFA"))
+            put("accentFill", hex(com.jarvis.assistant.R.attr.themeAccentFill, "#6352F5"))
+            put("onAccent", hex(com.jarvis.assistant.R.attr.themeOnAccent, "#FFFFFF"))
+        }.toString()
     }
 
     private fun proxyDirect(request: WebResourceRequest, upstreamUrl: String): WebResourceResponse? {
@@ -835,17 +1131,13 @@ class GodsEyeActivity : AppCompatActivity() {
 
             // --- B. SATELLITES & SPACE LAUNCHES ---
             if (path.startsWith("/api/celestrak/")) {
-                val rawGroup = path.removePrefix("/api/celestrak/").substringBefore("?").trim()
-                val group = if (rawGroup.isNotEmpty()) rawGroup else "active"
-                val upstreamUrl = "https://celestrak.org/NORAD/elements/gp.php?GROUP=$group&FORMAT=tle"
-                val upstreamReq = Request.Builder()
-                    .url(upstreamUrl)
-                    .header("User-Agent", "gods-eye-view-celestrak-proxy/1.0 (+https://github.com/bilawalsidhu/gods-eye-view)")
-                    .build()
-                val upstreamResp = okHttpClient.newCall(upstreamReq).execute()
-                if (upstreamResp.isSuccessful) {
-                    val bodyStream = upstreamResp.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
-                    return WebResourceResponse("text/plain", "UTF-8", 200, "OK", corsHeaders, bodyStream)
+                val group = path.removePrefix("/api/celestrak/").substringBefore("?").trim()
+                // Cached 2 h per group (CelesTrak blocks repeat downloads), stale copy or SatNOGS when refused.
+                val tle = GodsEyeBridgeApi.satelliteTle(this@GodsEyeActivity, group)
+                return if (!tle.isNullOrBlank()) {
+                    WebResourceResponse("text/plain", "UTF-8", 200, "OK", corsHeaders, ByteArrayInputStream(tle.toByteArray()))
+                } else {
+                    jsonResponse("{\"error\":\"Satellite data unavailable (CelesTrak refused and no fallback)\"}", corsHeaders, 502)
                 }
             }
 
@@ -1007,27 +1299,20 @@ class GodsEyeActivity : AppCompatActivity() {
 
             // --- E. WILDFIRE PERIMETERS ---
             if (path.startsWith("/api/fire-perimeters")) {
-                try {
-                    val upstreamUrl = "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters_Current/FeatureServer/0/query?where=1%3D1&outFields=*&maxAllowableOffset=0.001&outSR=4326&f=geojson"
-                    val upstreamReq = Request.Builder()
-                        .url(upstreamUrl)
-                        .header("User-Agent", "Jarvis-GodsEye/1.8.7")
-                        .build()
-                    val upstreamResp = okHttpClient.newCall(upstreamReq).execute()
-                    if (upstreamResp.isSuccessful) {
-                        val bodyStream = upstreamResp.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
-                        return WebResourceResponse("application/json", "UTF-8", 200, "OK", corsHeaders, bodyStream)
-                    }
-                } catch (_: Exception) {}
-                return jsonResponse("{\"fetchedAt\":${System.currentTimeMillis()},\"rows\":[]}", corsHeaders, 200)
+                // Normalised rows + InciWeb routes (the console never read raw GeoJSON).
+                val reply = GodsEyeBridgeApi.firePerimeters(path)
+                return jsonResponse(reply.body, corsHeaders, reply.status)
             }
 
             val userPrefs = prefs
 
             // --- F. TRAFFIC (TOMTOM & OPENFREEMAP) ---
             if (path.startsWith("/api/tomtom/status")) {
-                val tomtomStatus = "{\"hasKey\":true,\"dailyCount\":0,\"budget\":6000,\"date\":\"2026-10-16\"}"
-                return jsonResponse(tomtomStatus, corsHeaders, 200)
+                // Real key state: a hardcoded hasKey:true made the traffic layer read green with no key.
+                val hasTomTom = com.jarvis.assistant.JarvisApp.instance.preferences.godsEyeTomTomKey.isNotBlank()
+                val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+                val tomtomStatus = JSONObject().put("hasKey", hasTomTom).put("dailyCount", 0).put("budget", 6000).put("date", today)
+                return jsonResponse(tomtomStatus.toString(), corsHeaders, 200)
             }
 
             if (path.startsWith("/api/tomtom/flow/")) {
@@ -1194,10 +1479,24 @@ class GodsEyeActivity : AppCompatActivity() {
                     "clouds-regional" -> "goes-lir"
                     else -> "weather_radar_base_reflectivity"
                 }
-                val bboxParam = url.getQueryParameter("bbox") ?: "-125,24,-66,49"
+                // Tiles come as z/x/y of Cesium's GeographicTilingScheme (2x1 tiles at level 0,
+                // as server/providers/weather.js weatherTileBounds). Ignoring them sent the same
+                // US-wide image to every tile.
+                val z = url.getQueryParameter("z")?.toIntOrNull()
+                val x = url.getQueryParameter("x")?.toIntOrNull()
+                val y = url.getQueryParameter("y")?.toIntOrNull()
+                val isTile = path.startsWith("/api/weather/tile") && z != null && x != null && y != null &&
+                    z in 0..6 && x >= 0 && y >= 0 && x < (2 shl z) && y < (1 shl z)
+                val bboxParam = if (isTile) {
+                    val span = 180.0 / (1 shl z!!)
+                    "${-180 + x!! * span},${90 - (y!! + 1) * span},${-180 + (x + 1) * span},${90 - y * span}"
+                } else {
+                    url.getQueryParameter("bbox") ?: "-125,24,-66,49"
+                }
                 val timeParam = url.getQueryParameter("time")
-                val widthParam = url.getQueryParameter("size")?.substringBefore("x") ?: "1024"
-                val heightParam = url.getQueryParameter("size")?.substringAfter("x", "")?.ifBlank { null } ?: "512"
+                val sizeParam = url.getQueryParameter("size")
+                val widthParam = if (isTile) (sizeParam ?: "512") else (sizeParam?.substringBefore("x") ?: "1024")
+                val heightParam = if (isTile) widthParam else (sizeParam?.substringAfter("x", "")?.ifBlank { null } ?: "512")
                 val upstreamUrl = StringBuilder("https://nowcoast.noaa.gov/geoserver/observations//ows?")
                     .append("service=WMS&version=1.1.1&request=GetMap")
                     .append("&layers=").append(layer)
@@ -1224,17 +1523,18 @@ class GodsEyeActivity : AppCompatActivity() {
             }
 
             // --- L. WIND FORECAST & GRID ---
+            // Open-Meteo sampled grid (GodsEyeBridgeApi.windManifest); a zero-filled grid would be a fabricated calm.
             if (path.startsWith("/api/wind/manifest") || path.startsWith("/api/wind/status")) {
-                return jsonResponse(buildWindManifestJson(), corsHeaders, 200)
+                val model = url.getQueryParameter("model")?.takeIf { it == "gfs" || it == "ifs" } ?: "gfs"
+                val overlay = url.getQueryParameter("overlay")?.takeIf { it == "temperature" || it == "pressure" } ?: "none"
+                val reply = GodsEyeBridgeApi.windManifest(this@GodsEyeActivity, model, overlay)
+                return jsonResponse(reply.body, corsHeaders, reply.status)
             }
 
             if (path.startsWith("/api/wind/grid/")) {
-                // A zero-filled grid is not "no wind", it is a fabricated calm.
-                return jsonResponse(
-                    "{\"error\":\"No GFS wind grid available in the standalone build\"}",
-                    corsHeaders,
-                    503
-                )
+                val bytes = GodsEyeBridgeApi.windGrid(this@GodsEyeActivity)
+                    ?: return jsonResponse("{\"error\":\"Wind grid unavailable\"}", corsHeaders, 503)
+                return WebResourceResponse("application/octet-stream", null, 200, "OK", corsHeaders, ByteArrayInputStream(bytes))
             }
 
             // --- M. MILITARY INSTALLATIONS ---
@@ -1325,7 +1625,7 @@ class GodsEyeActivity : AppCompatActivity() {
             }
 
             if (path.startsWith("/api/setup/keys")) {
-                // Keys live in Jarvis settings; the WebView never writes them.
+                // Saves arrive as POSTs through jarvis-bridge.js; this answers only if that bridge is missing.
                 return jsonResponse(
                     "{\"error\":\"Keys are managed in Jarvis > Settings > API Connections\",\"readOnly\":true}",
                     corsHeaders,
@@ -1934,40 +2234,6 @@ class GodsEyeActivity : AppCompatActivity() {
             put("tileTemplate", "/api/weather/tile?product=$product&time=$time&z={z}&x={x}&y={y}")
             put("imageUrl", "/api/weather/image?product=$product&time=$time")
             put("imageSize", JSONObject().apply { put("width", 2048); put("height", 1024) })
-        }.toString()
-    }
-
-    private fun buildWindManifestJson(): String {
-        val now = System.currentTimeMillis()
-        val sdfDate = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
-        val sdfHour = SimpleDateFormat("HH", Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
-        val nowDate = sdfDate.format(Date(now))
-        val nowHour = sdfHour.format(Date(now))
-        return JSONObject().apply {
-            put("schemaVersion", 1)
-            put("model", "gfs")
-            put("overlay", "none")
-            put("fetchedAt", now)
-            // The standalone build has no GRIB decoder, so there is no real GFS
-            // grid to serve. Reporting it unavailable keeps the layer off rather
-            // than painting a worldwide dead calm that looks like a forecast.
-            put("unavailable", true)
-            put("stale", true)
-            put("reason", "GFS wind grids need the God's Eye server (Termux on :4173); the standalone build has no GRIB decoder")
-            put("cycle", JSONObject().apply {
-                put("date", nowDate)
-                put("hour", nowHour)
-                put("forecastHour", 0)
-            })
-            put("grid", JSONObject().apply {
-                put("nx", 360)
-                put("ny", 181)
-                put("lo1", 0.0)
-                put("la1", 90.0)
-                put("dx", 1.0)
-                put("dy", 1.0)
-            })
-            put("gridUrl", "/api/wind/grid/gfs-$nowDate.bin?model=gfs&overlay=none")
         }.toString()
     }
 
@@ -2599,6 +2865,39 @@ class GodsEyeActivity : AppCompatActivity() {
             recordActionReceipt(traceId, resultJson)
         }
 
+        /**
+         * POST routes whose body WebView interception cannot see (jarvis-bridge.js).
+         * Runs off the UI thread and answers through window.__jarvisApiResolve.
+         */
+        @JavascriptInterface
+        fun apiPost(requestId: String, pathAndQuery: String, body: String, contentType: String) {
+            if (!pathAndQuery.startsWith("/api/")) return
+            Thread {
+                val reply = GodsEyeBridgeApi.handlePost(
+                    this@GodsEyeActivity,
+                    com.jarvis.assistant.JarvisApp.instance.preferences,
+                    pathAndQuery, body, contentType
+                )
+                val js = "window.__jarvisApiResolve && window.__jarvisApiResolve(" +
+                    "${JSONObject.quote(requestId)}, ${reply.status}, ${JSONObject.quote(reply.contentType)}, ${JSONObject.quote(reply.body)});"
+                runOnUiThread {
+                    if (!isDestroyed) binding.webViewGodsEye.evaluateJavascript(js, null)
+                }
+            }.apply { name = "GodsEyeApiPost"; isDaemon = true }.start()
+        }
+
+        @JavascriptInterface
+        fun onCommandResult(commandId: String, resultJson: String) {
+            completePageCommand(commandId, resultJson)
+        }
+
+        /** Last known phone position for the Places sheet's "My location"; null JSON without a fix. */
+        @JavascriptInterface
+        fun getDeviceLocation(): String {
+            val loc = lastKnownLocation() ?: return "null"
+            return JSONObject().put("lat", loc.latitude).put("lon", loc.longitude).toString()
+        }
+
         @JavascriptInterface
         fun isIntegrated(): Boolean = true
 
@@ -2612,103 +2911,50 @@ class GodsEyeActivity : AppCompatActivity() {
 
     fun executeActionInWebView(actionJson: String) {
         if (actionJson.isBlank()) return
-
-        try {
-            val rootObj = JSONObject(actionJson)
-            if (rootObj.optBoolean("start_auto_tour", false)) {
-                runOnUiThread { startAutoTour() }
-            }
-        } catch (_: Exception) {}
-
-        if (!isInitialPageLoaded) {
-            pendingAction = actionJson
+        val action = try {
+            normalizeAction(actionJson)
+        } catch (e: Exception) {
+            Log.w(TAG, "Ignoring unparseable God's Eye action: ${e.message}")
             return
         }
-        val escaped = actionJson.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n").replace("\r", "\\r")
+        if (isDuplicateTrace(action.optString("trace_id"))) {
+            Log.d(TAG, "Skipping repeat of action ${action.optString("trace_id")}")
+            return
+        }
+        if (action.optBoolean("start_auto_tour", false)) {
+            runOnUiThread { startAutoTour() }
+        }
+
+        if (!isInitialPageLoaded) {
+            pendingAction = action.toString()
+            return
+        }
+        // "all" needs the layer catalogue, which only the page has; everything else is
+        // handled by the console's own executor.
         val js = """
             (function() {
                 try {
-                    var action = JSON.parse('$escaped');
-                    
-                    var layerAliasMap = {
-                        'all': 'all', 'everything': 'all', 'all_layers': 'all',
-                        'aircraft': 'flights', 'planes': 'flights', 'flight': 'flights', 'flights': 'flights',
-                        'ships': 'ais-live-vessels', 'vessels': 'ais-live-vessels', 'boat': 'ais-live-vessels', 'ais': 'ais-live-vessels',
-                        'cameras': 'cctv', 'camera': 'cctv', 'cctv': 'cctv', 'video': 'cctv',
-                        'fires': 'local-firms', 'wildfires': 'fire-perimeters', 'fire': 'local-firms', 'firms': 'local-firms',
-                        'space': 'rocket-launches', 'launches': 'rocket-launches', 'satellites': 'satellites', 'satellite': 'satellites',
-                        'quake': 'earthquakes', 'earthquakes': 'earthquakes', 'seismic': 'earthquakes',
-                        'weather-radar': 'weather-radar', 'radar': 'weather-radar', 'rain': 'weather-radar',
-                        'weather-satellite': 'weather-satellite', 'clouds': 'weather-satellite', 'cloud': 'weather-satellite',
-                        'weather-lightning': 'weather-lightning', 'lightning': 'weather-lightning',
-                        'weather-cyclones': 'weather-cyclones', 'cyclones': 'weather-cyclones', 'cyclone': 'weather-cyclones', 'hurricanes': 'weather-cyclones',
-                        'wind': 'wind', 'traffic': 'traffic', 'transit': 'transit', 'bikeshare': 'bikeshare',
-                        'radio': 'radio', 'military': 'military-installations', 'military-awareness': 'military-awareness',
-                        'street-level': 'street-level', 'recent-imagery': 'recent-imagery',
-                        'cables': 'subsea-cables', 'subsea': 'subsea-cables', 'cable': 'subsea-cables', 'telecom': 'subsea-cables',
-                        'datacenters': 'datacenters', 'datacenter': 'datacenters', 'cloud': 'datacenters',
-                        'dams': 'hydro-dams', 'dam': 'hydro-dams', 'water': 'hydro-dams',
-                        'solar': 'solar-weather', 'space-weather': 'solar-weather', 'aurora': 'solar-weather',
-                        'event-reconstruction': 'bhote-koshi-2026', 'event_reconstruction': 'bhote-koshi-2026',
-                        'bhote-koshi': 'bhote-koshi-2026', 'bhote_koshi': 'bhote-koshi-2026', 'flood-reconstruction': 'bhote-koshi-2026'
-                    };
-
+                    var action = ${action};
                     var dm = window.__godsEyeView && window.__godsEyeView.dataManager;
-                    var excludedFromAll = ['bhote-koshi-2026', 'bhote-koshi-locator'];
+                    var isAll = function(list) { return Array.isArray(list) && (list.indexOf('all') >= 0 || list.indexOf('everything') >= 0); };
                     if (dm && typeof dm.getAll === 'function') {
-                        if (action.enable_all || (action.enable_layers && (action.enable_layers.indexOf('all') >= 0 || action.enable_layers.indexOf('everything') >= 0))) {
-                            var all = dm.getAll();
-                            for (var i = 0; i < all.length; i++) {
-                                var it = all[i];
-                                if (!it || it.showInTogglePanel === false || excludedFromAll.indexOf(it.id) >= 0 || (typeof it.id === 'string' && it.id.indexOf('bhote') >= 0)) {
-                                    continue;
-                                }
+                        if (action.enable_all || isAll(action.enable_layers)) {
+                            dm.getAll().forEach(function(it) {
+                                if (!it || it.showInTogglePanel === false || String(it.id).indexOf('bhote') >= 0) return;
                                 try { dm.setEnabled(it.id, true, { origin: 'external' }); } catch(e) {}
-                            }
+                            });
                         }
-                        if (action.clear_all || action.disable_all || (action.disable_layers && (action.disable_layers.indexOf('all') >= 0 || action.disable_layers.indexOf('everything') >= 0))) {
-                            var all = dm.getAll();
-                            for (var i = 0; i < all.length; i++) {
-                                try { dm.setEnabled(all[i].id, false, { origin: 'external' }); } catch(e) {}
-                            }
-                        }
-                        if (action.enable_layers && Array.isArray(action.enable_layers)) {
-                            for (var i = 0; i < action.enable_layers.length; i++) {
-                                var raw = String(action.enable_layers[i]).toLowerCase().trim();
-                                var mapped = layerAliasMap[raw] || raw;
-                                if (mapped !== 'all') {
-                                    try { dm.setEnabled(mapped, true, { origin: 'external' }); } catch(e) {}
-                                }
-                            }
-                        }
-                        if (action.disable_layers && Array.isArray(action.disable_layers)) {
-                            for (var i = 0; i < action.disable_layers.length; i++) {
-                                var raw = String(action.disable_layers[i]).toLowerCase().trim();
-                                var mapped = layerAliasMap[raw] || raw;
-                                if (mapped !== 'all') {
-                                    try { dm.setEnabled(mapped, false, { origin: 'external' }); } catch(e) {}
-                                }
-                            }
-                        }
+                        if (action.disable_all || isAll(action.disable_layers)) action.clear_all = true;
                     }
-                    if (action.disable_layers && (action.disable_layers.indexOf('bhote-koshi-2026') >= 0 || action.disable_layers.indexOf('event-reconstruction') >= 0 || action.disable_layers.indexOf('all') >= 0)) {
-                        try {
-                            var panel = document.getElementById('bhote-koshi-event-panel');
-                            if (panel) {
-                                var closeBtn = panel.querySelector('[data-action="close"], .bhote-event-icon-btn');
-                                if (closeBtn) closeBtn.click(); else panel.remove();
-                            }
-                        } catch(e) {}
-                    }
-
+                    ['enable_layers', 'disable_layers'].forEach(function(k) {
+                        if (Array.isArray(action[k])) action[k] = action[k].filter(function(id) { return id !== 'all' && id !== 'everything'; });
+                    });
                     if (window.__executeGodsEyeAction && typeof window.__executeGodsEyeAction === 'function') {
-                        var res = window.__executeGodsEyeAction(action);
-                        return JSON.stringify(res);
-                    } else {
-                        window.__pendingGodsEyeActions = window.__pendingGodsEyeActions || [];
-                        window.__pendingGodsEyeActions.push(action);
-                        return JSON.stringify({ trace_id: action.trace_id || 'queued', status: 'queued' });
+                        return JSON.stringify(window.__executeGodsEyeAction(action));
                     }
+                    window.__pendingGodsEyeActions = window.__pendingGodsEyeActions || [];
+                    window.__pendingGodsEyeActions.push(action);
+                    return JSON.stringify({ trace_id: action.trace_id || 'queued', status: 'queued' });
                 } catch(e) {
                     console.error('[Jarvis] Failed to dispatch action:', e);
                     return JSON.stringify({ error: e.message });
@@ -2724,12 +2970,45 @@ class GodsEyeActivity : AppCompatActivity() {
                     } else res
                     val obj = JSONObject(unquoted)
                     val tid = obj.optString("trace_id", "")
-                    if (tid.isNotBlank()) {
+                    if (tid.isNotBlank() && obj.optString("status") != "queued") {
                         recordActionReceipt(tid, obj.toString())
                     }
                 } catch (_: Exception) {}
             }
         }
+    }
+
+    /**
+     * Runs a console command through its own runner (the same one its voice agent
+     * uses) and hands the awaited result back through JarvisVoiceBridge.onCommandResult.
+     */
+    private fun evaluatePageCommand(id: String, name: String, args: JSONObject) {
+        if (!isInitialPageLoaded) {
+            completePageCommand(id, JSONObject().put("ok", false).put("error", "God's Eye is still loading").toString())
+            return
+        }
+        val js = """
+            (function() {
+                var id = ${JSONObject.quote(id)};
+                function done(r) {
+                    var text;
+                    try { text = JSON.stringify(r === undefined ? { ok: true } : r); } catch(e) { text = JSON.stringify({ ok: true, note: 'result not serialisable' }); }
+                    if (text && text.length > 12000) text = JSON.stringify({ ok: true, truncated: true, text: text.slice(0, 12000) });
+                    window.JarvisVoiceBridge.onCommandResult(id, text);
+                }
+                try {
+                    var vc = window.__godsEyeView && window.__godsEyeView.voiceCommands;
+                    // Jarvis asked for this panel: the phone layout may show it as a sheet.
+                    if (${JSONObject.quote(name)} === 'set_panel_open') window.__jarvisAllowSheetUntil = Date.now() + 3000;
+                    if (!vc || typeof vc.runner !== 'function') { done({ ok: false, error: "God's Eye command runner is not ready yet" }); return; }
+                    Promise.resolve(vc.runner(${JSONObject.quote(name)}, ${args}, {}))
+                        .then(done, function(e) { done({ ok: false, error: String(e && e.message || e) }); });
+                } catch(e) {
+                    done({ ok: false, error: String(e && e.message || e) });
+                }
+            })();
+        """.trimIndent()
+        binding.webViewGodsEye.evaluateJavascript(js, null)
     }
 
     fun queryGlobeState(callback: (JSONObject?) -> Unit) {
@@ -2757,11 +3036,11 @@ class GodsEyeActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         val actionJson = intent.getStringExtra(EXTRA_ACTION_JSON)
+        val targetUrl = intent.getStringExtra(EXTRA_VIEW_URL) ?: intent.dataString
+        // The action already carries the view; navigating to the URL as well flew the camera twice.
         if (!actionJson.isNullOrBlank()) {
             executeActionInWebView(actionJson)
-        }
-        val targetUrl = intent.getStringExtra(EXTRA_VIEW_URL) ?: intent.dataString
-        if (!targetUrl.isNullOrBlank()) {
+        } else if (!targetUrl.isNullOrBlank()) {
             loadGodsEye(targetUrl)
         }
     }
@@ -2831,6 +3110,7 @@ class GodsEyeActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         activeInstance = this
+        isInForeground = true
         binding.webViewGodsEye.onResume()
         binding.webViewGodsEye.resumeTimers()
         startJarvisStateObserver()
@@ -2851,7 +3131,7 @@ class GodsEyeActivity : AppCompatActivity() {
         val currentOrientation = resources.configuration.orientation
         if (currentOrientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
             requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            binding.btnOrientationToggle.setColorFilter(themeAttr(com.jarvis.assistant.R.attr.themeAccent2, Color.parseColor("#64FFDA")))
+            binding.btnOrientationToggle.setColorFilter(themeAttr(com.jarvis.assistant.R.attr.themeTextPrimary, Color.parseColor("#64FFDA")))
             Toast.makeText(this, "HUD: PORTRAIT MODE (SENSOR LOCKED)", Toast.LENGTH_SHORT).show()
         } else {
             requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
@@ -2932,8 +3212,8 @@ class GodsEyeActivity : AppCompatActivity() {
 
     fun startAutoTour() {
         isAutoTourActive = true
-        binding.btnAutoTour.backgroundTintList = android.content.res.ColorStateList.valueOf(themeAttr(com.jarvis.assistant.R.attr.themeAccent, Color.parseColor("#00E5FF")))
-        binding.btnAutoTour.imageTintList = android.content.res.ColorStateList.valueOf(themeAttr(com.jarvis.assistant.R.attr.themeBg, Color.parseColor("#050811")))
+        binding.btnAutoTour.backgroundTintList = android.content.res.ColorStateList.valueOf(themeAttr(com.jarvis.assistant.R.attr.themeAccentFill, Color.parseColor("#00E5FF")))
+        binding.btnAutoTour.imageTintList = android.content.res.ColorStateList.valueOf(themeAttr(com.jarvis.assistant.R.attr.themeOnAccent, Color.parseColor("#050811")))
         binding.layoutAutoTourHud.visibility = View.VISIBLE
         launchTourCycle()
     }
@@ -2943,7 +3223,7 @@ class GodsEyeActivity : AppCompatActivity() {
         autoTourJob?.cancel()
         autoTourJob = null
         binding.btnAutoTour.backgroundTintList = null
-        binding.btnAutoTour.imageTintList = android.content.res.ColorStateList.valueOf(themeAttr(com.jarvis.assistant.R.attr.themeAccent3, Color.parseColor("#64FFDA")))
+        binding.btnAutoTour.imageTintList = android.content.res.ColorStateList.valueOf(themeAttr(com.jarvis.assistant.R.attr.themeAccent, Color.parseColor("#64FFDA")))
         binding.layoutAutoTourHud.visibility = View.GONE
     }
 
@@ -2967,9 +3247,9 @@ class GodsEyeActivity : AppCompatActivity() {
                 while (remainingSeconds > 0 && isAutoTourActive) {
                     val isPausedByTouch = System.currentTimeMillis() - lastUserTouchTime < 10000L
                     if (isPausedByTouch) {
-                        binding.tvAutoTourBadge.text = "⏸ PAUSED (${scene.domainTag})"
+                        binding.tvAutoTourBadge.text = "Paused (${scene.domainTag})"
                     } else {
-                        binding.tvAutoTourBadge.text = "⟳ AUTO: ${scene.domainTag} (${remainingSeconds}s)"
+                        binding.tvAutoTourBadge.text = "Auto: ${scene.domainTag} (${remainingSeconds}s)"
                         remainingSeconds--
                     }
                     kotlinx.coroutines.delay(1000L)
@@ -2981,51 +3261,22 @@ class GodsEyeActivity : AppCompatActivity() {
     }
 
     private fun executeTourScene(scene: AutoTourScene) {
+        // Flat fields: the console's executor never read the old nested `camera` object,
+        // and the flyTo/selectCamera fallbacks called functions the bundle does not have.
         val action = JSONObject().apply {
             put("trace_id", "tour_${scene.domainTag.lowercase()}_${System.currentTimeMillis()}")
-            val cam = JSONObject().apply {
-                put("latitude", scene.latitude)
-                put("longitude", scene.longitude)
-                put("altitude", scene.altitude)
-                put("heading", scene.heading)
-                put("pitch", scene.pitch)
-                put("duration", 3.0)
-            }
-            put("camera", cam)
+            put("lat", scene.latitude)
+            put("lon", scene.longitude)
+            put("alt", scene.altitude)
+            put("heading", scene.heading)
+            put("pitch", scene.pitch)
+            put("duration", 3.0)
             put("enable_layers", JSONArray(scene.enableLayers))
             if (scene.cctvId != null) {
-                put("cctv", scene.cctvId)
+                put("cameraId", scene.cctvId)
             }
         }
         executeActionInWebView(action.toString())
-
-        // Also evaluate direct Cesium JS flyTo fallback for 100% reliability
-        val flyJs = """
-            (function() {
-                try {
-                    if (window.__godsEyeView && typeof window.__godsEyeView.flyTo === 'function') {
-                        window.__godsEyeView.flyTo({
-                            latitude: ${scene.latitude},
-                            longitude: ${scene.longitude},
-                            altitude: ${scene.altitude},
-                            heading: ${scene.heading},
-                            pitch: ${scene.pitch},
-                            duration: 3.0
-                        });
-                    }
-                    var layers = ${JSONArray(scene.enableLayers)};
-                    if (window.__dataManager && typeof window.__dataManager.setEnabled === 'function') {
-                        for (var i = 0; i < layers.length; i++) {
-                            try { window.__dataManager.setEnabled(layers[i], true, { origin: 'external' }); } catch(e){}
-                        }
-                    }
-                    ${if (scene.cctvId != null) "if (window.__godsEyeView && typeof window.__godsEyeView.selectCamera === 'function') { window.__godsEyeView.selectCamera('${scene.cctvId}'); }" else ""}
-                } catch(e) {
-                    console.warn('[AutoTour] JS dispatch error:', e);
-                }
-            })();
-        """.trimIndent()
-        binding.webViewGodsEye.evaluateJavascript(flyJs, null)
 
         if (scene.enableScope) {
             val scopeJs = """
@@ -3068,6 +3319,7 @@ class GodsEyeActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        isInForeground = false
         stopAutoTour()
         stopJarvisStateObserver()
         binding.webViewGodsEye.onPause()
@@ -3079,6 +3331,8 @@ class GodsEyeActivity : AppCompatActivity() {
         stopJarvisStateObserver()
         if (activeInstance == this) {
             activeInstance = null
+            isInForeground = false
+            onGodsEyeClosed()
         }
         binding.webViewGodsEye.stopLoading()
         binding.webViewGodsEye.destroy()

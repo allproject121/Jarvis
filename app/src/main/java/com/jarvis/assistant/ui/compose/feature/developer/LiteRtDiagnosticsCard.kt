@@ -34,6 +34,9 @@ import com.jarvis.assistant.ui.compose.components.CloudChip
 import com.jarvis.assistant.ui.compose.components.CloudGlassCard
 import com.jarvis.assistant.ui.compose.theme.ledger
 import java.util.Locale
+import com.jarvis.assistant.ui.compose.designsystem.BentoPillShape
+import com.jarvis.assistant.ui.compose.designsystem.bentoSecondaryBorder
+import com.jarvis.assistant.ui.compose.designsystem.bentoSecondaryButtonColors
 
 /**
  * Real diagnostics for the optional AndroLLM LiteRT-LM engine: hardware
@@ -132,17 +135,17 @@ internal fun LiteRtDiagnosticsCard(viewModel: DeveloperViewModel) {
 
             Spacer(modifier = Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(
+                OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(),
                     onClick = { viewModel.loadLiteRtModel() },
                     enabled = busy == null && selected != null,
                     modifier = Modifier.weight(1f)
                 ) { Text("Load", maxLines = 1) }
-                OutlinedButton(
+                OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(),
                     onClick = { viewModel.unloadLiteRtModel() },
                     enabled = busy == null && loaded != null,
                     modifier = Modifier.weight(1f)
                 ) { Text("Unload", maxLines = 1) }
-                OutlinedButton(
+                OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(),
                     onClick = { viewModel.benchmarkLiteRtBackends() },
                     enabled = busy == null && selected != null,
                     modifier = Modifier.weight(1.3f)

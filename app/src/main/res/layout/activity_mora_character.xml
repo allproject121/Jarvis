@@ -25,7 +25,9 @@
             android:id="@+id/btnBack"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:background="@drawable/bg_set_icon_btn"
             android:src="@drawable/ic_back"
             android:contentDescription="Back"
             app:tint="?attr/themeTextPrimary" />
@@ -35,38 +37,46 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:layout_marginStart="8dp">
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="8dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="REDMAGIC MORA"
+                android:text="Mora"
                 android:textColor="?attr/themeTextPrimary"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.05" />
+                android:textSize="26sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
+                android:letterSpacing="-0.02"
+                android:maxLines="1"
+                android:ellipsize="end" />
 
             <TextView
                 android:id="@+id/tvMoraSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Interactive Cyber AI Companion"
-                android:textColor="?attr/themeAccent"
-                android:textSize="12sp"
-                android:letterSpacing="0.04" />
+                android:layout_marginTop="2dp"
+                android:text="Interactive AI companion"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter" />
         </LinearLayout>
 
         <TextView
             android:id="@+id/tvLiveStatusBadge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="LIVE 3D"
-            android:textColor="?attr/themeAccent"
-            android:textSize="11sp"
-            android:textStyle="bold"
+            android:text="Live 3D"
+            android:textColor="?attr/themeTextSecondary"
+            android:textSize="12sp"
+            android:fontFamily="@font/inter"
+            android:drawableStart="@drawable/bg_bento_dot"
+            android:drawablePadding="6dp"
+            android:gravity="center_vertical"
             android:paddingHorizontal="10dp"
             android:paddingVertical="4dp"
-            android:background="@drawable/bg_jarvis_chip" />
+            android:background="@drawable/bg_set_badge" />
     </LinearLayout>
 
     <!-- Full Character 3D WebView Stage -->
@@ -85,8 +95,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:background="?attr/themeSurface"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="18dp"
+        android:background="@drawable/bg_bento_x_sheet"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -106,9 +119,11 @@
                 <Button
                     android:id="@+id/btnEmoteWave"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
+                    android:layout_height="40dp"
                     android:text="Wave 👋"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textAllCaps="false"
                     android:textColor="?attr/themeOnAccent"
                     android:backgroundTint="?attr/themeAccentFill"
                     android:layout_marginEnd="8dp" />
@@ -116,41 +131,57 @@
                 <Button
                     android:id="@+id/btnEmoteJoy"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
+                    android:layout_height="40dp"
                     android:text="Joy ✨"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textAllCaps="false"
                     android:textColor="?attr/themeTextPrimary"
                     android:backgroundTint="?attr/themeChipBg"
+                    app:strokeColor="?attr/themePlateBorder"
+                    app:strokeWidth="1dp"
                     android:layout_marginEnd="8dp" />
 
                 <Button
                     android:id="@+id/btnEmoteTeach"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
+                    android:layout_height="40dp"
                     android:text="Learn 💡"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textAllCaps="false"
                     android:textColor="?attr/themeTextPrimary"
                     android:backgroundTint="?attr/themeChipBg"
+                    app:strokeColor="?attr/themePlateBorder"
+                    app:strokeWidth="1dp"
                     android:layout_marginEnd="8dp" />
 
                 <Button
                     android:id="@+id/btnEmoteDance"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
+                    android:layout_height="40dp"
                     android:text="Dance 💃"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textAllCaps="false"
                     android:textColor="?attr/themeTextPrimary"
                     android:backgroundTint="?attr/themeChipBg"
+                    app:strokeColor="?attr/themePlateBorder"
+                    app:strokeWidth="1dp"
                     android:layout_marginEnd="8dp" />
 
                 <Button
                     android:id="@+id/btnEmoteTalk"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
+                    android:layout_height="40dp"
                     android:text="Speak 💬"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textAllCaps="false"
                     android:textColor="?attr/themeTextPrimary"
-                    android:backgroundTint="?attr/themeChipBg" />
+                    android:backgroundTint="?attr/themeChipBg"
+                    app:strokeColor="?attr/themePlateBorder"
+                    app:strokeWidth="1dp" />
             </LinearLayout>
         </HorizontalScrollView>
 
@@ -166,7 +197,7 @@
                 android:layout_width="10dp"
                 android:layout_height="10dp"
                 android:src="@drawable/circle_cyan"
-                app:tint="?attr/themeSuccess"
+                app:tint="?attr/themeTextMuted"
                 android:contentDescription="Status" />
 
             <TextView
@@ -174,18 +205,22 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="READY • TAP MORA TO INTERACT"
+                android:text="Ready · tap Mora to interact"
                 android:textColor="?attr/themeTextSecondary"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:layout_marginStart="8dp" />
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:maxLines="2"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp" />
 
             <Button
                 android:id="@+id/btnApplyAsMain"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="40dp"
                 android:text="Set As Active"
-                android:textSize="11sp"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:textAllCaps="false"
                 android:textColor="?attr/themeOnAccent"
                 android:backgroundTint="?attr/themeAccentFill" />
         </LinearLayout>

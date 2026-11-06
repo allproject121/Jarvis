@@ -15,8 +15,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             android:paddingTop="36dp"
             android:paddingBottom="48dp">
 
@@ -26,13 +26,15 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="24dp">
+                android:layout_marginBottom="20dp">
 
                 <ImageButton
                     android:id="@+id/btnBack"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_jarvis_icon_square"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:padding="10dp"
+                    android:scaleType="fitCenter"
+                    android:background="@drawable/bg_set_icon_btn"
                     android:src="@drawable/ic_back"
                     app:tint="?attr/themeTextPrimary"
                     android:contentDescription="Back" />
@@ -47,18 +49,21 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Hands-Free &amp; App Control"
+                        android:text="Hands-free control"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="19sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-medium" />
+                        android:textSize="26sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
+                        android:letterSpacing="-0.02" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Autonomous Voice Automation Guide"
+                        android:layout_marginTop="2dp"
+                        android:text="Voice automation for apps and phone settings"
                         android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp" />
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -69,8 +74,9 @@
                 android:orientation="vertical"
                 android:gravity="center_horizontal"
                 android:background="@drawable/bg_jarvis_card"
-                android:padding="22dp"
-                android:layout_marginBottom="20dp">
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="22dp"
+                android:layout_marginBottom="12dp">
 
                 <ImageView
                     android:layout_width="140dp"
@@ -83,11 +89,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Autonomous Device Control"
+                    android:text="Autonomous device control"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-medium" />
+                    android:textSize="19sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -96,7 +102,7 @@
                     android:gravity="center"
                     android:text="Control WhatsApp, YouTube, and phone settings completely hands-free with your voice."
                     android:textColor="?attr/themeTextMuted"
-                    android:textSize="12.5sp"
+                    android:textSize="13sp"
                     android:lineSpacingExtra="2dp" />
 
                 <!-- Live Status Chip -->
@@ -105,27 +111,26 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:background="@drawable/bg_jarvis_status_badge"
-                    android:paddingHorizontal="14dp"
+                    android:background="@drawable/bg_set_badge"
+                    android:paddingHorizontal="12dp"
                     android:paddingVertical="6dp"
                     android:layout_marginTop="14dp">
 
                     <View
                         android:id="@+id/dotAccessibilityStatus"
-                        android:layout_width="8dp"
-                        android:layout_height="8dp"
-                        android:background="@drawable/bg_jarvis_mic_center"
-                        android:backgroundTint="@color/status_green" />
+                    android:layout_width="6dp"
+                        android:layout_height="6dp"
+                        android:background="@drawable/bg_bento_dot"
+                        android:backgroundTint="?attr/themeSuccess" />
 
                     <TextView
                         android:id="@+id/tvAccessibilityStatus"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="HANDS-FREE SERVICE: ACTIVE"
+                        android:text="Hands-free service active"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.08"
+                        android:textSize="12sp"
+                        android:fontFamily="@font/inter"
                         android:layout_marginStart="8dp" />
                 </LinearLayout>
 
@@ -138,45 +143,78 @@
                     android:layout_marginTop="16dp"
                     android:text="Configure Accessibility Service"
                     android:textColor="?attr/themeOnAccent"
-                    android:textStyle="bold"
                     android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
                     android:textAllCaps="false"
-                    app:cornerRadius="14dp"
+                    app:cornerRadius="24dp"
                     app:backgroundTint="?attr/themeAccentFill" />
             </LinearLayout>
 
-            <!-- SECTION 1: HOW JARVIS WORKS (NON-DEVELOPER GUIDE) -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="HOW IT WORKS (EASY GUIDE)"
-                android:textColor="?attr/themeAccent"
-                android:textSize="11sp"
-                android:letterSpacing="0.10"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-medium"
-                android:layout_marginBottom="10dp" />
-
+            <!-- How it works -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="@drawable/bg_jarvis_card"
-                android:padding="20dp"
-                android:layout_marginBottom="20dp">
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp"
+                android:layout_marginBottom="12dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="14dp">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:gravity="center"
+                        android:text="💡"
+                        android:textSize="18sp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="How it works"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Three steps from voice to action"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
+
 
                 <!-- Step 1: Hold the Mic Button -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="top"
-                    android:layout_marginBottom="16dp">
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="14dp">
 
                     <FrameLayout
                         android:layout_width="38dp"
                         android:layout_height="38dp"
-                        android:background="@drawable/bg_jarvis_icon_square">
+                        android:background="@drawable/bg_set_icon_tile">
 
                         <ImageView
                             android:layout_width="20dp"
@@ -199,9 +237,9 @@
                             android:layout_height="wrap_content"
                             android:text="1. Hold the Microphone Button"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium" />
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -209,29 +247,28 @@
                             android:layout_marginTop="2dp"
                             android:text="Hold the center mic button or tap the 3D Orb to speak. You don&apos;t need to type or navigate manually."
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="12.5sp"
+                            android:textSize="13sp"
                             android:lineSpacingExtra="2dp" />
                     </LinearLayout>
                 </LinearLayout>
 
-                <View
+                <Space
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?attr/themeCardBorder"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_height="8dp" />
 
                 <!-- Step 2: Ultra-Fast AI Neural Brain -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="top"
-                    android:layout_marginBottom="16dp">
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="14dp">
 
                     <FrameLayout
                         android:layout_width="38dp"
                         android:layout_height="38dp"
-                        android:background="@drawable/bg_jarvis_icon_square">
+                        android:background="@drawable/bg_set_icon_tile">
 
                         <ImageView
                             android:layout_width="20dp"
@@ -254,9 +291,9 @@
                             android:layout_height="wrap_content"
                             android:text="2. Gemini 3.8 Live Brain"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium" />
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -264,28 +301,28 @@
                             android:layout_marginTop="2dp"
                             android:text="Your speech is processed in real time using Google&apos;s latest Gemini 3.8 Live model. It understands context in Hindi, Urdu, English, Hinglish, and regional languages."
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="12.5sp"
+                            android:textSize="13sp"
                             android:lineSpacingExtra="2dp" />
                     </LinearLayout>
                 </LinearLayout>
 
-                <View
+                <Space
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?attr/themeCardBorder"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_height="8dp" />
 
                 <!-- Step 3: Autonomous Device Execution -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="top">
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="14dp">
 
                     <FrameLayout
                         android:layout_width="38dp"
                         android:layout_height="38dp"
-                        android:background="@drawable/bg_jarvis_icon_square">
+                        android:background="@drawable/bg_set_icon_tile">
 
                         <ImageView
                             android:layout_width="20dp"
@@ -308,9 +345,9 @@
                             android:layout_height="wrap_content"
                             android:text="3. Digital Hands on Your Mobile"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium" />
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -318,32 +355,63 @@
                             android:layout_marginTop="2dp"
                             android:text="Jarvis uses your phone&apos;s built-in Android accessibility service to type messages, tap send, search YouTube, and adjust settings just like your own hands."
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="12.5sp"
+                            android:textSize="13sp"
                             android:lineSpacingExtra="2dp" />
                     </LinearLayout>
                 </LinearLayout>
 
             </LinearLayout>
 
-            <!-- SECTION 2: PERMISSIONS & ACCESSIBILITY INSTRUCTIONS -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="HOW TO ALLOW ALL PERMISSIONS"
-                android:textColor="?attr/themeAccent"
-                android:textSize="11sp"
-                android:letterSpacing="0.10"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-medium"
-                android:layout_marginBottom="10dp" />
-
+            <!-- Permissions -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="@drawable/bg_jarvis_card"
-                android:padding="20dp"
-                android:layout_marginBottom="20dp">
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp"
+                android:layout_marginBottom="12dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="14dp">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:gravity="center"
+                        android:text="🔐"
+                        android:textSize="18sp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Permissions"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Let Jarvis tap and type for you"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
+
 
                 <TextView
                     android:layout_width="match_parent"
@@ -351,8 +419,8 @@
                     android:text="Why does Jarvis need Accessibility Permission?"
                     android:textColor="?attr/themeTextPrimary"
                     android:textSize="15sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-medium" />
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -374,10 +442,11 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Quick Steps to Enable:"
-                        android:textColor="?attr/themeAccent"
-                        android:textSize="12.5sp"
-                        android:textStyle="bold" />
+                        android:text="Quick steps to enable"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -385,7 +454,7 @@
                         android:layout_marginTop="6dp"
                         android:text="1. Tap the 'Open Accessibility Settings' button below.\n2. Tap 'Downloaded Apps' or 'Installed Services'.\n3. Tap 'Jarvis Accessibility Service'.\n4. Turn the switch ON and tap 'Allow'."
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="12.5sp"
+                        android:textSize="13sp"
                         android:lineSpacingExtra="4dp" />
                 </LinearLayout>
 
@@ -397,10 +466,11 @@
                     android:layout_marginTop="14dp"
                     android:text="Open Accessibility Settings"
                     android:textColor="?attr/themeOnAccent"
-                    android:textStyle="bold"
                     android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
                     android:textAllCaps="false"
-                    app:cornerRadius="12dp"
+                    app:cornerRadius="24dp"
                     app:backgroundTint="?attr/themeAccentFill" />
 
                 <com.google.android.material.button.MaterialButton
@@ -410,44 +480,84 @@
                     android:minHeight="48dp"
                     android:layout_marginTop="8dp"
                     android:text="Grant All System Authorizations"
-                    android:textColor="?attr/themeAccent"
-                    android:textStyle="bold"
+                    android:textColor="?attr/themeTextPrimary"
                     android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
                     android:textAllCaps="false"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    app:cornerRadius="12dp"
-                    app:strokeColor="?attr/themeAccent" />
+                    app:cornerRadius="24dp"
+                    app:backgroundTint="?attr/themeChipBg"
+                    app:strokeColor="?attr/themePlateBorder"
+                    app:strokeWidth="1dp" />
 
             </LinearLayout>
 
-            <!-- SECTION 3: VOICE COMMANDS CATALOG -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="VOICE COMMANDS CATALOG"
-                android:textColor="?attr/themeAccent"
-                android:textSize="11sp"
-                android:letterSpacing="0.10"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-medium"
-                android:layout_marginBottom="10dp" />
-
+            <!-- Voice commands -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="@drawable/bg_jarvis_card"
-                android:padding="18dp"
-                android:layout_marginBottom="20dp">
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp"
+                android:layout_marginBottom="12dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="14dp">
 
-                <!-- WhatsApp Commands -->
-                <TextView
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:gravity="center"
+                        android:text="🗣️"
+                        android:textSize="18sp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Voice commands"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Things you can say right away"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="14dp">
+<TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="💬 WhatsApp Hands-Free Commands"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textSize="15sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -455,23 +565,28 @@
                     android:layout_marginTop="4dp"
                     android:text="• &quot;Send WhatsApp to Rahul saying I will reach in 10 minutes&quot;\n• &quot;Call Mom on WhatsApp&quot;\n• &quot;Make a video call to Priya on WhatsApp&quot;\n• &quot;Delete last message for everyone&quot;"
                     android:textColor="?attr/themeTextMuted"
-                    android:textSize="12.5sp"
+                    android:textSize="13sp"
                     android:lineSpacingExtra="3dp" />
+                </LinearLayout>
 
-                <View
+                <Space
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?attr/themeCardBorder"
-                    android:layout_marginVertical="12dp" />
+                    android:layout_height="8dp" />
 
-                <!-- YouTube Commands -->
-                <TextView
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="14dp">
+<TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🎬 YouTube &amp; Music Commands"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textSize="15sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -479,23 +594,28 @@
                     android:layout_marginTop="4dp"
                     android:text="• &quot;Play Arijit Singh songs on YouTube&quot;\n• &quot;Search Iron Man highlights on YouTube&quot;\n• &quot;Pause YouTube video&quot; / &quot;Play next song&quot;\n• &quot;Make video fullscreen&quot;"
                     android:textColor="?attr/themeTextMuted"
-                    android:textSize="12.5sp"
+                    android:textSize="13sp"
                     android:lineSpacingExtra="3dp" />
+                </LinearLayout>
 
-                <View
+                <Space
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?attr/themeCardBorder"
-                    android:layout_marginVertical="12dp" />
+                    android:layout_height="8dp" />
 
-                <!-- Phone Hardware Commands -->
-                <TextView
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="14dp">
+<TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="📱 Phone Hardware &amp; Settings"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textSize="15sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -503,23 +623,28 @@
                     android:layout_marginTop="4dp"
                     android:text="• &quot;Turn on flashlight / torch&quot;\n• &quot;Increase volume to 80%&quot; / &quot;Mute sound&quot;\n• &quot;Set brightness to 50%&quot;\n• &quot;Turn on Bluetooth&quot; / &quot;Open Instagram&quot;"
                     android:textColor="?attr/themeTextMuted"
-                    android:textSize="12.5sp"
+                    android:textSize="13sp"
                     android:lineSpacingExtra="3dp" />
+                </LinearLayout>
 
-                <View
+                <Space
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?attr/themeCardBorder"
-                    android:layout_marginVertical="12dp" />
+                    android:layout_height="8dp" />
 
-                <!-- Intelligence & Memory Commands -->
-                <TextView
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="14dp">
+<TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🧠 Neural Memory &amp; Daily Life"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textSize="15sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -527,38 +652,71 @@
                     android:layout_marginTop="4dp"
                     android:text="• &quot;Remember that my passport is in the blue bag&quot;\n• &quot;Where is my passport?&quot;\n• &quot;What is the weather outside?&quot;\n• &quot;Good morning Jarvis, what is my schedule today?&quot;"
                     android:textColor="?attr/themeTextMuted"
-                    android:textSize="12.5sp"
+                    android:textSize="13sp"
                     android:lineSpacingExtra="3dp" />
+                </LinearLayout>
 
             </LinearLayout>
 
-            <!-- SECTION 4: ACTIVE AI MODEL & RELEASE API -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="AI MODEL &amp; RELEASE API"
-                android:textColor="?attr/themeAccent"
-                android:textSize="11sp"
-                android:letterSpacing="0.10"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-medium"
-                android:layout_marginBottom="10dp" />
-
+            <!-- AI model -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="@drawable/bg_jarvis_card"
-                android:padding="20dp"
-                android:layout_marginBottom="24dp">
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp"
+                android:layout_marginBottom="12dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="14dp">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:gravity="center"
+                        android:text="✨"
+                        android:textSize="18sp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="AI model"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Live brain and API keys"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
+
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Best Selected Model: Gemini 3.8 Live"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:textSize="16sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -566,7 +724,7 @@
                     android:layout_marginTop="4dp"
                     android:text="The app comes pre-configured with Google's gemini-3.8-live model and embedded release API key. Ultra-low latency voice streaming with immediate responses."
                     android:textColor="?attr/themeTextMuted"
-                    android:textSize="12.5sp"
+                    android:textSize="13sp"
                     android:lineSpacingExtra="2dp" />
 
                 <com.google.android.material.button.MaterialButton
@@ -576,37 +734,68 @@
                     android:minHeight="48dp"
                     android:layout_marginTop="14dp"
                     android:text="Manage API Key &amp; Models"
-                    android:textColor="?attr/themeAccent"
-                    android:textStyle="bold"
+                    android:textColor="?attr/themeTextPrimary"
                     android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
                     android:textAllCaps="false"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    app:cornerRadius="12dp"
-                    app:strokeColor="?attr/themeAccent" />
+                    app:cornerRadius="24dp"
+                    app:backgroundTint="?attr/themeChipBg"
+                    app:strokeColor="?attr/themePlateBorder"
+                    app:strokeWidth="1dp" />
             </LinearLayout>
 
-            <!-- SECTION 5: COMMUNITY & SOURCE CODE -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="COMMUNITY &amp; DISCUSSION GROUPS"
-                android:textColor="?attr/themeAccent"
-                android:textSize="11sp"
-                android:letterSpacing="0.10"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-medium"
-                android:layout_marginBottom="10dp" />
-
+            <!-- Community -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="@drawable/bg_jarvis_card"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
-                android:layout_marginBottom="24dp">
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp"
+                android:layout_marginBottom="12dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="14dp">
+
+                    <TextView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_jarvis_icon_square"
+                        android:gravity="center"
+                        android:text="🤝"
+                        android:textSize="18sp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Community"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Developer profiles and contact"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+                </LinearLayout>
+
 
                 <!-- GitHub Profile 1 -->
                 <LinearLayout
@@ -615,7 +804,8 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingVertical="14dp"
+                    android:paddingVertical="12dp"
+                    android:paddingHorizontal="14dp"
                     android:background="@drawable/bg_jarvis_row_item"
                     android:clickable="true"
                     android:focusable="true">
@@ -623,6 +813,8 @@
                     <ImageView
                         android:layout_width="36dp"
                         android:layout_height="36dp"
+                        android:padding="8dp"
+                        android:background="@drawable/bg_set_icon_tile"
                         android:src="@drawable/ic_social_github"
                         app:tint="?attr/themeAccent"
                         android:contentDescription="GitHub Developer Profile" />
@@ -639,9 +831,9 @@
                             android:layout_height="wrap_content"
                             android:text="GitHub Developer Profile"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium" />
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -659,10 +851,9 @@
                         android:contentDescription="Open" />
                 </LinearLayout>
 
-                <View
+                <Space
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?attr/themeCardBorder" />
+                    android:layout_height="8dp" />
 
                 <!-- GitHub Profile 2 -->
                 <LinearLayout
@@ -671,7 +862,8 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingVertical="14dp"
+                    android:paddingVertical="12dp"
+                    android:paddingHorizontal="14dp"
                     android:background="@drawable/bg_jarvis_row_item"
                     android:clickable="true"
                     android:focusable="true">
@@ -679,6 +871,8 @@
                     <ImageView
                         android:layout_width="36dp"
                         android:layout_height="36dp"
+                        android:padding="8dp"
+                        android:background="@drawable/bg_set_icon_tile"
                         android:src="@drawable/ic_social_github"
                         app:tint="?attr/themeAccent"
                         android:contentDescription="Secondary GitHub" />
@@ -695,9 +889,9 @@
                             android:layout_height="wrap_content"
                             android:text="Secondary GitHub Profile"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium" />
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -715,10 +909,9 @@
                         android:contentDescription="Open" />
                 </LinearLayout>
 
-                <View
+                <Space
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?attr/themeCardBorder" />
+                    android:layout_height="8dp" />
 
                 <!-- Developer Email -->
                 <LinearLayout
@@ -727,7 +920,8 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingVertical="14dp"
+                    android:paddingVertical="12dp"
+                    android:paddingHorizontal="14dp"
                     android:background="@drawable/bg_jarvis_row_item"
                     android:clickable="true"
                     android:focusable="true">
@@ -735,6 +929,8 @@
                     <ImageView
                         android:layout_width="36dp"
                         android:layout_height="36dp"
+                        android:padding="8dp"
+                        android:background="@drawable/bg_set_icon_tile"
                         android:src="@drawable/ic_social_email"
                         app:tint="?attr/themeAccent"
                         android:contentDescription="Developer Email" />
@@ -751,9 +947,9 @@
                             android:layout_height="wrap_content"
                             android:text="Developer Email"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium" />
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -778,9 +974,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="JARVIS INTELLIGENCE OS • ROSHAN\nAutonomous Hands-Free Architecture"
+                android:layout_marginTop="8dp"
+                android:text="Jarvis · Roshan\nHands-free automation"
                 android:textColor="?attr/themeTextMuted"
-                android:textSize="11.5sp"
+                android:textSize="12sp"
+                android:fontFamily="@font/inter"
                 android:lineSpacingExtra="3dp" />
 
         </LinearLayout>

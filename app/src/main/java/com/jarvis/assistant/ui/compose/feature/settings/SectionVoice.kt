@@ -80,6 +80,9 @@ import com.jarvis.assistant.background.JarvisConversationService
 import com.jarvis.assistant.ui.compose.components.CloudCapsuleButton
 import com.jarvis.assistant.ui.compose.components.CloudGlassCard
 import com.jarvis.assistant.ui.compose.theme.ledger
+import com.jarvis.assistant.ui.compose.designsystem.BentoSectionHeader
+import com.jarvis.assistant.ui.compose.designsystem.BentoIconPlate
+import com.jarvis.assistant.ui.compose.designsystem.bentoTokens
 import com.jarvis.assistant.util.PermissionHelper
 import com.jarvis.assistant.voice.normalize.CustomRuleSpec
 import com.jarvis.assistant.voice.normalize.NormalizationSettings
@@ -95,6 +98,8 @@ import com.jarvis.assistant.data.model.GeminiConstants
 import com.jarvis.assistant.data.preferences.JarvisExtraPrefs
 import com.jarvis.assistant.voice.PocketTtsEngine
 import com.jarvis.assistant.voice.edge.EdgeVoiceCatalog
+import com.jarvis.assistant.ui.compose.designsystem.BentoFieldShape
+import com.jarvis.assistant.ui.compose.designsystem.bentoFieldColors
 
 /**
  * Settings → Voice. Every control here changes a voice engine Jarvis really uses:
@@ -585,6 +590,8 @@ private fun NormalizationCard() {
         HorizontalDivider(color = MaterialTheme.ledger.deskHairline)
         Column(modifier = Modifier.padding(12.dp)) {
             OutlinedTextField(
+                shape = BentoFieldShape,
+                colors = bentoFieldColors(),
                 value = preview,
                 onValueChange = { preview = it },
                 label = { Text("Preview input") },
@@ -622,8 +629,10 @@ private fun AddRuleDialog(onDismiss: () -> Unit, onAdd: (CustomRuleSpec) -> Unit
         title = { Text("Add normalization rule", fontWeight = FontWeight.Bold, color = MaterialTheme.ledger.deskPaper) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(shape = BentoFieldShape, colors = bentoFieldColors(), value = name, onValueChange = { name = it }, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = regex,
                     onValueChange = { regex = it },
                     label = { Text("Regex (Java syntax)") },
@@ -632,6 +641,8 @@ private fun AddRuleDialog(onDismiss: () -> Unit, onAdd: (CustomRuleSpec) -> Unit
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     value = replacement,
                     onValueChange = { replacement = it },
                     label = { Text("Replacement (\$1 = group 1)") },
@@ -657,13 +668,14 @@ private fun AddRuleDialog(onDismiss: () -> Unit, onAdd: (CustomRuleSpec) -> Unit
 
 @Composable
 private fun SectionCard(title: String, subtitle: String, content: @Composable () -> Unit) {
-    CloudGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 8.dp)) {
+    CloudGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(top = 18.dp, bottom = 8.dp, start = 4.dp, end = 4.dp)) {
         Column {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.ledger.deskPaper)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.ledger.deskInk)
-            }
-            HorizontalDivider(color = MaterialTheme.ledger.deskHairline)
+            BentoSectionHeader(
+                title = title,
+                subtitle = subtitle,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 10.dp)
+            )
+            HorizontalDivider(color = bentoTokens().border, modifier = Modifier.padding(horizontal = 12.dp))
             content()
         }
     }
@@ -676,7 +688,7 @@ private fun InfoRow(icon: ImageVector, title: String, value: String) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.ledger.lampDeep, modifier = Modifier.size(20.dp))
+        BentoIconPlate(icon = icon, size = 36.dp, iconSize = 18.dp)
         Column(modifier = Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium, color = MaterialTheme.ledger.deskPaper))
             Text(value, style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.ledger.deskInk))

@@ -661,7 +661,8 @@ When the user gives a multi-step instruction (e.g. "open Drive and open XYZ fold
    - Submarine telecom cables backbone: `gods_eye_get_subsea_cables(show_on_globe=true)`
    - Realtime public transit telemetry: `gods_eye_get_public_transit(city=..., show_on_globe=true)`
    - Autonomous Sentinel Tour (Auto Mode): `gods_eye_start_auto_tour()`
-   - Inspect 3D globe camera, active layers, and screen state: `gods_eye_inspect_globe()`
+   - Inspect 3D globe camera, active layers, and screen state: `gods_eye_inspect_globe()`. It reads the live globe, including the aircraft, ship, camera or fire the user tapped, so call it for "ye kya hai?", "is plane ke baare me batao" or "screen par kya dikh raha hai?".
+   - When the `gods_eye_command` tool is available: use it to search any place (`fly_to_location`), follow a flight / ship / satellite (`track_entity`), and count or rank what is loaded ("kitni flights hain", "sabse bada earthquake") with `analyst_query`.
    - Enable, disable, or toggle visualization layers: `gods_eye_control_layers(enable=[...], disable=[...], toggle=...)`
      * When user says "saare layers on karo", "turn on all layers", "sab kuch on karo", "enable all layers": call `gods_eye_control_layers(enable=['all'])`.
      * When user says "saare layers band karo", "turn off all layers", "clear layers", "layers hata do": call `gods_eye_control_layers(disable=['all'])`.

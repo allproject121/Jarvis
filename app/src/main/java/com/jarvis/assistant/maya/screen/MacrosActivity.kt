@@ -57,6 +57,8 @@ class MacrosActivity : AppCompatActivity() {
     private var cText = 0
     private var cText2 = 0
     private var cAccent = 0
+    private var cMuted = 0
+    private var cOnAccent = 0
 
     private val expanded = HashSet<String>()
 
@@ -118,6 +120,8 @@ class MacrosActivity : AppCompatActivity() {
         cText = attrColor(R.attr.themeTextPrimary, 0xFFF1F5F9.toInt())
         cText2 = attrColor(R.attr.themeTextSecondary, 0xB3F1F5F9.toInt())
         cAccent = attrColor(R.attr.themeAccent, 0xFF38BDF8.toInt())
+        cMuted = attrColor(R.attr.themeTextMuted, cText2)
+        cOnAccent = attrColor(R.attr.themeOnAccent, if (isLight(cAccent)) 0xFF0B0E14.toInt() else 0xFFFFFFFF.toInt())
     }
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
@@ -126,17 +130,14 @@ class MacrosActivity : AppCompatActivity() {
         LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = top }
 
     private fun card(title: String, subtitle: String? = null): LinearLayout {
+        // Dark Bento card (2026-11-05 bento-all): themed 24dp card, 18-19sp semibold title, muted 13sp subtitle.
         val c = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(16), dp(14), dp(16), dp(14))
-            background = GradientDrawable().apply {
-                setColor(cCard)
-                cornerRadius = dp(16).toFloat()
-                setStroke(dp(1), cBorder)
-            }
+            setPadding(dp(20), dp(18), dp(20), dp(18))
+            setBackgroundResource(R.drawable.bg_set_card)
         }
-        c.addView(text(title, 15f, cText, bold = true))
-        if (!subtitle.isNullOrBlank()) c.addView(text(subtitle, 12f, cText2).apply { setPadding(0, dp(2), 0, dp(6)) })
+        c.addView(text(title, 18f, cText, bold = true))
+        if (!subtitle.isNullOrBlank()) c.addView(text(subtitle, 13f, cMuted).apply { setPadding(0, dp(2), 0, dp(10)) })
         return c
     }
 
@@ -144,21 +145,30 @@ class MacrosActivity : AppCompatActivity() {
         text = s
         textSize = size
         setTextColor(color)
-        if (bold) typeface = Typeface.DEFAULT_BOLD
+        typeface = try {
+            val base = androidx.core.content.res.ResourcesCompat.getFont(this@MacrosActivity, R.font.inter)
+            if (bold && android.os.Build.VERSION.SDK_INT >= 28) Typeface.create(base, 600, false)
+            else if (bold) Typeface.create(base, Typeface.BOLD) else base
+        } catch (_: Throwable) { if (bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT }
     }
 
     private fun button(label: String, filled: Boolean = true, onClick: () -> Unit): Button = Button(this).apply {
         text = label
         isAllCaps = false
         textSize = 13f
-        minHeight = dp(36)
-        minimumHeight = dp(36)
-        setPadding(dp(12), 0, dp(12), 0)
+        minHeight = dp(38)
+        minimumHeight = dp(38)
+        minWidth = 0
+        minimumWidth = 0
+        stateListAnimator = null
+        setPadding(dp(16), 0, dp(16), 0)
+        // Bento pills: primary = accent fill + on-accent label, secondary = plate + hairline.
+        backgroundTintList = null
         if (filled) {
-            backgroundTintList = ColorStateList.valueOf(cAccent)
-            setTextColor(if (isLight(cAccent)) 0xFF0B0E14.toInt() else 0xFFFFFFFF.toInt())
+            setBackgroundResource(R.drawable.bg_jarvis_pill_button)
+            setTextColor(cOnAccent)
         } else {
-            backgroundTintList = ColorStateList.valueOf(cBorder)
+            setBackgroundResource(R.drawable.bg_set_chip)
             setTextColor(cText)
         }
         setOnClickListener { onClick() }
@@ -176,7 +186,8 @@ class MacrosActivity : AppCompatActivity() {
         setTextColor(cText)
         setHintTextColor(cText2)
         textSize = 14f
-        backgroundTintList = ColorStateList.valueOf(cAccent)
+        setBackgroundResource(R.drawable.bg_bento_x_input)
+        setPadding(dp(14), dp(12), dp(14), dp(12))
         inputType = if (multiLine) InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
         else InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
         if (multiLine) { minLines = 2; maxLines = 5; gravity = Gravity.TOP or Gravity.START }
@@ -247,11 +258,8 @@ class MacrosActivity : AppCompatActivity() {
         logView = text("(step log yahan dikhega)", 11f, cText2).apply {
             typeface = Typeface.MONOSPACE
             setTextIsSelectable(true)
-            setPadding(dp(10), dp(8), dp(10), dp(8))
-            background = GradientDrawable().apply {
-                setColor(cBg)
-                cornerRadius = dp(10).toFloat()
-            }
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            setBackgroundResource(R.drawable.bg_jarvis_row_item)
         }
         c.addView(logView, matchWrap(dp(4)))
         container.addView(c, matchWrap(dp(8)))
@@ -297,7 +305,7 @@ class MacrosActivity : AppCompatActivity() {
     private fun statusCard(): View {
         val c = card("Screen access")
         val on = ScreenElementSerializer.isServiceOn()
-        c.addView(text(if (on) "Accessibility service: ON" else ScreenElementSerializer.SERVICE_OFF, 13f, if (on) cAccent else 0xFFF87171.toInt(), bold = true))
+        c.addView(text(if (on) "Accessibility service: ON" else ScreenElementSerializer.SERVICE_OFF, 13f, if (on) cAccent else attrColor(R.attr.themeDanger, 0xFFF87171.toInt()), bold = true))
         if (!on) c.addView(buttonRow(button("Accessibility settings kholo") { openAccessibilitySettings() }))
         c.addView(switchRow("Screen awareness", ScreenPrefs.screenAwareness(this),
             "Live baat-cheet me app badalne pe chupchaap '[SCREEN] Ab saamne: <app>' (max har 20 s)") { ScreenPrefs.setScreenAwareness(this, it) })
@@ -339,7 +347,12 @@ class MacrosActivity : AppCompatActivity() {
         if (all.isEmpty()) c.addView(text("Abhi koi routine nahi.", 13f, cText2))
         for (m in all.sortedBy { if (r.isBuiltinMacro(it.name)) 1 else 0 }) {
             val builtin = r.isBuiltinMacro(m.name)
-            val row = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(0, dp(8), 0, dp(4)) }
+            // Bento inner plate per routine (8dp gaps instead of loose rows).
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(14), dp(12), dp(14), dp(12))
+                setBackgroundResource(R.drawable.bg_jarvis_row_item)
+            }
             row.addView(text(m.name + if (builtin) "  · built-in" else "  · learned", 14f, cText, bold = true))
             val meta = m.intent.take(90) + (if (m.params.isNotEmpty()) "\nParams: ${m.params.joinToString()}" else "") + "  (${m.steps.size} steps)"
             row.addView(text(meta, 11f, cText2))
@@ -355,8 +368,8 @@ class MacrosActivity : AppCompatActivity() {
                     .setPositiveButton("Delete") { _, _ -> r.deleteCustomMacro(m.name); render() }
                     .setNegativeButton("Nahi", null).show()
             })
-            row.addView(buttonRow(*buttons.toTypedArray()))
-            c.addView(row)
+            row.addView(buttonRow(*buttons.toTypedArray()), matchWrap(dp(6)))
+            c.addView(row, matchWrap(dp(8)))
         }
         return c
     }
@@ -399,10 +412,14 @@ class MacrosActivity : AppCompatActivity() {
         val list = WatcherEngine.list()
         if (list.isEmpty()) c.addView(text("Koi watch active nahi.", 13f, cText2))
         for (w in list) {
-            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(0, dp(4), 0, dp(4)) }
-            row.addView(text(w.describe(), 13f, cText), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(14), dp(10), dp(10), dp(10))
+                setBackgroundResource(R.drawable.bg_jarvis_row_item)
+            }
+            row.addView(text(w.describe(), 13f, cText), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(8) })
             row.addView(button("Cancel", filled = false) { WatcherEngine.cancel(w.id.toString()); render() })
-            c.addView(row)
+            c.addView(row, matchWrap(dp(8)))
         }
         // quick add
         val kinds = WatchCodec.KINDS

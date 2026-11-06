@@ -187,7 +187,7 @@ class SettingsFragment : Fragment() {
 
 
         // Section 5: Studio & Theme
-        binding.tvStudioSummary.text = "Core, pulse rings & glow"
+        binding.tvStudioSummary.text = "Home cards, HUD / character size, 3D character & orb"
         binding.tvCurrentTheme.text = preferences.appTheme.replace('_', ' ').lowercase(Locale.ROOT).replaceFirstChar { it.titlecase(Locale.ROOT) }
         binding.switchBlurEffect.isChecked = preferences.isBlurEffectEnabled
         binding.switchBatterySaver.isChecked = preferences.isBatterySaverEnabled
@@ -202,13 +202,6 @@ class SettingsFragment : Fragment() {
         binding.btnSettingsBack.setOnClickListener {
             HudSoundManager.playTapSound()
             (activity as? MainActivity)?.selectTab(MainActivity.TAB_HOME) ?: activity?.onBackPressedDispatcher?.onBackPressed()
-        }
-        binding.cardSettingsCustomizeHome.setOnClickListener {
-            HudSoundManager.playTapSound()
-            com.jarvis.assistant.ui.home.HomeCardsCustomizationBottomSheet.newInstance().show(
-                childFragmentManager,
-                com.jarvis.assistant.ui.home.HomeCardsCustomizationBottomSheet.TAG
-            )
         }
         // Profile Card -> Edit name
         binding.cardProfile.setOnClickListener {
@@ -406,8 +399,8 @@ class SettingsFragment : Fragment() {
             activity?.recreate()
         }
 
-        // "Home screen" (cardSettingsCustomizeHome) is the single entry for hide-all, per-card
-        // toggles, widgets, HUD size and the 3D character - see HomeCardsCustomizationBottomSheet.
+        // "Arc reactor, HUD & home screen" (rowCustomizationStudio) is the single entry for hide-all,
+        // per-card toggles, HUD / character size and the 3D character - see the Studio's Home screen tab.
 
         binding.rowPcPhone.setOnClickListener {
             showPcHubDialog()
@@ -542,11 +535,11 @@ class SettingsFragment : Fragment() {
             val upper = active.uppercase(Locale.ROOT)
             chips.forEach { (chip, key) ->
                 if (key == upper) {
-                    chip.setBackgroundResource(R.drawable.bg_jarvis_chip)
-                    chip.setTextColor(com.jarvis.assistant.util.ThemeManager.getThemeAccentColor(requireContext()))
+                    chip.setBackgroundResource(R.drawable.bg_bento_x_chip_on)
+                    chip.setTextColor(com.jarvis.assistant.util.ThemeManager.onAccentColor(requireContext()))
                 } else {
-                    chip.setBackgroundResource(R.drawable.bg_jarvis_row_item)
-                    chip.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                    chip.setBackgroundResource(R.drawable.bg_set_chip)
+                    chip.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(requireContext(), R.attr.themeTextPrimary))
                 }
             }
         }

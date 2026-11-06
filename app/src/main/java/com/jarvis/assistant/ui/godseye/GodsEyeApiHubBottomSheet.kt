@@ -97,15 +97,18 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
     private fun themeColor(attr: Int, fallback: Int): Int =
         com.jarvis.assistant.util.ThemeManager.attrColor(requireContext(), attr, fallback)
 
+    private fun dpx(v: Int): Int = (v * resources.displayMetrics.density).toInt()
+
     private fun updateAutoTourButtonState(isRunning: Boolean) {
         if (isRunning) {
-            binding.btnToggleAutoTourHub.text = "STOP ⏹"
-            binding.btnToggleAutoTourHub.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FF3D00"))
+            // Dark Bento pills (2026-11-05 bento-all): danger fill while running, accent fill + on-accent idle.
+            binding.btnToggleAutoTourHub.text = "Stop"
+            binding.btnToggleAutoTourHub.backgroundTintList = android.content.res.ColorStateList.valueOf(themeColor(R.attr.themeDanger, Color.parseColor("#FF3D00")))
             binding.btnToggleAutoTourHub.setTextColor(Color.WHITE)
         } else {
-            binding.btnToggleAutoTourHub.text = "START ⟳"
-            binding.btnToggleAutoTourHub.backgroundTintList = android.content.res.ColorStateList.valueOf(themeColor(R.attr.themeAccent, Color.parseColor("#00E5FF")))
-            binding.btnToggleAutoTourHub.setTextColor(themeColor(R.attr.themeBg, Color.parseColor("#050811")))
+            binding.btnToggleAutoTourHub.text = "Start"
+            binding.btnToggleAutoTourHub.backgroundTintList = android.content.res.ColorStateList.valueOf(themeColor(R.attr.themeAccentFill, Color.parseColor("#00E5FF")))
+            binding.btnToggleAutoTourHub.setTextColor(themeColor(R.attr.themeOnAccent, Color.parseColor("#050811")))
         }
     }
 
@@ -136,7 +139,10 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
                         val args = org.json.JSONObject().apply {
                             put("camera_id", camId)
                         }
-                        GodsEyeMcpClient.handleSelectCamera(args)
+                        // Loads the CCTV catalogue (3 MB) and may wait for the globe: not on the UI thread.
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                            GodsEyeMcpClient.handleSelectCamera(args)
+                        }
                         Toast.makeText(requireContext(), "Centering God's Eye on $title...", Toast.LENGTH_SHORT).show()
                         dismiss()
                     } catch (e: Exception) {
@@ -228,13 +234,14 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
     private fun createRadioStationCard(station: GodsEyeApiHub.RadioStation): View {
         val root = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.HORIZONTAL
-            setPadding(20, 16, 20, 16)
-            setBackgroundResource(R.drawable.bg_godseye_hud_back)
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(dpx(14), dpx(10), dpx(10), dpx(10))
+            setBackgroundResource(R.drawable.bg_jarvis_row_item)
             val lp = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                bottomMargin = 10
+                bottomMargin = dpx(8)
             }
             layoutParams = lp
         }
@@ -248,39 +255,51 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
         val tvName = TextView(requireContext()).apply {
             text = station.name
             setTextColor(themeColor(R.attr.themeTextPrimary, Color.WHITE))
-            textSize = 12f
+            textSize = 14f
             paint.isFakeBoldText = true
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
         }
 
         val tvMeta = TextView(requireContext()).apply {
             val countryTag = if (station.country.isNotBlank()) "${station.country} • " else ""
             val codecTag = if (station.codec.isNotBlank()) "${station.codec} ${station.bitrate}kbps" else ""
             text = "$countryTag$codecTag".trim().removeSuffix("•").trim()
-            setTextColor(themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
-            textSize = 10f
+            setTextColor(themeColor(R.attr.themeTextMuted, Color.parseColor("#94A3B8")))
+            textSize = 12f
         }
 
         infoLayout.addView(tvName)
         infoLayout.addView(tvMeta)
 
-        val btnPlay = Button(requireContext()).apply {
-            text = if (currentlyPlayingUrl == station.streamUrl) "STOP" else "PLAY"
-            setTextColor(if (currentlyPlayingUrl == station.streamUrl) Color.parseColor("#FF3B30") else Color.BLACK)
-            textSize = 10f
-            paint.isFakeBoldText = true
-            setBackgroundResource(R.drawable.bg_godseye_hud_back)
-            backgroundTintList = android.content.res.ColorStateList.valueOf(
-                if (currentlyPlayingUrl == station.streamUrl) Color.parseColor("#331215") else Color.parseColor("#10B981")
+        // Bento pill: idle = accent "Play" (on-accent label), playing = plate "Stop" (danger label).
+        fun Button.stylePlay(playing: Boolean) {
+            backgroundTintList = null
+            text = if (playing) "Stop" else "Play"
+            setBackgroundResource(if (playing) R.drawable.bg_set_chip else R.drawable.bg_jarvis_pill_button)
+            setTextColor(
+                if (playing) themeColor(R.attr.themeDanger, Color.parseColor("#FF3B30"))
+                else themeColor(R.attr.themeOnAccent, Color.BLACK)
             )
+        }
+        val btnPlay = Button(requireContext()).apply {
+            isAllCaps = false
+            textSize = 13f
+            paint.isFakeBoldText = true
+            minWidth = 0
+            minimumWidth = 0
+            minHeight = dpx(36)
+            minimumHeight = dpx(36)
+            stateListAnimator = null
+            setPadding(dpx(16), 0, dpx(16), 0)
+            stylePlay(currentlyPlayingUrl == station.streamUrl)
             setOnClickListener {
                 if (currentlyPlayingUrl == station.streamUrl) {
                     stopAudioStream()
-                    text = "PLAY"
-                    backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#10B981"))
+                    stylePlay(false)
                 } else {
                     playAudioStream(station.streamUrl, station.name)
-                    text = "STOP"
-                    backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#331215"))
+                    stylePlay(true)
                 }
             }
         }
@@ -462,35 +481,34 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
     ): View {
         return LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(20, 16, 20, 16)
-            setBackgroundResource(R.drawable.bg_godseye_hud_back)
+            setPadding(dpx(14), dpx(12), dpx(14), dpx(12))
+            setBackgroundResource(R.drawable.bg_jarvis_row_item)
             val lp = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                bottomMargin = 10
+                bottomMargin = dpx(8)
             }
             layoutParams = lp
 
             val tvTitle = TextView(requireContext()).apply {
                 text = title
                 setTextColor(themeColor(R.attr.themeTextPrimary, Color.WHITE))
-                textSize = 12f
+                textSize = 14f
                 paint.isFakeBoldText = true
             }
 
             val tvSub = TextView(requireContext()).apply {
                 text = subtitle
-                setTextColor(if (accentColor.equals("#00D4FF", true)) themeColor(R.attr.themeAccent, Color.parseColor(accentColor)) else Color.parseColor(accentColor))
-                textSize = 10f
-                paint.isFakeBoldText = true
-                setPadding(0, 4, 0, 4)
+                setTextColor(themeColor(R.attr.themeAccent, Color.parseColor(accentColor))) // bento: one theme accent, no per-feed neon
+                textSize = 12f
+                setPadding(0, dpx(2), 0, dpx(4))
             }
 
             val tvDet = TextView(requireContext()).apply {
                 text = details
-                setTextColor(themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
-                textSize = 10.5f
+                setTextColor(themeColor(R.attr.themeTextMuted, Color.parseColor("#94A3B8")))
+                textSize = 12f
             }
 
             addView(tvTitle)
@@ -506,7 +524,7 @@ class GodsEyeApiHubBottomSheet : BottomSheetDialogFragment() {
     private fun addSimpleTextView(container: LinearLayout, text: String, colorHex: String = "#94A3B8") {
         val tv = TextView(requireContext()).apply {
             this.text = text
-            setTextColor(if (colorHex.equals("#94A3B8", true)) themeColor(R.attr.themeTextSecondary, Color.parseColor(colorHex)) else Color.parseColor(colorHex))
+            setTextColor(if (colorHex.equals("#FF4444", true)) themeColor(R.attr.themeDanger, Color.parseColor(colorHex)) else themeColor(R.attr.themeTextMuted, Color.parseColor(colorHex)))
             textSize = 11f
             setPadding(8, 8, 8, 8)
         }

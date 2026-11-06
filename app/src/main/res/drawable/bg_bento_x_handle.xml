@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento sheet drag handle (2026-11-05 bento-all): 36x4dp muted pill. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="2dp" />
+    <size android:width="36dp" android:height="4dp" />
+    <solid android:color="?attr/themePlateBorder" />
+</shape>

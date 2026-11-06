@@ -20,8 +20,8 @@ object OfflineToolRouter {
         "chalao" to listOf("play", "open", "start"), "bajao" to listOf("play", "music", "song"), "play" to listOf("play", "music", "video"),
         "band" to listOf("off", "close", "stop", "disable"), "bujhao" to listOf("off", "disable"), "jalao" to listOf("on", "enable"),
         "chalu" to listOf("on", "enable", "start"), "on" to listOf("on", "enable"), "off" to listOf("off", "disable"),
-        "bhejo" to listOf("send", "message"), "bhej" to listOf("send", "message"), "msg" to listOf("message", "send"),
-        "message" to listOf("message", "send", "sms"), "sms" to listOf("sms", "message"),
+        "bhejo" to listOf("send", "message"), "bhej" to listOf("send", "message"), "msg" to listOf("message"),
+        "message" to listOf("message", "sms"), "sms" to listOf("sms", "message"),
         "call" to listOf("call", "dial", "phone"), "phone" to listOf("call", "phone"), "dial" to listOf("call", "dial"),
         "gaana" to listOf("song", "music", "play"), "gana" to listOf("song", "music", "play"), "gaane" to listOf("song", "music", "play"),
         "song" to listOf("song", "music", "play"), "music" to listOf("music", "play", "media"),
@@ -39,7 +39,6 @@ object OfflineToolRouter {
         "dhundo" to listOf("search", "find"), "dhoondo" to listOf("search", "find"), "khojo" to listOf("search", "find"),
         "search" to listOf("search", "find", "web"), "google" to listOf("search", "web"),
         "note" to listOf("note", "notes", "save"), "likho" to listOf("write", "note", "type"), "padho" to listOf("read"),
-        "kitna" to listOf("status", "get", "level"), "kitni" to listOf("status", "get", "level"),
         "screen" to listOf("screen", "display"), "location" to listOf("location", "gps"), "kahan" to listOf("location", "where"),
         "rasta" to listOf("directions", "maps", "navigate"), "map" to listOf("maps", "directions"),
         "payment" to listOf("pay", "payment", "upi"), "paise" to listOf("pay", "payment", "money"),
@@ -79,28 +78,61 @@ object OfflineToolRouter {
         return out
     }
 
-    private fun score(schema: JSONObject, words: Set<String>): Int {
-        val fn = schema.optJSONObject("function") ?: return 0
-        val nameParts = fn.optString("name").lowercase(Locale.ROOT).split('_').filter { it.length >= 2 }
-        val descWords = tokens(fn.optString("description").take(160)).toSet()
-        var s = 0
-        for (w in words) {
-            if (w in nameParts) s += 3
-            else if (w.length >= 4 && nameParts.any { it.startsWith(w) || w.startsWith(it) && it.length >= 4 }) s += 2
-            if (w in descWords) s += 1
-        }
-        return s
+    /**
+     * Tool-name words that say nothing about WHAT a tool is for. The audit showed "kitna hota hai"
+     * (-> get/status) pulling get_wifi_status, get_bluetooth_status, get_task_status... into a maths
+     * question: +180 prompt tokens, +30 s, no benefit. Only specific name words count now.
+     */
+    private val GENERIC_NAME_PARTS = setOf(
+        "get", "set", "status", "info", "current", "check", "toggle", "enable", "disable", "start", "stop",
+        "list", "run", "do", "make", "open", "app", "device", "data", "show", "my", "all", "new", "by", "id"
+    )
+
+    private fun specificParts(toolName: String): List<String> =
+        toolName.lowercase(Locale.ROOT).split('_').filter { it.length >= 2 && it !in GENERIC_NAME_PARTS }
+
+    private fun partMatches(word: String, part: String): Int = when {
+        word == part -> 3
+        word.length >= 4 && part.length >= 4 && (part.startsWith(word) || word.startsWith(part)) -> 2
+        else -> 0
     }
 
-    /** Up to [max] tools relevant to [query], best first; empty for plain chat. */
+    /** Name score (specific words only) and description score. */
+    private fun score(schema: JSONObject, words: Set<String>): Pair<Int, Int> {
+        val fn = schema.optJSONObject("function") ?: return 0 to 0
+        val parts = specificParts(fn.optString("name"))
+        val descWords = tokens(fn.optString("description").take(160)).toSet()
+        var name = 0
+        var desc = 0
+        for (w in words) {
+            name += parts.maxOfOrNull { partMatches(w, it) } ?: 0
+            if (w in descWords) desc += 1
+        }
+        return name to desc
+    }
+
+    /**
+     * Up to [max] tools relevant to [query], best first; empty for plain chat or maths. A tool needs a
+     * SPECIFIC name word matching the request. Tools in [exclude] (the always-present core set) are
+     * skipped, and so are look-alikes of a core tool the request already matches (get_battery next to
+     * get_battery_status confused the model into writing broken JSON).
+     */
     fun select(query: String, schemas: List<JSONObject>, max: Int = 6, exclude: Set<String> = emptySet()): List<JSONObject> {
         val words = expand(query)
         if (words.isEmpty()) return emptyList()
+        val coveredByCore = exclude.flatMap { specificParts(it) }
+            .filter { part -> words.any { partMatches(it, part) > 0 } }
+            .toSet()
         return schemas.asSequence()
             .filter { (it.optJSONObject("function")?.optString("name") ?: "") !in exclude }
+            // Keep a tool only if one of its matching name words is NOT already covered by a core tool.
+            .filter { s ->
+                specificParts(s.optJSONObject("function")?.optString("name").orEmpty())
+                    .any { part -> part !in coveredByCore && words.any { partMatches(it, part) > 0 } }
+            }
             .map { it to score(it, words) }
-            .filter { it.second >= 3 }
-            .sortedByDescending { it.second }
+            .filter { it.second.first >= 2 && it.second.first + it.second.second >= 3 }
+            .sortedByDescending { it.second.first * 2 + it.second.second }
             .take(max)
             .map { it.first }
             .toList()

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento dropdown field (2026-11-05 bento-all): input plate + muted chevron on the end. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/bg_bento_x_input" />
+    <item
+        android:drawable="@drawable/bg_bento_x_sht_chevron"
+        android:gravity="end|center_vertical"
+        android:width="18dp"
+        android:height="18dp"
+        android:end="14dp" />
+</layer-list>

@@ -59,6 +59,8 @@ import com.jarvis.assistant.ui.compose.theme.LampAmber
 import com.jarvis.assistant.ui.compose.theme.LampGlow
 import com.jarvis.assistant.ui.compose.theme.LampHalo
 import com.jarvis.assistant.ui.compose.theme.ledger
+import com.jarvis.assistant.ui.compose.designsystem.BentoSurface
+import com.jarvis.assistant.ui.compose.designsystem.bentoTokens
 
 /**
  * Backward compatible wrapper for the desk background.
@@ -72,14 +74,16 @@ fun GradientBackground(
 }
 
 /**
- * A parchment index card — the writing surface of the desk. Soft warm shadow,
- * cream hairline border; pressed states settle the card a fraction.
+ * The shared section card — now the Dark Bento card (2026-11-05): 24dp radius, lighter-top
+ * gradient, soft corner glow, 64dp sheen and a 1dp hairline, all from the Jarvis theme attrs
+ * (see [com.jarvis.assistant.ui.compose.designsystem.BentoSurface]). Cards nested inside
+ * another card render as plate tiles. Pressed states still settle the card a fraction.
  */
 @Composable
 fun CloudGlassCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    borderColor: Color = MaterialTheme.ledger.deskHairline,
+    borderColor: Color = Color.Unspecified,
     contentPadding: PaddingValues = PaddingValues(20.dp),
     content: @Composable () -> Unit
 ) {
@@ -92,16 +96,11 @@ fun CloudGlassCard(
         ),
         label = "cardScale"
     )
+    val bento = bentoTokens()
 
-    Surface(
+    BentoSurface(
         modifier = modifier
             .scale(scale)
-            .shadow(
-                elevation = 10.dp,
-                shape = DeskCardShape,
-                ambientColor = Color(0x1A141413),
-                spotColor = Color(0x2E141413)
-            )
             .pointerInput(onClick) {
                 if (onClick != null) {
                     detectTapGestures(
@@ -114,15 +113,10 @@ fun CloudGlassCard(
                     )
                 }
             },
-        shape = DeskCardShape,
-        color = MaterialTheme.ledger.deskWalnut,
-        border = BorderStroke(1.dp, if (isPressed) MaterialTheme.ledger.lampAmber.copy(alpha = 0.65f) else borderColor)
+        contentPadding = contentPadding,
+        borderColor = if (isPressed) bento.accent.copy(alpha = 0.65f) else borderColor
     ) {
-        Box(
-            modifier = Modifier.padding(contentPadding)
-        ) {
-            content()
-        }
+        content()
     }
 }
 
@@ -149,22 +143,17 @@ fun CloudCapsuleButton(
         label = "buttonScale"
     )
 
+    val bento = bentoTokens()
     Box(
         modifier = modifier
             .scale(scale)
             .clip(DeskPillShape)
             .background(
                 when {
-                    !enabled -> MaterialTheme.ledger.deskHairlineSoft
-                    isPressed -> MaterialTheme.ledger.lampAmber.copy(alpha = 0.85f)
-                    else -> MaterialTheme.ledger.lampAmber
+                    !enabled -> bento.plate
+                    isPressed -> bento.accentFill.copy(alpha = 0.85f)
+                    else -> bento.accentFill
                 }
-            )
-            .shadow(
-                elevation = if (enabled) 6.dp else 0.dp,
-                shape = DeskPillShape,
-                ambientColor = Color(0x1F141413),
-                spotColor = MaterialTheme.ledger.lampAmber.copy(alpha = 0.3f)
             )
             .clickable(enabled = enabled) { onClick() }
             .padding(horizontal = 24.dp, vertical = 14.dp),
@@ -178,7 +167,7 @@ fun CloudCapsuleButton(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = if (enabled) MaterialTheme.ledger.inkOnLamp else MaterialTheme.ledger.deskInkFaint,
+                    tint = if (enabled) bento.onAccent else bento.muted,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -187,7 +176,7 @@ fun CloudCapsuleButton(
                 text = text,
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.SemiBold,
-                    color = if (enabled) MaterialTheme.ledger.inkOnLamp else MaterialTheme.ledger.deskInk.copy(alpha = 0.6f)
+                    color = if (enabled) bento.onAccent else bento.muted
                 )
             )
         }
@@ -230,14 +219,16 @@ fun SectionCard(
 fun CloudChip(
     text: String,
     modifier: Modifier = Modifier,
-    accentColor: Color = MaterialTheme.ledger.lampAmber,
+    accentColor: Color = Color.Unspecified,
     icon: ImageVector? = null
 ) {
+    val bento = bentoTokens()
+    val tint = if (accentColor == Color.Unspecified) bento.accent else accentColor
     Surface(
         modifier = modifier,
         shape = CircleShape,
-        color = accentColor.copy(alpha = 0.08f),
-        border = BorderStroke(1.dp, accentColor.copy(alpha = 0.25f))
+        color = bento.plate,
+        border = BorderStroke(1.dp, if (accentColor == Color.Unspecified) bento.plateBorder else accentColor.copy(alpha = 0.35f))
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -247,15 +238,15 @@ fun CloudChip(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = accentColor,
+                    tint = tint,
                     modifier = Modifier.size(14.dp)
                 )
                 Spacer(modifier = Modifier.width(5.dp))
             }
             Text(
                 text = text,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    color = accentColor
+                style = MaterialTheme.typography.labelMedium.copy(
+                    color = tint
                 )
             )
         }
@@ -278,20 +269,21 @@ fun SectionHeader(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(modifier = Modifier.weight(1f)) {
+            val bento = bentoTokens()
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    color = MaterialTheme.ledger.deskPaper
-                ),
+                color = bento.text,
+                fontSize = 21.sp,
+                fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
             if (!subtitle.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = subtitle.uppercase(),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = MaterialTheme.ledger.deskInk
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = bento.muted
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -330,15 +322,14 @@ fun EmptyState(
             Box(
                 modifier = Modifier
                     .size(72.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.ledger.deskWalnutDeep)
-                    .shadow(4.dp, CircleShape, ambientColor = Color(0x1F141413)),
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
+                    .background(bentoTokens().accentSoft),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.ledger.lampAmber,
+                    tint = bentoTokens().accent,
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -378,8 +369,8 @@ fun LoadingIndicator(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(
-            color = MaterialTheme.ledger.lampAmber,
-            trackColor = MaterialTheme.ledger.deskHairline,
+            color = bentoTokens().accentFill,
+            trackColor = bentoTokens().plate,
             strokeWidth = 3.dp,
             modifier = Modifier.padding(24.dp).size(36.dp)
         )

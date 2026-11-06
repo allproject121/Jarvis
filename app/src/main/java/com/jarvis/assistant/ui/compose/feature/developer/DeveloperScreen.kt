@@ -68,6 +68,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.delay
+import com.jarvis.assistant.ui.compose.designsystem.BentoTopBar
+import androidx.compose.ui.unit.sp
+import com.jarvis.assistant.ui.compose.designsystem.BentoIconPlate
+import com.jarvis.assistant.ui.compose.designsystem.BentoSectionHeader
+import com.jarvis.assistant.ui.compose.designsystem.bentoTokens
 
 /** Derived view of the telemetry flows (mirrors AndroLLM's DeveloperData). */
 private class DeveloperData(
@@ -153,7 +158,9 @@ private fun DeveloperScreen(
             currentRoute = ComposeRoutes.DEVELOPER,
             onTabSelected = { tab -> if (tab.route != ComposeRoutes.DEVELOPER) navigate(tab.route) },
             topBar = {
-                TopAppBar(
+                BentoTopBar(
+                    title = "Developer Mode",
+                    subtitle = "Gemini check • tool calls • engine & device telemetry",
                     navigationIcon = {
                         IconButton(onClick = back) {
                             Icon(
@@ -163,30 +170,11 @@ private fun DeveloperScreen(
                             )
                         }
                     },
-                    title = {
-                        Column {
-                            Text(
-                                text = "Developer Mode",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.ledger.deskPaper
-                                )
-                            )
-                            Text(
-                                text = "Gemini check • tool calls • engine & device telemetry",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.ledger.lampDeep,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            )
-                        }
-                    },
                     actions = {
                         IconButton(onClick = { viewModel.refresh() }) {
                             Icon(Icons.Filled.Refresh, contentDescription = "Refresh", tint = MaterialTheme.ledger.deskInk)
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                    }
                 )
             }
         ) { padding ->
@@ -445,14 +433,11 @@ private fun GeminiCheckCard(viewModel: DeveloperViewModel) {
     val prefs = remember { com.jarvis.assistant.JarvisApp.instance.preferences }
     CloudGlassCard(modifier = Modifier.fillMaxWidth()) {
         Column {
-            Text(
-                text = "Gemini check",
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.ledger.deskPaper)
-            )
-            Text(
-                text = "Sends a real request with your saved key • Live model ${prefs.aiModel.removePrefix("models/")} • voice ${prefs.voice}" +
+            BentoSectionHeader(
+                title = "Gemini check",
+                subtitle = "Sends a real request with your saved key • Live model ${prefs.aiModel.removePrefix("models/")} • voice ${prefs.voice}" +
                     if (prefs.apiKey.isBlank()) " • NO API KEY SAVED" else "",
-                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.deskInk)
+                icon = Icons.Filled.Bolt
             )
             Spacer(modifier = Modifier.height(10.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -527,11 +512,13 @@ private fun RecentToolCallsCard(traces: List<com.jarvis.assistant.androllm.agent
     CloudGlassCard(modifier = Modifier.fillMaxWidth()) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Bolt, contentDescription = null, tint = MaterialTheme.ledger.lampGlow, modifier = Modifier.size(22.dp))
-                Spacer(modifier = Modifier.width(10.dp))
+                BentoIconPlate(icon = Icons.Filled.Bolt)
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "Tool calls (${traces.size})",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.ledger.deskPaper),
+                    color = bentoTokens().text,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.weight(1f)
                 )
                 androidx.compose.material3.TextButton(onClick = onOpen) {
@@ -629,19 +616,15 @@ private fun DeviceSummaryCard(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Filled.Troubleshoot,
-                contentDescription = null,
-                tint = MaterialTheme.ledger.lampGlow,
-                modifier = Modifier.size(32.dp)
-            )
+            BentoIconPlate(icon = Icons.Filled.Troubleshoot, iconSize = 22.dp)
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = modelName,
                     style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.ledger.deskPaper
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = bentoTokens().text
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -699,22 +682,21 @@ private fun ChartCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.ledger.deskPaper
-                        )
+                        color = bentoTokens().text,
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                     Text(
                         text = subtitle,
-                        style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.deskInk)
+                        style = MaterialTheme.typography.bodySmall.copy(color = bentoTokens().muted)
                     )
                 }
                 Text(
                     text = liveValue,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.ledger.lampAmber
-                    )
+                    color = bentoTokens().accent,
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
@@ -1090,10 +1072,11 @@ private fun StatMini(label: String, value: String, modifier: Modifier = Modifier
     ) {
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.ledger.lampAmber
-            )
+            color = bentoTokens().text,
+            fontSize = 24.sp,
+            lineHeight = 28.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1
         )
         Text(
             text = label,

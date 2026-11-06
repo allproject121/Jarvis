@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento layout (2026-11-05 bento-all): page title + muted subtitle, one bento card per section
+     (icon plate + title/subtitle + status pill), primary pill buttons, theme attrs only. -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -7,7 +9,7 @@
     android:layout_height="match_parent"
     android:background="?attr/themeBg">
 
-    <!-- Top App Bar -->
+    <!-- Header: ghost back button + page title / muted subtitle -->
     <LinearLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
@@ -22,10 +24,12 @@
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="@drawable/bg_jarvis_icon_square"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_set_icon_btn"
             android:src="@drawable/ic_back"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
             app:tint="?attr/themeTextPrimary"
             android:contentDescription="Back" />
 
@@ -39,27 +43,30 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="SuperCore &amp; System Control"
+                android:text="Super Core"
                 android:textColor="?attr/themeTextPrimary"
-                android:textSize="20sp"
-                android:fontFamily="sans-serif-medium"
-                android:textStyle="bold" />
+                android:textSize="26sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
+                android:letterSpacing="-0.02" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="OS Assistant • WhatsApp • Calls • Neural Memory"
+                android:layout_marginTop="2dp"
+                android:text="System assistant, messages, calls and memory."
                 android:textColor="?attr/themeTextMuted"
-                android:textSize="12sp"
-                android:fontFamily="sans-serif" />
+                android:textSize="13sp"
+                android:fontFamily="@font/inter" />
         </LinearLayout>
     </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:clipToPadding="false"
         android:scrollbars="none"
         app:layout_constraintTop_toBottomOf="@id/topBar"
         app:layout_constraintBottom_toBottomOf="parent">
@@ -68,52 +75,76 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="8dp"
+            android:paddingTop="6dp"
             android:paddingBottom="36dp">
 
-            <!-- Card 1: Default Android Digital Assistant -->
+            <!-- ===== Card 1: Default Android digital assistant ===== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_action_card"
-                android:padding="18dp"
-                android:layout_marginBottom="18dp">
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="20dp"
+                android:layout_marginBottom="14dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="10dp">
+                    android:gravity="center_vertical">
 
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_nav_settings"
-                        app:tint="?attr/themeAccent" />
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_set_icon_tile">
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_nav_settings"
+                            app:tint="?attr/themeAccent" />
+                    </FrameLayout>
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="1. Default Digital Assistant"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginStart="10dp" />
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="8dp"
+                        android:orientation="vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Default assistant"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="Summon Jarvis from anywhere"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvDefaultAssistantBadge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="CHECKING…"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:textColor="?attr/themeAccent"
-                        android:background="@drawable/bg_jarvis_status_badge"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
+                        android:text="Checking…"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500"
+                        android:textColor="?attr/themeTextSecondary"
+                        android:background="@drawable/bg_set_badge"
+                        android:drawableStart="@drawable/bg_bento_dot"
+                        android:drawablePadding="6dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
                         android:paddingTop="4dp"
                         android:paddingBottom="4dp" />
                 </LinearLayout>
@@ -121,66 +152,97 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Hold your phone's Home button or Power button to instantly summon Jarvis from anywhere in Android."
+                    android:layout_marginTop="14dp"
+                    android:text="Hold your phone's Home or Power button to instantly summon Jarvis from anywhere in Android."
                     android:textColor="?attr/themeTextSecondary"
                     android:textSize="13sp"
-                    android:layout_marginBottom="14dp" />
+                    android:fontFamily="@font/inter"
+                    android:lineSpacingMultiplier="1.15"
+                    android:layout_marginBottom="16dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSetDefaultAssistant"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="SET JARVIS AS DEFAULT ASSISTANT"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="Set Jarvis as default assistant"
+                    android:textAllCaps="false"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
                     android:textColor="?attr/themeOnAccent"
                     app:backgroundTint="?attr/themeAccentFill"
-                    app:cornerRadius="12dp" />
+                    app:cornerRadius="24dp" />
             </LinearLayout>
 
-            <!-- Card 2: Smart WhatsApp & Messaging Auto-Reader -->
+            <!-- ===== Card 2: WhatsApp & message reader ===== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_action_card"
-                android:padding="18dp"
-                android:layout_marginBottom="18dp">
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="20dp"
+                android:layout_marginBottom="14dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="10dp">
+                    android:gravity="center_vertical">
 
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_chat_bubble"
-                        app:tint="?attr/themeSuccess" />
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_set_icon_tile">
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_chat_bubble"
+                            app:tint="?attr/themeAccent" />
+                    </FrameLayout>
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="2. WhatsApp &amp; Message Reader"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginStart="10dp" />
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="8dp"
+                        android:orientation="vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Message reader"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="WhatsApp, Telegram and SMS"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvNotificationListenerBadge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="DISABLED"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:textColor="?attr/themeWarning"
-                        android:background="@drawable/bg_jarvis_status_badge"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
+                        android:text="Disabled"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500"
+                        android:textColor="?attr/themeTextSecondary"
+                        android:background="@drawable/bg_set_badge"
+                        android:drawableStart="@drawable/bg_bento_dot"
+                        android:drawablePadding="6dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
                         android:paddingTop="4dp"
                         android:paddingBottom="4dp" />
                 </LinearLayout>
@@ -188,132 +250,221 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Reads incoming WhatsApp, Telegram &amp; SMS notifications. Reply directly using voice without opening the app."
+                    android:layout_marginTop="14dp"
+                    android:text="Reads incoming WhatsApp, Telegram &amp; SMS notifications. Reply by voice without opening the app."
                     android:textColor="?attr/themeTextSecondary"
                     android:textSize="13sp"
-                    android:layout_marginBottom="14dp" />
+                    android:fontFamily="@font/inter"
+                    android:lineSpacingMultiplier="1.15"
+                    android:layout_marginBottom="16dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnGrantNotificationAccess"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="GRANT NOTIFICATION ACCESS"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:textColor="#FFFFFF"
-                    app:backgroundTint="#047857"
-                    app:cornerRadius="12dp"
-                    android:layout_marginBottom="14dp" />
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="Grant notification access"
+                    android:textAllCaps="false"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:textColor="?attr/themeOnAccent"
+                    app:backgroundTint="?attr/themeAccentFill"
+                    app:cornerRadius="24dp"
+                    android:layout_marginBottom="12dp" />
 
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/switchWhatsAppReader"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Read Incoming Messages (WhatsApp, Telegram, Signal, SMS)"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp" />
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:layout_marginBottom="8dp">
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchWhatsAppReader"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="52dp"
+                        android:text="Read incoming messages (WhatsApp, Telegram, Signal, SMS)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter" />
+                </LinearLayout>
 
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/switchAutoReplyConfirm"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Confirm Before Sending Voice Reply"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp" />
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp">
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchAutoReplyConfirm"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="52dp"
+                        android:text="Confirm before sending a voice reply"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter" />
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- Card 3: Call Sentinel -->
+            <!-- ===== Card 3: Call sentinel ===== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_action_card"
-                android:padding="18dp"
-                android:layout_marginBottom="18dp">
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="20dp"
+                android:layout_marginBottom="14dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="10dp">
+                    android:gravity="center_vertical">
 
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_verified_badge"
-                        app:tint="?attr/themeWarning" />
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_set_icon_tile">
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_verified_badge"
+                            app:tint="?attr/themeAccent" />
+                    </FrameLayout>
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="3. Call Sentinel"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginStart="10dp" />
-
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Call sentinel"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="Caller announcements by voice"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Announces callers and accepts voice commands to Answer or Decline."
+                    android:layout_marginTop="14dp"
+                    android:text="Announces callers and accepts voice commands to answer or decline."
                     android:textColor="?attr/themeTextSecondary"
                     android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:lineSpacingMultiplier="1.15"
                     android:layout_marginBottom="14dp" />
 
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/switchCallerIdAnnouncement"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Voice Caller ID Announcement"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp" />
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp">
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchCallerIdAnnouncement"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="52dp"
+                        android:text="Voice caller ID announcement"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter" />
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- Card 4: Local Host AI & Neural Memory -->
+            <!-- ===== Card 4: Local AI & neural memory ===== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_action_card"
-                android:padding="18dp">
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="20dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="10dp">
+                    android:gravity="center_vertical">
 
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_verified_badge"
-                        app:tint="?attr/themeAccent" />
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_set_icon_tile">
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_verified_badge"
+                            app:tint="?attr/themeAccent" />
+                    </FrameLayout>
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="4. Local AI &amp; Neural Memory"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginStart="10dp" />
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="8dp"
+                        android:orientation="vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Local AI &amp; memory"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="Ollama and Mem0"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="ACTIVE"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:textColor="?attr/themeAccent"
-                        android:background="@drawable/bg_jarvis_status_badge"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
+                        android:text="Active"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500"
+                        android:textColor="?attr/themeTextSecondary"
+                        android:background="@drawable/bg_set_badge"
+                        android:drawableStart="@drawable/bg_bento_dot"
+                        android:drawablePadding="6dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
                         android:paddingTop="4dp"
                         android:paddingBottom="4dp" />
                 </LinearLayout>
@@ -321,32 +472,51 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Ollama on PC and Mem0 persistent user memory (when off, Jarvis will not save or recall long-term facts)."
+                    android:layout_marginTop="14dp"
+                    android:text="Ollama on your PC and Mem0 persistent user memory (when off, Jarvis will not save or recall long-term facts)."
                     android:textColor="?attr/themeTextSecondary"
                     android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:lineSpacingMultiplier="1.15"
                     android:layout_marginBottom="14dp" />
 
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/switchMem0Memory"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Mem0 Persistent User Memory"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp" />
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp">
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchMem0Memory"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="52dp"
+                        android:text="Mem0 persistent user memory"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter" />
+                </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnConfigureOllama"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="CONFIGURE PC OLLAMA ENDPOINT"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="Configure PC Ollama endpoint"
+                    android:textAllCaps="false"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
                     android:textColor="?attr/themeTextPrimary"
-                    app:strokeColor="?attr/themeCardBorder"
+                    app:strokeColor="?attr/themePlateBorder"
                     app:strokeWidth="1dp"
                     app:backgroundTint="?attr/themeChipBg"
-                    app:cornerRadius="12dp"
-                    android:layout_marginTop="10dp" />
+                    app:cornerRadius="24dp"
+                    android:layout_marginTop="12dp" />
             </LinearLayout>
 
         </LinearLayout>

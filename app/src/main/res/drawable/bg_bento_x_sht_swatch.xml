@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento colour swatch (2026-11-05 bento-all): white oval, coloured via android:backgroundTint.
+     Pair with android:foreground="@drawable/bg_bento_x_sht_swatch_ring" so black/white swatches stay visible. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#FFFFFFFF" />
+</shape>

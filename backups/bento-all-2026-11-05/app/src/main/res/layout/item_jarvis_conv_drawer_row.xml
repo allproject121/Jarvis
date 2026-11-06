@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Row of the Chat tab conversation drawer: a conversation, a search hit or a section label. -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvDrawerSection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="4dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="4dp"
+        android:letterSpacing="0.08"
+        android:textAllCaps="true"
+        android:textColor="?attr/themeTextMuted"
+        android:textSize="11sp"
+        android:fontFamily="@font/inter"
+        android:textFontWeight="600"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/layoutDrawerItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_set_card_md"
+        android:paddingStart="12dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="6dp"
+        android:paddingBottom="10dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvDrawerItemTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="14sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="500" />
+
+            <TextView
+                android:id="@+id/tvDrawerItemSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="12sp"
+                android:fontFamily="@font/inter" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/ivDrawerItemPin"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginStart="6dp"
+            android:src="@drawable/ic_jchat_pin"
+            app:tint="?attr/themeAccent"
+            android:visibility="gone" />
+
+        <ImageButton
+            android:id="@+id/btnDrawerItemMore"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@null"
+            android:src="@drawable/ic_jchat_more"
+            app:tint="?attr/themeTextMuted"
+            android:contentDescription="Conversation actions" />
+    </LinearLayout>
+</LinearLayout>

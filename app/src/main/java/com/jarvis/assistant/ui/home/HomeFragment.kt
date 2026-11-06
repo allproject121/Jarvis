@@ -120,7 +120,7 @@ class HomeFragment : Fragment() {
 
         binding.btnCustomizeHomeCards.setOnClickListener {
             HudSoundManager.playTapSound()
-            HomeCardsCustomizationBottomSheet.newInstance().show(childFragmentManager, HomeCardsCustomizationBottomSheet.TAG)
+            startActivity(CustomizationStudioActivity.homeScreenIntent(requireContext()))
         }
 
         setupDualBrainCard()
@@ -547,7 +547,7 @@ class HomeFragment : Fragment() {
             HudSoundManager.playTapSound()
             com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Hide $cardTitle?")
-                .setMessage("Do you want to hide this option from the Home Screen? You can unhide it anytime from Menu > Customize Home.")
+                .setMessage("Do you want to hide this option from the Home Screen? You can unhide it anytime from HUD Studio > Home screen.")
                 .setPositiveButton("Hide") { _, _ ->
                     onHide()
                     applyCustomizationPreferences()
@@ -556,11 +556,11 @@ class HomeFragment : Fragment() {
                         "$cardTitle hidden from Home",
                         com.google.android.material.snackbar.Snackbar.LENGTH_LONG
                     ).setAnchorView(requireActivity().findViewById<View>(R.id.bottomDock)).setAction("Customize") {
-                        HomeCardsCustomizationBottomSheet.newInstance().show(childFragmentManager, HomeCardsCustomizationBottomSheet.TAG)
+                        startActivity(CustomizationStudioActivity.homeScreenIntent(requireContext()))
                     }.show()
                 }
                 .setNeutralButton("Customize All") { _, _ ->
-                    HomeCardsCustomizationBottomSheet.newInstance().show(childFragmentManager, HomeCardsCustomizationBottomSheet.TAG)
+                    startActivity(CustomizationStudioActivity.homeScreenIntent(requireContext()))
                 }
                 .setNegativeButton("Cancel", null)
                 .show()
@@ -1556,10 +1556,10 @@ class HomeFragment : Fragment() {
 
         val execMode = preferences.aiExecutionMode
         if (execMode == com.jarvis.assistant.ai.MultiModelAiRouter.MODE_ALL_TOGETHER) {
-            binding.tvBrainActiveBadge.text = "ALL MODELS ENSEMBLE"
+            binding.tvBrainActiveBadge.text = "All models ensemble"
             binding.tvPrimaryBrainStatus.text = "Parallel consensus mode"
         } else {
-            binding.tvBrainActiveBadge.text = "GEMINI LIVE + ANDROLLM"
+            binding.tvBrainActiveBadge.text = "Gemini Live + on-device"
             binding.tvPrimaryBrainStatus.text = "Live · bidirectional WebSocket"
         }
 

@@ -296,7 +296,11 @@ internal class ChatDrawerAdapter(
                     b.tvDrawerSection.visibility = View.GONE
                     b.layoutDrawerItem.visibility = View.VISIBLE
                     b.tvDrawerItemTitle.text = c.title
-                    b.tvDrawerItemTitle.setTextColor(if (row.isActive) accent else primary)
+                    b.tvDrawerItemTitle.setTextColor(primary)
+                    // Dark Bento: active conversation = accent-tinted plate instead of accent text.
+                    b.layoutDrawerItem.setBackgroundResource(
+                        if (row.isActive) R.drawable.bg_bento_x_chat_row_active else R.drawable.bg_jarvis_row_item
+                    )
                     b.tvDrawerItemSubtitle.text = buildString {
                         val preview = c.lastMessagePreview?.replace(Regex("\\s+"), " ")?.trim().orEmpty()
                         if (preview.isNotEmpty()) append(preview.take(80)).append(" · ")
@@ -316,6 +320,7 @@ internal class ChatDrawerAdapter(
                     b.layoutDrawerItem.visibility = View.VISIBLE
                     b.tvDrawerItemTitle.text = row.conversationTitle
                     b.tvDrawerItemTitle.setTextColor(primary)
+                    b.layoutDrawerItem.setBackgroundResource(R.drawable.bg_jarvis_row_item)
                     val who = if (row.message.role == MessageRole.USER) "You" else "Jarvis"
                     b.tvDrawerItemSubtitle.text = "$who: ${snippet(row.message.content, row.query)}"
                     b.ivDrawerItemPin.visibility = View.GONE

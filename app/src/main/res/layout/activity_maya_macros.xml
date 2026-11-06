@@ -12,31 +12,48 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="12dp"
-        android:paddingTop="12dp"
+        android:paddingStart="16dp"
+        android:paddingTop="16dp"
         android:paddingEnd="16dp"
-        android:paddingBottom="10dp">
+        android:paddingBottom="12dp">
 
         <ImageButton
             android:id="@+id/mayaMacrosBack"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:background="@drawable/bg_set_icon_btn"
             android:contentDescription="@string/desc_back"
             android:src="@drawable/ic_back"
             app:tint="?attr/themeTextPrimary" />
 
-        <TextView
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="14dp"
             android:layout_weight="1"
-            android:fontFamily="sans-serif-black"
-            android:letterSpacing="0.08"
-            android:text="Macros &amp; Watches"
-            android:textColor="?attr/themeTextPrimary"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
+                android:letterSpacing="-0.02"
+                android:text="Macros &amp; Watches"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="26sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:fontFamily="@font/inter"
+                android:text="Automation lab, routines, watches and phone events"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="13sp" />
+        </LinearLayout>
     </LinearLayout>
 
     <ScrollView

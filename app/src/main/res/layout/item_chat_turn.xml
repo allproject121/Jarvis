@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One voice-chat turn (ChatAdapter / chat history sheet) - 2026-11-05 redesign:
+<!-- Dark Bento pass 2026-11-05 (bento-all): bento bubbles bg_bento_x_chat_bubble_user/ai, 16dp bubble padding.
+      One voice-chat turn (ChatAdapter / chat history sheet) - 2026-11-05 redesign:
      muted 11sp timestamp, accent-tinted user bubble right, glass assistant bubble left. Ids unchanged. -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -26,9 +27,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end"
         android:layout_marginStart="48dp"
-        android:background="@drawable/bg_set_bubble_user"
+        android:background="@drawable/bg_bento_x_chat_bubble_user"
         android:orientation="vertical"
-        android:paddingHorizontal="14dp"
+        android:paddingHorizontal="16dp"
         android:paddingVertical="10dp">
 
         <TextView
@@ -59,9 +60,9 @@
         android:layout_gravity="start"
         android:layout_marginEnd="48dp"
         android:layout_marginTop="8dp"
-        android:background="@drawable/bg_set_bubble_assistant"
+        android:background="@drawable/bg_bento_x_chat_bubble_ai"
         android:orientation="vertical"
-        android:paddingHorizontal="14dp"
+        android:paddingHorizontal="16dp"
         android:paddingVertical="10dp">
 
         <TextView

@@ -146,28 +146,28 @@ class MoraCharacterActivity : AppCompatActivity() {
                 when (state) {
                     ConversationState.LISTENING -> {
                         setMoraState("listening")
-                        binding.tvConversationStatus.text = "LISTENING • SPEAK NOW"
-                        binding.ivStatusDot.setColorFilter(Color.parseColor("#10B981"))
+                        binding.tvConversationStatus.text = "Listening · speak now"
+                        binding.ivStatusDot.setColorFilter(com.jarvis.assistant.util.ThemeManager.attrColor(this@MoraCharacterActivity, com.jarvis.assistant.R.attr.themeSuccess, Color.parseColor("#10B981")))
                     }
                     ConversationState.THINKING -> {
                         setMoraState("thinking")
-                        binding.tvConversationStatus.text = "PROCESSING REQUEST..."
-                        binding.ivStatusDot.setColorFilter(Color.parseColor("#F59E0B"))
+                        binding.tvConversationStatus.text = "Thinking…"
+                        binding.ivStatusDot.setColorFilter(com.jarvis.assistant.util.ThemeManager.attrColor(this@MoraCharacterActivity, com.jarvis.assistant.R.attr.themeWarning, Color.parseColor("#F59E0B")))
                     }
                     ConversationState.SPEAKING -> {
                         setMoraState("speaking")
-                        binding.tvConversationStatus.text = "MORA SPEAKING..."
-                        binding.ivStatusDot.setColorFilter(Color.parseColor("#00F0FF"))
+                        binding.tvConversationStatus.text = "Mora is speaking…"
+                        binding.ivStatusDot.setColorFilter(com.jarvis.assistant.util.ThemeManager.attrColor(this@MoraCharacterActivity, com.jarvis.assistant.R.attr.themeAccent, Color.parseColor("#00F0FF")))
                     }
                     ConversationState.IDLE -> {
                         setMoraState("idle")
-                        binding.tvConversationStatus.text = "READY • TAP MORA TO INTERACT"
-                        binding.ivStatusDot.setColorFilter(Color.parseColor("#FF0055"))
+                        binding.tvConversationStatus.text = "Ready · tap Mora to interact"
+                        binding.ivStatusDot.setColorFilter(com.jarvis.assistant.util.ThemeManager.attrColor(this@MoraCharacterActivity, com.jarvis.assistant.R.attr.themeTextMuted, Color.parseColor("#FF0055")))
                     }
                     else -> {
                         setMoraState("idle")
-                        binding.tvConversationStatus.text = "READY • TAP MORA TO INTERACT"
-                        binding.ivStatusDot.setColorFilter(Color.parseColor("#FF0055"))
+                        binding.tvConversationStatus.text = "Ready · tap Mora to interact"
+                        binding.ivStatusDot.setColorFilter(com.jarvis.assistant.util.ThemeManager.attrColor(this@MoraCharacterActivity, com.jarvis.assistant.R.attr.themeTextMuted, Color.parseColor("#FF0055")))
                     }
                 }
             }

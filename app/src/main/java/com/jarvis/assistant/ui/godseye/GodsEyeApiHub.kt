@@ -193,10 +193,7 @@ object GodsEyeApiHub {
                 return handleGenericOverpassProxy(query, corsHeaders, customClient)
             }
 
-            // K. WIND VECTOR MANIFEST & TILES
-            if (path.startsWith("/api/wind/manifest") || path.startsWith("/api/wind/status")) {
-                return jsonResponse(buildWindManifestJson(), corsHeaders, 200)
-            }
+            // K. Wind manifest + grid are served by GodsEyeActivity (Open-Meteo grid, GodsEyeBridgeApi).
 
             // L. GBFS BIKESHARE PROXY
             if (path.startsWith("/api/gbfs/")) {
@@ -1015,28 +1012,6 @@ object GodsEyeApiHub {
                     })
                 })
             })
-        }.toString()
-    }
-
-    private fun buildWindManifestJson(): String {
-        val now = System.currentTimeMillis()
-        val iso = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:00:00'Z'", java.util.Locale.US).apply {
-            timeZone = java.util.TimeZone.getTimeZone("UTC")
-        }.format(java.util.Date(now))
-
-        return JSONObject().apply {
-            put("generated", iso)
-            put("valid", iso)
-            put("step", 3)
-            put("resolution", 1.0)
-            put("width", 360)
-            put("height", 181)
-            put("uMin", -35.0)
-            put("uMax", 45.0)
-            put("vMin", -30.0)
-            put("vMax", 35.0)
-            put("source", "NOAA GFS Forecast Model")
-            put("status", "nominal")
         }.toString()
     }
 }

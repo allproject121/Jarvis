@@ -170,7 +170,8 @@ class ChatFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         chatVm = ViewModelProvider(this)[JarvisChatTabViewModel::class.java]
         com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.root)
-        com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(binding.panelDrawer)
+        // Dark Bento (2026-11-05 bento-all): panelDrawer keeps its rounded glass drawable
+        // (bg_bento_x_chat_drawer) instead of a flat dynamic colour.
 
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val statusBarInsets = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
@@ -770,18 +771,25 @@ class ChatFragment : Fragment() {
     private fun setDrawerMode(mode: DrawerMode) {
         drawerMode.value = mode
         val b = _binding ?: return
-        val accent = requireContext().jarvisThemeColor(R.attr.themeAccent, android.graphics.Color.WHITE)
+        // Dark Bento pills: selected = accent fill + on-accent text, idle = plate + hairline.
+        val onAccent = com.jarvis.assistant.util.ThemeManager.onAccentColor(requireContext())
         val primary = requireContext().jarvisThemeColor(R.attr.themeTextPrimary, android.graphics.Color.WHITE)
-        b.chipDrawerChats.setTextColor(if (mode == DrawerMode.CHATS) accent else primary)
-        b.chipDrawerBookmarks.setTextColor(if (mode == DrawerMode.BOOKMARKS) accent else primary)
-        b.chipDrawerArchived.setTextColor(if (mode == DrawerMode.ARCHIVED) accent else primary)
+        listOf(
+            b.chipDrawerChats to DrawerMode.CHATS,
+            b.chipDrawerBookmarks to DrawerMode.BOOKMARKS,
+            b.chipDrawerArchived to DrawerMode.ARCHIVED
+        ).forEach { (chip, chipMode) ->
+            val on = mode == chipMode
+            chip.setBackgroundResource(if (on) R.drawable.bg_bento_x_chip_on else R.drawable.bg_set_chip)
+            chip.setTextColor(if (on) onAccent else primary)
+        }
         if (chatVm.searchQuery.value.isBlank()) b.tvDrawerTitle.text = drawerTitle(mode)
     }
 
     private fun openDrawer(focusSearch: Boolean = false) {
         val b = _binding ?: return
         clearSelection()
-        com.jarvis.assistant.util.ThemeManager.applyDynamicBackground(b.panelDrawer)
+        // Dark Bento: drawer keeps its XML glass panel background (no flat recolour on open).
         drawerOpen = true
         b.layoutDrawerOverlay.visibility = View.VISIBLE
         val width = b.panelDrawer.width.takeIf { it > 0 } ?: (310 * resources.displayMetrics.density).toInt()

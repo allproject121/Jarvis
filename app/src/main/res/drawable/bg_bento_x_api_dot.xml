@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento status dot (2026-11-05 bento-all, API screens): 8dp oval, theme success by default;
+     code re-tints it via backgroundTintList for ok / warning / error states. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="?attr/themeSuccess" />
+    <size android:width="8dp" android:height="8dp" />
+</shape>

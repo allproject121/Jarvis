@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento updates page (2026-11-05 bento-all): page title + muted subtitle, cards are built in code. -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/themeBg"
-    android:paddingStart="20dp"
-    android:paddingEnd="20dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
     android:paddingTop="20dp"
     android:paddingBottom="100dp">
 
@@ -23,24 +24,27 @@
             android:layout_height="wrap_content"
             android:text="Updates"
             android:textColor="?attr/themeTextPrimary"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-medium" />
+            android:textSize="28sp"
+            android:fontFamily="@font/inter"
+            android:textFontWeight="600"
+            android:letterSpacing="-0.02" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
             android:text="Jarvis updates &amp; announcements"
             android:textColor="?attr/themeTextMuted"
             android:textSize="13sp"
-            android:fontFamily="sans-serif"
-            android:layout_marginTop="4dp" />
+            android:fontFamily="@font/inter" />
     </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
+        android:clipToPadding="false"
+        android:scrollbars="none"
         app:layout_constraintTop_toBottomOf="@id/layoutUpdatesHeader"
         app:layout_constraintBottom_toBottomOf="parent">
 

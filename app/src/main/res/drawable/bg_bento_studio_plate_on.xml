@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Customization Studio (Dark Bento, 2026-11-05): selected inner plate (theme / persona /
+     template / vault cards) = accent-tinted plate + accent hairline. Idle = bg_jarvis_row_item. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/themeAccentLight">
+    <item>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="14dp" />
+                    <solid android:color="?attr/themeChipBg" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="14dp" />
+                    <solid android:color="?attr/themeAccentLight" />
+                    <stroke
+                        android:width="1.5dp"
+                        android:color="?attr/themeAccent" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</ripple>

@@ -265,7 +265,7 @@ object GodsEyeMcpClient {
                         GodsEyeActivity.dispatchAction(enrichedActionJson)
                     }
 
-                    val receipt = GodsEyeActivity.awaitActionReceipt(traceId, 250)
+                    val receipt = GodsEyeActivity.awaitActionReceipt(traceId)
 
                     return JSONObject().apply {
                         put("success", true)
@@ -305,7 +305,7 @@ object GodsEyeMcpClient {
 
                 if (GodsEyeActivity.activeInstance != null) {
                     GodsEyeActivity.dispatchAction(updatedAction)
-                    val receipt = GodsEyeActivity.awaitActionReceipt(actTraceId, 250)
+                    val receipt = GodsEyeActivity.awaitActionReceipt(actTraceId)
                     if (receipt != null) {
                         standaloneRes.put("verified_on_screen", true)
                         standaloneRes.put("globe_state", receipt.optJSONObject("state"))
@@ -409,10 +409,18 @@ object GodsEyeMcpClient {
         }.toString()
     }
 
+    /** Open God's Eye on [viewUrl] / run [actionJson] there, from any thread. */
+    private fun showInGodsEye(viewUrl: String, actionJson: String): Boolean {
+        launchOrUpdateGodsEye(com.jarvis.assistant.JarvisApp.instance, viewUrl, actionJson)
+        return true
+    }
+
     fun launchOrUpdateGodsEye(context: Context, viewUrl: String? = null, actionJson: String? = null) {
         try {
             if (!actionJson.isNullOrBlank() && GodsEyeActivity.dispatchAction(actionJson)) {
                 Log.i(TAG, "Dispatched action directly to active GodsEyeActivity: $actionJson")
+                // "Show me X" must also show God's Eye when it is open but behind another screen.
+                GodsEyeActivity.bringToFront(context)
                 return
             }
 
@@ -486,6 +494,7 @@ object GodsEyeMcpClient {
             "gods_eye_inspect_globe", "inspect_globe", "gods_eye_inspect_state" -> handleInspectGlobe()
             "gods_eye_control_layers", "control_layers" -> handleControlLayers(args)
             "gods_eye_select_camera", "select_camera" -> handleSelectCamera(args)
+            "gods_eye_command" -> handleGodsEyeCommand(args)
             else -> handleStandaloneView(args)
         }
     }
@@ -503,6 +512,8 @@ object GodsEyeMcpClient {
         val heading = args.optDouble("heading", 0.0)
         val pitch = args.optDouble("pitch", -45.0)
 
+        val layers = args.opt("layers")?.takeIf { it != JSONObject.NULL }
+
         var resolvedPlace = "Global"
         if (lat.isNaN() || lon.isNaN()) {
             if (locationStr.isNotBlank()) {
@@ -516,6 +527,25 @@ object GodsEyeMcpClient {
             }
         } else {
             resolvedPlace = "Lat: %.2f, Lon: %.2f".format(lat, lon)
+        }
+
+        // Not in the small city table: let the console geocode it (countries, regions,
+        // landmarks) instead of silently showing the whole globe.
+        if ((lat.isNaN() || lon.isNaN()) && locationStr.isNotBlank()) {
+            val place = args.optString("location", "").ifBlank { args.optJSONObject("area")?.optString("place", "").orEmpty() }.trim()
+            val action = JSONObject().apply {
+                put("action", "fly_to_location")
+                put("args", JSONObject().put("query", place))
+                if (layers != null) put("enable_layers", layers)
+                if (style.isNotBlank() && style != "normal") put("style", if (style == "thermal") "flir" else style)
+            }
+            return JSONObject().apply {
+                put("success", true)
+                put("summary", "God's Eye is searching for $place and flying there.")
+                put("view_url", GodsEyeActivity.GODS_EYE_LOCAL_URL)
+                put("action_json", action.toString())
+                put("target", place)
+            }
         }
 
         if (lat.isNaN() || lon.isNaN()) {
@@ -539,6 +569,7 @@ object GodsEyeMcpClient {
             if (style.isNotBlank() && style != "normal") {
                 put("style", if (style == "thermal") "flir" else style)
             }
+            if (layers != null) put("enable_layers", layers)
         }.toString()
 
         return JSONObject().apply {
@@ -976,23 +1007,8 @@ object GodsEyeMcpClient {
         val actionJson = actionObj.toString()
         val viewUrl = "${GodsEyeActivity.GODS_EYE_LOCAL_URL}#v=2&lat=${primary.lat}&lon=${primary.lon}&alt=15000&heading=0.0&pitch=-45.0&roll=0&layers=cctv&camera=${primary.id}"
 
-        var dispatched = false
-        if (GodsEyeActivity.activeInstance != null) {
-            dispatched = GodsEyeActivity.dispatchAction(actionJson)
-        } else {
-            try {
-                val intent = android.content.Intent(com.jarvis.assistant.JarvisApp.instance, GodsEyeActivity::class.java).apply {
-                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                    putExtra(GodsEyeActivity.EXTRA_VIEW_URL, viewUrl)
-                    putExtra(GodsEyeActivity.EXTRA_ACTION_JSON, actionJson)
-                }
-                com.jarvis.assistant.JarvisApp.instance.startActivity(intent)
-                dispatched = true
-            } catch (e: Exception) {
-                android.util.Log.w("GodsEyeMcpClient", "Failed to auto-launch GodsEyeActivity for CCTV: ${e.message}")
-            }
-        }
-        val receipt = GodsEyeActivity.awaitActionReceipt(traceId, 250)
+        val dispatched = showInGodsEye(viewUrl, actionJson)
+        val receipt = GodsEyeActivity.awaitActionReceipt(traceId)
         val verifiedOnScreen = receipt != null
 
         val summary = if (isGeneric) {
@@ -1027,6 +1043,14 @@ object GodsEyeMcpClient {
     }
 
     fun handleInspectGlobe(): JSONObject {
+        // Live read from the open console: camera, layers with counts, and what the user tapped.
+        val view = GodsEyeActivity.runPageCommand("get_current_view_state", JSONObject(), 4_000L)
+        if (view != null && view.optBoolean("ok", true)) {
+            val selected = GodsEyeActivity.runPageCommand(
+                "get_entity_context", JSONObject().put("scope", "selected").put("limit", 3), 4_000L
+            )
+            return liveGlobeReport(view, selected)
+        }
         val snapshot = GodsEyeActivity.getLatestGlobeStateSnapshot()
         return if (snapshot != null) {
             val lat = snapshot.optDouble("lat", 0.0)
@@ -1037,37 +1061,129 @@ object GodsEyeMcpClient {
             for (i in 0 until layers.length()) activeLayers.add(layers.optString(i))
             val selectedCam = snapshot.optString("selected_camera", "")
             val style = snapshot.optString("visual_style", "normal")
-            val summary = "God's Eye globe active at lat: %.2f, lon: %.2f (altitude: %d km). Style: %s. Active layers: %s.%s".format(
+            val summary = "God's Eye (last known, not live) at lat: %.2f, lon: %.2f (altitude: %d km). Style: %s. Active layers: %s.%s".format(
                 lat, lon, alt / 1000, style,
                 if (activeLayers.isEmpty()) "None" else activeLayers.joinToString(", "),
                 if (selectedCam.isNotBlank()) " Selected CCTV camera: $selectedCam." else ""
             )
             JSONObject().apply {
                 put("success", true)
-                put("running", true)
+                put("running", GodsEyeActivity.activeInstance != null)
+                put("live", false)
                 put("summary", summary)
                 put("globe_state", snapshot)
-                put("view_url", "${GodsEyeActivity.GODS_EYE_LOCAL_URL}#v=2&lat=$lat&lon=$lon&alt=$alt&style=$style")
             }
         } else {
-            val defaultState = JSONObject().apply {
-                put("lat", 20.0)
-                put("lon", 0.0)
-                put("alt", 20000000L)
-                put("heading", 0)
-                put("pitch", -90)
-                put("roll", 0)
-                put("enabled_layers", JSONArray())
-                put("selected_camera", JSONObject.NULL)
-                put("visual_style", "normal")
-            }
             JSONObject().apply {
                 put("success", true)
                 put("running", false)
-                put("summary", "God's Eye globe is in standby or initializing. Default orbital vantage: Global (lat: 20.0, lon: 0.0, alt: 20000 km).")
-                put("globe_state", defaultState)
-                put("view_url", "${GodsEyeActivity.GODS_EYE_LOCAL_URL}#v=2&lat=20.0&lon=0.0&alt=20000000&heading=0.0&pitch=-90.0&roll=0")
+                put("live", false)
+                put("summary", "God's Eye is not open, so there is no live globe to read. Open it with open_gods_eye_view first.")
             }
+        }
+    }
+
+    private fun liveGlobeReport(view: JSONObject, selected: JSONObject?): JSONObject {
+        val cam = view.optJSONObject("camera") ?: JSONObject()
+        val lat = cam.optDouble("latitude", 0.0)
+        val lon = cam.optDouble("longitude", 0.0)
+        val heightKm = cam.optDouble("heightM", 0.0) / 1000.0
+        val layers = view.optJSONArray("layers") ?: JSONArray()
+        val onLayers = mutableListOf<String>()
+        for (i in 0 until layers.length()) {
+            val l = layers.optJSONObject(i) ?: continue
+            if (!l.optBoolean("enabled")) continue
+            val count = l.opt("count")
+            onLayers.add(l.optString("name", l.optString("id")) + if (count is Number) " ($count)" else "")
+        }
+        val tracked = view.optJSONArray("tracked")
+        val place = selected?.optJSONObject("scene")?.optJSONObject("basemap")
+            ?.optJSONObject("place")?.optString("formattedAddress").orEmpty()
+        val summary = buildString {
+            append("God's Eye live view at %.3f, %.3f, %.1f km up".format(lat, lon, heightKm))
+            if (place.isNotBlank()) append(" over $place")
+            append(". Style: ${view.optString("style", "normal")}.")
+            append(" Layers on: ${if (onLayers.isEmpty()) "none" else onLayers.joinToString(", ")}.")
+            if (tracked != null && tracked.length() > 0) append(" Tracking: $tracked.")
+        }
+        return JSONObject().apply {
+            put("success", true)
+            put("running", true)
+            put("live", true)
+            put("summary", summary)
+            put("view_state", trimForModel(view))
+            // What the user tapped (aircraft, ship, camera, fire ...), when anything is selected.
+            if (selected != null) put("selection_context", trimForModel(selected))
+        }
+    }
+
+    /** Page results can be large (viewport samples, full layer metadata); keep tool replies short. */
+    private fun trimForModel(obj: JSONObject, maxChars: Int = 4_000): Any {
+        val text = obj.toString()
+        return if (text.length <= maxChars) obj else text.take(maxChars) + "…"
+    }
+
+    /** Command names of the console's own tool set (the bundled realtime session file). */
+    val pageCommandNames: Set<String> by lazy {
+        try {
+            val json = com.jarvis.assistant.JarvisApp.instance.assets
+                .open("godseye/jarvis-realtime-session.json").bufferedReader().use { it.readText() }
+            val root = JSONObject(json)
+            val tools = root.optJSONArray("tools") ?: root.optJSONObject("session")?.optJSONArray("tools") ?: JSONArray()
+            (0 until tools.length()).mapNotNull { tools.optJSONObject(it)?.optString("name")?.takeIf { n -> n.isNotBlank() } }.toSet()
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not read God's Eye command list: ${e.message}")
+            emptySet()
+        }
+    }
+
+    /**
+     * gods_eye_command: run one of the console's own commands (fly_to_location with
+     * geocoding, track_entity, analyst_query, control_cctv, set_visual_style, ...).
+     * With God's Eye open the real result comes back; otherwise God's Eye opens and
+     * runs it on arrival.
+     */
+    fun handleGodsEyeCommand(args: JSONObject): JSONObject {
+        val command = args.optString("command").ifBlank { args.optString("name") }.trim()
+        val cmdArgs = when (val raw = args.opt("args")) {
+            is JSONObject -> raw
+            is String -> try { JSONObject(raw.ifBlank { "{}" }) } catch (_: Exception) { JSONObject() }
+            else -> JSONObject()
+        }
+        val known = pageCommandNames
+        if (command.isBlank() || (known.isNotEmpty() && command !in known)) {
+            return JSONObject().apply {
+                put("success", false)
+                put("message", "Unknown God's Eye command '$command'. Available: ${known.sorted().joinToString(", ")}")
+            }
+        }
+        if (GodsEyeActivity.activeInstance == null) {
+            val action = JSONObject().apply {
+                put("trace_id", "tr-cmd-" + System.currentTimeMillis() + "-" + rpcIdCounter.getAndIncrement())
+                put("action", command)
+                put("args", cmdArgs)
+            }
+            return JSONObject().apply {
+                put("success", true)
+                put("summary", "Opening God's Eye and running $command there. Ask again once it is open to read the result.")
+                put("view_url", GodsEyeActivity.GODS_EYE_LOCAL_URL)
+                put("action_json", action.toString())
+            }
+        }
+        GodsEyeActivity.bringToFront(com.jarvis.assistant.JarvisApp.instance)
+        val result = GodsEyeActivity.runPageCommand(command, cmdArgs, 15_000L)
+            ?: return JSONObject().apply {
+                put("success", false)
+                put("message", "God's Eye did not answer $command in time (it may still be loading).")
+            }
+        val ok = result.optBoolean("ok", !result.has("error"))
+        return JSONObject().apply {
+            put("success", ok)
+            // "say" is the console's own one-line answer; "summary" is sometimes an object.
+            val said = listOf("say", "message", "summary")
+                .firstNotNullOfOrNull { key -> (result.opt(key) as? String)?.takeIf { it.isNotBlank() } }
+            put("summary", said ?: if (ok) "God's Eye ran $command." else "God's Eye could not run $command: ${result.optString("error")}")
+            put("result", trimForModel(result, 6_000))
         }
     }
 
@@ -1148,24 +1264,9 @@ object GodsEyeMcpClient {
             (if (isEnableAll) "&${GodsEyeActivity.ALL_LAYERS_HASH}" else if (layersParam.isNotBlank()) "&layers=$layersParam" else "") +
             (if (style.isNotBlank()) "&style=$style" else "")
 
-        var dispatched = false
-        if (GodsEyeActivity.activeInstance != null) {
-            dispatched = GodsEyeActivity.dispatchAction(actionJson)
-        } else {
-            try {
-                val launchIntent = Intent(com.jarvis.assistant.JarvisApp.instance, GodsEyeActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    putExtra(GodsEyeActivity.EXTRA_VIEW_URL, viewUrl)
-                    putExtra(GodsEyeActivity.EXTRA_ACTION_JSON, actionJson)
-                }
-                com.jarvis.assistant.JarvisApp.instance.startActivity(launchIntent)
-                dispatched = true
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to launch GodsEyeActivity for layer control: ${e.message}")
-            }
-        }
+        val dispatched = showInGodsEye(viewUrl, actionJson)
 
-        val receipt = GodsEyeActivity.awaitActionReceipt(traceId, 250)
+        val receipt = GodsEyeActivity.awaitActionReceipt(traceId)
         val verifiedOnScreen = receipt != null
 
         val summary = buildString {
@@ -1239,24 +1340,9 @@ object GodsEyeMcpClient {
 
         val viewUrl = "${GodsEyeActivity.GODS_EYE_LOCAL_URL}#v=2&lat=${camera.lat}&lon=${camera.lon}&alt=12000&heading=0.0&pitch=-45.0&roll=0&layers=cctv&camera=${camera.id}"
 
-        var dispatched = false
-        if (GodsEyeActivity.activeInstance != null) {
-            dispatched = GodsEyeActivity.dispatchAction(actionJson)
-        } else {
-            try {
-                val intent = android.content.Intent(com.jarvis.assistant.JarvisApp.instance, GodsEyeActivity::class.java).apply {
-                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                    putExtra(GodsEyeActivity.EXTRA_VIEW_URL, viewUrl)
-                    putExtra(GodsEyeActivity.EXTRA_ACTION_JSON, actionJson)
-                }
-                com.jarvis.assistant.JarvisApp.instance.startActivity(intent)
-                dispatched = true
-            } catch (e: Exception) {
-                android.util.Log.w("GodsEyeMcpClient", "Failed to auto-launch GodsEyeActivity for CCTV: ${e.message}")
-            }
-        }
+        val dispatched = showInGodsEye(viewUrl, actionJson)
 
-        val receipt = GodsEyeActivity.awaitActionReceipt(traceId, 250)
+        val receipt = GodsEyeActivity.awaitActionReceipt(traceId)
         val verifiedOnScreen = receipt != null
 
         val summary = "Selected CCTV camera '${camera.name}' (${camera.id}) in ${camera.city}. Stream format: ${camera.feedType.uppercase()}. Globe centered at lat: %.4f, lon: %.4f and camera player engaged.".format(camera.lat, camera.lon)
@@ -1436,6 +1522,22 @@ object GodsEyeMcpClient {
     }
 
     private fun handleStandalonePublicTransit(args: JSONObject): JSONObject {
+        val city = args.optString("city", "").ifBlank { args.optString("location", "") }.trim()
+        if (city.isNotBlank() && !city.contains("boston", ignoreCase = true)) {
+            // The standalone count below is Boston's MBTA feed only; elsewhere the console's
+            // own transit layer shows whatever feeds cover that city.
+            val action = JSONObject().apply {
+                put("action", "fly_to_location")
+                put("args", JSONObject().put("query", city))
+                put("enable_layers", JSONArray().put("transit"))
+            }
+            return JSONObject().apply {
+                put("success", true)
+                put("summary", "Showing the transit layer around $city. Live vehicles appear only where God's Eye has a GTFS-realtime feed for that city.")
+                put("view_url", GodsEyeActivity.GODS_EYE_LOCAL_URL)
+                put("action_json", action.toString())
+            }
+        }
         var vehicleCount = 0
         try {
             val upstreamUrl = "https://cdn.mbta.com/realtime/VehiclePositions.json"

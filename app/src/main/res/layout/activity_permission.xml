@@ -15,8 +15,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             android:paddingTop="36dp"
             android:paddingBottom="40dp">
 
@@ -26,13 +26,15 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="24dp">
+                android:layout_marginBottom="20dp">
 
                 <ImageButton
                     android:id="@+id/btnBack"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_jarvis_icon_square"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_set_icon_btn"
+                    android:padding="10dp"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/ic_back"
                     app:tint="?attr/themeTextPrimary"
                     android:contentDescription="Back" />
@@ -47,18 +49,21 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="System Authorizations"
+                        android:text="Permissions"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="19sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-medium" />
+                        android:textSize="26sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
+                        android:letterSpacing="-0.02" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Permissions &amp; Privacy Control"
+                        android:layout_marginTop="2dp"
+                        android:text="System access &amp; privacy control"
                         android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp" />
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -68,9 +73,9 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:gravity="center_horizontal"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="22dp"
-                android:layout_marginBottom="24dp">
+                android:background="@drawable/bg_nova_card"
+                android:padding="20dp"
+                android:layout_marginBottom="16dp">
 
                 <ImageView
                     android:layout_width="140dp"
@@ -83,10 +88,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="JARVIS • Neural Assistant"
+                    android:text="Jarvis · Neural Assistant"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:textSize="18sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -95,7 +101,8 @@
                     android:gravity="center"
                     android:text="Grant necessary authorizations so Jarvis can listen, speak, deliver accurate weather, and process your requests seamlessly."
                     android:textColor="?attr/themeTextMuted"
-                    android:textSize="12.5sp"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
                     android:lineSpacingExtra="2dp" />
             </LinearLayout>
 
@@ -105,9 +112,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="18dp"
-                android:layout_marginBottom="14dp">
+                android:background="@drawable/bg_nova_card"
+                android:padding="20dp"
+                android:layout_marginBottom="12dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -118,8 +125,8 @@
                     <ImageView
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:background="@drawable/bg_jarvis_avatar"
-                        android:padding="8dp"
+                        android:background="@drawable/bg_set_icon_tile"
+                        android:padding="9dp"
                         android:src="@drawable/ic_mic_jarvis"
                         app:tint="?attr/themeAccent" />
 
@@ -133,27 +140,37 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Microphone Access"
+                            android:text="Microphone access"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                            android:textSize="17sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600"
+                            android:maxLines="2" />
 
                         <TextView
                             android:id="@+id/tvStatusMic"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="Checking..."
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="12sp" />
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
                     </LinearLayout>
 
                     <Button
                         android:id="@+id/btnGrantMic"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="8dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingHorizontal="18dp"
                         android:text="Grant"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
+                        android:textAllCaps="false"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
                         android:background="@drawable/bg_jarvis_pill_button"
                         android:textColor="?attr/themeOnAccent" />
                 </LinearLayout>
@@ -161,10 +178,12 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="2dp"
+                    android:fontFamily="@font/inter"
                     android:text="Required for voice conversations, voice recognition, and real-time audio interaction with Jarvis."
                     android:textColor="?attr/themeTextMuted"
-                    android:textSize="12sp" />
+                    android:textSize="13sp" />
             </LinearLayout>
 
             <!-- Card 2: Location -->
@@ -173,9 +192,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="18dp"
-                android:layout_marginBottom="14dp">
+                android:background="@drawable/bg_nova_card"
+                android:padding="20dp"
+                android:layout_marginBottom="12dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -186,8 +205,8 @@
                     <ImageView
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:background="@drawable/bg_jarvis_avatar"
-                        android:padding="8dp"
+                        android:background="@drawable/bg_set_icon_tile"
+                        android:padding="9dp"
                         android:src="@drawable/ic_weather_sun"
                         app:tint="?attr/themeAccent" />
 
@@ -201,27 +220,37 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Precise Location"
+                            android:text="Precise location"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                            android:textSize="17sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600"
+                            android:maxLines="2" />
 
                         <TextView
                             android:id="@+id/tvStatusLocation"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="Checking..."
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="12sp" />
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
                     </LinearLayout>
 
                     <Button
                         android:id="@+id/btnGrantLocation"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="8dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingHorizontal="18dp"
                         android:text="Grant"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
+                        android:textAllCaps="false"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
                         android:background="@drawable/bg_jarvis_pill_button"
                         android:textColor="?attr/themeOnAccent" />
                 </LinearLayout>
@@ -229,10 +258,12 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="2dp"
+                    android:fontFamily="@font/inter"
                     android:text="Required to detect your exact city/locality and provide accurate real-time weather and temperature reports on Home screen."
                     android:textColor="?attr/themeTextMuted"
-                    android:textSize="12sp" />
+                    android:textSize="13sp" />
             </LinearLayout>
 
             <!-- Card 3: Notification -->
@@ -241,9 +272,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="18dp"
-                android:layout_marginBottom="14dp">
+                android:background="@drawable/bg_nova_card"
+                android:padding="20dp"
+                android:layout_marginBottom="12dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -254,8 +285,8 @@
                     <ImageView
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:background="@drawable/bg_jarvis_avatar"
-                        android:padding="8dp"
+                        android:background="@drawable/bg_set_icon_tile"
+                        android:padding="9dp"
                         android:src="@drawable/ic_nav_bell"
                         app:tint="?attr/themeAccent" />
 
@@ -271,25 +302,35 @@
                             android:layout_height="wrap_content"
                             android:text="Notifications"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                            android:textSize="17sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600"
+                            android:maxLines="2" />
 
                         <TextView
                             android:id="@+id/tvStatusNotification"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="Checking..."
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="12sp" />
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
                     </LinearLayout>
 
                     <Button
                         android:id="@+id/btnGrantNotification"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="8dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingHorizontal="18dp"
                         android:text="Grant"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
+                        android:textAllCaps="false"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
                         android:background="@drawable/bg_jarvis_pill_button"
                         android:textColor="?attr/themeOnAccent" />
                 </LinearLayout>
@@ -297,10 +338,12 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="2dp"
+                    android:fontFamily="@font/inter"
                     android:text="Required for reminders, schedule alerts, and continuous background voice service notifications."
                     android:textColor="?attr/themeTextMuted"
-                    android:textSize="12sp" />
+                    android:textSize="13sp" />
             </LinearLayout>
 
             <!-- Card 4: System Overlay -->
@@ -309,9 +352,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="18dp"
-                android:layout_marginBottom="28dp">
+                android:background="@drawable/bg_nova_card"
+                android:padding="20dp"
+                android:layout_marginBottom="12dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -322,8 +365,8 @@
                     <ImageView
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:background="@drawable/bg_jarvis_avatar"
-                        android:padding="8dp"
+                        android:background="@drawable/bg_set_icon_tile"
+                        android:padding="9dp"
                         android:src="@drawable/ic_nav_settings"
                         app:tint="?attr/themeAccent" />
 
@@ -337,27 +380,37 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Display Over Other Apps"
+                            android:text="Display over other apps"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                            android:textSize="17sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600"
+                            android:maxLines="2" />
 
                         <TextView
                             android:id="@+id/tvStatusOverlay"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="Checking..."
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="12sp" />
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
                     </LinearLayout>
 
                     <Button
                         android:id="@+id/btnGrantOverlay"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="8dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingHorizontal="18dp"
                         android:text="Grant"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
+                        android:textAllCaps="false"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
                         android:background="@drawable/bg_jarvis_pill_button"
                         android:textColor="?attr/themeOnAccent" />
                 </LinearLayout>
@@ -365,10 +418,12 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="2dp"
+                    android:fontFamily="@font/inter"
                     android:text="Optional: Allows Jarvis floating bubble to appear anywhere on your phone for quick one-tap voice commands."
                     android:textColor="?attr/themeTextMuted"
-                    android:textSize="12sp" />
+                    android:textSize="13sp" />
             </LinearLayout>
 
             <!-- Card 5: Accessibility Service -->
@@ -377,9 +432,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="18dp"
-                android:layout_marginBottom="28dp">
+                android:background="@drawable/bg_nova_card"
+                android:padding="20dp"
+                android:layout_marginBottom="12dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -390,8 +445,8 @@
                     <ImageView
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:background="@drawable/bg_jarvis_avatar"
-                        android:padding="8dp"
+                        android:background="@drawable/bg_set_icon_tile"
+                        android:padding="9dp"
                         android:src="@drawable/ic_checklist_tasks"
                         app:tint="?attr/themeAccent" />
 
@@ -405,27 +460,37 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Accessibility Service"
+                            android:text="Accessibility service"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                            android:textSize="17sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600"
+                            android:maxLines="2" />
 
                         <TextView
                             android:id="@+id/tvStatusAccessibility"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="Checking..."
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="12sp" />
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
                     </LinearLayout>
 
                     <Button
                         android:id="@+id/btnGrantAccessibility"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="8dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingHorizontal="18dp"
                         android:text="Grant"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
+                        android:textAllCaps="false"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
                         android:background="@drawable/bg_jarvis_pill_button"
                         android:textColor="?attr/themeOnAccent" />
                 </LinearLayout>
@@ -433,10 +498,12 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="2dp"
+                    android:fontFamily="@font/inter"
                     android:text="Essential for autonomous AI actions: allows Jarvis to tap buttons, search apps, type messages, and scroll hands-free on your screen."
                     android:textColor="?attr/themeTextMuted"
-                    android:textSize="12sp" />
+                    android:textSize="13sp" />
             </LinearLayout>
 
             <!-- Bottom Action Buttons -->
@@ -444,25 +511,32 @@
                 android:id="@+id/btnGrantAll"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:text="GRANT ALL PERMISSIONS"
+                android:layout_marginTop="8dp"
+                android:text="Grant all permissions"
+                android:textAllCaps="false"
                 android:textColor="?attr/themeOnAccent"
-                android:textSize="14sp"
-                android:textStyle="bold"
+                android:textSize="15sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
                 android:background="@drawable/bg_jarvis_pill_button"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="10dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnOpenSettings"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="48dp"
-                android:text="OPEN SYSTEM APP SETTINGS"
-                android:textColor="?attr/themeAccent"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                app:strokeColor="?attr/themeAccent"
-                app:cornerRadius="16dp" />
+                android:minHeight="50dp"
+                android:text="Open system app settings"
+                android:textAllCaps="false"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="14sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
+                app:backgroundTint="?attr/themeChipBg"
+                app:strokeColor="?attr/themePlateBorder"
+                app:strokeWidth="1dp"
+                app:cornerRadius="26dp" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

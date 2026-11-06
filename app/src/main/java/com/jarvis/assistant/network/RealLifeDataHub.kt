@@ -838,7 +838,7 @@ object RealLifeDataHub {
             } ?: run {
                 targetLat = 28.6139
                 targetLon = 77.2090
-                targetPlace = "Global"
+                targetPlace = "New Delhi (no location fix)"
             }
         }
 
@@ -859,6 +859,7 @@ object RealLifeDataHub {
         try {
             if (GodsEyeActivity.dispatchAction(actionJson)) {
                 Log.i(TAG, "Dispatched radar action directly to running GodsEyeActivity: $actionJson")
+                GodsEyeActivity.bringToFront(context)
             } else {
                 val intent = Intent(context, GodsEyeActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)

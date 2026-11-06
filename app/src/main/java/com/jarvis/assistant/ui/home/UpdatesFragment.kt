@@ -60,7 +60,7 @@ class UpdatesFragment : Fragment() {
         renderSystemReadinessCard(list)
 
         // 2. Section Header: Autonomous Macros
-        renderSectionHeader(list, "AUTONOMOUS MACROS & DIRECTIVES", "Direct UI execution pipelines driven by Accessibility")
+        renderSectionHeader(list, "Autonomous macros", "Direct UI execution pipelines driven by Accessibility")
 
         // 3. Render all installed macros with real execution buttons
         val macros = macroRepository.getAllMacros()
@@ -69,27 +69,62 @@ class UpdatesFragment : Fragment() {
         }
 
         // 4. Section Header: Verified System Capabilities & Catalog
-        renderSectionHeader(list, "CORE SYSTEM CAPABILITIES", "Verified device & OS integration modules")
+        renderSectionHeader(list, "Core capabilities", "Verified device & OS integration modules")
 
         // 5. Render Feature Updates
         renderFeatureUpdates(list)
     }
 
+    // Dark Bento (2026-11-05 bento-all): section title 19sp semibold + muted 13sp subtitle,
+    // cards = bg_nova_card with 18dp padding, buttons = accent pill (primary) / plate pill (secondary).
+    private fun inter(weight: Int): android.graphics.Typeface {
+        val base = androidx.core.content.res.ResourcesCompat.getFont(requireContext(), R.font.inter)
+            ?: android.graphics.Typeface.DEFAULT
+        return android.graphics.Typeface.create(base, weight, false)
+    }
+
+    private fun bentoCard(bottomMarginDp: Int = 12): LinearLayout = LinearLayout(requireContext()).apply {
+        orientation = LinearLayout.VERTICAL
+        background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_nova_card)
+        setPadding(dp(18), dp(18), dp(18), dp(18))
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            bottomMargin = dp(bottomMarginDp)
+        }
+    }
+
+    private fun bentoButton(label: String, primary: Boolean): Button = Button(requireContext()).apply {
+        text = label
+        textSize = 13f
+        isAllCaps = false
+        typeface = inter(600)
+        stateListAnimator = null
+        minHeight = 0
+        minimumHeight = 0
+        setPadding(dp(14), 0, dp(14), 0)
+        if (primary) {
+            background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_jarvis_pill_button)
+            setTextColor(com.jarvis.assistant.util.ThemeManager.onAccentColor(requireContext()))
+        } else {
+            background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_set_chip)
+            setTextColor(themeColor(R.attr.themeTextPrimary))
+        }
+    }
+
     private fun renderSectionHeader(parent: LinearLayout, title: String, subtitle: String) {
         val container = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(0, dp(14), 0, dp(10))
+            setPadding(dp(2), dp(16), 0, dp(10))
         }
         container.addView(TextView(requireContext()).apply {
             text = title
-            textSize = 13f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            setTextColor(themeColor(R.attr.themeAccent))
-            letterSpacing = 0.08f
+            textSize = 19f
+            typeface = inter(600)
+            setTextColor(themeColor(R.attr.themeTextPrimary))
         })
         container.addView(TextView(requireContext()).apply {
             text = subtitle
-            textSize = 12f
+            textSize = 13f
+            typeface = inter(400)
             setTextColor(themeColor(R.attr.themeTextMuted))
             setPadding(0, dp(2), 0, 0)
         })
@@ -97,38 +132,47 @@ class UpdatesFragment : Fragment() {
     }
 
     private fun renderSystemReadinessCard(parent: LinearLayout) {
-        val card = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_jarvis_card)
-            setPadding(dp(16), dp(16), dp(16), dp(16))
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                bottomMargin = dp(8)
-            }
-        }
+        val card = bentoCard(bottomMarginDp = 8)
 
         card.addView(TextView(requireContext()).apply {
-            text = "SYSTEM READINESS & SERVICES"
-            textSize = 12f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            setTextColor(themeColor(R.attr.themeAccent))
-            letterSpacing = 0.06f
+            text = "System readiness"
+            textSize = 18f
+            typeface = inter(600)
+            setTextColor(themeColor(R.attr.themeTextPrimary))
+        })
+        card.addView(TextView(requireContext()).apply {
+            text = "Services Jarvis needs for hands-free actions"
+            textSize = 13f
+            typeface = inter(400)
+            setTextColor(themeColor(R.attr.themeTextMuted))
+            setPadding(0, dp(2), 0, dp(12))
         })
 
         val isAccessEnabled = JarvisAccessibilityService.instance != null
         val tvAccess = TextView(requireContext()).apply {
-            text = if (isAccessEnabled) "• Accessibility Service: ACTIVE (Ready for autonomous actions)"
-                   else "• Accessibility Service: DISABLED (Tap below to enable)"
+            text = if (isAccessEnabled) "\u25CF  Accessibility service \u00B7 Active, ready for autonomous actions"
+                   else "\u25CF  Accessibility service \u00B7 Disabled, tap below to enable"
             textSize = 13f
+            typeface = inter(500)
             setTextColor(if (isAccessEnabled) ContextCompat.getColor(requireContext(), R.color.status_green) else ContextCompat.getColor(requireContext(), R.color.status_amber))
-            setPadding(0, dp(6), 0, dp(4))
+            background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_jarvis_row_item)
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                bottomMargin = dp(8)
+            }
         }
         card.addView(tvAccess)
 
         val tvVoice = TextView(requireContext()).apply {
-            text = "• PocketTTS Engine: Active (Offline 24kHz Hindi/English speech)"
+            text = "\u25CF  PocketTTS engine \u00B7 Offline 24 kHz Hindi / English speech"
             textSize = 13f
+            typeface = inter(500)
             setTextColor(themeColor(R.attr.themeTextSecondary))
-            setPadding(0, 0, 0, dp(8))
+            background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_jarvis_row_item)
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                bottomMargin = dp(14)
+            }
         }
         card.addView(tvVoice)
 
@@ -137,11 +181,9 @@ class UpdatesFragment : Fragment() {
         }
 
         if (!isAccessEnabled) {
-            val btnGrant = Button(requireContext()).apply {
-                text = "GRANT ACCESSIBILITY"
-                textSize = 11f
-                layoutParams = LinearLayout.LayoutParams(0, dp(38), 1f).apply {
-                    marginEnd = dp(6)
+            val btnGrant = bentoButton("Grant accessibility", primary = true).apply {
+                layoutParams = LinearLayout.LayoutParams(0, dp(42), 1f).apply {
+                    marginEnd = dp(8)
                 }
                 setOnClickListener {
                     try {
@@ -152,13 +194,11 @@ class UpdatesFragment : Fragment() {
             btnRow.addView(btnGrant)
         }
 
-        val btnTestTts = Button(requireContext()).apply {
-            text = "TEST POCKET TTS"
-            textSize = 11f
-            layoutParams = LinearLayout.LayoutParams(0, dp(38), 1f)
+        val btnTestTts = bentoButton("Test Pocket TTS", primary = isAccessEnabled).apply {
+            layoutParams = LinearLayout.LayoutParams(0, dp(42), 1f)
             setOnClickListener {
                 PocketTtsEngine.speak("नमस्ते! Jarvis Pocket TTS इंजन बिल्कुल ठीक चल रहा है।", requireContext())
-                Toast.makeText(requireContext(), "Synthesizing test speech…", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Synthesizing test speech\u2026", Toast.LENGTH_SHORT).show()
             }
         }
         btnRow.addView(btnTestTts)
@@ -168,37 +208,29 @@ class UpdatesFragment : Fragment() {
     }
 
     private fun renderMacroCard(parent: LinearLayout, macro: Macro) {
-        val card = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_jarvis_card)
-            setPadding(dp(16), dp(16), dp(16), dp(16))
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                bottomMargin = dp(12)
-            }
-        }
+        val card = bentoCard()
 
         card.addView(TextView(requireContext()).apply {
-            text = macro.name.uppercase()
-            textSize = 14f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            text = macro.name
+            textSize = 18f
+            typeface = inter(600)
             setTextColor(themeColor(R.attr.themeTextPrimary))
         })
 
         card.addView(TextView(requireContext()).apply {
             text = macro.intent
-            textSize = 12f
+            textSize = 13f
+            typeface = inter(400)
             setTextColor(themeColor(R.attr.themeTextMuted))
-            setPadding(0, dp(4), 0, dp(8))
+            setPadding(0, dp(2), 0, dp(14))
         })
 
         val btnRow = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.HORIZONTAL
         }
 
-        val btnRun = Button(requireContext()).apply {
-            text = "EXECUTE MACRO"
-            textSize = 11f
-            layoutParams = LinearLayout.LayoutParams(0, dp(38), 1f).apply {
+        val btnRun = bentoButton("Run macro", primary = true).apply {
+            layoutParams = LinearLayout.LayoutParams(0, dp(42), 1f).apply {
                 marginEnd = dp(8)
             }
             setOnClickListener {
@@ -207,10 +239,8 @@ class UpdatesFragment : Fragment() {
         }
         btnRow.addView(btnRun)
 
-        val btnSteps = Button(requireContext()).apply {
-            text = "VIEW STEPS (${macro.steps.size})"
-            textSize = 11f
-            layoutParams = LinearLayout.LayoutParams(0, dp(38), 1f)
+        val btnSteps = bentoButton("View steps (${macro.steps.size})", primary = false).apply {
+            layoutParams = LinearLayout.LayoutParams(0, dp(42), 1f)
             setOnClickListener {
                 showMacroStepsDialog(macro)
             }
@@ -308,30 +338,30 @@ class UpdatesFragment : Fragment() {
         )
 
         features.forEach { feature ->
-            val card = LinearLayout(requireContext()).apply {
-                orientation = LinearLayout.VERTICAL
-                background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_jarvis_card)
-                setPadding(dp(16), dp(16), dp(16), dp(16))
-                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                    bottomMargin = dp(12)
-                }
-            }
+            val card = bentoCard()
+            // pill badge (dot + feature name) instead of the old accent caps label
             card.addView(TextView(requireContext()).apply {
-                text = feature.feature.uppercase()
-                textSize = 12f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                setTextColor(themeColor(R.attr.themeAccent))
+                text = feature.feature
+                textSize = 11f
+                typeface = inter(600)
+                setTextColor(themeColor(R.attr.themeTextSecondary))
+                background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_set_badge)
+                setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.bg_bento_dot, 0, 0, 0)
+                compoundDrawablePadding = dp(6)
+                setPadding(dp(10), dp(4), dp(10), dp(4))
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             })
             card.addView(TextView(requireContext()).apply {
                 text = feature.title
-                textSize = 14f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                textSize = 18f
+                typeface = inter(600)
                 setTextColor(themeColor(R.attr.themeTextPrimary))
-                setPadding(0, dp(6), 0, dp(4))
+                setPadding(0, dp(10), 0, dp(4))
             })
             card.addView(TextView(requireContext()).apply {
                 text = feature.details
-                textSize = 12f
+                textSize = 13f
+                typeface = inter(400)
                 setTextColor(themeColor(R.attr.themeTextMuted))
                 setLineSpacing(dp(2).toFloat(), 1f)
             })

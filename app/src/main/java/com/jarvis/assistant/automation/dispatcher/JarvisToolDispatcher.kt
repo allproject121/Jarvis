@@ -1086,7 +1086,8 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
                     "gods_eye_get_subsea_cables",
                     "gods_eye_get_public_transit",
                     "gods_eye_start_auto_tour",
-                    "gods_eye_select_camera" -> {
+                    "gods_eye_select_camera",
+                    "gods_eye_command" -> {
                         val mcpResult = com.jarvis.assistant.ui.godseye.GodsEyeMcpClient.executeTool(name, args)
                         val ok = mcpResult.optBoolean("success", false)
                         val viewUrl = mcpResult.optString("view_url", "")
@@ -2696,6 +2697,47 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
             tools.addAll(mcpManager.getMcpToolSchemas())
         } catch (_: Exception) {}
 
+        // God's Eye globe. Only Gemini Live used to declare these, so text chat, Hermes and the
+        // offline brain were told about the globe in the prompt but could never call it.
+        tool(
+            name = "open_gods_eye_view",
+            description = "Opens the God's Eye 3D globe and flies to a place (city, country, landmark or lat/lon), optionally turning layers on.",
+            properties = JSONObject().apply {
+                put("location", JSONObject().put("type", "string").put("description", "Place to show, e.g. 'Delhi', 'Ukraine', 'Eiffel Tower'"))
+                put("lat", JSONObject().put("type", "number"))
+                put("lon", JSONObject().put("type", "number"))
+                put("layers", JSONObject().put("type", "string").put("description", "Comma list: flights, military, ships, cctv, satellites, earthquakes, fires, weather, cyclones, launches, cables, datacenters, dams, traffic, transit"))
+                put("style", JSONObject().put("type", "string").put("description", "normal, crt, nvg, flir, anime, noir, snow"))
+            },
+            required = emptyList()
+        )
+        tool(
+            name = "gods_eye_control_layers",
+            description = "Turns God's Eye globe layers on or off, or changes its visual style.",
+            properties = JSONObject().apply {
+                put("enable", JSONObject().put("type", "string").put("description", "Comma list of layers to turn on ('all' = every layer)"))
+                put("disable", JSONObject().put("type", "string").put("description", "Comma list of layers to turn off ('all' = clear)"))
+                put("style", JSONObject().put("type", "string"))
+            },
+            required = emptyList()
+        )
+        tool(
+            name = "gods_eye_inspect_globe",
+            description = "Reads what the God's Eye globe is showing right now: place, layers on with counts, and the aircraft / ship / camera the user tapped.",
+            properties = JSONObject(),
+            required = emptyList()
+        )
+        tool(
+            name = "gods_eye_command",
+            description = "Runs a God's Eye console command and returns its result. Commands: fly_to_location {query}, track_entity {query, layerId}, stop_tracking, select_nearest_aircraft {locationQuery}, analyst_query {layers, limit} (counts / lists of loaded flights, ships, fires, quakes), get_entity_context {scope}, control_cctv {action, cameraQuery}, set_visual_style {style}, set_map_stack {stack}, zoom_to_globe, adjust_camera_zoom {direction}, frame_overhead {target}, next_iss_pass, annotate_map, control_radio {action}.",
+            properties = JSONObject().apply {
+                put("command", JSONObject().put("type", "string").put("description", "Command name, e.g. fly_to_location"))
+                // A JSON string, not an object: Gemini rejects OBJECT parameters without declared properties.
+                put("args", JSONObject().put("type", "string").put("description", "Command arguments as JSON, e.g. {\"query\": \"Mumbai\"}"))
+            },
+            required = listOf("command")
+        )
+
         // Maya feature tool packs: only the CORE set is shown (built-in names win on collision).
         // The other ~250 stay reachable through find_tool + run_tool; showing them all overloaded
         // Gemini's tool choice and blew the offline model's 2K context.
@@ -2725,7 +2767,7 @@ class JarvisToolDispatcher private constructor(private val context: Context) {
         val wanted = listOf(
             "set_flashlight", "set_volume", "open_app", "call_contact", "send_whatsapp_message",
             "whatsapp_delete_message", "whatsapp_delete_sent_message", "set_reminder",
-            "get_battery_status", "set_wifi", "get_weather", "search_web"
+            "get_battery_status", "set_wifi", "get_weather", "search_web", "open_gods_eye_view"
         )
         val byName = getAvailableToolSchemas(includeDisabled = false)
             .associateBy { it.optJSONObject("function")?.optString("name").orEmpty() }

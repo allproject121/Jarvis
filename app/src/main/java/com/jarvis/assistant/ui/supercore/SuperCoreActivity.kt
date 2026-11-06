@@ -73,32 +73,32 @@ class SuperCoreActivity : AppCompatActivity() {
         // 1. Check Default Assistant Status
         val isDefaultAssist = isJarvisDefaultAssistant()
         if (isDefaultAssist) {
-            binding.tvDefaultAssistantBadge.text = "ACTIVE"
-            binding.tvDefaultAssistantBadge.setTextColor(Color.parseColor("#10B981"))
-            binding.tvDefaultAssistantBadge.setBackgroundResource(R.drawable.bg_jarvis_status_badge_green)
-            binding.btnSetDefaultAssistant.text = "JARVIS IS DEFAULT ASSISTANT ✓"
+            binding.tvDefaultAssistantBadge.text = "Active"
+            binding.tvDefaultAssistantBadge.setTextColor(ThemeManager.attrColor(this, R.attr.themeSuccess, Color.parseColor("#10B981")))
+            binding.tvDefaultAssistantBadge.setBackgroundResource(R.drawable.bg_set_badge)
+            binding.btnSetDefaultAssistant.text = "Jarvis is your default assistant ✓"
             binding.btnSetDefaultAssistant.isEnabled = false
         } else {
-            binding.tvDefaultAssistantBadge.text = "NOT SET"
-            binding.tvDefaultAssistantBadge.setTextColor(ThemeManager.attrColor(this, R.attr.themeAccent, ContextCompat.getColor(this, R.color.primary_cyan)))
-            binding.tvDefaultAssistantBadge.setBackgroundResource(R.drawable.bg_jarvis_status_badge)
-            binding.btnSetDefaultAssistant.text = "SET JARVIS AS DEFAULT ASSISTANT"
+            binding.tvDefaultAssistantBadge.text = "Not set"
+            binding.tvDefaultAssistantBadge.setTextColor(ThemeManager.attrColor(this, R.attr.themeTextSecondary, ContextCompat.getColor(this, R.color.primary_cyan)))
+            binding.tvDefaultAssistantBadge.setBackgroundResource(R.drawable.bg_set_badge)
+            binding.btnSetDefaultAssistant.text = "Set Jarvis as default assistant"
             binding.btnSetDefaultAssistant.isEnabled = true
         }
 
         // 2. Check Notification Listener Status
         val isNotifEnabled = JarvisNotificationListener.isNotificationServiceEnabled(this)
         if (isNotifEnabled) {
-            binding.tvNotificationListenerBadge.text = "ACTIVE"
-            binding.tvNotificationListenerBadge.setTextColor(Color.parseColor("#10B981"))
-            binding.tvNotificationListenerBadge.setBackgroundResource(R.drawable.bg_jarvis_status_badge_green)
-            binding.btnGrantNotificationAccess.text = "NOTIFICATION ACCESS GRANTED ✓"
+            binding.tvNotificationListenerBadge.text = "Active"
+            binding.tvNotificationListenerBadge.setTextColor(ThemeManager.attrColor(this, R.attr.themeSuccess, Color.parseColor("#10B981")))
+            binding.tvNotificationListenerBadge.setBackgroundResource(R.drawable.bg_set_badge)
+            binding.btnGrantNotificationAccess.text = "Notification access granted ✓"
             binding.btnGrantNotificationAccess.isEnabled = false
         } else {
-            binding.tvNotificationListenerBadge.text = "PERMISSION NEEDED"
-            binding.tvNotificationListenerBadge.setTextColor(Color.parseColor("#F59E0B"))
-            binding.tvNotificationListenerBadge.setBackgroundResource(R.drawable.bg_jarvis_status_badge)
-            binding.btnGrantNotificationAccess.text = "GRANT NOTIFICATION ACCESS"
+            binding.tvNotificationListenerBadge.text = "Needs permission"
+            binding.tvNotificationListenerBadge.setTextColor(ThemeManager.attrColor(this, R.attr.themeWarning, Color.parseColor("#F59E0B")))
+            binding.tvNotificationListenerBadge.setBackgroundResource(R.drawable.bg_set_badge)
+            binding.btnGrantNotificationAccess.text = "Grant notification access"
             binding.btnGrantNotificationAccess.isEnabled = true
         }
 

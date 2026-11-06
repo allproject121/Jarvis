@@ -1,510 +1,657 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento theme picker sheet (2026-11-05 bento-all): page title + muted subtitle,
+     "App themes" bento card with theme rows as inner plates, "Custom colour" bento card. -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/bg_jarvis_dock"
-    android:paddingStart="20dp"
-    android:paddingEnd="20dp"
-    android:paddingTop="20dp"
-    android:paddingBottom="32dp">
+    android:background="@drawable/bg_bento_x_sheet"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="24dp">
 
-    <!-- Handle Bar -->
+    <!-- Handle -->
     <View
-        android:layout_width="40dp"
+        android:layout_width="36dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:background="@drawable/bg_jarvis_chip"
-        android:layout_marginBottom="16dp" />
+        android:background="@drawable/bg_bento_x_handle"
+        android:layout_marginBottom="18dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Select App Theme"
+        android:text="Theme"
         android:textColor="?attr/themeTextPrimary"
-        android:textSize="20sp"
-        android:fontFamily="sans-serif-medium"
-        android:textStyle="bold" />
+        android:textSize="26sp"
+        android:fontFamily="@font/inter"
+        android:textFontWeight="600"
+        android:letterSpacing="-0.02" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Restyles the entire app and the neural orb"
+        android:text="Restyles the entire app and the neural orb."
         android:textColor="?attr/themeTextMuted"
-        android:textSize="12sp"
-        android:fontFamily="sans-serif"
+        android:textSize="13sp"
+        android:fontFamily="@font/inter"
         android:layout_marginTop="2dp"
         android:layout_marginBottom="16dp" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:overScrollMode="never">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Theme 1: Light -->
+            <!-- ===== App themes card ===== -->
             <LinearLayout
-                android:id="@+id/cardThemeNova"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
-                android:layout_marginBottom="10dp">
-
-                <View
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:background="@drawable/bg_jarvis_chip"
-                    android:backgroundTint="#A78BFA" />
+                android:orientation="vertical"
+                android:background="@drawable/bg_set_card"
+                android:padding="18dp">
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="14dp">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Nova (new look)"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="15sp"
-                        android:fontFamily="@font/inter"
-                        android:textStyle="bold" />
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_set_icon_tile"
+                        android:padding="9dp"
+                        android:src="@drawable/ic_settings_palette"
+                        android:contentDescription="@null"
+                        app:tint="?attr/themeAccent" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="21st.dev style · zinc black · violet glow · Inter"
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:fontFamily="@font/inter" />
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="App themes"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="Every screen follows the theme you pick"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
                 </LinearLayout>
 
-                <ImageView
-                    android:id="@+id/ivCheckNova"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_checklist_tasks"
-                    app:tint="?attr/themeAccent" />
-            </LinearLayout>
-            <LinearLayout
-                android:id="@+id/cardThemeLight"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
-                android:layout_marginBottom="10dp">
-
-                <View
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:background="@drawable/bg_jarvis_chip"
-                    android:backgroundTint="#F4F6FB" />
-
+                <!-- Theme: Nova -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:id="@+id/cardThemeNova"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="14dp">
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:minHeight="60dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Light"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="15sp"
-                        android:fontFamily="sans-serif-medium"
-                        android:textStyle="bold" />
+                    <View
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_bento_x_sht_swatch"
+                        android:backgroundTint="#A78BFA"
+                        android:foreground="@drawable/bg_bento_x_sht_swatch_ring" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Crisp studio white • Blue &amp; Violet accents"
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:fontFamily="sans-serif" />
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Nova (new look)"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="15sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Zinc black · violet glow · Inter"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/inter"
+                            android:maxLines="2"
+                            android:ellipsize="end" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/ivCheckNova"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/bg_bento_x_sht_check"
+                        android:contentDescription="Selected"
+                        app:tint="?attr/themeAccent" />
                 </LinearLayout>
 
-                <ImageView
-                    android:id="@+id/ivCheckLight"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_checklist_tasks"
-                    app:tint="?attr/themeAccent" />
-            </LinearLayout>
-
-            <!-- Theme 2: Dark -->
-            <LinearLayout
-                android:id="@+id/cardThemeDark"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
-                android:layout_marginBottom="10dp">
-
-                <View
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:background="@drawable/bg_jarvis_chip"
-                    android:backgroundTint="#0A0D1F" />
-
+                <!-- Theme: Light -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:id="@+id/cardThemeLight"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="14dp">
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:minHeight="60dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Dark"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="15sp"
-                        android:fontFamily="sans-serif-medium"
-                        android:textStyle="bold" />
+                    <View
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_bento_x_sht_swatch"
+                        android:backgroundTint="#F4F6FB"
+                        android:foreground="@drawable/bg_bento_x_sht_swatch_ring" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Deep midnight cosmic • Neon cyan &amp; purple"
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:fontFamily="sans-serif" />
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Light"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="15sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Crisp studio white · blue &amp; violet accents"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/inter"
+                            android:maxLines="2"
+                            android:ellipsize="end" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/ivCheckLight"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/bg_bento_x_sht_check"
+                        android:contentDescription="Selected"
+                        app:tint="?attr/themeAccent" />
                 </LinearLayout>
 
-                <ImageView
-                    android:id="@+id/ivCheckDark"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_checklist_tasks"
-                    app:tint="?attr/themeAccent" />
-            </LinearLayout>
-
-            <!-- Theme 3: Red -->
-            <LinearLayout
-                android:id="@+id/cardThemeRed"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
-                android:layout_marginBottom="10dp">
-
-                <View
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:background="@drawable/bg_jarvis_chip"
-                    android:backgroundTint="#2A0A10" />
-
+                <!-- Theme: Dark -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:id="@+id/cardThemeDark"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="14dp">
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:minHeight="60dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Red"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="15sp"
-                        android:fontFamily="sans-serif-medium"
-                        android:textStyle="bold" />
+                    <View
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_bento_x_sht_swatch"
+                        android:backgroundTint="#0A0D1F"
+                        android:foreground="@drawable/bg_bento_x_sht_swatch_ring" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Obsidian crimson • Laser coral &amp; flame"
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:fontFamily="sans-serif" />
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Dark"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="15sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Deep midnight · cyan &amp; purple accents"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/inter"
+                            android:maxLines="2"
+                            android:ellipsize="end" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/ivCheckDark"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/bg_bento_x_sht_check"
+                        android:contentDescription="Selected"
+                        app:tint="?attr/themeAccent" />
                 </LinearLayout>
 
-                <ImageView
-                    android:id="@+id/ivCheckRed"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_checklist_tasks"
-                    app:tint="?attr/themeAccent" />
-            </LinearLayout>
-
-            <!-- Theme 4: Sunset -->
-            <LinearLayout
-                android:id="@+id/cardThemeSunset"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
-                android:layout_marginBottom="10dp">
-
-                <View
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:background="@drawable/bg_jarvis_chip"
-                    android:backgroundTint="#FFE7E1" />
-
+                <!-- Theme: Red -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:id="@+id/cardThemeRed"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="14dp">
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:minHeight="60dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Sunset"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="15sp"
-                        android:fontFamily="sans-serif-medium"
-                        android:textStyle="bold" />
+                    <View
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_bento_x_sht_swatch"
+                        android:backgroundTint="#2A0A10"
+                        android:foreground="@drawable/bg_bento_x_sht_swatch_ring" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Warm pastel peach • Coral &amp; magenta twilight"
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:fontFamily="sans-serif" />
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Red"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="15sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Obsidian crimson · Laser coral &amp; flame"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/inter"
+                            android:maxLines="2"
+                            android:ellipsize="end" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/ivCheckRed"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/bg_bento_x_sht_check"
+                        android:contentDescription="Selected"
+                        app:tint="?attr/themeAccent" />
                 </LinearLayout>
 
-                <ImageView
-                    android:id="@+id/ivCheckSunset"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_checklist_tasks"
-                    app:tint="?attr/themeAccent" />
-            </LinearLayout>
-
-            <!-- Theme 5: Stealth OLED Pure Black -->
-            <LinearLayout
-                android:id="@+id/cardThemeStealth"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
-                android:layout_marginBottom="10dp">
-
-                <View
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:background="@drawable/bg_jarvis_chip"
-                    android:backgroundTint="#000000" />
-
+                <!-- Theme: Sunset -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:id="@+id/cardThemeSunset"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="14dp">
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:minHeight="60dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Stealth OLED Black"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="15sp"
-                        android:fontFamily="sans-serif-medium"
-                        android:textStyle="bold" />
+                    <View
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_bento_x_sht_swatch"
+                        android:backgroundTint="#FFE7E1"
+                        android:foreground="@drawable/bg_bento_x_sht_swatch_ring" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Pure pitch black • Minimalist silver glass specular"
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:fontFamily="sans-serif" />
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sunset"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="15sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Warm pastel peach · Coral &amp; magenta twilight"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/inter"
+                            android:maxLines="2"
+                            android:ellipsize="end" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/ivCheckSunset"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/bg_bento_x_sht_check"
+                        android:contentDescription="Selected"
+                        app:tint="?attr/themeAccent" />
                 </LinearLayout>
 
-                <ImageView
-                    android:id="@+id/ivCheckStealth"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_checklist_tasks"
-                    app:tint="?attr/themeAccent" />
-            </LinearLayout>
-
-            <!-- Theme 5b: AndroLLM Night -->
-            <LinearLayout
-                android:id="@+id/cardThemeAndroNight"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
-                android:layout_marginBottom="10dp">
-
-                <View
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:background="@drawable/bg_jarvis_chip"
-                    android:backgroundTint="#7A5CFF" />
-
+                <!-- Theme: Stealth OLED -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:id="@+id/cardThemeStealth"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="14dp">
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:minHeight="60dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="AndroLLM Night"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="15sp"
-                        android:fontFamily="sans-serif-medium"
-                        android:textStyle="bold" />
+                    <View
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_bento_x_sht_swatch"
+                        android:backgroundTint="#000000"
+                        android:foreground="@drawable/bg_bento_x_sht_swatch_ring" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Blackout desk • Aurora violet accent"
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:fontFamily="sans-serif" />
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Stealth OLED Black"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="15sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Pure pitch black · Minimalist silver glass specular"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/inter"
+                            android:maxLines="2"
+                            android:ellipsize="end" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/ivCheckStealth"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/bg_bento_x_sht_check"
+                        android:contentDescription="Selected"
+                        app:tint="?attr/themeAccent" />
                 </LinearLayout>
 
-                <ImageView
-                    android:id="@+id/ivCheckAndroNight"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_checklist_tasks"
-                    app:tint="?attr/themeAccent" />
-            </LinearLayout>
-
-            <!-- Theme 5c: AndroLLM Parchment -->
-            <LinearLayout
-                android:id="@+id/cardThemeAndroParchment"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
-                android:layout_marginBottom="10dp">
-
-                <View
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:background="@drawable/bg_jarvis_chip"
-                    android:backgroundTint="#D97757" />
-
+                <!-- Theme: AndroLLM Night -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:id="@+id/cardThemeAndroNight"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="14dp">
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:minHeight="60dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="AndroLLM Parchment"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="15sp"
-                        android:fontFamily="sans-serif-medium"
-                        android:textStyle="bold" />
+                    <View
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_bento_x_sht_swatch"
+                        android:backgroundTint="#7A5CFF"
+                        android:foreground="@drawable/bg_bento_x_sht_swatch_ring" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Daylight parchment • Terracotta ink"
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:fontFamily="sans-serif" />
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="AndroLLM Night"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="15sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Blackout desk · Aurora violet accent"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/inter"
+                            android:maxLines="2"
+                            android:ellipsize="end" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/ivCheckAndroNight"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/bg_bento_x_sht_check"
+                        android:contentDescription="Selected"
+                        app:tint="?attr/themeAccent" />
                 </LinearLayout>
 
-                <ImageView
-                    android:id="@+id/ivCheckAndroParchment"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_checklist_tasks"
-                    app:tint="?attr/themeAccent" />
-            </LinearLayout>
-
-            <!-- Theme 5d: Maya (companion look) -->
-            <LinearLayout
-                android:id="@+id/cardThemeMaya"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
-                android:layout_marginBottom="10dp">
-
-                <View
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:background="@drawable/bg_jarvis_chip"
-                    android:backgroundTint="@color/maya_primary" />
-
+                <!-- Theme: AndroLLM Parchment -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:id="@+id/cardThemeAndroParchment"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="14dp">
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:minHeight="60dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Maya"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="15sp"
-                        android:fontFamily="@font/inter"
-                        android:textStyle="bold" />
+                    <View
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_bento_x_sht_swatch"
+                        android:backgroundTint="#D97757"
+                        android:foreground="@drawable/bg_bento_x_sht_swatch_ring" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Charcoal-navy • Electric-blue neon • Character stage on Home"
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="12sp"
-                        android:fontFamily="@font/inter" />
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="AndroLLM Parchment"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="15sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Daylight parchment · Terracotta ink"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/inter"
+                            android:maxLines="2"
+                            android:ellipsize="end" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/ivCheckAndroParchment"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/bg_bento_x_sht_check"
+                        android:contentDescription="Selected"
+                        app:tint="?attr/themeAccent" />
                 </LinearLayout>
 
-                <ImageView
-                    android:id="@+id/ivCheckMaya"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_checklist_tasks"
-                    app:tint="?attr/themeAccent" />
+                <!-- Theme: Maya -->
+                <LinearLayout
+                    android:id="@+id/cardThemeMaya"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:minHeight="60dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
+
+                    <View
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_bento_x_sht_swatch"
+                        android:backgroundTint="@color/maya_primary"
+                        android:foreground="@drawable/bg_bento_x_sht_swatch_ring" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Maya"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="15sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Charcoal-navy · electric blue · character stage on Home"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/inter"
+                            android:maxLines="2"
+                            android:ellipsize="end" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/ivCheckMaya"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/bg_bento_x_sht_check"
+                        android:contentDescription="Selected"
+                        app:tint="?attr/themeAccent" />
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- Theme 6: Custom Background Colour -->
+            <!-- ===== Custom colour card ===== -->
             <LinearLayout
                 android:id="@+id/cardThemeCustom"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
                 android:orientation="vertical"
-                android:background="@drawable/bg_jarvis_card"
-                android:padding="16dp"
-                android:layout_marginBottom="10dp">
+                android:background="@drawable/bg_set_card"
+                android:padding="18dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -514,167 +661,234 @@
 
                     <View
                         android:id="@+id/viewCustomPreview"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:background="@drawable/bg_jarvis_chip"
-                        android:backgroundTint="#8B5CF6" />
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_bento_x_sht_swatch"
+                        android:backgroundTint="#8B5CF6"
+                        android:foreground="@drawable/bg_bento_x_sht_swatch_ring" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="14dp">
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="10dp"
+                        android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Custom Background"
+                            android:text="Custom colour"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:fontFamily="sans-serif-medium"
-                            android:textStyle="bold" />
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
 
                         <TextView
                             android:id="@+id/tvCustomSubtitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
                             android:text="Choose any HEX colour (#RRGGBB)"
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="12sp"
-                            android:fontFamily="sans-serif" />
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
                     </LinearLayout>
 
                     <ImageView
                         android:id="@+id/ivCheckCustom"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_checklist_tasks"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/bg_bento_x_sht_check"
+                        android:contentDescription="Selected"
                         app:tint="?attr/themeAccent" />
                 </LinearLayout>
 
-                <!-- Custom Hex Input & Presets -->
+                <!-- Hex input + Apply -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginTop="12dp">
+                    android:layout_marginTop="16dp">
 
                     <EditText
                         android:id="@+id/etCustomHex"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="48dp"
                         android:layout_weight="1"
                         android:hint="#1E1B4B"
                         android:text="#1E1B4B"
                         android:textColor="?attr/themeTextPrimary"
                         android:textColorHint="?attr/themeTextMuted"
-                        android:textSize="14sp"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
-                        android:background="@drawable/bg_jarvis_card"
+                        android:textSize="15sp"
+                        android:fontFamily="@font/inter"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:background="@drawable/bg_bento_x_input"
+                        android:importantForAutofill="no"
+                        android:inputType="textNoSuggestions"
                         android:singleLine="true" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnApplyCustom"
                         android:layout_width="wrap_content"
-                        android:layout_height="44dp"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="10dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:minWidth="88dp"
                         android:text="Apply"
+                        android:textAllCaps="false"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
                         android:textColor="?attr/themeOnAccent"
                         app:backgroundTint="?attr/themeAccentFill"
-                        app:cornerRadius="10dp"
-                        android:layout_marginStart="10dp" />
+                        app:cornerRadius="24dp" />
                 </LinearLayout>
 
-                <!-- Quick Preset Swatches -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center"
-                    android:layout_marginTop="12dp">
+                    android:layout_marginTop="16dp"
+                    android:text="Quick presets"
+                    android:textColor="?attr/themeTextSecondary"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
-                    <View
-                        android:id="@+id/swatchRed"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/bg_jarvis_chip"
-                        android:backgroundTint="#FF4D5E" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
 
-                    <View
-                        android:id="@+id/swatch1"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/bg_jarvis_chip"
-                        android:backgroundTint="#F59E0B" />
+                        <View
+                            android:id="@+id/swatchRed"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="@drawable/bg_bento_x_sht_swatch"
+                            android:backgroundTint="#FF4D5E"
+                            android:foreground="@drawable/bg_bento_x_sht_swatch_ring"
+                            android:contentDescription="Red"
+                            android:clickable="true"
+                            android:focusable="true" />
 
-                    <View
-                        android:id="@+id/swatch2"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/bg_jarvis_chip"
-                        android:backgroundTint="#10B981" />
+                        <View
+                            android:id="@+id/swatch1"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="@drawable/bg_bento_x_sht_swatch"
+                            android:backgroundTint="#F59E0B"
+                            android:foreground="@drawable/bg_bento_x_sht_swatch_ring"
+                            android:contentDescription="Gold"
+                            android:clickable="true"
+                            android:focusable="true" />
 
-                    <View
-                        android:id="@+id/swatch3"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/bg_jarvis_chip"
-                        android:backgroundTint="#EC4899" />
+                        <View
+                            android:id="@+id/swatch2"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="@drawable/bg_bento_x_sht_swatch"
+                            android:backgroundTint="#10B981"
+                            android:foreground="@drawable/bg_bento_x_sht_swatch_ring"
+                            android:contentDescription="Emerald"
+                            android:clickable="true"
+                            android:focusable="true" />
 
-                    <View
-                        android:id="@+id/swatch4"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/bg_jarvis_chip"
-                        android:backgroundTint="#FF7700" />
+                        <View
+                            android:id="@+id/swatch3"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="@drawable/bg_bento_x_sht_swatch"
+                            android:backgroundTint="#EC4899"
+                            android:foreground="@drawable/bg_bento_x_sht_swatch_ring"
+                            android:contentDescription="Pink"
+                            android:clickable="true"
+                            android:focusable="true" />
 
-                    <View
-                        android:id="@+id/swatch5"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/bg_jarvis_chip"
-                        android:backgroundTint="#6366F1" />
+                        <View
+                            android:id="@+id/swatch4"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/bg_bento_x_sht_swatch"
+                            android:backgroundTint="#FF7700"
+                            android:foreground="@drawable/bg_bento_x_sht_swatch_ring"
+                            android:contentDescription="Orange"
+                            android:clickable="true"
+                            android:focusable="true" />
+                    </LinearLayout>
 
-                    <View
-                        android:id="@+id/swatch6"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/bg_jarvis_chip"
-                        android:backgroundTint="#22D3EE" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
 
-                    <View
-                        android:id="@+id/swatchPurple"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/bg_jarvis_chip"
-                        android:backgroundTint="#C084FC" />
+                        <View
+                            android:id="@+id/swatch5"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="@drawable/bg_bento_x_sht_swatch"
+                            android:backgroundTint="#6366F1"
+                            android:foreground="@drawable/bg_bento_x_sht_swatch_ring"
+                            android:contentDescription="Indigo"
+                            android:clickable="true"
+                            android:focusable="true" />
 
-                    <View
-                        android:id="@+id/swatchWhite"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/bg_jarvis_chip"
-                        android:backgroundTint="#FFFFFF" />
+                        <View
+                            android:id="@+id/swatch6"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="@drawable/bg_bento_x_sht_swatch"
+                            android:backgroundTint="#22D3EE"
+                            android:foreground="@drawable/bg_bento_x_sht_swatch_ring"
+                            android:contentDescription="Cyan"
+                            android:clickable="true"
+                            android:focusable="true" />
 
-                    <View
-                        android:id="@+id/swatchBlack"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/bg_jarvis_chip"
-                        android:backgroundTint="#000000" />
-                </LinearLayout>
+                        <View
+                            android:id="@+id/swatchPurple"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="@drawable/bg_bento_x_sht_swatch"
+                            android:backgroundTint="#C084FC"
+                            android:foreground="@drawable/bg_bento_x_sht_swatch_ring"
+                            android:contentDescription="Amethyst"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <View
+                            android:id="@+id/swatchWhite"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="@drawable/bg_bento_x_sht_swatch"
+                            android:backgroundTint="#FFFFFF"
+                            android:foreground="@drawable/bg_bento_x_sht_swatch_ring"
+                            android:contentDescription="White"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <View
+                            android:id="@+id/swatchBlack"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/bg_bento_x_sht_swatch"
+                            android:backgroundTint="#000000"
+                            android:foreground="@drawable/bg_bento_x_sht_swatch_ring"
+                            android:contentDescription="Black"
+                            android:clickable="true"
+                            android:focusable="true" />
+                    </LinearLayout>
             </LinearLayout>
 
         </LinearLayout>

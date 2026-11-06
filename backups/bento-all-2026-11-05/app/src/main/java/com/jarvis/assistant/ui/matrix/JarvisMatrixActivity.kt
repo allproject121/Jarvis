@@ -1,0 +1,998 @@
+package com.jarvis.assistant.ui.matrix
+
+import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Bundle
+import android.provider.Settings
+import android.view.View
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import com.jarvis.assistant.JarvisApp
+import com.jarvis.assistant.R
+import com.jarvis.assistant.automation.accessibility.JarvisAccessibilityService
+import com.jarvis.assistant.automation.macro.MacroExecutionResult
+import com.jarvis.assistant.databinding.ActivityJarvisMatrixBinding
+import com.jarvis.assistant.marketing.YouTubeCreatorToolkit
+import com.jarvis.assistant.automation.dynamic.DynamicToolRegistry
+import com.jarvis.assistant.automation.dynamic.DynamicTool
+import com.jarvis.assistant.automation.dynamic.DynamicScriptExecutor
+import com.jarvis.assistant.connectors.ConnectorStatus
+import com.jarvis.assistant.connectors.AppConnectorsManager
+import com.jarvis.assistant.connectors.AppConnectorsBottomSheet
+import com.jarvis.assistant.ui.settings.AndroLlmPageActivity
+import com.jarvis.assistant.ui.compose.navigation.ComposeRoutes
+import com.jarvis.assistant.util.HudSoundManager
+import com.jarvis.assistant.util.ThemeManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+class JarvisMatrixActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityJarvisMatrixBinding
+    private val app by lazy { application as JarvisApp }
+    private var currentGeneratedBitmap: android.graphics.Bitmap? = null
+    private var appliedThemeKey: String = ""
+    private var appliedCustomHex: String = ""
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        ThemeManager.applyTheme(this)
+        appliedThemeKey = app.preferences.appTheme
+        appliedCustomHex = app.preferences.customThemeColor
+        binding = ActivityJarvisMatrixBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        ThemeManager.applyDynamicBackground(binding.root)
+
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            val sysBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            val density = resources.displayMetrics.density
+            val safeTop = if (sysBars.top > 0) sysBars.top else (12 * density).toInt()
+            binding.root.setPadding(sysBars.left, safeTop, sysBars.right, sysBars.bottom)
+            insets
+        }
+
+        setupListeners()
+        setupCategoryFilters()
+        setupDynamicToolsSection()
+        setupAppConnectorsSection()
+        setupAgentToolsSection()
+        checkAccessibilityStatus()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val prefs = app.preferences
+        if (appliedThemeKey != prefs.appTheme || appliedCustomHex != prefs.customThemeColor) {
+            appliedThemeKey = prefs.appTheme
+            appliedCustomHex = prefs.customThemeColor
+            recreate()
+            return
+        }
+        checkAccessibilityStatus()
+    }
+
+    private fun setupCategoryFilters() {
+        val dynamicSections = listOf(binding.secDynamicTools)
+        val connectorSections = listOf(binding.secAppConnectors)
+        val agentToolSections = listOf(binding.secAgentTools)
+        val voiceSections = listOf(binding.secPocketTts, binding.secBarcodeScanner)
+        val automationSections = listOf(binding.secAiMacros, binding.secLinuxTermux, binding.secCreatorStudio)
+        val smartHomeSections = listOf(binding.secSmartHome, binding.secStocks)
+        val allSections = dynamicSections + connectorSections + agentToolSections + voiceSections + automationSections + smartHomeSections
+
+        val chips = listOf(
+            binding.chipFilterAll,
+            binding.chipFilterDynamicTools,
+            binding.chipFilterAppConnectors,
+            binding.chipFilterAgentTools,
+            binding.chipFilterVoice,
+            binding.chipFilterAutomation,
+            binding.chipFilterSmartHome
+        )
+
+        fun selectCategory(activeChip: android.widget.TextView, visibleSections: List<View>?) {
+            HudSoundManager.playTapSound()
+            chips.forEach { chip ->
+                chip.setBackgroundResource(com.jarvis.assistant.R.drawable.bg_jarvis_row_item)
+                chip.setTextColor(ThemeManager.attrColor(this, R.attr.themeTextSecondary, ContextCompat.getColor(this, R.color.text_muted)))
+            }
+            activeChip.setBackgroundResource(com.jarvis.assistant.R.drawable.bg_jarvis_pill_button)
+            activeChip.setTextColor(ThemeManager.onAccentColor(this))
+
+            allSections.forEach { section ->
+                section.visibility = if (visibleSections == null || section in visibleSections) View.VISIBLE else View.GONE
+            }
+        }
+
+        binding.chipFilterAll.setOnClickListener { selectCategory(binding.chipFilterAll, null) }
+        binding.chipFilterDynamicTools.setOnClickListener { selectCategory(binding.chipFilterDynamicTools, dynamicSections) }
+        binding.chipFilterAppConnectors.setOnClickListener { selectCategory(binding.chipFilterAppConnectors, connectorSections) }
+        binding.chipFilterAgentTools.setOnClickListener { selectCategory(binding.chipFilterAgentTools, agentToolSections) }
+        binding.chipFilterVoice.setOnClickListener { selectCategory(binding.chipFilterVoice, voiceSections) }
+        binding.chipFilterAutomation.setOnClickListener { selectCategory(binding.chipFilterAutomation, automationSections) }
+        binding.chipFilterSmartHome.setOnClickListener { selectCategory(binding.chipFilterSmartHome, smartHomeSections) }
+    }
+
+    private fun checkAccessibilityStatus() {
+        if (!JarvisAccessibilityService.isEnabled()) {
+            binding.tvMacroStatus.text = "⚠️ Accessibility Service OFF. Tap macro button to enable."
+            binding.tvMacroStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_orange_light))
+        } else {
+            binding.tvMacroStatus.text = "✅ JARVIS Accessibility Service is ACTIVE."
+            binding.tvMacroStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
+        }
+    }
+
+    private fun ensureAccessibilityOrPrompt(): Boolean {
+        if (!JarvisAccessibilityService.isEnabled()) {
+            AlertDialog.Builder(this)
+                .setTitle("JARVIS Accessibility Required")
+                .setMessage("To allow JARVIS to automatically open apps, type prompts, and save images, please enable 'JARVIS Assistant' in Accessibility Settings.")
+                .setPositiveButton("Open Settings") { _, _ ->
+                    startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+            return false
+        }
+        return true
+    }
+
+    private fun setupListeners() {
+        binding.btnBack.setOnClickListener {
+            HudSoundManager.playTapSound()
+            finish()
+        }
+
+        binding.bannerOpenBypassIde.setOnClickListener {
+            HudSoundManager.playTapSound()
+            com.jarvis.assistant.ui.bypasside.BypassIdeActivity.open(this)
+        }
+
+        // --- 1. AI Direct Generation & Macros ---
+        binding.btnDirectGenerateImg.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val prompt = binding.etChatGptPrompt.text.toString().trim()
+            if (prompt.isBlank()) {
+                Toast.makeText(this, "Please enter an image prompt", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            binding.pbAiImageLoading.visibility = View.VISIBLE
+            binding.tvAiImageStatus.visibility = View.VISIBLE
+            binding.tvAiImageStatus.text = "Generating direct AI image (Flux Model)..."
+            binding.ivGeneratedAiImage.visibility = View.GONE
+
+            lifecycleScope.launch {
+                val bitmap = app.directAiImageGenerator.generateImage(prompt)
+                withContext(Dispatchers.Main) {
+                    binding.pbAiImageLoading.visibility = View.GONE
+                    if (bitmap != null) {
+                        currentGeneratedBitmap = bitmap
+                        binding.ivGeneratedAiImage.setImageBitmap(bitmap)
+                        binding.ivGeneratedAiImage.visibility = View.VISIBLE
+                        binding.layoutAiImageActions.visibility = View.VISIBLE
+                        binding.tvAiImageStatus.text = "✅ Image Generated Successfully (Flux Model)"
+                        Toast.makeText(this@JarvisMatrixActivity, "AI Image Generated! Tap Save to keep it in App/Gallery.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        binding.layoutAiImageActions.visibility = View.GONE
+                        binding.tvAiImageStatus.text = "❌ Generation failed. Check internet connection."
+                        Toast.makeText(this@JarvisMatrixActivity, "Image generation failed.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+
+        binding.btnSaveAiImage.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val bmp = currentGeneratedBitmap
+            if (bmp != null) {
+                saveImageToAppAndGallery(bmp)
+            } else {
+                Toast.makeText(this, "No image to save", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.btnShareAiImage.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val bmp = currentGeneratedBitmap
+            if (bmp != null) {
+                shareImage(bmp)
+            }
+        }
+
+        binding.btnViewFullAiImage.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val bmp = currentGeneratedBitmap
+            if (bmp != null) {
+                viewFullScreen(bmp)
+            }
+        }
+
+        binding.btnGenerateChatGptImg.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val prompt = binding.etChatGptPrompt.text.toString().trim()
+            if (prompt.isBlank()) {
+                Toast.makeText(this, "Please enter an image prompt", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (!ensureAccessibilityOrPrompt()) return@setOnClickListener
+
+            val isChatGptInstalled = try {
+                packageManager.getPackageInfo("com.openai.chatgpt", 0) != null
+            } catch (_: Exception) {
+                false
+            }
+
+            if (!isChatGptInstalled) {
+                AlertDialog.Builder(this)
+                    .setTitle("ChatGPT App Not Installed")
+                    .setMessage("The official ChatGPT app is not installed on this device to run the accessibility macro.\n\nWould you like JARVIS to generate this image directly using the built-in AI Neural Generator (Flux Model)?")
+                    .setPositiveButton("Generate Directly") { _, _ ->
+                        binding.btnDirectGenerateImg.performClick()
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+                return@setOnClickListener
+            }
+
+            Toast.makeText(this, "JARVIS Macro: Initiating ChatGPT Image Workflow...", Toast.LENGTH_SHORT).show()
+            lifecycleScope.launch {
+                val res = app.macroEngine.executeMacroByName("chatgpt image", mapOf("image prompt" to prompt))
+                when (res) {
+                    is MacroExecutionResult.Success -> Toast.makeText(this@JarvisMatrixActivity, "ChatGPT Macro Complete!", Toast.LENGTH_LONG).show()
+                    is MacroExecutionResult.Failure -> Toast.makeText(this@JarvisMatrixActivity, "Macro Notice: ${res.error}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        binding.btnGeminiImage.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val prompt = binding.etGeminiPrompt.text.toString().trim()
+            if (prompt.isBlank()) {
+                Toast.makeText(this, "Please enter an image prompt", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (!ensureAccessibilityOrPrompt()) return@setOnClickListener
+
+            val isGeminiInstalled = try {
+                packageManager.getPackageInfo("com.google.android.apps.bard", 0) != null
+            } catch (_: Exception) {
+                false
+            }
+
+            if (!isGeminiInstalled) {
+                AlertDialog.Builder(this)
+                    .setTitle("Google Gemini App Not Installed")
+                    .setMessage("The official Google Gemini app is not installed on this device.\n\nWould you like JARVIS to generate this image directly using the built-in AI Neural Generator (Flux Model)?")
+                    .setPositiveButton("Generate Directly") { _, _ ->
+                        binding.etChatGptPrompt.setText(prompt)
+                        binding.btnDirectGenerateImg.performClick()
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+                return@setOnClickListener
+            }
+
+            Toast.makeText(this, "JARVIS Macro: Initiating Gemini Image Workflow...", Toast.LENGTH_SHORT).show()
+            lifecycleScope.launch {
+                val res = app.macroEngine.executeMacroByName("gemini image", mapOf("image prompt" to prompt))
+                when (res) {
+                    is MacroExecutionResult.Success -> Toast.makeText(this@JarvisMatrixActivity, "Gemini Image Macro Complete!", Toast.LENGTH_LONG).show()
+                    is MacroExecutionResult.Failure -> Toast.makeText(this@JarvisMatrixActivity, "Macro Notice: ${res.error}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        binding.btnGeminiVideo.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val prompt = binding.etGeminiPrompt.text.toString().trim()
+            if (prompt.isBlank()) {
+                Toast.makeText(this, "Please enter a video prompt", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (!ensureAccessibilityOrPrompt()) return@setOnClickListener
+
+            Toast.makeText(this, "JARVIS Macro: Initiating Gemini Video Workflow...", Toast.LENGTH_SHORT).show()
+            lifecycleScope.launch {
+                val res = app.macroEngine.executeMacroByName("gemini video", mapOf("video prompt" to prompt))
+                when (res) {
+                    is MacroExecutionResult.Success -> Toast.makeText(this@JarvisMatrixActivity, "Gemini Video Macro Complete!", Toast.LENGTH_LONG).show()
+                    is MacroExecutionResult.Failure -> Toast.makeText(this@JarvisMatrixActivity, "Macro Notice: ${res.error}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        // --- 3. Linux Terminal & Native Shell Execution ---
+        binding.btnRunNativeShell.setOnClickListener {
+            val cmd = binding.etTermuxCommand.text.toString().trim().ifBlank { "uname -a" }
+            executeNativeShell(cmd)
+        }
+
+        binding.btnChipUname.setOnClickListener { executeNativeShell("uname -a") }
+        binding.btnChipDf.setOnClickListener { executeNativeShell("df -h") }
+        binding.btnChipUptime.setOnClickListener { executeNativeShell("uptime") }
+        binding.btnChipDate.setOnClickListener { executeNativeShell("date") }
+
+        binding.btnRunTermux.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val cmd = binding.etTermuxCommand.text.toString().trim()
+            if (cmd.isBlank()) {
+                Toast.makeText(this, "Enter a command first", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (!app.termuxBridge.isTermuxInstalled()) {
+                AlertDialog.Builder(this)
+                    .setTitle("Termux App Not Installed")
+                    .setMessage("You can execute commands natively without Termux! Would you like to run it directly on device?")
+                    .setPositiveButton("Run Natively") { _, _ -> executeNativeShell(cmd) }
+                    .setNegativeButton("Get Termux") { _, _ ->
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://f-droid.org/packages/com.termux/")))
+                    }
+                    .show()
+                return@setOnClickListener
+            }
+            val success = app.termuxBridge.runCommand(cmd)
+            binding.tvTermuxResult.text = if (success) "Dispatched to Termux: $cmd" else "Termux execution failed."
+        }
+
+        binding.btnRunUbuntu.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val cmd = binding.etTermuxCommand.text.toString().trim()
+            if (cmd.isBlank()) return@setOnClickListener
+            val success = app.termuxBridge.runInUbuntu(cmd)
+            binding.tvTermuxResult.text = if (success) "Dispatched to PRoot Ubuntu: $cmd" else "Failed to dispatch to Ubuntu."
+        }
+
+        // --- 4. Stock Market & Live Quotes ---
+        binding.btnFetchStock.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val symbol = binding.etStockSymbol.text.toString().trim()
+            if (symbol.isBlank()) return@setOnClickListener
+            fetchStockQuote(symbol)
+        }
+
+        binding.btnChipReliance.setOnClickListener { fetchStockQuote("RELIANCE.NS") }
+        binding.btnChipTcs.setOnClickListener { fetchStockQuote("TCS.NS") }
+        binding.btnChipBtc.setOnClickListener { fetchStockQuote("BTC-USD") }
+        binding.btnChipNifty.setOnClickListener { fetchStockQuote("^NSEI") }
+
+        binding.btnTrendingStocks.setOnClickListener {
+            HudSoundManager.playTapSound()
+            binding.tvStockResult.text = "Fetching trending stocks..."
+            lifecycleScope.launch {
+                val trending = app.financeClient.getTrending()
+                withContext(Dispatchers.Main) {
+                    if (trending.isNotEmpty()) {
+                        binding.tvStockResult.text = "Trending: " + trending.take(8).joinToString(", ")
+                    } else {
+                        binding.tvStockResult.text = "Trending stocks currently unavailable. Try symbol lookup."
+                    }
+                }
+            }
+        }
+
+        // --- 5. Creator Studio & SEO ---
+        binding.btnGenerateScript.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val topic = binding.etScriptTopic.text.toString().trim()
+            if (topic.isBlank()) {
+                Toast.makeText(this, "Enter a topic first", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            binding.tvScriptResult.text = "JARVIS Neural Engine formulating high-retention script for '$topic'..."
+            binding.btnGenerateScript.isEnabled = false
+            lifecycleScope.launch {
+                val script = YouTubeCreatorToolkit.generateDynamicScript(this@JarvisMatrixActivity, topic, "Reel", inHinglish = true)
+                withContext(Dispatchers.Main) {
+                    binding.btnGenerateScript.isEnabled = true
+                    binding.tvScriptResult.text = script
+                }
+            }
+        }
+
+        binding.btnCopyScript.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val script = binding.tvScriptResult.text.toString()
+            if (script.isNotBlank() && !script.contains("will appear here")) {
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("JARVIS Script", script))
+                Toast.makeText(this, "Script copied to clipboard!", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // --- 6. On-Device PocketTTS Neural Voice Engine ---
+        binding.btnPhraseHindi.setOnClickListener {
+            binding.etPocketTtsInput.setText("नमस्ते सर, मैं जार्विस हूँ। ऑल सिस्टम्स नॉमिनल।")
+        }
+
+        binding.btnPhraseEnglish.setOnClickListener {
+            binding.etPocketTtsInput.setText("All systems operational. Tactical protocols engaged and ready for commands.")
+        }
+
+        binding.btnPocketTtsSpeak.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val text = binding.etPocketTtsInput.text.toString().trim()
+            if (text.isBlank()) {
+                Toast.makeText(this, "Please enter text to synthesize", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            binding.tvPocketTtsStatus.text = "PocketTTS: Synthesizing with native ONNX + Kyutai Mimi vocoder..."
+            com.jarvis.assistant.voice.PocketTtsEngine.getInstance(this).speak(text) {
+                runOnUiThread {
+                    binding.tvPocketTtsStatus.text = "PocketTTS: Speech playback completed (24kHz 16-bit PCM)."
+                }
+            }
+        }
+
+        binding.btnPocketTtsStop.setOnClickListener {
+            HudSoundManager.playTapSound()
+            com.jarvis.assistant.voice.PocketTtsEngine.getInstance(this).stop()
+            binding.tvPocketTtsStatus.text = "PocketTTS: Playback stopped."
+        }
+
+        // --- 9. On-Device Barcode & QR Scanner ---
+        binding.btnScanScreenBarcode.setOnClickListener {
+            HudSoundManager.playTapSound()
+            binding.tvBarcodeScanResult.text = "Scanning screen with Barcode & QR engine..."
+            lifecycleScope.launch {
+                val bmp = JarvisAccessibilityService.captureScreenBitmap()
+                if (bmp != null) {
+                    val scanner = com.jarvis.assistant.vision.BarcodeScannerEngine(this@JarvisMatrixActivity)
+                    val codes = scanner.scanBitmap(bmp)
+                    withContext(Dispatchers.Main) {
+                        if (codes.isNotEmpty()) {
+                            val scanned = codes.joinToString("\n") { "${it.format}: ${it.rawValue}" }
+                            binding.tvBarcodeScanResult.text = "Detected Barcodes / QR:\n$scanned"
+                            com.jarvis.assistant.voice.PocketTtsEngine.getInstance(this@JarvisMatrixActivity)
+                                .speak("Barcode detected: ${codes.first().rawValue}")
+                            Toast.makeText(this@JarvisMatrixActivity, "Found ${codes.size} code(s)!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            binding.tvBarcodeScanResult.text = "Scan complete: No QR / Barcodes visible on screen."
+                        }
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        binding.tvBarcodeScanResult.text = "Screen capture requires JARVIS Accessibility Service. Tap to enable."
+                        ensureAccessibilityOrPrompt()
+                    }
+                }
+            }
+        }
+
+        // --- 10. Stark Smart Home & IoT Engine ---
+        binding.btnSmartHomeOn.setOnClickListener {
+            HudSoundManager.playTapSound()
+            lifecycleScope.launch {
+                val res = app.smartHomeManager.controlDevice("Living Room & Ambient Lights", "on")
+                withContext(Dispatchers.Main) {
+                    binding.tvSmartHomeStatus.text = res
+                    com.jarvis.assistant.voice.PocketTtsEngine.getInstance(this@JarvisMatrixActivity).speak(res)
+                    Toast.makeText(this@JarvisMatrixActivity, res, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        binding.btnSmartHomeOff.setOnClickListener {
+            HudSoundManager.playTapSound()
+            lifecycleScope.launch {
+                val res = app.smartHomeManager.controlDevice("All Smart Lights", "off")
+                withContext(Dispatchers.Main) {
+                    binding.tvSmartHomeStatus.text = res
+                    com.jarvis.assistant.voice.PocketTtsEngine.getInstance(this@JarvisMatrixActivity).speak(res)
+                    Toast.makeText(this@JarvisMatrixActivity, res, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        binding.btnSmartHomeBlink.setOnClickListener {
+            HudSoundManager.playTapSound()
+            lifecycleScope.launch {
+                val res = app.smartHomeManager.controlDevice("Stark Core Ambient Lights", "blink", intervalSec = 2)
+                withContext(Dispatchers.Main) {
+                    binding.tvSmartHomeStatus.text = res
+                    com.jarvis.assistant.voice.PocketTtsEngine.getInstance(this@JarvisMatrixActivity).speak(res)
+                    Toast.makeText(this@JarvisMatrixActivity, res, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        binding.btnSmartHomeChase.setOnClickListener {
+            HudSoundManager.playTapSound()
+            lifecycleScope.launch {
+                val res = app.smartHomeManager.controlDevice("Arc Reactor Array", "chase")
+                withContext(Dispatchers.Main) {
+                    binding.tvSmartHomeStatus.text = res
+                    com.jarvis.assistant.voice.PocketTtsEngine.getInstance(this@JarvisMatrixActivity).speak(res)
+                    Toast.makeText(this@JarvisMatrixActivity, res, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        binding.btnConfigureSmartHome.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val intent = android.content.Intent(this, com.jarvis.assistant.ui.settings.ApiConnectionActivity::class.java)
+            startActivity(intent)
+        }
+
+        binding.btnTestSmartHome.setOnClickListener {
+            HudSoundManager.playTapSound()
+            binding.tvSmartHomeStatus.text = "Testing Home Assistant / Webhook link..."
+            lifecycleScope.launch {
+                val (_, statusMsg) = app.smartHomeManager.testConnection()
+                withContext(Dispatchers.Main) {
+                    binding.tvSmartHomeStatus.text = statusMsg
+                    com.jarvis.assistant.voice.PocketTtsEngine.getInstance(this@JarvisMatrixActivity).speak(statusMsg)
+                    Toast.makeText(this@JarvisMatrixActivity, statusMsg, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun executeNativeShell(command: String) {
+        HudSoundManager.playTapSound()
+        binding.etTermuxCommand.setText(command)
+        binding.tvTermuxResult.text = "Executing '$command' on native Linux..."
+        lifecycleScope.launch(Dispatchers.IO) {
+            val output = app.termuxBridge.executeLocalCommand(command)
+            withContext(Dispatchers.Main) {
+                binding.tvTermuxResult.text = output
+            }
+        }
+    }
+
+    private fun fetchStockQuote(rawSymbol: String) {
+        HudSoundManager.playTapSound()
+        val symbol = when (rawSymbol.trim().uppercase()) {
+            "RELIANCE" -> "RELIANCE.NS"
+            "TCS" -> "TCS.NS"
+            "INFOSYS", "INFY" -> "INFY.NS"
+            "HDFC", "HDFCBANK" -> "HDFCBANK.NS"
+            "TATAMOTORS", "TATA MOTORS" -> "TATAMOTORS.NS"
+            "NIFTY", "NIFTY50" -> "^NSEI"
+            "SENSEX" -> "^BSESN"
+            "BITCOIN", "BTC" -> "BTC-USD"
+            "ETHEREUM", "ETH" -> "ETH-USD"
+            else -> rawSymbol.trim()
+        }
+        binding.tvStockResult.text = "Fetching live quote for $symbol..."
+        lifecycleScope.launch {
+            val quote = app.financeClient.getQuote(symbol)
+            withContext(Dispatchers.Main) {
+                if (quote != null) {
+                    val sign = if (quote.change >= 0) "+" else ""
+                    binding.tvStockResult.text = "${quote.name} (${quote.symbol})\nPrice: ${quote.currency} ${quote.price}\nChange: $sign${String.format("%.2f", quote.changePercent)}%\nState: ${quote.marketState}"
+                } else {
+                    binding.tvStockResult.text = "Could not fetch data for $symbol. Try adding .NS for Indian stocks (e.g. RELIANCE.NS, TCS.NS) or BTC-USD for crypto."
+                }
+            }
+        }
+    }
+
+    private fun saveImageToAppAndGallery(bitmap: android.graphics.Bitmap) {
+        try {
+            val filename = "JARVIS_AI_${System.currentTimeMillis()}.jpg"
+            // 1. Save to Device MediaStore (Pictures/JARVIS)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                val values = android.content.ContentValues().apply {
+                    put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, filename)
+                    put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                    put(android.provider.MediaStore.Images.Media.RELATIVE_PATH, android.os.Environment.DIRECTORY_PICTURES + "/JARVIS")
+                }
+                val uri = contentResolver.insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                if (uri != null) {
+                    contentResolver.openOutputStream(uri)?.use { out ->
+                        bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 95, out)
+                    }
+                }
+            } else {
+                val dir = java.io.File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_PICTURES), "JARVIS")
+                if (!dir.exists()) dir.mkdirs()
+                val file = java.io.File(dir, filename)
+                java.io.FileOutputStream(file).use { out ->
+                    bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 95, out)
+                }
+                android.media.MediaScannerConnection.scanFile(this, arrayOf(file.absolutePath), arrayOf("image/jpeg"), null)
+            }
+
+            // 2. Save directly inside App Internal Storage
+            val internalDir = java.io.File(filesDir, "saved_ai_images")
+            if (!internalDir.exists()) internalDir.mkdirs()
+            val internalFile = java.io.File(internalDir, filename)
+            java.io.FileOutputStream(internalFile).use { out ->
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 95, out)
+            }
+
+            binding.tvAiImageStatus.text = "✅ Saved to Pictures/JARVIS & App Storage!"
+            Toast.makeText(this, "💾 Image Saved to Device Gallery and App Storage!", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Save error: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun shareImage(bitmap: android.graphics.Bitmap) {
+        try {
+            val cacheFile = java.io.File(cacheDir, "shared_ai_image.jpg")
+            java.io.FileOutputStream(cacheFile).use { out ->
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 95, out)
+            }
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                this,
+                "${packageName}.fileprovider",
+                cacheFile
+            )
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "image/jpeg"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(shareIntent, "Share JARVIS AI Image"))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not share image: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun viewFullScreen(bitmap: android.graphics.Bitmap) {
+        val dialog = android.app.Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        val imageView = android.widget.ImageView(this).apply {
+            setImageBitmap(bitmap)
+            scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+            setBackgroundColor(android.graphics.Color.BLACK)
+            setOnClickListener { dialog.dismiss() }
+        }
+        dialog.setContentView(imageView)
+        dialog.show()
+    }
+
+    private fun setupDynamicToolsSection() {
+        val registry = DynamicToolRegistry.getInstance(this)
+        val scriptExecutor = DynamicScriptExecutor(this)
+
+        fun renderDynamicTools() {
+            lifecycleScope.launch {
+                val tools = registry.getAllTools()
+                withContext(Dispatchers.Main) {
+                    binding.containerDynamicToolsList.removeAllViews()
+                    binding.tvDynamicToolsCount.text = "${tools.size} DYNAMIC SCRIPTS ACTIVE"
+
+                    if (tools.isEmpty()) {
+                        val emptyTv = android.widget.TextView(this@JarvisMatrixActivity).apply {
+                            text = "No dynamic scripts yet. Jarvis automatically synthesizes tools at runtime when encountering missing APIs."
+                            textSize = 11f
+                            setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextMuted, ContextCompat.getColor(this@JarvisMatrixActivity, R.color.text_muted)))
+                            setPadding(0, 8, 0, 8)
+                        }
+                        binding.containerDynamicToolsList.addView(emptyTv)
+                    } else {
+                        for (tool in tools) {
+                            val itemView = android.widget.LinearLayout(this@JarvisMatrixActivity).apply {
+                                orientation = android.widget.LinearLayout.HORIZONTAL
+                                gravity = android.view.Gravity.CENTER_VERTICAL
+                                setBackgroundResource(R.drawable.bg_jarvis_row_item)
+                                setPadding(24, 20, 24, 20)
+                                val params = android.widget.LinearLayout.LayoutParams(
+                                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                                ).apply { bottomMargin = 12 }
+                                layoutParams = params
+                            }
+
+                            val infoLayout = android.widget.LinearLayout(this@JarvisMatrixActivity).apply {
+                                orientation = android.widget.LinearLayout.VERTICAL
+                                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                            }
+
+                            val titleRow = android.widget.LinearLayout(this@JarvisMatrixActivity).apply {
+                                orientation = android.widget.LinearLayout.HORIZONTAL
+                                gravity = android.view.Gravity.CENTER_VERTICAL
+                            }
+
+                            val nameTv = android.widget.TextView(this@JarvisMatrixActivity).apply {
+                                text = "⚡ ${tool.name}"
+                                textSize = 12.5f
+                                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextPrimary, android.graphics.Color.WHITE))
+                            }
+                            val verTv = android.widget.TextView(this@JarvisMatrixActivity).apply {
+                                text = "v${tool.version}"
+                                textSize = 9.5f
+                                setTextColor(android.graphics.Color.parseColor("#22D3EE"))
+                                setPadding(12, 0, 0, 0)
+                            }
+                            titleRow.addView(nameTv)
+                            titleRow.addView(verTv)
+
+                            val descTv = android.widget.TextView(this@JarvisMatrixActivity).apply {
+                                text = tool.description
+                                textSize = 10.5f
+                                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextMuted, ContextCompat.getColor(this@JarvisMatrixActivity, R.color.text_muted)))
+                                setPadding(0, 4, 0, 0)
+                            }
+                            infoLayout.addView(titleRow)
+                            infoLayout.addView(descTv)
+
+                            val runBtn = com.google.android.material.button.MaterialButton(this@JarvisMatrixActivity, null, com.google.android.material.R.attr.borderlessButtonStyle).apply {
+                                text = "TEST"
+                                textSize = 10f
+                                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeAccent, ContextCompat.getColor(this@JarvisMatrixActivity, R.color.primary_cyan)))
+                                setPadding(16, 0, 16, 0)
+                                setOnClickListener {
+                                    HudSoundManager.playTapSound()
+                                    lifecycleScope.launch {
+                                        val res = scriptExecutor.execute(tool, org.json.JSONObject())
+                                        withContext(Dispatchers.Main) {
+                                            val msg = if (res.isSuccess) "Output: ${res.outputJson}" else "Failed: ${res.errorMessage}"
+                                            Toast.makeText(this@JarvisMatrixActivity, msg, Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                                }
+                            }
+
+                            itemView.addView(infoLayout)
+                            itemView.addView(runBtn)
+                            binding.containerDynamicToolsList.addView(itemView)
+                        }
+                    }
+                }
+            }
+        }
+
+        renderDynamicTools()
+
+        binding.btnCreateDynamicToolDemo.setOnClickListener {
+            HudSoundManager.playTapSound()
+            showCreateDynamicToolDialog(registry) { renderDynamicTools() }
+        }
+
+        binding.btnOpenIdeForSelfHealing.setOnClickListener {
+            HudSoundManager.playTapSound()
+            com.jarvis.assistant.codestudio.CodeStudioActivity.open(this)
+        }
+    }
+
+    /**
+     * Asks for a tool name, description and shell command, then registers it as a
+     * SHELL dynamic tool through [DynamicToolRegistry.createTool].
+     */
+    private fun showCreateDynamicToolDialog(registry: DynamicToolRegistry, onCreated: () -> Unit) {
+        val pad = (16 * resources.displayMetrics.density).toInt()
+        val container = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(pad, pad / 2, pad, 0)
+        }
+        fun field(hint: String, multiLine: Boolean = false) = android.widget.EditText(this).apply {
+            this.hint = hint
+            textSize = 13f
+            if (multiLine) {
+                inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+                minLines = 2
+                typeface = android.graphics.Typeface.MONOSPACE
+            } else {
+                inputType = android.text.InputType.TYPE_CLASS_TEXT
+                maxLines = 1
+            }
+        }
+        val nameInput = field("Tool name (e.g. check_storage)")
+        val descInput = field("What the tool does")
+        val commandInput = field("Shell command (e.g. df -h)", multiLine = true)
+        container.addView(nameInput)
+        container.addView(descInput)
+        container.addView(commandInput)
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Create Dynamic Tool")
+            .setMessage("Jarvis will be able to run this shell command as a tool.")
+            .setView(container)
+            .setPositiveButton("Create", null)
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val name = nameInput.text.toString().trim().lowercase().replace(Regex("[\\s-]+"), "_")
+                val description = descInput.text.toString().trim()
+                val command = commandInput.text.toString().trim()
+                when {
+                    name.isBlank() -> { nameInput.error = "Enter a tool name"; return@setOnClickListener }
+                    description.isBlank() -> { descInput.error = "Enter a description"; return@setOnClickListener }
+                    command.isBlank() -> { commandInput.error = "Enter a shell command"; return@setOnClickListener }
+                }
+                HudSoundManager.playTapSound()
+                lifecycleScope.launch {
+                    val result = registry.createTool(
+                        name = name,
+                        description = description,
+                        parametersSchemaJson = """{"type":"object","properties":{}}""",
+                        scriptType = DynamicTool.ScriptType.SHELL,
+                        scriptCode = command,
+                        author = "User"
+                    )
+                    withContext(Dispatchers.Main) {
+                        result.onSuccess { tool ->
+                            dialog.dismiss()
+                            onCreated()
+                            Toast.makeText(this@JarvisMatrixActivity, "Tool '${tool.name}' registered.", Toast.LENGTH_SHORT).show()
+                        }.onFailure { e ->
+                            Toast.makeText(this@JarvisMatrixActivity, "Could not create tool: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
+        }
+        dialog.show()
+    }
+
+    private fun setupAppConnectorsSection() {
+        val manager = AppConnectorsManager.getInstance(this)
+        val connectors = manager.getConnectors()
+
+        val operationalCount = connectors.count {
+            manager.computeConnectorStatus(it) == ConnectorStatus.OPERATIONAL
+        }
+        binding.tvConnectorsOperationalBadge.text = "$operationalCount / ${connectors.size} OPERATIONAL"
+
+        binding.containerConnectorsPreview.removeAllViews()
+
+        // Highlight top 4 primary phone apps
+        val topApps = connectors.take(4)
+        for (conn in topApps) {
+            val status = manager.computeConnectorStatus(conn)
+            val itemView = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setBackgroundResource(R.drawable.bg_jarvis_row_item)
+                setPadding(24, 18, 24, 18)
+                val params = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = 10 }
+                layoutParams = params
+            }
+
+            val iconTv = android.widget.TextView(this).apply {
+                text = when {
+                    conn.id.contains("whatsapp", true) -> "💬"
+                    conn.id.contains("phone", true) -> "📞"
+                    conn.id.contains("contacts", true) -> "👥"
+                    conn.id.contains("youtube", true) -> "▶️"
+                    else -> "📱"
+                }
+                textSize = 16f
+                setPadding(0, 0, 20, 0)
+            }
+
+            val infoLayout = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+
+            val nameTv = android.widget.TextView(this).apply {
+                text = conn.name
+                textSize = 12.5f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextPrimary, android.graphics.Color.WHITE))
+            }
+            val pkgTv = android.widget.TextView(this).apply {
+                text = conn.packageName
+                textSize = 10.5f
+                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextMuted, ContextCompat.getColor(this@JarvisMatrixActivity, R.color.text_muted)))
+            }
+            infoLayout.addView(nameTv)
+            infoLayout.addView(pkgTv)
+
+            val badgeTv = android.widget.TextView(this).apply {
+                text = status.label
+                textSize = 9.5f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setPadding(18, 8, 18, 8)
+                // Neutral bento badge: coloured status ink must not sit on the accent fill.
+                setBackgroundResource(R.drawable.bg_jarvis_status_badge)
+                setTextColor(
+                    when (status) {
+                        ConnectorStatus.OPERATIONAL -> ThemeManager.attrColor(context, R.attr.themeSuccess, android.graphics.Color.parseColor("#4ADE80"))
+                        ConnectorStatus.AUTHENTICATED -> ThemeManager.attrColor(context, R.attr.themeInfo, android.graphics.Color.parseColor("#22D3EE"))
+                        ConnectorStatus.INSTALLED -> ThemeManager.attrColor(context, R.attr.themeWarning, android.graphics.Color.parseColor("#FBBF24"))
+                        else -> ThemeManager.attrColor(context, R.attr.themeTextMuted, android.graphics.Color.parseColor("#94A3B8"))
+                    }
+                )
+            }
+
+            itemView.addView(iconTv)
+            itemView.addView(infoLayout)
+            itemView.addView(badgeTv)
+            binding.containerConnectorsPreview.addView(itemView)
+        }
+
+        binding.btnManageAllConnectors.setOnClickListener {
+            HudSoundManager.playTapSound()
+            AppConnectorsBottomSheet.newInstance().show(supportFragmentManager, AppConnectorsBottomSheet.TAG)
+        }
+    }
+
+    private fun setupAgentToolsSection() {
+        binding.containerAgentToolsPreview.removeAllViews()
+
+        val sampleTools = listOf(
+            Triple("device_telemetry_query", "Real-time CPU, RAM, battery, thermal and network metrics query", "SYSTEM CORE"),
+            Triple("system_volume_control", "Unified media, ring, alarm, and speech synthesis volume control", "HARDWARE"),
+            Triple("launch_app_package", "Safe launch with direct intent resolution and store fallback", "NAVIGATION"),
+            Triple("file_search_and_read", "Semantic sandbox file locator and content extractor", "STORAGE")
+        )
+
+        for ((name, desc, category) in sampleTools) {
+            val itemView = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setBackgroundResource(R.drawable.bg_jarvis_row_item)
+                setPadding(24, 18, 24, 18)
+                val params = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = 10 }
+                layoutParams = params
+            }
+
+            val infoLayout = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+
+            val titleRow = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+            }
+
+            val nameTv = android.widget.TextView(this).apply {
+                text = "🔧 $name"
+                textSize = 12.5f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextPrimary, android.graphics.Color.WHITE))
+            }
+
+            val catTv = android.widget.TextView(this).apply {
+                text = category
+                textSize = 9f
+                setTextColor(android.graphics.Color.parseColor("#A855F7"))
+                setPadding(12, 0, 0, 0)
+            }
+            titleRow.addView(nameTv)
+            titleRow.addView(catTv)
+
+            val descTv = android.widget.TextView(this).apply {
+                text = desc
+                textSize = 10.5f
+                setTextColor(ThemeManager.attrColor(this@JarvisMatrixActivity, R.attr.themeTextMuted, ContextCompat.getColor(this@JarvisMatrixActivity, R.color.text_muted)))
+                setPadding(0, 4, 0, 0)
+            }
+
+            infoLayout.addView(titleRow)
+            infoLayout.addView(descTv)
+
+            val readyBadge = android.widget.TextView(this).apply {
+                text = "ACTIVE"
+                textSize = 9.5f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setTextColor(android.graphics.Color.parseColor("#4ADE80"))
+                setPadding(12, 6, 12, 6)
+            }
+
+            itemView.addView(infoLayout)
+            itemView.addView(readyBadge)
+            binding.containerAgentToolsPreview.addView(itemView)
+        }
+
+        binding.btnOpenAgentToolDebug.setOnClickListener {
+            HudSoundManager.playTapSound()
+            startActivity(AndroLlmPageActivity.routeIntent(this, ComposeRoutes.TOOL_DEBUG))
+        }
+    }
+}

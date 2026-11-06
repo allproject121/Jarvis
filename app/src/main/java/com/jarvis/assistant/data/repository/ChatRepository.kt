@@ -399,6 +399,32 @@ class ChatRepository(private val preferences: AppPreferences, context: Context) 
         refreshAwaiting()
     }
 
+    /**
+     * Stores the reply to a chat-tab send that was answered by the text brain
+     * (Gemini text / offline model) instead of a Gemini Live session.
+     */
+    suspend fun completeTextReply(entry: PendingSend, reply: String, modelLabel: String) {
+        synchronized(pending) { pending.remove(entry) }
+        refreshAwaiting()
+        val text = reply.trim()
+        if (text.isEmpty()) return
+        val convId = entry.conversationId.takeIf { conversations.findById(it) != null } ?: resolveMirrorConversation()
+        val now = System.currentTimeMillis()
+        messages.upsert(
+            Message(
+                id = UUID.randomUUID().toString(),
+                conversationId = convId,
+                role = MessageRole.ASSISTANT,
+                content = text,
+                timestamp = now,
+                modelId = modelLabel.ifBlank { "Jarvis" },
+                origin = MessageOrigin.TYPED
+            )
+        )
+        conversations.touch(convId)
+        _lastReplyLatencyMs.value = now - entry.sentAt
+    }
+
     /** Forgets a send that will never be answered here (e.g. its conversation was deleted). */
     fun cancelAwaiting(conversationId: String) {
         synchronized(pending) { pending.removeAll { it.conversationId == conversationId } }

@@ -242,37 +242,16 @@ private fun McpPageContent() {
     )
 }
 
-/** Mirrors Jarvis Settings' header: back button, bold tracked title, muted subtitle. */
+/** Page header in the Dark Bento style (same as Tool Debug / Developer pages). */
 @Composable
 private fun JarvisPageTopBar(title: String, subtitle: String, onBack: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 6.dp, end = 18.dp, top = 8.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(onClick = onBack) {
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
-                tint = MaterialTheme.ledger.deskPaper
-            )
+    com.jarvis.assistant.ui.compose.designsystem.BentoTopBar(
+        title = title.lowercase().replaceFirstChar { it.uppercase() },
+        subtitle = subtitle,
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            }
         }
-        Spacer(modifier = Modifier.width(4.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                color = MaterialTheme.ledger.deskPaper,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.4.sp
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = subtitle,
-                color = MaterialTheme.ledger.deskInk,
-                fontSize = 12.sp
-            )
-        }
-    }
+    )
 }

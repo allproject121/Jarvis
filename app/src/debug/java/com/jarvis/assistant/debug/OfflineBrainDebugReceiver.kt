@@ -36,6 +36,10 @@ class OfflineBrainDebugReceiver : BroadcastReceiver() {
                 if (!model.isNullOrBlank()) {
                     com.jarvis.assistant.ai.local.LocalModelManager.getInstance(app, scope).setActiveModel(model)
                 }
+                if (intent.getBooleanExtra("audit", false)) {
+                    OfflineBrainAudit.run(app, scope)
+                    return@launch
+                }
                 if (intent.getBooleanExtra("bench", false)) {
                     val provider = com.jarvis.assistant.ai.provider.LocalPhoneProvider.getInstance(app, scope)
                     val threads = intent.getIntExtra("threads", 0)

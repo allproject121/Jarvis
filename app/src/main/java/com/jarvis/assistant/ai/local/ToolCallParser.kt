@@ -74,6 +74,104 @@ object ToolCallParser {
         return null
     }
 
+    private val NAME_REGEX = Regex("\"(?:name|function)\"\\s*:\\s*\"([A-Za-z0-9_.-]+)\"")
+    private val ARGS_START_REGEX = Regex("\"(?:arguments|parameters)\"\\s*:\\s*")
+    private val SIMPLE_PAIR_REGEX = Regex("\"([A-Za-z0-9_]+)\"\\s*:\\s*(\"((?:[^\"\\\\]|\\\\.)*)\"|true|false|-?\\d+(?:\\.\\d+)?)")
+    private val ARITHMETIC_VALUE_REGEX = Regex("(:\\s*)(\\(?\\s*-?\\d+(?:\\.\\d+)?(?:\\s*[-+*/]\\s*\\(?\\s*-?\\d+(?:\\.\\d+)?\\s*\\)?)+\\s*\\)?)(?=\\s*[,}])")
+
+    /**
+     * Use ONLY on a finished reply. [parseToolCall], then a repair pass for the broken JSON small models
+     * write, e.g. `"arguments": {"}}` or `"minutes": 60*24 - 6*60`. The phone audit (Nov 6) found such
+     * calls on 3 of 24 tool runs: nothing ran and the user got an empty reply.
+     * Never used on a partial stream: a half-written call would otherwise run with missing arguments.
+     */
+    fun parseToolCallLenient(finishedText: String): AiToolCall? =
+        parseToolCall(finishedText) ?: repairToolCall(finishedText)
+
+    private fun repairToolCall(text: String): AiToolCall? {
+        val stripped = stripThinking(text)
+        val openIdx = stripped.indexOf(TOOL_CALL_OPEN)
+        val body = when {
+            openIdx >= 0 -> stripped.substring(openIdx + TOOL_CALL_OPEN.length)
+            stripped.trimStart().startsWith("{") -> stripped
+            else -> return null
+        }.substringBefore("</tool_call>")
+        val name = NAME_REGEX.find(body)?.groupValues?.get(1) ?: return null
+        val argsMatch = ARGS_START_REGEX.find(body)
+        val args = if (argsMatch == null) JSONObject() else {
+            val rest = body.substring(argsMatch.range.last + 1)
+            val candidate = extractBalancedJson(rest, 0) ?: rest
+            lenientArgs(candidate)
+        }
+        Log.w(TAG, "Repaired broken tool call JSON: $name $args")
+        return AiToolCall(callId = "local_call_${UUID.randomUUID().toString().take(8)}", functionName = name, arguments = args)
+    }
+
+    /** Best-effort object: arithmetic values computed, else every simple "key": value pair, else empty. */
+    private fun computeArithmeticValues(raw: String): String =
+        ARITHMETIC_VALUE_REGEX.replace(raw) { m ->
+            val v = evaluateArithmetic(m.groupValues[2])
+            if (v == null) m.value else m.groupValues[1] + formatNumber(v)
+        }
+
+    private fun lenientArgs(raw: String): JSONObject {
+        val computed = computeArithmeticValues(raw)
+        runCatching { return JSONObject(computed) }
+        val out = JSONObject()
+        for (m in SIMPLE_PAIR_REGEX.findAll(computed)) {
+            val key = m.groupValues[1]
+            val rawValue = m.groupValues[2]
+            when {
+                rawValue.startsWith("\"") -> out.put(key, m.groupValues[3])
+                rawValue == "true" || rawValue == "false" -> out.put(key, rawValue.toBoolean())
+                rawValue.contains('.') -> out.put(key, rawValue.toDouble())
+                else -> out.put(key, rawValue.toLong())
+            }
+        }
+        return out
+    }
+
+    private fun formatNumber(v: Double): String = if (v == Math.floor(v) && !v.isInfinite()) v.toLong().toString() else v.toString()
+
+    /** + - * / and parentheses only; null when the text is anything else. */
+    internal fun evaluateArithmetic(expr: String): Double? {
+        val s = expr.replace(" ", "")
+        var pos = 0
+        fun parseExpr(): Double? {
+            fun parseFactor(): Double? {
+                if (pos < s.length && s[pos] == '(') {
+                    pos++
+                    val v = parseExpr() ?: return null
+                    if (pos >= s.length || s[pos] != ')') return null
+                    pos++
+                    return v
+                }
+                val start = pos
+                if (pos < s.length && s[pos] == '-') pos++
+                while (pos < s.length && (s[pos].isDigit() || s[pos] == '.')) pos++
+                return s.substring(start, pos).toDoubleOrNull()
+            }
+            fun parseTerm(): Double? {
+                var v = parseFactor() ?: return null
+                while (pos < s.length && (s[pos] == '*' || s[pos] == '/')) {
+                    val op = s[pos++]
+                    val r = parseFactor() ?: return null
+                    v = if (op == '*') v * r else { if (r == 0.0) return null; v / r }
+                }
+                return v
+            }
+            var v = parseTerm() ?: return null
+            while (pos < s.length && (s[pos] == '+' || s[pos] == '-')) {
+                val op = s[pos++]
+                val r = parseTerm() ?: return null
+                v = if (op == '+') v + r else v - r
+            }
+            return v
+        }
+        val result = parseExpr()
+        return if (pos == s.length) result else null
+    }
+
     /**
      * Removes <tool_call> tags and their contents from display text so the user only sees conversational speech.
      */
@@ -202,7 +300,9 @@ it's always").
 
     private fun parseJsonToToolCall(jsonString: String): AiToolCall? {
         return try {
-            val json = JSONObject(jsonString)
+            // Unquoted maths in a value ("minutes": 60*24 - 6*60) is computed first, so Android's strict
+            // JSON parser and lenient ones read the same call.
+            val json = JSONObject(computeArithmeticValues(jsonString))
             val name = when {
                 json.has("name") -> json.getString("name")
                 json.has("function") -> json.getString("function")

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Memory - Dark Bento layout (2026-11-05 bento-all): page title + muted subtitle, vector-engine bento card,
+     pill search + pill filter chips, rounded memory cards with 8dp gaps. All ids/types unchanged. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -7,20 +9,22 @@
     android:background="?attr/themeBg"
     android:orientation="vertical">
 
-    <!-- Top App Bar -->
+    <!-- Header: ghost back, page title + subtitle, primary Add pill -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:paddingTop="16dp"
-        android:paddingBottom="14dp">
+        android:paddingBottom="16dp">
 
         <ImageButton
             android:id="@+id/btnBack"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@drawable/bg_set_icon_btn"
+            android:padding="9dp"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_back"
             android:contentDescription="@string/desc_back"
             app:tint="?attr/themeTextPrimary"
@@ -28,28 +32,59 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@string/memory_title"
-            android:textColor="?attr/themeTextPrimary"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-black"
-            android:letterSpacing="0.15"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:orientation="vertical"
+            app:layout_constraintStart_toEndOf="@id/btnBack"
+            app:layout_constraintEnd_toStartOf="@id/btnAddMemory"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Memory"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="26sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
+                android:letterSpacing="-0.02"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Facts, preferences and routines Jarvis remembers"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:maxLines="2"
+                android:ellipsize="end" />
+        </LinearLayout>
 
         <Button
             android:id="@+id/btnAddMemory"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.Material3.Button"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="+ ADD"
-            android:textColor="?attr/themeAccent"
-            android:textStyle="bold"
+            android:layout_height="44dp"
+            android:minWidth="0dp"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="+ Add"
+            android:textAllCaps="false"
+            android:textSize="14sp"
+            android:fontFamily="@font/inter"
+            android:textFontWeight="600"
+            android:textColor="?attr/themeOnAccent"
+            app:backgroundTint="?attr/themeAccentFill"
+            app:cornerRadius="22dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
@@ -61,16 +96,14 @@
         android:orientation="vertical"
         android:paddingHorizontal="16dp">
 
-        <!-- Neural Memory & Vector Engine Health Banner -->
+        <!-- Vector engine bento card -->
         <LinearLayout
             android:id="@+id/cardMemoryHealth"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@drawable/bg_jarvis_card"
-            android:padding="12dp"
-            android:layout_marginTop="2dp"
-            android:layout_marginBottom="8dp">
+            android:padding="18dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -78,106 +111,150 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:src="@drawable/ic_verified_badge"
-                    app:tint="?attr/themeAccent"
-                    android:contentDescription="Vector Health" />
+                <FrameLayout
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_set_icon_tile">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_verified_badge"
+                        app:tint="?attr/themeAccent"
+                        android:contentDescription="Vector Health" />
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/tvMemorySyncTitle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:text="NEURAL VECTOR ENGINE SYNCHRONIZED"
+                    android:layout_marginStart="12dp"
+                    android:text="Vector engine"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-medium" />
+                    android:textSize="18sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
 
                 <TextView
                     android:id="@+id/tvMemorySyncRatio"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="49/49 INDEXED"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_set_badge"
+                    android:drawableStart="@drawable/bg_bento_dot"
+                    android:drawablePadding="6dp"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
+                    android:text="49/49 indexed"
                     android:textColor="?attr/themeSuccess"
                     android:textSize="11sp"
-                    android:textStyle="bold" />
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:maxLines="1" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/tvMemoryHealthSub"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Room Database synced with Vector Cache • Built-in Semantic Hashing Active"
-                android:textColor="?attr/themeTextSecondary"
-                android:textSize="11sp" />
+                android:layout_marginTop="10dp"
+                android:text="Room database synced with vector cache - semantic hashing active"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:lineSpacingExtra="2dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="14dp">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnReindexMemories"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    style="@style/Widget.Material3.Button"
                     android:layout_width="0dp"
-                    android:layout_height="36dp"
+                    android:layout_height="44dp"
                     android:layout_weight="1"
-                    android:text="⚡ SYNC &amp; RE-INDEX"
-                    android:textSize="11sp"
-                    android:textColor="?attr/themeAccent"
-                    app:strokeColor="?attr/themeAccent"
-                    app:cornerRadius="8dp"
-                    android:paddingVertical="0dp"
-                    android:layout_marginEnd="6dp" />
+                    android:layout_marginEnd="6dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingHorizontal="8dp"
+                    android:text="Sync &amp; re-index"
+                    android:textAllCaps="false"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:maxLines="1"
+                    android:textColor="?attr/themeOnAccent"
+                    app:backgroundTint="?attr/themeAccentFill"
+                    app:cornerRadius="22dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnOpenMemoryInspector"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
-                    android:layout_height="36dp"
+                    android:layout_height="44dp"
                     android:layout_weight="1"
-                    android:text="🔍 INSPECTOR"
-                    android:textSize="11sp"
-                    android:textColor="?attr/themeTextSecondary"
-                    app:strokeColor="?attr/themeCardBorder"
-                    app:cornerRadius="8dp"
-                    android:paddingVertical="0dp"
-                    android:layout_marginStart="6dp" />
+                    android:layout_marginStart="6dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingHorizontal="8dp"
+                    android:text="Inspector"
+                    android:textAllCaps="false"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:maxLines="1"
+                    android:textColor="?attr/themeTextPrimary"
+                    app:backgroundTint="?attr/themeChipBg"
+                    app:strokeColor="?attr/themePlateBorder"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="22dp" />
             </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnOpenMayaWiki"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="match_parent"
-                android:layout_height="36dp"
-                android:layout_marginTop="6dp"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
                 android:text="Wiki, rules &amp; episodes"
-                android:textSize="11sp"
-                android:textColor="?attr/themeAccent"
-                app:strokeColor="?attr/themeAccent"
-                app:cornerRadius="8dp"
-                android:paddingVertical="0dp" />
+                android:textAllCaps="false"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
+                android:maxLines="1"
+                android:textColor="?attr/themeTextPrimary"
+                app:backgroundTint="?attr/themeChipBg"
+                app:strokeColor="?attr/themePlateBorder"
+                app:strokeWidth="1dp"
+                app:cornerRadius="22dp" />
         </LinearLayout>
 
-        <!-- Search Input -->
+        <!-- Search pill -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilSearch"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="16dp"
             app:boxBackgroundColor="?attr/themeInputBg"
             app:boxStrokeColor="?attr/themeAccent"
-            app:boxCornerRadiusTopStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxCornerRadiusBottomStart="12dp"
-            app:boxCornerRadiusBottomEnd="12dp"
+            app:boxStrokeWidth="1dp"
+            app:boxCornerRadiusTopStart="24dp"
+            app:boxCornerRadiusTopEnd="24dp"
+            app:boxCornerRadiusBottomStart="24dp"
+            app:boxCornerRadiusBottomEnd="24dp"
+            app:startIconDrawable="@drawable/ic_set_search"
+            app:startIconTint="?attr/themeTextMuted"
             app:hintEnabled="false">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -187,16 +264,18 @@
                 android:hint="@string/search_memories"
                 android:textColor="?attr/themeTextPrimary"
                 android:textColorHint="?attr/themeTextMuted"
+                android:fontFamily="@font/inter"
                 android:singleLine="true"
                 android:paddingVertical="12dp"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Category Filter Chips -->
+        <!-- Category filter pills (MemoryActivity swaps bg_bento_x_chip_on / bg_set_chip) -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:clipToPadding="false"
             android:scrollbars="none">
 
             <LinearLayout
@@ -208,91 +287,102 @@
                 <TextView
                     android:id="@+id/chipCategoryAll"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_chip_selected"
-                    android:paddingHorizontal="14dp"
-                    android:paddingVertical="6dp"
+                    android:layout_height="36dp"
+                    android:gravity="center"
+                    android:background="@drawable/bg_bento_x_chip_on"
+                    android:paddingHorizontal="16dp"
                     android:text="@string/category_all"
-                    android:textColor="?attr/themeAccent"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                    android:textColor="?attr/themeOnAccent"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="500" />
 
                 <TextView
                     android:id="@+id/chipCategoryPersonal"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="36dp"
                     android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_chip_unselected"
-                    android:paddingHorizontal="14dp"
-                    android:paddingVertical="6dp"
+                    android:gravity="center"
+                    android:background="@drawable/bg_set_chip"
+                    android:paddingHorizontal="16dp"
                     android:text="@string/category_personal"
                     android:textColor="?attr/themeTextSecondary"
-                    android:textSize="12sp" />
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="500" />
 
                 <TextView
                     android:id="@+id/chipCategoryPreferences"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="36dp"
                     android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_chip_unselected"
-                    android:paddingHorizontal="14dp"
-                    android:paddingVertical="6dp"
+                    android:gravity="center"
+                    android:background="@drawable/bg_set_chip"
+                    android:paddingHorizontal="16dp"
                     android:text="@string/category_preferences"
                     android:textColor="?attr/themeTextSecondary"
-                    android:textSize="12sp" />
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="500" />
 
                 <TextView
                     android:id="@+id/chipCategoryContacts"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="36dp"
                     android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_chip_unselected"
-                    android:paddingHorizontal="14dp"
-                    android:paddingVertical="6dp"
+                    android:gravity="center"
+                    android:background="@drawable/bg_set_chip"
+                    android:paddingHorizontal="16dp"
                     android:text="@string/category_contacts"
                     android:textColor="?attr/themeTextSecondary"
-                    android:textSize="12sp" />
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="500" />
 
                 <TextView
                     android:id="@+id/chipCategoryRoutines"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="36dp"
                     android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_chip_unselected"
-                    android:paddingHorizontal="14dp"
-                    android:paddingVertical="6dp"
+                    android:gravity="center"
+                    android:background="@drawable/bg_set_chip"
+                    android:paddingHorizontal="16dp"
                     android:text="@string/category_routines"
                     android:textColor="?attr/themeTextSecondary"
-                    android:textSize="12sp" />
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="500" />
 
                 <TextView
                     android:id="@+id/chipCategoryNotes"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="36dp"
                     android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_chip_unselected"
-                    android:paddingHorizontal="14dp"
-                    android:paddingVertical="6dp"
+                    android:gravity="center"
+                    android:background="@drawable/bg_set_chip"
+                    android:paddingHorizontal="16dp"
                     android:text="@string/category_notes"
                     android:textColor="?attr/themeTextSecondary"
-                    android:textSize="12sp" />
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="500" />
             </LinearLayout>
         </HorizontalScrollView>
 
-        <!-- Count header -->
+        <!-- Section title -->
         <TextView
             android:id="@+id/tvMemoryCount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp"
-            android:text="SAVED MEMORIES (0)"
-            android:textColor="?attr/themeTextMuted"
-            android:textSize="11sp"
-            android:letterSpacing="0.05"
-            android:textStyle="bold" />
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="10dp"
+            android:text="Saved memories (0)"
+            android:textColor="?attr/themeTextPrimary"
+            android:textSize="18sp"
+            android:fontFamily="@font/inter"
+            android:textFontWeight="600" />
 
-        <!-- Memory List -->
+        <!-- Memory list -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
@@ -313,6 +403,7 @@
                 android:text="@string/no_memories"
                 android:textColor="?attr/themeTextMuted"
                 android:textSize="14sp"
+                android:fontFamily="@font/inter"
                 android:visibility="gone" />
         </FrameLayout>
     </LinearLayout>

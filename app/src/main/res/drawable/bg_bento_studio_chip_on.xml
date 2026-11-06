@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Customization Studio (Dark Bento, 2026-11-05): selected pill = accent fill.
+     Text on it MUST be ?attr/themeOnAccent (ThemeManager.onAccentColor in code). -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ripple_on_accent">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="999dp" />
+            <solid android:color="?attr/themeAccentFill" />
+            <stroke
+                android:width="1dp"
+                android:color="?attr/themeAccentFill" />
+        </shape>
+    </item>
+</ripple>

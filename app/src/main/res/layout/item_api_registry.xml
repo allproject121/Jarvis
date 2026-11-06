@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento API row card (2026-11-05 bento-all): transparent MaterialCardView shell (kept for code),
+     inner bg_set_card_md card, pill badges, plates instead of HUD boxes, pill action buttons. -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -6,18 +8,18 @@
     android:id="@+id/cardApiItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
-    app:cardBackgroundColor="?attr/themeCardBg"
-    app:cardCornerRadius="14dp"
+    android:layout_marginBottom="8dp"
+    app:cardBackgroundColor="@android:color/transparent"
+    app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
-    app:strokeColor="?attr/themeCardBorder"
-    app:strokeWidth="1dp">
+    app:strokeWidth="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="14dp">
+        android:background="@drawable/bg_set_card_md"
+        android:padding="16dp">
 
         <!-- COLLAPSED HEADER (Always Visible) -->
         <LinearLayout
@@ -32,9 +34,8 @@
                 android:id="@+id/dotStatus"
                 android:layout_width="8dp"
                 android:layout_height="8dp"
-                android:layout_marginEnd="10dp"
-                android:background="@drawable/bg_cyber_status_dot"
-                android:backgroundTint="#00E676" />
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_bento_x_api_dot" />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -52,39 +53,40 @@
                         android:id="@+id/tvCategoryBadge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="?attr/themeChipBg"
-                        android:paddingHorizontal="7dp"
+                        android:background="@drawable/bg_set_badge"
+                        android:paddingHorizontal="8dp"
                         android:paddingVertical="2dp"
-                        android:text="AVIATION"
-                        android:textColor="?attr/themeAccent"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:fontFamily="monospace"
-                        android:layout_marginEnd="8dp" />
+                        android:text="Aviation"
+                        android:textColor="?attr/themeTextSecondary"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
+                        android:layout_marginEnd="6dp" />
 
                     <TextView
                         android:id="@+id/tvAuthBadge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="?attr/themeChipBg"
-                        android:paddingHorizontal="6dp"
+                        android:background="@drawable/bg_set_badge"
+                        android:paddingHorizontal="8dp"
                         android:paddingVertical="2dp"
                         android:text="100% Free"
                         android:textColor="?attr/themeSuccess"
-                        android:textSize="9sp"
-                        android:fontFamily="sans-serif-medium" />
+                        android:textSize="11sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500" />
                 </LinearLayout>
 
                 <TextView
                     android:id="@+id/tvApiName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="8dp"
                     android:text="OpenSky &amp; Community ADS-B Flights"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-medium" />
+                    android:textSize="16sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
                 <TextView
                     android:id="@+id/tvApiShortSummary"
@@ -92,8 +94,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:text="Worldwide civilian aircraft transponders, altitude &amp; heading"
-                    android:textColor="?attr/themeTextSecondary"
-                    android:textSize="11sp"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
                     android:maxLines="1"
                     android:ellipsize="end" />
             </LinearLayout>
@@ -110,25 +113,25 @@
                     android:id="@+id/tvPingStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="READY"
+                    android:text="Ready"
                     android:textColor="?attr/themeAccent"
-                    android:textSize="10sp"
-                    android:fontFamily="monospace"
-                    android:textStyle="bold" />
+                    android:textSize="11sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
                 <TextView
                     android:id="@+id/btnToggleDetail"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:background="?attr/themeChipBg"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="3dp"
-                    android:text="DETAIL ▾"
-                    android:textColor="?attr/themeAccent"
-                    android:textSize="10sp"
-                    android:fontFamily="monospace"
-                    android:textStyle="bold" />
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_set_chip"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
+                    android:text="Details ▾"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="500" />
             </LinearLayout>
         </LinearLayout>
 
@@ -138,71 +141,78 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="12dp"
-            android:paddingTop="10dp"
-            android:background="@drawable/bg_themed_detail_box"
+            android:layout_marginTop="14dp"
             android:visibility="gone"
             tools:visibility="visible">
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="?attr/themeCardBorder"
-                android:layout_marginBottom="10dp" />
-
             <!-- Hindi Explanation -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="KARYA (WHAT IT DOES):"
-                android:textColor="?attr/themeAccent"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:fontFamily="monospace" />
-
-            <TextView
-                android:id="@+id/tvDetailHindi"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:text="Aasman me ud rahe sabhi planes ke transponder signal se unki live position, speed aur altitude track karta hai."
-                android:textColor="?attr/themeTextPrimary"
-                android:textSize="12sp"
-                android:lineSpacingExtra="2dp" />
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_row_item"
+                android:padding="12dp">
 
-            <!-- English Explanation -->
-            <TextView
-                android:id="@+id/tvDetailEnglish"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Worldwide live surveillance of commercial and private aircraft using Mode-S and 1090MHz ADS-B transponder data."
-                android:textColor="?attr/themeTextSecondary"
-                android:textSize="11sp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="What it does"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
+
+                <TextView
+                    android:id="@+id/tvDetailHindi"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Aasman me ud rahe sabhi planes ke transponder signal se unki live position, speed aur altitude track karta hai."
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:lineSpacingExtra="2dp" />
+
+                <!-- English Explanation -->
+                <TextView
+                    android:id="@+id/tvDetailEnglish"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Worldwide live surveillance of commercial and private aircraft using Mode-S and 1090MHz ADS-B transponder data."
+                    android:textColor="?attr/themeTextSecondary"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/inter"
+                    android:lineSpacingExtra="2dp" />
+            </LinearLayout>
 
             <!-- Role in Gods Eye View -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:orientation="horizontal">
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_row_item"
+                android:padding="12dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="GOD'S EYE: "
-                    android:textColor="?attr/themeWarning"
-                    android:textSize="10sp"
-                    android:fontFamily="monospace"
-                    android:textStyle="bold" />
+                    android:text="On God's Eye"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
                 <TextView
                     android:id="@+id/tvGodsEyeRole"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
                     android:text="Draws 3D jet aircraft models, altitude trails and callsigns."
                     android:textColor="?attr/themeTextSecondary"
-                    android:textSize="11sp" />
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter" />
             </LinearLayout>
 
             <!-- Technical URL & Provider -->
@@ -210,28 +220,28 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_themed_inset_box"
-                android:padding="8dp"
+                android:background="@drawable/bg_jarvis_row_item"
+                android:padding="12dp"
                 android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/tvProvider"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="PROVIDER: OpenSky Network / ADSB.lol"
-                    android:textColor="?attr/themeAccent2"
-                    android:textSize="10sp"
-                    android:fontFamily="monospace"
-                    android:textStyle="bold" />
+                    android:text="Provider: OpenSky Network / ADSB.lol"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
                 <TextView
                     android:id="@+id/tvEndpointUrl"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="4dp"
                     android:text="https://opensky-network.org/api/states/all?extended=1"
-                    android:textColor="?attr/themeAccent"
-                    android:textSize="10sp"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="12sp"
                     android:fontFamily="monospace"
                     android:ellipsize="middle"
                     android:singleLine="true" />
@@ -241,93 +251,109 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_jarvis_row_item"
+                android:padding="12dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="VOICE: "
-                    android:textColor="?attr/themeSuccess"
-                    android:textSize="10sp"
-                    android:fontFamily="monospace"
-                    android:textStyle="bold" />
+                    android:text="Say"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
 
                 <TextView
                     android:id="@+id/tvVoiceCommand"
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_marginTop="4dp"
                     android:text="'Jarvis, scan air traffic' ya 'Hawa me ud rahe planes dikhao'"
-                    android:textColor="?attr/themeAccent"
-                    android:textSize="11sp"
-                    android:fontFamily="sans-serif-condensed" />
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter" />
             </LinearLayout>
 
             <!-- Action Buttons: Ping, View Raw Data, Connect to Globe -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="12dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnTestPing"
-                    android:layout_width="wrap_content"
-                    android:layout_height="34dp"
-                    android:backgroundTint="?attr/themeChipBg"
-                    android:fontFamily="monospace"
-                    android:paddingHorizontal="10dp"
-                    android:text="⚡ PING"
-                    android:textColor="?attr/themeAccent"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    app:cornerRadius="7dp"
-                    app:strokeColor="?attr/themeAccent"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minWidth="0dp"
+                    android:paddingHorizontal="8dp"
+                    android:text="Ping"
+                    android:textAllCaps="false"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    app:backgroundTint="?attr/themeChipBg"
+                    app:cornerRadius="20dp"
+                    app:strokeColor="?attr/themePlateBorder"
                     app:strokeWidth="1dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnViewRawData"
-                    android:layout_width="wrap_content"
-                    android:layout_height="34dp"
-                    android:layout_marginStart="6dp"
-                    android:backgroundTint="?attr/themeChipBg"
-                    android:fontFamily="monospace"
-                    android:paddingHorizontal="10dp"
-                    android:text="📋 RAW DATA"
-                    android:textColor="?attr/themeAccent2"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    app:cornerRadius="7dp"
-                    app:strokeColor="?attr/themeAccent2"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minWidth="0dp"
+                    android:paddingHorizontal="8dp"
+                    android:text="Raw data"
+                    android:textAllCaps="false"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    app:backgroundTint="?attr/themeChipBg"
+                    app:cornerRadius="20dp"
+                    app:strokeColor="?attr/themePlateBorder"
                     app:strokeWidth="1dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnConnectGlobe"
-                    android:layout_width="wrap_content"
-                    android:layout_height="34dp"
-                    android:layout_marginStart="6dp"
-                    android:backgroundTint="?attr/themeAccentFill"
-                    android:fontFamily="monospace"
-                    android:paddingHorizontal="10dp"
-                    android:text="🌐 CONNECT"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minWidth="0dp"
+                    android:paddingHorizontal="8dp"
+                    android:text="Connect"
+                    android:textAllCaps="false"
                     android:textColor="?attr/themeOnAccent"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    app:cornerRadius="7dp" />
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    app:backgroundTint="?attr/themeAccentFill"
+                    app:cornerRadius="20dp" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/tvPingResultDetail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="8dp"
                 android:text="Tap to verify live server connection"
                 android:textColor="?attr/themeTextMuted"
-                android:textSize="10sp"
-                android:fontFamily="monospace" />
+                android:textSize="12sp"
+                android:fontFamily="@font/inter" />
 
             <!-- Collapsible Raw Data Viewer Box -->
             <TextView
@@ -335,14 +361,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_themed_inset_box"
+                android:background="@drawable/bg_bento_x_input"
                 android:fontFamily="monospace"
                 android:maxLines="10"
-                android:padding="8dp"
+                android:padding="12dp"
                 android:scrollbars="vertical"
                 android:text=""
                 android:textColor="?attr/themeTextSecondary"
-                android:textSize="10sp"
+                android:textSize="11sp"
                 android:visibility="gone" />
 
         </LinearLayout>

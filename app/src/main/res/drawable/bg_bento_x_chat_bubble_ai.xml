@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento assistant bubble (2026-11-05 bento-all): 20dp radius, 6dp tail corner,
+     card glass gradient + top light-catch sheen + soft corner glow + 1dp hairline. Theme attrs only. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <corners
+                android:topLeftRadius="20dp"
+                android:topRightRadius="20dp"
+                android:bottomRightRadius="20dp"
+                android:bottomLeftRadius="6dp" />
+            <gradient
+                android:type="linear"
+                android:angle="270"
+                android:startColor="?attr/themeCardGlassStart"
+                android:endColor="?attr/themeCardGlassEnd" />
+        </shape>
+    </item>
+    <item
+        android:gravity="top"
+        android:height="40dp">
+        <shape android:shape="rectangle">
+            <corners
+                android:topLeftRadius="20dp"
+                android:topRightRadius="20dp"
+                android:bottomLeftRadius="0dp"
+                android:bottomRightRadius="0dp" />
+            <gradient
+                android:type="linear"
+                android:angle="270"
+                android:startColor="#12FFFFFF"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <corners
+                android:topLeftRadius="20dp"
+                android:topRightRadius="20dp"
+                android:bottomRightRadius="20dp"
+                android:bottomLeftRadius="6dp" />
+            <gradient
+                android:type="radial"
+                android:centerX="1.0"
+                android:centerY="0.0"
+                android:gradientRadius="140%"
+                android:startColor="?attr/themeGlow1"
+                android:endColor="@android:color/transparent" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <corners
+                android:topLeftRadius="20dp"
+                android:topRightRadius="20dp"
+                android:bottomRightRadius="20dp"
+                android:bottomLeftRadius="6dp" />
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="1dp"
+                android:color="?attr/themeCardBorder" />
+        </shape>
+    </item>
+</layer-list>

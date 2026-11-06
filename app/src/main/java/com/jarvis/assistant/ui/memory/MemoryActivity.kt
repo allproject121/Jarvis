@@ -91,9 +91,8 @@ class MemoryActivity : AppCompatActivity() {
     }
 
     private fun updateChipStyles(chips: List<Pair<TextView, String>>, selectedView: TextView) {
-        val tvAccent = android.util.TypedValue()
-        theme.resolveAttribute(R.attr.themeAccent, tvAccent, true)
-        val accentColor = if (tvAccent.data != 0) tvAccent.data else ContextCompat.getColor(this, R.color.primary_cyan)
+        // Bento selected pill = accent fill + on-accent label (never accent-on-accent)
+        val accentColor = com.jarvis.assistant.util.ThemeManager.onAccentColor(this)
 
         val tvSecondary = android.util.TypedValue()
         theme.resolveAttribute(R.attr.themeTextSecondary, tvSecondary, true)
@@ -101,10 +100,10 @@ class MemoryActivity : AppCompatActivity() {
 
         for ((view, _) in chips) {
             if (view == selectedView) {
-                view.setBackgroundResource(R.drawable.bg_chip_selected)
+                view.setBackgroundResource(R.drawable.bg_bento_x_chip_on)
                 view.setTextColor(accentColor)
             } else {
-                view.setBackgroundResource(R.drawable.bg_chip_unselected)
+                view.setBackgroundResource(R.drawable.bg_set_chip)
                 view.setTextColor(secondaryColor)
             }
         }
@@ -124,8 +123,8 @@ class MemoryActivity : AppCompatActivity() {
     private fun setupVectorSyncCard() {
         binding.btnReindexMemories.setOnClickListener {
             com.jarvis.assistant.util.HudSoundManager.playTapSound()
-            binding.tvMemorySyncRatio.text = "SYNCING..."
-            binding.tvMemorySyncRatio.setTextColor(android.graphics.Color.parseColor("#F59E0B"))
+            binding.tvMemorySyncRatio.text = "Syncing..."
+            binding.tvMemorySyncRatio.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this@MemoryActivity, R.attr.themeWarning, android.graphics.Color.parseColor("#F59E0B")))
             lifecycleScope.launch {
                 val pipeline = com.jarvis.assistant.data.memory.MemoryManager.getInstance(this@MemoryActivity)
                 val totalIndexed = pipeline.syncAllMemories(allMemories)
@@ -147,9 +146,12 @@ class MemoryActivity : AppCompatActivity() {
     }
 
     private fun updateVectorHealthUi(indexed: Int, total: Int) {
-        binding.tvMemorySyncRatio.text = "" + indexed + "/" + total + " INDEXED"
-        binding.tvMemorySyncRatio.setTextColor(if (indexed >= total && total > 0) android.graphics.Color.parseColor("#4ADE80") else android.graphics.Color.parseColor("#22D3EE"))
-        binding.tvMemoryHealthSub.text = "Room Database (" + total + " facts) synced with Vector Cache (" + indexed + ") - Built-in Semantic Hashing Active"
+        binding.tvMemorySyncRatio.text = "" + indexed + "/" + total + " indexed"
+        binding.tvMemorySyncRatio.setTextColor(
+            if (indexed >= total && total > 0) com.jarvis.assistant.util.ThemeManager.attrColor(this, R.attr.themeSuccess, android.graphics.Color.parseColor("#4ADE80"))
+            else com.jarvis.assistant.util.ThemeManager.attrColor(this, R.attr.themeAccent, android.graphics.Color.parseColor("#22D3EE"))
+        )
+        binding.tvMemoryHealthSub.text = "Room database (" + total + " facts) synced with vector cache (" + indexed + ") - semantic hashing active"
     }
 
     private fun observeMemories() {
@@ -177,7 +179,7 @@ class MemoryActivity : AppCompatActivity() {
             matchesCategory && matchesSearch
         }
 
-        binding.tvMemoryCount.text = "SAVED MEMORIES (${filtered.size})"
+        binding.tvMemoryCount.text = "Saved memories (${filtered.size})"
         adapter.submitList(filtered)
 
         if (filtered.isEmpty()) {
@@ -199,7 +201,7 @@ class MemoryActivity : AppCompatActivity() {
                 android.R.layout.simple_spinner_dropdown_item,
                 MemoryEntity.ALL_CATEGORIES
             )
-            setBackgroundResource(R.drawable.bg_input_field)
+            setBackgroundResource(R.drawable.bg_bento_x_input)
             setPadding(16, 16, 16, 16)
         }
 
@@ -215,7 +217,7 @@ class MemoryActivity : AppCompatActivity() {
             hint = "e.g., My favorite song is Believer"
             setTextColor(textPrimaryColor)
             setHintTextColor(textMutedColor)
-            setBackgroundResource(R.drawable.bg_input_field)
+            setBackgroundResource(R.drawable.bg_bento_x_input)
             setPadding(24, 24, 24, 24)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -256,7 +258,7 @@ class MemoryActivity : AppCompatActivity() {
         val editText = EditText(this).apply {
             setText(memory.rawText)
             setTextColor(textPrimaryColor)
-            setBackgroundResource(R.drawable.bg_input_field)
+            setBackgroundResource(R.drawable.bg_bento_x_input)
             setPadding(24, 24, 24, 24)
         }
 

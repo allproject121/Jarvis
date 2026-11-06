@@ -23,6 +23,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.PaddingValues
+import com.jarvis.assistant.ui.compose.designsystem.BentoPageTitle
+import com.jarvis.assistant.ui.compose.designsystem.BentoSurface
+import com.jarvis.assistant.ui.compose.designsystem.bentoTokens
 
 /**
  * Collapsible groups for the AndroLLM feature layer settings. Each section is owned by its
@@ -31,16 +36,9 @@ import androidx.compose.ui.unit.dp
 @Composable
 internal fun AndroLlmFeatureSections(onOpenToolDebug: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            text = "AndroLLM features",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = 4.dp)
-        )
-        Text(
-            text = "Optional add-ons. Gemini Live stays Jarvis' primary brain.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        BentoPageTitle(
+            title = "AndroLLM features",
+            subtitle = "Optional add-ons. Gemini Live stays Jarvis' primary brain.",
             modifier = Modifier.padding(horizontal = 4.dp)
         )
         CollapsibleGroup("engines", "Engines · LiteRT-LM & cloud gateway") { EnginesSettingsSection() }
@@ -57,19 +55,32 @@ internal fun AndroLlmFeatureSections(onOpenToolDebug: () -> Unit) {
 @Composable
 private fun CollapsibleGroup(key: String, title: String, content: @Composable () -> Unit) {
     var expanded by rememberSaveable(key) { mutableStateOf(false) }
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = !expanded }
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-            Icon(if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = null)
-        }
-        AnimatedVisibility(visible = expanded) {
-            Column(modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp)) { content() }
+    val bento = bentoTokens()
+    BentoSurface(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(0.dp)) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(horizontal = 20.dp, vertical = 18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    title,
+                    color = bento.text,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                    contentDescription = null,
+                    tint = bento.text2
+                )
+            }
+            AnimatedVisibility(visible = expanded) {
+                Column(modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp)) { content() }
+            }
         }
     }
 }

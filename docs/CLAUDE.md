@@ -2,7 +2,7 @@
 
 > **Purpose:** Har kaam jo Claude ne is project mein kiya, woh yahan likha jaata hai.  
 > **Rule:** Jab bhi koi naya kaam karo, sabse pehle yahan update karo. Dusra AI bhi yahi padh ke project ko samjhe.  
-> **Last Updated:** Nov 5, 2026
+> **Last Updated:** Nov 6, 2026
 
 ---
 
@@ -318,6 +318,33 @@ Text chat → ModelRouter GEMINI_LIVE/AUTO_HYBRID → geminiTextOrLocal → fail
 - **Debug-only adb hooks:** `am start -n com.jarvis.assistant/.debug.DebugOpenActivity --es section VOICE|AGENT|AUTOMATION|PERMISSIONS` / `--es route tool_debug|developer`; `am broadcast -a com.jarvis.assistant.debug.RUN_TOOL -p com.jarvis.assistant --es name get_battery_status --es args '{}'` (tag JarvisToolTest); `am broadcast -a com.jarvis.assistant.debug.GEMINI_TEST -p com.jarvis.assistant --es text "'India ki capital?'" --es mode both` (tag GeminiTest).
 - Known: text chat saved Live model (`gemini-3.1-flash-live-preview`) text endpoint ko bhejta hai — GEMINI_TEST se verify karna. ~90 tools jo GeminiLiveWebSocket me hardcoded hain unpe Agent toggles lagu nahi (protected file).
 
+### Session 10b — Nov 5, 2026 night (Gemini text asli fix, ONNX conflict, bento layouts, phone test)
+- **Gemini text chat fix:** saved model Live-only hai (`gemini-3.1-flash-live-preview` → generateContent par HTTP 400) aur purane fallbacks retire (`gemini-2.0-flash`/`1.5-flash` → 404), isliye har text sawaal chupke se offline brain par jata tha. Naya `ai/GeminiTextModels.kt`: key ke ListModels se text-capable models (Live/TTS/image/embedding skip), newest Flash pehle, kaam karne wala yaad rakhta hai. MultiModelAiRouter, AiTextSynthesizer, VisionDescribe, VisionLookup, GeminiSelfTest isi par. Phone test: `gemini-3.6-flash` HTTP 200 "Jarvis online", chat path 3 s. Gemini Live: "India ki capital New Delhi hai" 1.4 s.
+- **ONNX conflict fix:** PocketTTS ka ORT 1.20 (`jniLibs/arm64-v8a/libonnxruntime.so`) sherpa-onnx ke ORT 1.27 ko override karta tha → sherpa kabhi load nahi hota tha. 1.20 ka SONAME/DT_NEEDED ELF-patch karke `libonnxrt120.so` (scratchpad `elf_rename.py`), `PocketTtsNative.load()` ab `onnxrt120` load karta hai. Phone par dono saath map hue (maps vs APK offsets).
+- **Bento layout:** fragment_home.xml (dual-brain wide tile + nested plates, 2x2 stat tiles, square quick actions), fragment_settings.xml (hero profile tile, 2x2 shortcuts, har section card + plate rows), item_jarvis_settings_link_row, MediaStudioActivity (Compose, theme attrs se). Backup `backups/bento-layout-2026-11-05/restore.ps1`.
+- **Phone par verify (build 21:35):** 6 AI pages khule (debug launcher), tools via dispatcher (battery/storage), Backup dialog + SAF "Save to" picker, merged Home screen sheet, floating avatar launcher ke upar dikha + off karne par hata, Media studio fit. Jarvis ke logcat logs vivo par is waqt nahi aate — Developer page ka "Gemini check" use karo.
+
+### Session 11 — Nov 6, 2026 (God's Eye phone look + Jarvis se asli connection)
+**Backup:** `backups/godseye-mobile-2026-11-06/restore.ps1` (edited files; naye `jarvis-mobile.css/js` hata deta hai).
+- **Phone look (portrait < 760 px):** naye `assets/godseye/jarvis-mobile.css` + `jarvis-mobile.js`, `GodsEyeActivity.bootstrappedIndexHtml()` `</head>` se pehle jodta hai (upstream bundle untouched). Globe full screen; neeche chip bar (Layers · Places · CCTV · Scenes · Style · Display · Street · Context, Weather/Imagery jab layer on); chip = us panel ka bottom sheet (panel ka apna collapse button dabata hai). Places/Style = Jarvis ke sheets jo console ke asli buttons dabate hain + search (`fly_to_location`) + "My location". Dock me sirf Jarvis voice pill. User ne kaha "look naya, baaki sab pehle wala": HUD ke charon kone (compact 8.5px: upar classification/REC, neeche MGRS/GSD-NIIRS voice pill ke upar), Power-up keys chip, credits aur console logo (Back+menu ke bagal me) sab dikhte hain, aapas me overlap nahi. Sheet sirf user tap ya Jarvis `set_panel_open` par khulti hai (console khud panel khole to wapas band). Android Back pehle sheet band karta hai. Accent rang Jarvis theme se (`window.__JARVIS_THEME__`), cards hamesha dark. Landscape/tablet = purana desktop layout.
+- **Native toolbar:** 5 buttons ki jagah Back + menu (API keys, rotate, my location, hero scene, auto tour, reload), top 10dp.
+- **Start view:** plain open → phone ki last known location (60 km), fix na ho to India. Seedha camera flyTo (result card nahi).
+- **Phone rendering:** 30 fps, globe SSE 2.0, tile cache 120, 3D tiles SSE 16 (pehle 60 fps / SSE 1.2 / tiles SSE 6 force hota tha). WebGL context lost → page usi view par reload (2 min me max 2).
+- **Connection fixes:** `GodsEyeActivity.normalizeAction()` — nested `camera{}` → flat lat/lon, layer naam → asli ids (`subsea-cables`→`telegeography-submarine-cables`, `firms`→`local-firms`, `c,f,s` tokens…), `cctv`→`cameraId`, sirf `location` ho to `fly_to_location`. Ek trace_id ek hi baar chalta hai (pehle 2–3 baar). Startup script ab layers band nahi karta (Jarvis ki layers mitti thi). Background me God's Eye ho to `bringToFront`. Auto-tour ab sahi format (purane `flyTo/selectCamera` fallback bundle me the hi nahi).
+- **Jarvis ↔ page:** `GodsEyeActivity.runPageCommand(name,args)` console ka apna runner chalata hai aur result `JarvisVoiceBridge.onCommandResult` se lautata hai. `gods_eye_inspect_globe` ab LIVE (camera, layers+count, user ne kya tap kiya). Naya tool `gods_eye_command` (fly_to_location, track_entity, analyst_query, control_cctv…; list `jarvis-realtime-session.json` se). `open_gods_eye_view` anjaan jagah → console geocode; `layers` arg. Transit me `city`. Radar fallback label sach ("New Delhi (no location fix)").
+- **Brains:** dispatcher `getAvailableToolSchemas` me open_gods_eye_view / control_layers / inspect_globe / gods_eye_command (text chat, Hermes, agentic). Offline brain ko sirf `open_gods_eye_view`. Gemini Live ke schemas protected file me hain → Live ko `gods_eye_command` nahi milta, baaki fixes Live par bhi lagte hain (wo bhi GodsEyeMcpClient use karta hai). PromptGenerator me inspect/command ki 2 lines.
+- **Phone par verify (build 09:39, vivo I2221):** GPS (19.37, 72.83) par khula; inspect_globe live 0.1 s; `gods_eye_command fly_to_location "India Gate, Delhi"` → 28.614, 77.224; analyst_query flights jawab; `open_gods_eye_view Ukraine + earthquakes` → 48.28, 31.18, layer on; Layers sheet + Back. Pehle build me Delhi 3D tiles ke baad WebGL context lost hua tha (RAM full: game + Mora WebView) → isliye reload guard.
+- **Testing tip:** PC par phone-size UI test: assets ko local server se serve karke headless Edge (`--remote-debugging-port`, CDP `Emulation.setDeviceMetricsOverride` 411x878). Phone WebView: `adb forward tcp:9333 localabstract:webview_devtools_remote_<pid>` + websocket `suppress_origin=True`.
+- **Baaki / pata hai:** unit tests is session me nahi chale (PC RAM kam); Satellites layer "CelesTrak unreachable" (upstream feed); Live voice se God's Eye commands mic se test nahi kiye.
+
+### Session 9 — Nov 5–6, 2026 (Offline brain: agent loop, audit, quality fixes)
+**Backups:** `backups/offline-brain-agent-2026-11-05/` aur `backups/offline-brain-quality-2026-11-06/` (dono me `restore.ps1`).
+- Agent loop (`LocalPhoneProvider.streamResponse`): tool → result `<tool_response>` me wapas → model agla tool ya natural jawab (max 4 steps, sirf Qwen). Per-request tools: `ai/local/OfflineToolRouter.kt` (~140 offline tools me se, Hinglish keywords, one-line format). Prompt me date/time.
+- Audit (debug-only `OfflineBrainAudit`, `--ez audit true`; tools sirf parse, chalte nahi): A minimal / B 12 tools / C +6 / D +history+memory. Template = GGUF jaisa sahi, `<think>` 0, leaks 0, cache asli (cacheN 505–512). Bugs: toota tool JSON (3/24) → khaali jawab; router noisy ("kitna" → 6 bekaar tools, get_battery duplicate).
+- Fixes: `ToolCallParser.parseToolCallLenient` (sirf finished reply par; `{"}}` → {}, `60*24 - 6*60` → 1080), kabhi khaali jawab nahi, router sirf specific name words + core look-alike skip, Qwen sampling top_k 20 / top_p 0.8.
+- Phone test (Nov 6, 08:09 build): battery → tool + natural jawab (2 steps), torch (model se) → tool + jawab, Pune mausam → asli data + jawab, 12×15 = 180 bina extra tools, "tum kaun ho" JARVIS. 40–110 s warm, ~210 s cold.
+- Garmi: 2–3 lagatar jawab ke baad Thermal 3; God's Eye 3D globe khula ho to ~1.5 core lagatar. Thread benchmark (4/5/6/8) thande phone par abhi baaki. Router: "roshni" → screen tools jud jaate hain (chhota fix baaki).
+
 ## 🔲 Pending / Next Steps
 
 - [x] **Phone par test** (P-08): Qwen3 4B phone par, text/failover commands tested (Session 8). Voice mic test baaki.
@@ -326,7 +353,7 @@ Text chat → ModelRouter GEMINI_LIVE/AUTO_HYBRID → geminiTextOrLocal → fail
 - [ ] Edge TTS test karna live device pe
 - [ ] Dynamic Island SYSTEM_ALERT_WINDOW permission flow test
 - [ ] Auto-Fix loop end-to-end test
-- [ ] Gods Eye Phase 6: Mobile touch gestures & WebView optimization (se `RESUME.md`)
+- [x] Gods Eye Phase 6: phone layout + WebView budget (Session 11). Baaki: Live voice se God's Eye mic test
 - [ ] CampusVoice Google login fix (localhost pe email use karo — done Nov 3)
 
 ---

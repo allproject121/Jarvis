@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Nova Home (2026-11-05 redesign, shadcn / 21st.dev style)
+    Nova Home - Dark Bento layout (2026-11-05)
     Order: slim top bar -> full-width character stage (status badge floats at its bottom)
-           -> "Overview" bento grid: Dual-brain (wide) | Weather + System (2 squares)
-           | On-device AI (compose) | Quick actions (3 tiles) | Protocols (wide + 2 tiles)
-           | What's new feed (wide).
+           -> "Overview" bento grid (16dp gutters, 12dp gaps, 24dp tiles, 18-20dp padding):
+              Dual-brain (wide: icon plate + pill, title, 2 nested plates, pill actions)
+              | Weather (wide, big temperature) | System (heading + 2x2 stat tiles, big numbers)
+              | On-device AI (compose) | Quick actions (3 square tiles) | Protocols (2 half tiles)
+              | What's new (wide tile, feed rows as nested plates).
     Every id from the previous layout is kept (ViewBinding). Unused legacy views stay GONE.
-    Backup of the previous layout: backups/home-redesign-2026-11-05.
+    Backups: backups/home-redesign-2026-11-05, backups/bento-layout-2026-11-05.
 -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -361,7 +363,9 @@
                 </LinearLayout>
             </FrameLayout>
 
-            <!-- ============ 3. BENTO GRID (hidden as a whole in focus mode) ============ -->
+            <!-- ============ 3. BENTO GRID (hidden as a whole in focus mode) ============
+                 Dark Bento UI Kit structure: 16dp gutters, 12dp gaps, 24dp tiles (bg_nova_card),
+                 20dp tile padding, eyebrow/icon plate -> large title -> muted description -> nested plates. -->
             <LinearLayout
                 android:id="@+id/layoutHomeCardsContainer"
                 android:layout_width="match_parent"
@@ -369,7 +373,7 @@
                 android:orientation="vertical"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:paddingTop="6dp"
+                android:paddingTop="8dp"
                 android:divider="@drawable/bg_nova_spacer"
                 android:showDividers="middle">
 
@@ -380,37 +384,37 @@
                     android:orientation="vertical"
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
-                    android:paddingBottom="2dp">
+                    android:paddingBottom="4dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Overview"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="20sp"
+                        android:textSize="26sp"
                         android:fontFamily="@font/inter"
                         android:textFontWeight="600"
-                        android:letterSpacing="-0.02"
+                        android:letterSpacing="-0.025"
                         android:includeFontPadding="false" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="6dp"
                         android:text="Everything Jarvis is running right now"
                         android:textColor="?attr/themeTextMuted"
-                        android:textSize="13sp"
+                        android:textSize="13.5sp"
                         android:fontFamily="@font/inter" />
                 </LinearLayout>
 
-                <!-- 3a. Dual-brain (wide card) -->
+                <!-- 3a. Dual-brain (wide tile: header, two inner plates, pill actions) -->
                 <LinearLayout
                     android:id="@+id/cardDualBrainStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_nova_card"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -418,66 +422,120 @@
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
 
-                        <TextView
+                        <FrameLayout
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_jarvis_icon_square">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_sparkle"
+                                app:tint="?attr/themeAccent"
+                                android:importantForAccessibility="no" />
+                        </FrameLayout>
+
+                        <Space
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Dual-brain"
-                            android:textAllCaps="true"
-                            android:textColor="?attr/themeTextMuted"
-                            android:textSize="11sp"
-                            android:letterSpacing="0.08"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="500" />
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
 
                         <TextView
                             android:id="@+id/tvBrainActiveBadge"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:background="@drawable/bg_nova_badge"
-                            android:paddingStart="10dp"
-                            android:paddingEnd="10dp"
-                            android:paddingTop="4dp"
-                            android:paddingBottom="4dp"
+                            android:layout_marginStart="12dp"
+                            android:background="@drawable/bg_set_badge"
+                            android:drawableStart="@drawable/bg_bento_dot"
+                            android:drawablePadding="7dp"
+                            android:gravity="center_vertical"
+                            android:paddingStart="11dp"
+                            android:paddingEnd="12dp"
+                            android:paddingTop="6dp"
+                            android:paddingBottom="6dp"
                             android:text="GEMINI LIVE + ANDROLLM"
-                            android:textColor="?attr/themeAccent"
-                            android:textSize="10sp"
-                            android:letterSpacing="0.04"
+                            android:textColor="?attr/themeTextSecondary"
+                            android:textSize="10.5sp"
+                            android:letterSpacing="0.02"
                             android:fontFamily="@font/inter"
-                            android:textFontWeight="600"
-                            android:singleLine="true" />
+                            android:textFontWeight="500"
+                            android:singleLine="true"
+                            android:ellipsize="end" />
                     </LinearLayout>
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:text="Dual-brain AI"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="21sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
+                        android:letterSpacing="-0.015"
+                        android:includeFontPadding="false" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="Cloud reasoning with an on-device fallback."
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter"
+                        android:lineSpacingExtra="2dp" />
+
+                    <!-- Two nested plates side by side -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
+                        android:layout_marginTop="16dp"
                         android:orientation="horizontal"
-                        android:baselineAligned="false">
+                        android:baselineAligned="false"
+                        android:divider="@drawable/bg_bento_gap"
+                        android:showDividers="middle">
 
                         <LinearLayout
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:paddingEnd="12dp">
+                            android:background="@drawable/bg_jarvis_row_item"
+                            android:padding="14dp">
 
-                            <TextView
-                                android:layout_width="wrap_content"
+                            <LinearLayout
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Cloud"
-                                android:textColor="?attr/themeTextMuted"
-                                android:textSize="12sp"
-                                android:fontFamily="@font/inter" />
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <ImageView
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
+                                    android:src="@drawable/ic_weather_cloud"
+                                    app:tint="?attr/themeAccent"
+                                    android:importantForAccessibility="no" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="6dp"
+                                    android:text="Cloud"
+                                    android:textColor="?attr/themeTextMuted"
+                                    android:textSize="12sp"
+                                    android:fontFamily="@font/inter"
+                                    android:textFontWeight="500" />
+                            </LinearLayout>
 
                             <TextView
                                 android:id="@+id/tvPrimaryBrainModel"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
+                                android:layout_marginTop="10dp"
                                 android:text="Gemini Live"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="15sp"
+                                android:textSize="15.5sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
                                 android:singleLine="true"
@@ -485,45 +543,57 @@
 
                             <TextView
                                 android:id="@+id/tvPrimaryBrainStatus"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
+                                android:layout_marginTop="4dp"
                                 android:text="Bidirectional WebSocket"
-                                android:textColor="?attr/themeTextSecondary"
+                                android:textColor="?attr/themeTextMuted"
                                 android:textSize="12sp"
                                 android:fontFamily="@font/inter"
                                 android:maxLines="2"
                                 android:ellipsize="end" />
                         </LinearLayout>
 
-                        <View
-                            android:layout_width="1dp"
-                            android:layout_height="match_parent"
-                            android:background="?attr/themeCardBorder" />
-
                         <LinearLayout
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:paddingStart="12dp">
+                            android:background="@drawable/bg_jarvis_row_item"
+                            android:padding="14dp">
 
-                            <TextView
-                                android:layout_width="wrap_content"
+                            <LinearLayout
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="On-device"
-                                android:textColor="?attr/themeTextMuted"
-                                android:textSize="12sp"
-                                android:fontFamily="@font/inter" />
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <ImageView
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
+                                    android:src="@drawable/ic_androllm_robot"
+                                    app:tint="?attr/themeAccent"
+                                    android:importantForAccessibility="no" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="6dp"
+                                    android:text="On-device"
+                                    android:textColor="?attr/themeTextMuted"
+                                    android:textSize="12sp"
+                                    android:fontFamily="@font/inter"
+                                    android:textFontWeight="500" />
+                            </LinearLayout>
 
                             <TextView
                                 android:id="@+id/tvLocalBrainModel"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
+                                android:layout_marginTop="10dp"
                                 android:text="AndroLLM"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="15sp"
+                                android:textSize="15.5sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
                                 android:singleLine="true"
@@ -531,11 +601,11 @@
 
                             <TextView
                                 android:id="@+id/tvLocalBrainStatus"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
+                                android:layout_marginTop="4dp"
                                 android:text="On-device fallback ready"
-                                android:textColor="?attr/themeTextSecondary"
+                                android:textColor="?attr/themeTextMuted"
                                 android:textSize="12sp"
                                 android:fontFamily="@font/inter"
                                 android:maxLines="2"
@@ -543,7 +613,7 @@
                         </LinearLayout>
                     </LinearLayout>
 
-                    <!-- Pill buttons -->
+                    <!-- Pill actions: primary (accent fill) + two secondary plates -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -552,9 +622,9 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnQuickAiHub"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
+                            android:layout_height="42dp"
                             android:layout_weight="1"
                             android:minHeight="0dp"
                             android:minWidth="0dp"
@@ -564,21 +634,20 @@
                             android:paddingEnd="6dp"
                             android:text="AI setup"
                             android:textAllCaps="false"
-                            android:textSize="12.5sp"
+                            android:textSize="13sp"
                             android:letterSpacing="0"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600"
-                            android:textColor="?attr/themeAccent"
-                            app:backgroundTint="?attr/themeAccentLight"
-                            app:strokeColor="?attr/themeAccent"
-                            app:strokeWidth="1dp"
-                            app:cornerRadius="20dp" />
+                            android:textColor="?attr/themeOnAccent"
+                            app:backgroundTint="?attr/themeAccentFill"
+                            app:strokeWidth="0dp"
+                            app:cornerRadius="21dp" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnQuickMemoryHub"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
+                            android:layout_height="42dp"
                             android:layout_weight="1"
                             android:layout_marginStart="8dp"
                             android:minHeight="0dp"
@@ -589,20 +658,21 @@
                             android:paddingEnd="6dp"
                             android:text="Memory"
                             android:textAllCaps="false"
-                            android:textSize="12.5sp"
+                            android:textSize="13sp"
                             android:letterSpacing="0"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="500"
                             android:textColor="?attr/themeTextPrimary"
-                            app:strokeColor="?attr/themeCardBorder"
+                            app:backgroundTint="?attr/themeChipBg"
+                            app:strokeColor="?attr/themePlateBorder"
                             app:strokeWidth="1dp"
-                            app:cornerRadius="20dp" />
+                            app:cornerRadius="21dp" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnQuickMatrixHub"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
+                            android:layout_height="42dp"
                             android:layout_weight="1"
                             android:layout_marginStart="8dp"
                             android:minHeight="0dp"
@@ -613,316 +683,538 @@
                             android:paddingEnd="6dp"
                             android:text="Agents"
                             android:textAllCaps="false"
-                            android:textSize="12.5sp"
+                            android:textSize="13sp"
                             android:letterSpacing="0"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="500"
                             android:textColor="?attr/themeTextPrimary"
-                            app:strokeColor="?attr/themeCardBorder"
+                            app:backgroundTint="?attr/themeChipBg"
+                            app:strokeColor="?attr/themePlateBorder"
                             app:strokeWidth="1dp"
-                            app:cornerRadius="20dp" />
+                            app:cornerRadius="21dp" />
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- 3b. Weather + System (two squares; one fills the row if the other is hidden) -->
+                <!-- 3b. Weather (wide tile: text left, big temperature right) -->
                 <LinearLayout
+                    android:id="@+id/cardWeather"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:baselineAligned="false"
-                    android:divider="@drawable/bg_nova_spacer"
-                    android:showDividers="middle">
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_nova_card"
+                    android:padding="20dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Weather, tap to refresh">
 
                     <LinearLayout
-                        android:id="@+id/cardWeather"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:minHeight="176dp"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_nova_card"
-                        android:padding="16dp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:contentDescription="Weather, tap to refresh">
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <FrameLayout
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_jarvis_icon_square">
+
+                            <ImageView
+                                android:id="@+id/ivWeatherIcon"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_weather_sun"
+                                app:tint="?attr/themeAccent"
+                                android:contentDescription="Weather icon" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:text="Weather"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="500" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_set_badge"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:paddingTop="5dp"
+                            android:paddingBottom="5dp"
+                            android:text="Now"
+                            android:textColor="?attr/themeTextSecondary"
+                            android:textSize="10.5sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="500"
+                            android:singleLine="true" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:orientation="horizontal"
+                        android:gravity="bottom"
+                        android:baselineAligned="false">
 
                         <LinearLayout
-                            android:layout_width="match_parent"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
+                            android:layout_weight="1"
+                            android:layout_marginEnd="12dp"
+                            android:orientation="vertical">
 
                             <TextView
-                                android:layout_width="0dp"
+                                android:id="@+id/tvWeatherCondition"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Weather"
-                                android:textAllCaps="true"
-                                android:textColor="?attr/themeTextMuted"
-                                android:textSize="11sp"
-                                android:letterSpacing="0.08"
+                                android:text="Detecting location…"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="19sp"
                                 android:fontFamily="@font/inter"
-                                android:textFontWeight="500" />
+                                android:textFontWeight="600"
+                                android:letterSpacing="-0.01"
+                                android:maxLines="2"
+                                android:ellipsize="end" />
 
-                            <FrameLayout
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
-                                android:background="@drawable/bg_nova_icon_chip">
-
-                                <ImageView
-                                    android:id="@+id/ivWeatherIcon"
-                                    android:layout_width="18dp"
-                                    android:layout_height="18dp"
-                                    android:layout_gravity="center"
-                                    android:src="@drawable/ic_weather_sun"
-                                    app:tint="?attr/themeAccent"
-                                    android:contentDescription="Weather icon" />
-                            </FrameLayout>
+                            <TextView
+                                android:id="@+id/tvWeatherDetails"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Tap to refresh"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="13sp"
+                                android:fontFamily="@font/inter"
+                                android:maxLines="2"
+                                android:ellipsize="end" />
                         </LinearLayout>
 
                         <TextView
                             android:id="@+id/tvTemperature"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
                             android:text="--°C"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="34sp"
+                            android:textSize="40sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600"
-                            android:letterSpacing="-0.03"
+                            android:letterSpacing="-0.035"
                             android:singleLine="true"
                             android:includeFontPadding="false" />
-
-                        <TextView
-                            android:id="@+id/tvWeatherCondition"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Detecting location…"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="13sp"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="500"
-                            android:maxLines="2"
-                            android:ellipsize="end" />
-
-                        <TextView
-                            android:id="@+id/tvWeatherDetails"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Tap to refresh"
-                            android:textColor="?attr/themeTextMuted"
-                            android:textSize="11.5sp"
-                            android:fontFamily="@font/inter"
-                            android:maxLines="2"
-                            android:ellipsize="end" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/cardTelemetry"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:minHeight="176dp"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_nova_card"
-                        android:padding="16dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="32dp"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="System"
-                                android:textAllCaps="true"
-                                android:textColor="?attr/themeTextMuted"
-                                android:textSize="11sp"
-                                android:letterSpacing="0.08"
-                                android:fontFamily="@font/inter"
-                                android:textFontWeight="500" />
-
-                            <TextView
-                                android:id="@+id/tvTelemetryUptime"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:layout_marginStart="8dp"
-                                android:gravity="end"
-                                android:text="Online"
-                                android:textColor="?attr/themeTextMuted"
-                                android:textSize="10.5sp"
-                                android:fontFamily="@font/inter"
-                                android:singleLine="true"
-                                android:ellipsize="end" />
-                        </LinearLayout>
-
-                        <!-- Battery -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Battery"
-                                android:textColor="?attr/themeTextMuted"
-                                android:textSize="11.5sp"
-                                android:fontFamily="@font/inter" />
-
-                            <TextView
-                                android:id="@+id/tvTelemetryBatteryState"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:layout_marginStart="6dp"
-                                android:gravity="end"
-                                android:text="Online"
-                                android:textColor="?attr/themeAccent"
-                                android:textSize="10.5sp"
-                                android:fontFamily="@font/inter"
-                                android:singleLine="true"
-                                android:ellipsize="end" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/tvTelemetryBattery"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="--%"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="600"
-                            android:singleLine="true" />
-
-                        <!-- Memory -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Memory"
-                                android:textColor="?attr/themeTextMuted"
-                                android:textSize="11.5sp"
-                                android:fontFamily="@font/inter" />
-
-                            <TextView
-                                android:id="@+id/tvTelemetryRamPercent"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:layout_marginStart="6dp"
-                                android:gravity="end"
-                                android:text="--% load"
-                                android:textColor="?attr/themeAccent"
-                                android:textSize="10.5sp"
-                                android:fontFamily="@font/inter"
-                                android:singleLine="true"
-                                android:ellipsize="end" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/tvTelemetryRam"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="-- / -- GB"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="600"
-                            android:singleLine="true"
-                            android:ellipsize="end" />
-
-                        <!-- Network -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Network"
-                                android:textColor="?attr/themeTextMuted"
-                                android:textSize="11.5sp"
-                                android:fontFamily="@font/inter" />
-
-                            <TextView
-                                android:id="@+id/tvTelemetryNetworkStatus"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:layout_marginStart="6dp"
-                                android:gravity="end"
-                                android:text="Secure"
-                                android:textColor="?attr/themeAccent"
-                                android:textSize="10.5sp"
-                                android:fontFamily="@font/inter"
-                                android:singleLine="true"
-                                android:ellipsize="end" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/tvTelemetryNetwork"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Wi-Fi"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="600"
-                            android:singleLine="true"
-                            android:ellipsize="end" />
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- 3c. On-device AI dashboard (merged AndroLLM home; toggle: HomeDashboardPrefs) -->
+                <!-- 3c. System telemetry: heading + 2x2 half-width stat tiles (root toggles as one) -->
+                <LinearLayout
+                    android:id="@+id/cardTelemetry"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="10dp"
+                    android:divider="@drawable/bg_nova_spacer"
+                    android:showDividers="middle">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingStart="4dp"
+                        android:paddingEnd="4dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="System"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="19sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600"
+                            android:letterSpacing="-0.015"
+                            android:includeFontPadding="false" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:text="Live device telemetry"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+
+                    <!-- Row 1: Battery | Memory -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:baselineAligned="false"
+                        android:divider="@drawable/bg_nova_spacer"
+                        android:showDividers="middle">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:background="@drawable/bg_nova_card"
+                            android:padding="18dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <FrameLayout
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
+                                    android:background="@drawable/bg_jarvis_icon_square">
+
+                                    <ImageView
+                                        android:layout_width="17dp"
+                                        android:layout_height="17dp"
+                                        android:layout_gravity="center"
+                                        android:src="@drawable/ic_settings_plug"
+                                        app:tint="?attr/themeAccent"
+                                        android:importantForAccessibility="no" />
+                                </FrameLayout>
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:text="Battery"
+                                    android:textColor="?attr/themeTextMuted"
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/inter"
+                                    android:textFontWeight="500" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvTelemetryBattery"
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:layout_marginTop="18dp"
+                                android:gravity="start|center_vertical"
+                                android:text="--%"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="32sp"
+                                android:autoSizeTextType="uniform"
+                                android:autoSizeMinTextSize="16sp"
+                                android:autoSizeMaxTextSize="32sp"
+                                android:autoSizeStepGranularity="1sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="600"
+                                android:letterSpacing="-0.03"
+                                android:maxLines="1"
+                                android:includeFontPadding="false" />
+
+                            <TextView
+                                android:id="@+id/tvTelemetryBatteryState"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:background="@drawable/bg_set_badge"
+                                android:drawableStart="@drawable/bg_bento_dot"
+                                android:drawablePadding="6dp"
+                                android:gravity="center_vertical"
+                                android:paddingStart="9dp"
+                                android:paddingEnd="10dp"
+                                android:paddingTop="4dp"
+                                android:paddingBottom="4dp"
+                                android:text="Online"
+                                android:textColor="?attr/themeTextSecondary"
+                                android:textSize="11sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="500"
+                                android:singleLine="true"
+                                android:ellipsize="end" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:background="@drawable/bg_nova_card"
+                            android:padding="18dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <FrameLayout
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
+                                    android:background="@drawable/bg_jarvis_icon_square">
+
+                                    <ImageView
+                                        android:layout_width="17dp"
+                                        android:layout_height="17dp"
+                                        android:layout_gravity="center"
+                                        android:src="@drawable/ic_settings_db"
+                                        app:tint="?attr/themeAccent"
+                                        android:importantForAccessibility="no" />
+                                </FrameLayout>
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:text="Memory"
+                                    android:textColor="?attr/themeTextMuted"
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/inter"
+                                    android:textFontWeight="500" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvTelemetryRamPercent"
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:layout_marginTop="18dp"
+                                android:gravity="start|center_vertical"
+                                android:text="--% load"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="32sp"
+                                android:autoSizeTextType="uniform"
+                                android:autoSizeMinTextSize="16sp"
+                                android:autoSizeMaxTextSize="32sp"
+                                android:autoSizeStepGranularity="1sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="600"
+                                android:letterSpacing="-0.03"
+                                android:maxLines="1"
+                                android:includeFontPadding="false" />
+
+                            <TextView
+                                android:id="@+id/tvTelemetryRam"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:text="-- / -- GB"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="12.5sp"
+                                android:fontFamily="@font/inter"
+                                android:singleLine="true"
+                                android:ellipsize="end" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Row 2: Network | Uptime -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:baselineAligned="false"
+                        android:divider="@drawable/bg_nova_spacer"
+                        android:showDividers="middle">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:background="@drawable/bg_nova_card"
+                            android:padding="18dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <FrameLayout
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
+                                    android:background="@drawable/bg_jarvis_icon_square">
+
+                                    <ImageView
+                                        android:layout_width="17dp"
+                                        android:layout_height="17dp"
+                                        android:layout_gravity="center"
+                                        android:src="@drawable/ic_settings_wave"
+                                        app:tint="?attr/themeAccent"
+                                        android:importantForAccessibility="no" />
+                                </FrameLayout>
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:text="Network"
+                                    android:textColor="?attr/themeTextMuted"
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/inter"
+                                    android:textFontWeight="500" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvTelemetryNetwork"
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:layout_marginTop="18dp"
+                                android:gravity="start|center_vertical"
+                                android:text="Wi-Fi"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="28sp"
+                                android:autoSizeTextType="uniform"
+                                android:autoSizeMinTextSize="16sp"
+                                android:autoSizeMaxTextSize="28sp"
+                                android:autoSizeStepGranularity="1sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="600"
+                                android:letterSpacing="-0.025"
+                                android:maxLines="1"
+                                android:includeFontPadding="false" />
+
+                            <TextView
+                                android:id="@+id/tvTelemetryNetworkStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:background="@drawable/bg_set_badge"
+                                android:drawableStart="@drawable/bg_bento_dot"
+                                android:drawablePadding="6dp"
+                                android:gravity="center_vertical"
+                                android:paddingStart="9dp"
+                                android:paddingEnd="10dp"
+                                android:paddingTop="4dp"
+                                android:paddingBottom="4dp"
+                                android:text="Secure"
+                                android:textColor="?attr/themeTextSecondary"
+                                android:textSize="11sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="500"
+                                android:singleLine="true"
+                                android:ellipsize="end" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:background="@drawable/bg_nova_card"
+                            android:padding="18dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <FrameLayout
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
+                                    android:background="@drawable/bg_jarvis_icon_square">
+
+                                    <ImageView
+                                        android:layout_width="17dp"
+                                        android:layout_height="17dp"
+                                        android:layout_gravity="center"
+                                        android:src="@drawable/ic_auto_cycle"
+                                        app:tint="?attr/themeAccent"
+                                        android:importantForAccessibility="no" />
+                                </FrameLayout>
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:text="Uptime"
+                                    android:textColor="?attr/themeTextMuted"
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/inter"
+                                    android:textFontWeight="500" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvTelemetryUptime"
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:layout_marginTop="18dp"
+                                android:gravity="start|center_vertical"
+                                android:text="Online"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="28sp"
+                                android:autoSizeTextType="uniform"
+                                android:autoSizeMinTextSize="16sp"
+                                android:autoSizeMaxTextSize="28sp"
+                                android:autoSizeStepGranularity="1sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="600"
+                                android:letterSpacing="-0.025"
+                                android:maxLines="1"
+                                android:includeFontPadding="false" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:text="Since last boot"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="12.5sp"
+                                android:fontFamily="@font/inter"
+                                android:singleLine="true"
+                                android:ellipsize="end" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 3d. On-device AI dashboard (merged AndroLLM home; toggle: HomeDashboardPrefs) -->
                 <androidx.compose.ui.platform.ComposeView
                     android:id="@+id/composeLocalAiDashboard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:visibility="gone" />
 
-                <!-- 3d. Quick actions (3 icon tiles) -->
+                <!-- 3e. Quick actions: heading + 3 square tiles (icon plate, title, muted sub) -->
                 <LinearLayout
                     android:id="@+id/layoutActionGrid"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingTop="6dp"
+                    android:paddingTop="10dp"
                     android:divider="@drawable/bg_nova_spacer"
                     android:showDividers="middle">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:orientation="vertical"
                         android:paddingStart="4dp"
-                        android:text="Quick actions"
-                        android:textAllCaps="true"
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="11sp"
-                        android:letterSpacing="0.08"
-                        android:fontFamily="@font/inter"
-                        android:textFontWeight="500" />
+                        android:paddingEnd="4dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Quick actions"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="19sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600"
+                            android:letterSpacing="-0.015"
+                            android:includeFontPadding="false" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:text="One-tap shortcuts"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -935,23 +1227,24 @@
                         <LinearLayout
                             android:id="@+id/btnScreenShareQuick"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:layout_weight="1"
+                            android:minHeight="136dp"
                             android:orientation="vertical"
                             android:background="@drawable/bg_nova_card"
-                            android:padding="14dp"
+                            android:padding="16dp"
                             android:clickable="true"
                             android:focusable="true"
                             android:contentDescription="Start or stop screen sharing">
 
                             <FrameLayout
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:background="@drawable/bg_nova_icon_chip">
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:background="@drawable/bg_jarvis_icon_square">
 
                                 <ImageView
-                                    android:layout_width="18dp"
-                                    android:layout_height="18dp"
+                                    android:layout_width="20dp"
+                                    android:layout_height="20dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_screen_share"
                                     app:tint="?attr/themeAccent"
@@ -959,24 +1252,26 @@
                             </FrameLayout>
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
+                                android:layout_marginTop="26dp"
                                 android:text="Screen"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="13sp"
+                                android:textSize="16sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
-                                android:singleLine="true" />
+                                android:letterSpacing="-0.01"
+                                android:singleLine="true"
+                                android:ellipsize="end" />
 
                             <TextView
                                 android:id="@+id/tvQuickScreenShareStatus"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
+                                android:layout_marginTop="3dp"
                                 android:text="Share screen"
                                 android:textColor="?attr/themeTextMuted"
-                                android:textSize="11sp"
+                                android:textSize="12sp"
                                 android:fontFamily="@font/inter"
                                 android:singleLine="true"
                                 android:ellipsize="end" />
@@ -985,23 +1280,24 @@
                         <LinearLayout
                             android:id="@+id/btnSavedMemories"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:layout_weight="1"
+                            android:minHeight="136dp"
                             android:orientation="vertical"
                             android:background="@drawable/bg_nova_card"
-                            android:padding="14dp"
+                            android:padding="16dp"
                             android:clickable="true"
                             android:focusable="true"
                             android:contentDescription="Recall core memories">
 
                             <FrameLayout
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:background="@drawable/bg_nova_icon_chip">
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:background="@drawable/bg_jarvis_icon_square">
 
                                 <ImageView
-                                    android:layout_width="18dp"
-                                    android:layout_height="18dp"
+                                    android:layout_width="20dp"
+                                    android:layout_height="20dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_stack_memory"
                                     app:tint="?attr/themeAccent"
@@ -1009,23 +1305,25 @@
                             </FrameLayout>
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
+                                android:layout_marginTop="26dp"
                                 android:text="Memories"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="13sp"
+                                android:textSize="16sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
-                                android:singleLine="true" />
+                                android:letterSpacing="-0.01"
+                                android:singleLine="true"
+                                android:ellipsize="end" />
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
+                                android:layout_marginTop="3dp"
                                 android:text="Recall core"
                                 android:textColor="?attr/themeTextMuted"
-                                android:textSize="11sp"
+                                android:textSize="12sp"
                                 android:fontFamily="@font/inter"
                                 android:singleLine="true"
                                 android:ellipsize="end" />
@@ -1034,23 +1332,24 @@
                         <LinearLayout
                             android:id="@+id/btnConversationLanguageQuick"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:layout_weight="1"
+                            android:minHeight="136dp"
                             android:orientation="vertical"
                             android:background="@drawable/bg_nova_card"
-                            android:padding="14dp"
+                            android:padding="16dp"
                             android:clickable="true"
                             android:focusable="true"
                             android:contentDescription="Choose conversation language">
 
                             <FrameLayout
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:background="@drawable/bg_nova_icon_chip">
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:background="@drawable/bg_jarvis_icon_square">
 
                                 <ImageView
-                                    android:layout_width="18dp"
-                                    android:layout_height="18dp"
+                                    android:layout_width="20dp"
+                                    android:layout_height="20dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_settings_language"
                                     app:tint="?attr/themeAccent"
@@ -1058,24 +1357,26 @@
                             </FrameLayout>
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
+                                android:layout_marginTop="26dp"
                                 android:text="Language"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="13sp"
+                                android:textSize="16sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
-                                android:singleLine="true" />
+                                android:letterSpacing="-0.01"
+                                android:singleLine="true"
+                                android:ellipsize="end" />
 
                             <TextView
                                 android:id="@+id/tvQuickLanguageStatus"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
+                                android:layout_marginTop="3dp"
                                 android:text="Auto"
                                 android:textColor="?attr/themeTextMuted"
-                                android:textSize="11sp"
+                                android:textSize="12sp"
                                 android:fontFamily="@font/inter"
                                 android:singleLine="true"
                                 android:ellipsize="end" />
@@ -1083,27 +1384,43 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- 3e. Protocols (two small tiles) -->
+                <!-- 3f. Protocols: heading + two half tiles -->
                 <LinearLayout
                     android:id="@+id/layoutTacticalProtocols"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingTop="6dp"
+                    android:paddingTop="10dp"
                     android:divider="@drawable/bg_nova_spacer"
                     android:showDividers="middle">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:orientation="vertical"
                         android:paddingStart="4dp"
-                        android:text="Protocols"
-                        android:textAllCaps="true"
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="11sp"
-                        android:letterSpacing="0.08"
-                        android:fontFamily="@font/inter"
-                        android:textFontWeight="500" />
+                        android:paddingEnd="4dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Protocols"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="19sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600"
+                            android:letterSpacing="-0.015"
+                            android:includeFontPadding="false" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:text="Voice and developer tools"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
 
                     <LinearLayout
                         android:id="@+id/rowTacticalProtocols2"
@@ -1117,47 +1434,77 @@
                         <LinearLayout
                             android:id="@+id/cardHomePocketTts"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:background="@drawable/bg_nova_card"
-                            android:padding="16dp"
+                            android:padding="18dp"
                             android:clickable="true"
                             android:focusable="true"
                             android:contentDescription="Neural voice">
 
-                            <FrameLayout
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:background="@drawable/bg_nova_icon_chip">
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
 
-                                <ImageView
-                                    android:layout_width="18dp"
-                                    android:layout_height="18dp"
-                                    android:layout_gravity="center"
-                                    android:src="@drawable/ic_settings_owner_voice"
-                                    app:tint="?attr/themeAccent"
-                                    android:importantForAccessibility="no" />
-                            </FrameLayout>
+                                <FrameLayout
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:background="@drawable/bg_jarvis_icon_square">
+
+                                    <ImageView
+                                        android:layout_width="20dp"
+                                        android:layout_height="20dp"
+                                        android:layout_gravity="center"
+                                        android:src="@drawable/ic_settings_owner_voice"
+                                        app:tint="?attr/themeAccent"
+                                        android:importantForAccessibility="no" />
+                                </FrameLayout>
+
+                                <Space
+                                    android:layout_width="0dp"
+                                    android:layout_height="1dp"
+                                    android:layout_weight="1" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:background="@drawable/bg_set_badge"
+                                    android:paddingStart="9dp"
+                                    android:paddingEnd="9dp"
+                                    android:paddingTop="4dp"
+                                    android:paddingBottom="4dp"
+                                    android:text="Voice"
+                                    android:textColor="?attr/themeTextSecondary"
+                                    android:textSize="10.5sp"
+                                    android:fontFamily="@font/inter"
+                                    android:textFontWeight="500"
+                                    android:singleLine="true" />
+                            </LinearLayout>
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
+                                android:layout_marginTop="24dp"
                                 android:text="Neural voice"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="13.5sp"
+                                android:textSize="18sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
-                                android:singleLine="true" />
+                                android:letterSpacing="-0.015"
+                                android:singleLine="true"
+                                android:ellipsize="end" />
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
+                                android:layout_marginTop="4dp"
                                 android:text="PocketTTS · 24 kHz"
                                 android:textColor="?attr/themeTextMuted"
-                                android:textSize="11.5sp"
+                                android:textSize="13sp"
                                 android:fontFamily="@font/inter"
                                 android:singleLine="true"
                                 android:ellipsize="end" />
@@ -1166,47 +1513,77 @@
                         <LinearLayout
                             android:id="@+id/cardHomeMatrix"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:background="@drawable/bg_nova_card"
-                            android:padding="16dp"
+                            android:padding="18dp"
                             android:clickable="true"
                             android:focusable="true"
                             android:contentDescription="Bypass IDE">
 
-                            <FrameLayout
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:background="@drawable/bg_nova_icon_chip">
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
 
-                                <ImageView
-                                    android:layout_width="18dp"
-                                    android:layout_height="18dp"
-                                    android:layout_gravity="center"
-                                    android:src="@drawable/ic_code_chip"
-                                    app:tint="?attr/themeAccent"
-                                    android:importantForAccessibility="no" />
-                            </FrameLayout>
+                                <FrameLayout
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:background="@drawable/bg_jarvis_icon_square">
+
+                                    <ImageView
+                                        android:layout_width="20dp"
+                                        android:layout_height="20dp"
+                                        android:layout_gravity="center"
+                                        android:src="@drawable/ic_code_chip"
+                                        app:tint="?attr/themeAccent"
+                                        android:importantForAccessibility="no" />
+                                </FrameLayout>
+
+                                <Space
+                                    android:layout_width="0dp"
+                                    android:layout_height="1dp"
+                                    android:layout_weight="1" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:background="@drawable/bg_set_badge"
+                                    android:paddingStart="9dp"
+                                    android:paddingEnd="9dp"
+                                    android:paddingTop="4dp"
+                                    android:paddingBottom="4dp"
+                                    android:text="Studio"
+                                    android:textColor="?attr/themeTextSecondary"
+                                    android:textSize="10.5sp"
+                                    android:fontFamily="@font/inter"
+                                    android:textFontWeight="500"
+                                    android:singleLine="true" />
+                            </LinearLayout>
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
+                                android:layout_marginTop="24dp"
                                 android:text="Bypass IDE"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="13.5sp"
+                                android:textSize="18sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
-                                android:singleLine="true" />
+                                android:letterSpacing="-0.015"
+                                android:singleLine="true"
+                                android:ellipsize="end" />
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
+                                android:layout_marginTop="4dp"
                                 android:text="Shell &amp; agent studio"
                                 android:textColor="?attr/themeTextMuted"
-                                android:textSize="11.5sp"
+                                android:textSize="13sp"
                                 android:fontFamily="@font/inter"
                                 android:singleLine="true"
                                 android:ellipsize="end" />
@@ -1214,18 +1591,17 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- 3f. What's new (wide feed card; header row lives inside the card) -->
+                <!-- 3g. What's new (wide tile; header inside, feed rows as nested plates) -->
                 <LinearLayout
                     android:id="@+id/layoutUpdatesContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="10dp"
                     android:orientation="vertical"
                     android:background="@drawable/bg_nova_card"
-                    android:clipToOutline="true"
-                    android:divider="@drawable/bg_nova_hairline"
-                    android:showDividers="middle"
-                    android:dividerPadding="16dp">
+                    android:padding="18dp"
+                    android:divider="@drawable/bg_bento_gap"
+                    android:showDividers="middle">
 
                     <LinearLayout
                         android:id="@+id/layoutUpdatesSectionHeader"
@@ -1233,55 +1609,69 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="12dp"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="12dp">
+                        android:paddingStart="2dp"
+                        android:paddingBottom="6dp">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="What's new"
-                            android:textAllCaps="true"
-                            android:textColor="?attr/themeTextMuted"
-                            android:textSize="11sp"
-                            android:letterSpacing="0.08"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="500" />
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="What's new"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="19sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="600"
+                                android:letterSpacing="-0.015"
+                                android:includeFontPadding="false" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="5dp"
+                                android:text="Latest upgrades to Jarvis"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="13sp"
+                                android:fontFamily="@font/inter" />
+                        </LinearLayout>
 
                         <TextView
                             android:id="@+id/btnViewAllUpdates"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
                             android:background="@drawable/bg_nova_ghost_pill"
-                            android:paddingStart="12dp"
-                            android:paddingEnd="12dp"
-                            android:paddingTop="6dp"
-                            android:paddingBottom="6dp"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:paddingTop="7dp"
+                            android:paddingBottom="7dp"
                             android:text="View all"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="12sp"
+                            android:textSize="12.5sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="500"
                             android:clickable="true"
                             android:focusable="true" />
                     </LinearLayout>
 
-                    <!-- Feed row: Agent tasks -->
+                    <!-- Feed plate: Agent tasks -->
                     <LinearLayout
                         android:id="@+id/cardUpdateAgent"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:background="?attr/selectableItemBackground"
-                        android:padding="16dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:padding="14dp"
                         android:clickable="true"
                         android:focusable="true">
 
                         <FrameLayout
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
                             android:background="@drawable/bg_nova_icon_chip">
 
                             <ImageView
@@ -1305,14 +1695,14 @@
                                 android:layout_height="wrap_content"
                                 android:text="Verified actions &amp; UI grounding"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="14sp"
+                                android:textSize="14.5sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="3dp"
+                                android:layout_marginTop="4dp"
                                 android:text="Jarvis watches the screen, tracks multi-step tasks and stops safely when the UI is ambiguous."
                                 android:textColor="?attr/themeTextMuted"
                                 android:textSize="12.5sp"
@@ -1326,7 +1716,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_nova_badge"
+                            android:background="@drawable/bg_set_badge"
                             android:paddingStart="8dp"
                             android:paddingEnd="8dp"
                             android:paddingTop="3dp"
@@ -1338,20 +1728,20 @@
                             android:textFontWeight="500" />
                     </LinearLayout>
 
-                    <!-- Feed row: Voice architecture -->
+                    <!-- Feed plate: Voice architecture -->
                     <LinearLayout
                         android:id="@+id/cardUpdateVoice"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:background="?attr/selectableItemBackground"
-                        android:padding="16dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:padding="14dp"
                         android:clickable="true"
                         android:focusable="true">
 
                         <FrameLayout
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
                             android:background="@drawable/bg_nova_icon_chip">
 
                             <ImageView
@@ -1375,14 +1765,14 @@
                                 android:layout_height="wrap_content"
                                 android:text="Gemini Live &amp; wake word"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="14sp"
+                                android:textSize="14.5sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="3dp"
+                                android:layout_marginTop="4dp"
                                 android:text="Bilingual low-latency streaming, owner voice check and hands-free 'Hey Jarvis'."
                                 android:textColor="?attr/themeTextMuted"
                                 android:textSize="12.5sp"
@@ -1396,7 +1786,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_nova_badge"
+                            android:background="@drawable/bg_set_badge"
                             android:paddingStart="8dp"
                             android:paddingEnd="8dp"
                             android:paddingTop="3dp"
@@ -1408,20 +1798,20 @@
                             android:textFontWeight="500" />
                     </LinearLayout>
 
-                    <!-- Feed row: God's Eye -->
+                    <!-- Feed plate: God's Eye -->
                     <LinearLayout
                         android:id="@+id/cardUpdateGodsEye"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:background="?attr/selectableItemBackground"
-                        android:padding="16dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:padding="14dp"
                         android:clickable="true"
                         android:focusable="true">
 
                         <FrameLayout
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
                             android:background="@drawable/bg_nova_icon_chip">
 
                             <ImageView
@@ -1445,14 +1835,14 @@
                                 android:layout_height="wrap_content"
                                 android:text="God's Eye geospatial view"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="14sp"
+                                android:textSize="14.5sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="3dp"
+                                android:layout_marginTop="4dp"
                                 android:text="Cesium 3D globe, multi-sensor local feeds and live aerial radar."
                                 android:textColor="?attr/themeTextMuted"
                                 android:textSize="12.5sp"
@@ -1466,7 +1856,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_nova_badge"
+                            android:background="@drawable/bg_set_badge"
                             android:paddingStart="8dp"
                             android:paddingEnd="8dp"
                             android:paddingTop="3dp"

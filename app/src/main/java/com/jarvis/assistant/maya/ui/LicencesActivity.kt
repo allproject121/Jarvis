@@ -57,7 +57,7 @@ class LicencesActivity : AppCompatActivity() {
         }
         files.forEachIndexed { i, name ->
             val card = buildCard(name)
-            list.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = MayaUi.dp(this@LicencesActivity, 10f) })
+            list.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = MayaUi.dp(this@LicencesActivity, 8f) })
             card.alpha = 0f
             card.translationY = MayaUi.dp(this, 12f).toFloat()
             card.animate().alpha(1f).translationY(0f).setStartDelay(30L * i).setDuration(240L).start()
@@ -65,18 +65,18 @@ class LicencesActivity : AppCompatActivity() {
     }
 
     private fun buildCard(file: String): View {
-        val pad = MayaUi.dp(this, 16f)
+        val pad = MayaUi.dp(this, 18f)
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundResource(R.drawable.bg_maya_card)
+            setBackgroundResource(R.drawable.bg_set_card_md) // Dark Bento plate (2026-11-05 bento-all)
             setPadding(pad, pad, pad, pad)
             isClickable = true
             isFocusable = true
         }
         val header = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val titles = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        titles.addView(MayaUi.text(this, prettyName(file), 15f, 600))
-        titles.addView(MayaUi.text(this, licenceKind(file), 12f, 500, MayaUi.accent(this)),
+        titles.addView(MayaUi.text(this, prettyName(file), 16f, 600))
+        titles.addView(MayaUi.text(this, licenceKind(file), 13f, 400, MayaUi.textMuted(this)),
             LinearLayout.LayoutParams(-2, -2).apply { topMargin = MayaUi.dp(this@LicencesActivity, 3f) })
         header.addView(titles, LinearLayout.LayoutParams(0, -2, 1f))
         val chevron = MayaUi.text(this, "›", 22f, 500, MayaUi.textMuted(this))

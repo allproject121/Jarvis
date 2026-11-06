@@ -130,11 +130,11 @@ class PermissionActivity : AppCompatActivity() {
         updateExtraPermission("brightness", PermissionHelper.hasWriteSettingsPermission(this))
 
         if (hasMic && hasLoc && hasNotif && hasA11y) {
-            binding.btnGrantAll.text = "ALL ESSENTIAL PERMISSIONS GRANTED ✓"
+            binding.btnGrantAll.text = "All essential permissions granted ✓"
             binding.btnGrantAll.alpha = 0.7f
             binding.btnGrantAll.isEnabled = false
         } else {
-            binding.btnGrantAll.text = "GRANT ALL PERMISSIONS"
+            binding.btnGrantAll.text = "Grant all permissions"
             binding.btnGrantAll.alpha = 1.0f
             binding.btnGrantAll.isEnabled = true
         }
@@ -142,15 +142,17 @@ class PermissionActivity : AppCompatActivity() {
 
     private fun updateCardState(granted: Boolean, statusTv: TextView, button: Button) {
         if (granted) {
-            statusTv.text = "Active & Granted ✓"
-            statusTv.setTextColor(Color.parseColor("#10B981")) // Emerald Green
+            statusTv.text = "Active & granted ✓"
+            statusTv.setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeSuccess))
             button.text = "Manage"
+            styleBentoButton(button, primary = false)
             button.alpha = 1.0f
             button.isEnabled = true
         } else {
-            statusTv.text = "Action Required • Tap Grant"
-            statusTv.setTextColor(Color.parseColor("#F59E0B")) // Amber
+            statusTv.text = "Action required · tap Grant"
+            statusTv.setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeWarning))
             button.text = "Grant"
+            styleBentoButton(button, primary = true)
             button.alpha = 1.0f
             button.isEnabled = true
         }
@@ -184,6 +186,23 @@ class PermissionActivity : AppCompatActivity() {
         }
     }
 
+    // Dark Bento (2026-11-05 bento-all): pending = accent pill + on-accent label, granted ("Manage") = plate pill.
+    private fun styleBentoButton(button: Button, primary: Boolean) {
+        button.isAllCaps = false
+        if (primary) {
+            button.background = ContextCompat.getDrawable(this, com.jarvis.assistant.R.drawable.bg_jarvis_pill_button)
+            button.setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeOnAccent))
+        } else {
+            button.background = ContextCompat.getDrawable(this, com.jarvis.assistant.R.drawable.bg_set_chip)
+            button.setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeTextPrimary))
+        }
+    }
+
+    private fun bentoTypeface(weight: Int): Typeface {
+        val base = androidx.core.content.res.ResourcesCompat.getFont(this, com.jarvis.assistant.R.font.inter) ?: Typeface.DEFAULT
+        return Typeface.create(base, weight, false)
+    }
+
     private fun hasPermission(permission: String) = ContextCompat.checkSelfPermission(this, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED
 
     private fun addExtraPermissionCards() {
@@ -195,33 +214,34 @@ class PermissionActivity : AppCompatActivity() {
         fun card(key: String, title: String, details: String, iconId: Int, action: () -> Unit) {
             val body = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
-                background = androidx.core.content.ContextCompat.getDrawable(this@PermissionActivity, com.jarvis.assistant.R.drawable.bg_jarvis_card)
-                setPadding(dp(18), dp(18), dp(18), dp(18))
-                layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) }
+                background = androidx.core.content.ContextCompat.getDrawable(this@PermissionActivity, com.jarvis.assistant.R.drawable.bg_nova_card)
+                setPadding(dp(20), dp(20), dp(20), dp(20))
+                layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) }
             }
             val row = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL; orientation = LinearLayout.HORIZONTAL }
             val icon = ImageView(this).apply {
                 setImageResource(iconId)
                 imageTintList = android.content.res.ColorStateList.valueOf(resolveThemeColor(com.jarvis.assistant.R.attr.themeAccent))
-                background = androidx.core.content.ContextCompat.getDrawable(this@PermissionActivity, com.jarvis.assistant.R.drawable.bg_jarvis_avatar)
-                setPadding(dp(8), dp(8), dp(8), dp(8))
+                background = androidx.core.content.ContextCompat.getDrawable(this@PermissionActivity, com.jarvis.assistant.R.drawable.bg_set_icon_tile)
+                setPadding(dp(9), dp(9), dp(9), dp(9))
                 contentDescription = null
             }
             row.addView(icon, LinearLayout.LayoutParams(dp(40), dp(40)))
             val labels = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), 0, dp(8), 0) }
-            val heading = TextView(this).apply { text = title; setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeTextPrimary)); textSize = 15f; setTypeface(typeface, Typeface.BOLD) }
-            val status = TextView(this).apply { text = "Checking…"; setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeTextMuted)); textSize = 12f }
+            val heading = TextView(this).apply { text = title; setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeTextPrimary)); textSize = 17f; typeface = bentoTypeface(600); maxLines = 2 }
+            val status = TextView(this).apply { text = "Checking…"; setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeTextMuted)); textSize = 13f; typeface = bentoTypeface(400); setPadding(0, dp(2), 0, 0) }
             labels.addView(heading); labels.addView(status)
             row.addView(labels, LinearLayout.LayoutParams(0, -2, 1f))
             val button = Button(this).apply {
-                text = "Grant"; textSize = 12f; setTypeface(typeface, Typeface.BOLD)
+                text = "Grant"; textSize = 13f; typeface = bentoTypeface(600); isAllCaps = false
+                minWidth = 0; minHeight = 0; minimumWidth = 0; minimumHeight = 0; stateListAnimator = null
                 setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeOnAccent))
                 background = androidx.core.content.ContextCompat.getDrawable(this@PermissionActivity, com.jarvis.assistant.R.drawable.bg_jarvis_pill_button)
-                setPadding(dp(12), 0, dp(12), 0)
+                setPadding(dp(18), 0, dp(18), 0)
                 setOnClickListener { action() }
             }
-            row.addView(button, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(36)))
-            val description = TextView(this).apply { text = details; setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeTextMuted)); textSize = 12f; setPadding(0, dp(10), 0, 0) }
+            row.addView(button, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(38)))
+            val description = TextView(this).apply { text = details; setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeTextMuted)); textSize = 13f; typeface = bentoTypeface(400); setLineSpacing(dp(2).toFloat(), 1f); setPadding(0, dp(12), 0, 0) }
             body.addView(row); body.addView(description)
             section.addView(body)
             extraStatus[key] = status
@@ -247,7 +267,7 @@ class PermissionActivity : AppCompatActivity() {
         }
         val note = TextView(this).apply {
             text = "Screen sharing uses Android’s one-time screen-capture confirmation when you start sharing. Internet, network, notifications, and foreground-service access are managed by Android."
-            setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeTextMuted)); textSize = 11f; setPadding(dp(4), dp(4), dp(4), dp(16))
+            setTextColor(resolveThemeColor(com.jarvis.assistant.R.attr.themeTextMuted)); textSize = 12f; typeface = bentoTypeface(400); setPadding(dp(4), dp(4), dp(4), dp(16))
         }
         section.addView(note)
         column.addView(section, insertion)
@@ -256,8 +276,11 @@ class PermissionActivity : AppCompatActivity() {
     private fun updateExtraPermission(key: String, granted: Boolean) {
         val status = extraStatus[key] ?: return
         status.text = if (granted) "Granted ✓" else "Not granted"
-        status.setTextColor(if (granted) Color.parseColor("#10B981") else Color.parseColor("#F59E0B"))
-        extraButtons[key]?.text = if (granted) "Manage" else "Grant"
+        status.setTextColor(resolveThemeColor(if (granted) com.jarvis.assistant.R.attr.themeSuccess else com.jarvis.assistant.R.attr.themeWarning))
+        extraButtons[key]?.let { btn ->
+            btn.text = if (granted) "Manage" else "Grant"
+            styleBentoButton(btn, primary = !granted)
+        }
     }
 
     private fun resolveThemeColor(attribute: Int): Int {

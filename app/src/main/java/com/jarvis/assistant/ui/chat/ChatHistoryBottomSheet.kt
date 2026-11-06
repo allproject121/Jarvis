@@ -28,6 +28,9 @@ class ChatHistoryBottomSheet : BottomSheetDialogFragment() {
     override fun onStart() {
         super.onStart()
         com.jarvis.assistant.util.FrostedGlassEffect.applyWindowBlur(dialog?.window, blurRadius = 45)
+        // Dark Bento (2026-11-05 bento-all): let the layout's rounded bg_bento_x_sheet show through.
+        dialog?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+            ?.setBackgroundColor(android.graphics.Color.TRANSPARENT)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

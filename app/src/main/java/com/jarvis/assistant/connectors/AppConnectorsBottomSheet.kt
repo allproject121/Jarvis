@@ -118,13 +118,13 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
     private fun setFilterMode(mode: FilterMode) {
         currentFilterMode = mode
 
-        binding.chipFilterAll.setBackgroundResource(if (mode == FilterMode.ALL) R.drawable.bg_jarvis_pill_active else R.drawable.bg_themed2_pill_inactive)
+        binding.chipFilterAll.setBackgroundResource(if (mode == FilterMode.ALL) R.drawable.bg_bento_x_chip_on else R.drawable.bg_set_chip)
         binding.chipFilterAll.setTextColor(if (mode == FilterMode.ALL) com.jarvis.assistant.util.ThemeManager.onAccentColor(requireContext()) else themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
 
-        binding.chipFilterConnected.setBackgroundResource(if (mode == FilterMode.CONNECTED) R.drawable.bg_jarvis_pill_active else R.drawable.bg_themed2_pill_inactive)
+        binding.chipFilterConnected.setBackgroundResource(if (mode == FilterMode.CONNECTED) R.drawable.bg_bento_x_chip_on else R.drawable.bg_set_chip)
         binding.chipFilterConnected.setTextColor(if (mode == FilterMode.CONNECTED) com.jarvis.assistant.util.ThemeManager.onAccentColor(requireContext()) else themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
 
-        binding.chipFilterDisconnected.setBackgroundResource(if (mode == FilterMode.DISCONNECTED) R.drawable.bg_jarvis_pill_active else R.drawable.bg_themed2_pill_inactive)
+        binding.chipFilterDisconnected.setBackgroundResource(if (mode == FilterMode.DISCONNECTED) R.drawable.bg_bento_x_chip_on else R.drawable.bg_set_chip)
         binding.chipFilterDisconnected.setTextColor(if (mode == FilterMode.DISCONNECTED) com.jarvis.assistant.util.ThemeManager.onAccentColor(requireContext()) else themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
 
         populateConnectorsList()
@@ -140,9 +140,9 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
         val disconnectedCount = totalCount - connectedCount
 
         binding.tvConnectorsSubtitle.text = "$connectedCount of $totalCount apps connected with Full Autonomous Access"
-        binding.chipFilterAll.text = "ALL APPS ($totalCount)"
-        binding.chipFilterConnected.text = "CONNECTED ($connectedCount)"
-        binding.chipFilterDisconnected.text = "BASIC ($disconnectedCount)"
+        binding.chipFilterAll.text = "All apps ($totalCount)"
+        binding.chipFilterConnected.text = "Connected ($connectedCount)"
+        binding.chipFilterDisconnected.text = "Basic ($disconnectedCount)"
 
         val filtered = allConnectors.filter { conn ->
             // Filter by Mode
@@ -182,10 +182,11 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
-                    bottomMargin = (10 * density).toInt()
+                    bottomMargin = (8 * density).toInt()
                 }
                 orientation = LinearLayout.VERTICAL
-                setBackgroundResource(R.drawable.bg_jarvis_card)
+                // Dark Bento inner plate (2026-11-05 bento-all)
+                setBackgroundResource(R.drawable.bg_jarvis_row_item)
                 setPadding((14 * density).toInt(), (12 * density).toInt(), (14 * density).toInt(), (12 * density).toInt())
             }
 
@@ -200,12 +201,12 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
             // App Icon Frame
             val iconFrame = FrameLayout(requireContext()).apply {
                 id = View.generateViewId()
-                val sizePx = (38 * density).toInt()
+                val sizePx = (40 * density).toInt()
                 layoutParams = RelativeLayout.LayoutParams(sizePx, sizePx).apply {
                     addRule(RelativeLayout.ALIGN_PARENT_START)
                     addRule(RelativeLayout.CENTER_VERTICAL)
                 }
-                setBackgroundResource(R.drawable.bg_jarvis_icon_square)
+                setBackgroundResource(R.drawable.bg_set_icon_tile)
             }
 
             val ivIcon = ImageView(requireContext()).apply {
@@ -260,20 +261,23 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
             val tvTitle = TextView(requireContext()).apply {
                 text = conn.name
                 setTextColor(themeColor(R.attr.themeTextPrimary, Color.WHITE))
-                textSize = 14f
-                paint.isFakeBoldText = true
+                textSize = 15f
+                bentoFont(this, bold = true)
                 maxLines = 1
+                // shrink before the category pill so the pill never gets pushed off the plate
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT).apply { weight = 1f }
                 ellipsize = android.text.TextUtils.TruncateAt.END
             }
             nameRow.addView(tvTitle)
 
             val tvCategory = TextView(requireContext()).apply {
                 text = conn.category
-                setTextColor(themeColor(R.attr.themeAccent, Color.parseColor("#00E5FF")))
-                textSize = 9.5f
-                paint.isFakeBoldText = true
-                setPadding((6 * density).toInt(), (1 * density).toInt(), (6 * density).toInt(), (1 * density).toInt())
-                setBackgroundResource(R.drawable.bg_themed2_pill_inactive)
+                setTextColor(themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
+                textSize = 11f
+                bentoFont(this, bold = false)
+                maxLines = 1
+                setPadding((8 * density).toInt(), (2 * density).toInt(), (8 * density).toInt(), (2 * density).toInt())
+                setBackgroundResource(R.drawable.bg_set_badge)
                 val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                     marginStart = (6 * density).toInt()
                 }
@@ -287,9 +291,9 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
             val tvStatus = TextView(requireContext()).apply {
                 text = "● " + currentStatus.label
                 setTextColor(Color.parseColor(currentStatus.colorHex))
-                textSize = 10f
-                paint.isFakeBoldText = true
-                setPadding(0, (2 * density).toInt(), 0, 0)
+                textSize = 12f
+                bentoFont(this, bold = false)
+                setPadding(0, (3 * density).toInt(), 0, 0)
             }
             titleCol.addView(tvStatus)
 
@@ -299,9 +303,10 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
             // Description / Capability Summary
             val tvDesc = TextView(requireContext()).apply {
                 text = conn.description
-                setTextColor(themeColor(R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
-                textSize = 11f
-                setPadding(0, (6 * density).toInt(), 0, 0)
+                setTextColor(themeColor(R.attr.themeTextMuted, Color.parseColor("#94A3B8")))
+                textSize = 12f
+                bentoFont(this, bold = false)
+                setPadding(0, (8 * density).toInt(), 0, 0)
             }
             card.addView(tvDesc)
 
@@ -341,17 +346,31 @@ class AppConnectorsBottomSheet : BottomSheetDialogFragment() {
                 card.isClickable = true
                 card.setOnClickListener(openConnectors)
                 val tvLink = TextView(requireContext()).apply {
-                    text = if (conn.isConnected) "MANAGE TOKEN ›" else "LINK / TOKEN ›"
+                    text = if (conn.isConnected) "Manage token ›" else "Link token ›"
                     setTextColor(themeColor(R.attr.themeAccent, Color.parseColor("#00E5FF")))
-                    textSize = 11f
-                    paint.isFakeBoldText = true
-                    setPadding(0, (6 * density).toInt(), 0, 0)
+                    textSize = 13f
+                    bentoFont(this, bold = true)
+                    setPadding(0, (8 * density).toInt(), 0, 0)
                     setOnClickListener(openConnectors)
                 }
                 card.addView(tvLink)
             }
 
             container.addView(card)
+        }
+    }
+
+    /** Dark Bento type (2026-11-05 bento-all): Inter, semibold for titles (falls back to the default face). */
+    private fun bentoFont(tv: TextView, bold: Boolean) {
+        val inter = try { androidx.core.content.res.ResourcesCompat.getFont(requireContext(), R.font.inter) } catch (_: Exception) { null }
+        if (inter != null) {
+            tv.typeface = if (android.os.Build.VERSION.SDK_INT >= 28) {
+                android.graphics.Typeface.create(inter, if (bold) 600 else 400, false)
+            } else {
+                android.graphics.Typeface.create(inter, if (bold) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
+            }
+        } else if (bold) {
+            tv.paint.isFakeBoldText = true
         }
     }
 

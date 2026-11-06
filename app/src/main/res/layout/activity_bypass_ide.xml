@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento layout (2026-11-05 bento-all): page title + muted subtitle, telemetry bento card with
+     metric plates, pill segmented tabs (active = bg_bento_x_chip_on, idle = bg_set_chip; swapped in
+     BypassIdeActivity.switchSubTab), terminal card (monospace kept), pill quick actions. -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -9,7 +12,7 @@
     android:orientation="vertical"
     android:background="?attr/themeBg">
 
-    <!-- 1. TOP APP BAR / DYNAMIC ISLAND HEADER -->
+    <!-- 1. HEADER -->
     <LinearLayout
         android:id="@+id/topBarBypassIde"
         android:layout_width="match_parent"
@@ -17,29 +20,27 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="10dp"
-        android:background="?attr/themeCardGlassStart">
+        android:paddingTop="16dp"
+        android:paddingBottom="10dp">
 
-        <!-- Back Button (Comfortable 44dp touch target) -->
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="@drawable/bg_jarvis_icon_square"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_set_icon_btn"
             android:src="@drawable/ic_back"
             android:padding="10dp"
             android:scaleType="fitCenter"
-            app:tint="?attr/themeAccent"
+            app:tint="?attr/themeTextPrimary"
             android:contentDescription="Back" />
 
-        <!-- Title & Subtitle -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:layout_marginStart="12dp">
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="8dp">
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -50,128 +51,87 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="JARVIS BYPASS IDE"
+                    android:text="Bypass IDE"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.06"
-                    android:fontFamily="sans-serif-medium" />
+                    android:textSize="26sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:letterSpacing="-0.02"
+                    android:singleLine="true" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="PRO"
-                    android:textColor="?attr/themeSuccess"
-                    android:textSize="9sp"
-                    android:textStyle="bold"
-                    android:fontFamily="monospace"
-                    android:background="#2000FF88"
-                    android:paddingHorizontal="5dp"
-                    android:paddingVertical="1dp"
-                    android:layout_marginStart="6dp" />
+                    android:text="Pro"
+                    android:textColor="?attr/themeAccent"
+                    android:textSize="11sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:background="@drawable/bg_set_badge_accent"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:layout_marginStart="8dp" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/tvHeaderSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="AUTONOMOUS AGENTIC STUDIO · V5.2"
-                android:textColor="?attr/themeAccent"
-                android:textSize="10.5sp"
-                android:letterSpacing="0.04"
-                android:fontFamily="monospace"
+                android:text="Autonomous agentic studio · v5.2"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:singleLine="true"
+                android:ellipsize="end"
                 android:layout_marginTop="2dp" />
         </LinearLayout>
 
-        <!-- Dynamic Island Interactive Status Pill (Clickable 40dp) -->
+        <!-- Status pill (tap to cycle) -->
         <LinearLayout
             android:id="@+id/pillDynamicIsland"
             android:layout_width="wrap_content"
-            android:layout_height="38dp"
+            android:layout_height="34dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="@drawable/bg_jarvis_status_badge"
+            android:background="@drawable/bg_set_badge"
             android:paddingHorizontal="12dp"
             android:clickable="true"
             android:focusable="true">
 
             <View
                 android:id="@+id/dotIslandGlow"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:background="@drawable/bg_jarvis_mic_center"
-                android:backgroundTint="#00FF88" />
+                android:layout_width="6dp"
+                android:layout_height="6dp"
+                android:background="@drawable/bg_bento_dot" />
 
             <TextView
                 android:id="@+id/tvIslandStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="STATUS"
-                android:textColor="?attr/themeTextPrimary"
+                android:text="Status"
+                android:textColor="?attr/themeTextSecondary"
                 android:textSize="11sp"
-                android:textStyle="bold"
-                android:fontFamily="monospace"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="500"
+                android:maxWidth="120dp"
+                android:singleLine="true"
+                android:ellipsize="end"
                 android:layout_marginStart="6dp" />
         </LinearLayout>
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1.2dp"
-        android:background="?attr/themeCardBorder" />
-
-    <!-- 2. TELEMETRY & SECURITY ATTESTATION HUD CARD -->
+    <!-- 2. TELEMETRY BENTO CARD -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/bg_jarvis_action_card"
-        android:layout_marginHorizontal="14dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="8dp"
-        android:padding="12dp">
+        android:background="@drawable/bg_jarvis_card"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="10dp"
+        android:padding="16dp">
 
-        <!-- AI Engine Mode & Provider Selector Bar -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="AI BRAIN ENGINE"
-                android:textColor="?attr/themeTextSecondary"
-                android:textSize="10.5sp"
-                android:fontFamily="monospace"
-                android:textStyle="bold"
-                android:letterSpacing="0.04" />
-
-            <TextView
-                android:id="@+id/btnAiEngineSelector"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:gravity="center"
-                android:text="🧠 MODE: SINGLE (GEMINI) ▾"
-                android:textColor="?attr/themeOnAccent"
-                android:textSize="10sp"
-                android:fontFamily="monospace"
-                android:textStyle="bold"
-                android:background="@drawable/bg_jarvis_pill_button"
-                android:paddingHorizontal="10dp"
-                android:clickable="true"
-                android:focusable="true" />
-        </LinearLayout>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="?attr/themeCardBorder"
-            android:layout_marginBottom="8dp" />
-
+        <!-- AI engine mode selector -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -182,52 +142,80 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="HARDWARE ATTESTATION &amp; TELEMETRY"
-                android:textColor="?attr/themeTextSecondary"
-                android:textSize="10.5sp"
-                android:fontFamily="monospace"
-                android:textStyle="bold"
-                android:letterSpacing="0.04" />
+                android:text="AI brain"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="16sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600" />
+
+            <TextView
+                android:id="@+id/btnAiEngineSelector"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:gravity="center"
+                android:text="Mode: single (Gemini) ▾"
+                android:textColor="?attr/themeOnAccent"
+                android:textSize="12sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
+                android:maxWidth="220dp"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:background="@drawable/bg_bento_x_chip_on"
+                android:paddingHorizontal="14dp"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Device telemetry"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter" />
 
             <TextView
                 android:id="@+id/tvBypassSecurityTag"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="CHECKING…"
+                android:text="Checking…"
                 android:textColor="?attr/themeSuccess"
-                android:textSize="9.5sp"
-                android:fontFamily="monospace"
-                android:textStyle="bold"
-                android:background="#2000FF88"
-                android:paddingHorizontal="6dp"
-                android:paddingVertical="2dp" />
+                android:textSize="11sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="500"
+                android:maxWidth="230dp"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:background="@drawable/bg_set_badge"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="3dp" />
         </LinearLayout>
 
-        <!-- 3 Telemetry Metrics Grid -->
+        <!-- 3 metric plates -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="10dp">
 
-            <!-- Metric 1: Battery Arc Core -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/bg_jarvis_icon_square"
-                android:paddingVertical="6dp"
+                android:background="@drawable/bg_jarvis_row_item"
+                android:paddingVertical="10dp"
+                android:paddingHorizontal="12dp"
                 android:layout_marginEnd="4dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="ARC CORE"
-                    android:textColor="?attr/themeTextMuted"
-                    android:textSize="9sp"
-                    android:fontFamily="monospace" />
 
                 <TextView
                     android:id="@+id/tvTeleArcCore"
@@ -235,62 +223,60 @@
                     android:layout_height="wrap_content"
                     android:text="85%"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-medium"
+                    android:textSize="18sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Battery"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:fontFamily="@font/inter"
                     android:layout_marginTop="1dp" />
             </LinearLayout>
 
-            <!-- Metric 2: Free device RAM (ActivityManager.MemoryInfo) -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/bg_jarvis_icon_square"
-                android:paddingVertical="6dp"
+                android:background="@drawable/bg_jarvis_row_item"
+                android:paddingVertical="10dp"
+                android:paddingHorizontal="12dp"
                 android:layout_marginHorizontal="4dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="FREE RAM"
-                    android:textColor="?attr/themeTextMuted"
-                    android:textSize="9sp"
-                    android:fontFamily="monospace" />
 
                 <TextView
                     android:id="@+id/tvTeleEdgeRam"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="—"
-                    android:textColor="?attr/themeAccent"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-medium"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="18sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:singleLine="true" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Free RAM"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:fontFamily="@font/inter"
                     android:layout_marginTop="1dp" />
             </LinearLayout>
 
-            <!-- Metric 3: AI provider the model router last used -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/bg_jarvis_icon_square"
-                android:paddingVertical="6dp"
-                android:paddingHorizontal="4dp"
+                android:background="@drawable/bg_jarvis_row_item"
+                android:paddingVertical="10dp"
+                android:paddingHorizontal="12dp"
                 android:layout_marginStart="4dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="AI PROVIDER"
-                    android:textColor="?attr/themeTextMuted"
-                    android:textSize="9sp"
-                    android:fontFamily="monospace" />
 
                 <TextView
                     android:id="@+id/tvTeleProvider"
@@ -299,132 +285,157 @@
                     android:text="—"
                     android:maxLines="1"
                     android:ellipsize="end"
-                    android:textColor="?attr/themeSuccess"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-medium"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="18sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AI provider"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="11sp"
+                    android:fontFamily="@font/inter"
                     android:layout_marginTop="1dp" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
-    <!-- 3. TACTICAL SEGMENTED SUB-TABS (Minimum 48dp height for comfortable finger tap) -->
+    <!-- 3. SEGMENTED PILL TABS -->
     <LinearLayout
         android:id="@+id/rowSegmentedTabs"
         android:layout_width="match_parent"
-        android:layout_height="52dp"
+        android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingHorizontal="14dp"
-        android:paddingVertical="3dp"
+        android:paddingHorizontal="16dp"
         android:gravity="center_vertical">
 
-        <!-- Tab 1: Shell & Terminal -->
         <TextView
             android:id="@+id/tabShell"
             android:layout_width="0dp"
-            android:layout_height="46dp"
+            android:layout_height="42dp"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="⚡ BYPASS SHELL"
+            android:text="Shell"
             android:textColor="?attr/themeOnAccent"
-            android:textSize="11.5sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-medium"
-            android:background="@drawable/bg_jarvis_pill_button"
+            android:textSize="14sp"
+            android:fontFamily="@font/inter"
+            android:textFontWeight="600"
+            android:background="@drawable/bg_bento_x_chip_on"
             android:clickable="true"
             android:focusable="true"
             android:layout_marginEnd="4dp" />
 
-        <!-- Tab 2: Neural Agents -->
         <TextView
             android:id="@+id/tabAgents"
             android:layout_width="0dp"
-            android:layout_height="46dp"
+            android:layout_height="42dp"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="🧠 AGENT MATRIX"
+            android:text="Agents"
             android:textColor="?attr/themeTextSecondary"
-            android:textSize="11.5sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-medium"
-            android:background="@drawable/bg_jarvis_icon_square"
+            android:textSize="14sp"
+            android:fontFamily="@font/inter"
+            android:textFontWeight="600"
+            android:background="@drawable/bg_set_chip"
             android:clickable="true"
             android:focusable="true"
             android:layout_marginStart="4dp" />
     </LinearLayout>
 
-    <!-- 4. MAIN CONTENT VIEWPORT CONTAINER -->
+    <!-- 4. MAIN CONTENT VIEWPORT -->
     <FrameLayout
         android:id="@+id/viewportContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingHorizontal="14dp"
-        android:paddingTop="6dp"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="10dp"
         android:paddingBottom="12dp">
 
-        <!-- ==================== VIEW 1: BYPASS SHELL & LOGCAT ==================== -->
+        <!-- ==================== VIEW 1: SHELL ==================== -->
         <LinearLayout
             android:id="@+id/panelShellView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <!-- Terminal Output Card -->
+            <!-- Terminal card -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:background="@drawable/bg_jarvis_card"
-                android:padding="12dp">
+                android:padding="16dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingBottom="8dp"
-                    android:layout_marginBottom="4dp">
+                    android:layout_marginBottom="10dp">
 
-                    <TextView
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_set_icon_tile">
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_code_chip"
+                            app:tint="?attr/themeAccent" />
+                    </FrameLayout>
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="JARVIS COMMAND TERMINAL"
-                        android:textColor="?attr/themeAccent"
-                        android:textSize="11sp"
-                        android:fontFamily="monospace"
-                        android:textStyle="bold" />
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Terminal"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Command log"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
 
-                    <!-- Clear Logs Button (40dp) -->
                     <TextView
                         android:id="@+id/btnClearLogs"
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
                         android:gravity="center"
-                        android:text="CLEAR"
+                        android:text="Clear"
                         android:textColor="?attr/themeTextSecondary"
-                        android:textSize="10sp"
-                        android:fontFamily="monospace"
-                        android:background="@drawable/bg_jarvis_icon_square"
-                        android:paddingHorizontal="10dp"
+                        android:textSize="12sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="500"
+                        android:background="@drawable/bg_set_chip"
+                        android:paddingHorizontal="14dp"
                         android:clickable="true"
                         android:focusable="true" />
                 </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?attr/themeCardBorder"
-                    android:layout_marginBottom="6dp" />
-
-                <!-- Scrollable Terminal Window -->
+                <!-- Terminal window on an inner plate -->
                 <ScrollView
                     android:id="@+id/scrollTerminal"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:fillViewport="true"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="12dp"
                     android:scrollbars="none">
 
                     <TextView
@@ -440,13 +451,13 @@
                 </ScrollView>
             </LinearLayout>
 
-            <!-- Quick Action Chips Row (Generous 44dp height for easy tapping) -->
+            <!-- Quick action pills -->
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:scrollbars="none"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp">
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -456,65 +467,65 @@
                     <TextView
                         android:id="@+id/chipMacroWhatsapp"
                         android:layout_width="wrap_content"
-                        android:layout_height="44dp"
+                        android:layout_height="38dp"
                         android:gravity="center_vertical"
-                        android:text="📱 Open WhatsApp"
+                        android:text="Open WhatsApp"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="12sp"
-                        android:fontFamily="sans-serif-medium"
-                        android:background="@drawable/bg_jarvis_action_card"
-                        android:paddingHorizontal="14dp"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter"
+                        android:background="@drawable/bg_set_chip"
+                        android:paddingHorizontal="16dp"
                         android:clickable="true"
                         android:focusable="true"
-                        android:layout_marginEnd="6dp" />
-
+                        android:layout_marginEnd="8dp" />
 
                     <TextView
                         android:id="@+id/chipMacroRoot"
                         android:layout_width="wrap_content"
-                        android:layout_height="44dp"
+                        android:layout_height="38dp"
                         android:gravity="center_vertical"
-                        android:text="⚡ Root Check"
+                        android:text="Root check"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="12sp"
-                        android:fontFamily="sans-serif-medium"
-                        android:background="@drawable/bg_jarvis_action_card"
-                        android:paddingHorizontal="14dp"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter"
+                        android:background="@drawable/bg_set_chip"
+                        android:paddingHorizontal="16dp"
                         android:clickable="true"
                         android:focusable="true"
-                        android:layout_marginEnd="6dp" />
+                        android:layout_marginEnd="8dp" />
 
                     <TextView
                         android:id="@+id/chipMacroDualBrain"
                         android:layout_width="wrap_content"
-                        android:layout_height="44dp"
+                        android:layout_height="38dp"
                         android:gravity="center_vertical"
-                        android:text="🧠 AI Status"
+                        android:text="AI status"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="12sp"
-                        android:fontFamily="sans-serif-medium"
-                        android:background="@drawable/bg_jarvis_action_card"
-                        android:paddingHorizontal="14dp"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/inter"
+                        android:background="@drawable/bg_set_chip"
+                        android:paddingHorizontal="16dp"
                         android:clickable="true"
                         android:focusable="true" />
                 </LinearLayout>
             </HorizontalScrollView>
 
-            <!-- Terminal Command Prompt Input Box (Comfortable 48dp input target) -->
+            <!-- Command input field -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="52dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:background="@drawable/bg_jarvis_action_card"
-                android:paddingHorizontal="12dp">
+                android:background="@drawable/bg_bento_x_input"
+                android:paddingStart="14dp"
+                android:paddingEnd="6dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="jarvis@mobile:~$ "
+                    android:text="$ "
                     android:textColor="?attr/themeAccent"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
                     android:fontFamily="monospace"
                     android:textStyle="bold" />
 
@@ -524,33 +535,32 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@null"
-                    android:hint="Type 'help', 'status', 'scan', 'ask'..."
+                    android:hint="Type help, status, scan, ask…"
                     android:textColorHint="?attr/themeTextMuted"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
                     android:fontFamily="monospace"
                     android:imeOptions="actionSend"
                     android:inputType="textNoSuggestions"
                     android:maxLines="1" />
 
-                <!-- Big Easy-to-Tap RUN Button (48dp x 64dp) -->
                 <TextView
                     android:id="@+id/btnRunCommand"
-                    android:layout_width="64dp"
-                    android:layout_height="38dp"
+                    android:layout_width="68dp"
+                    android:layout_height="40dp"
                     android:gravity="center"
-                    android:text="RUN"
+                    android:text="Run"
                     android:textColor="?attr/themeOnAccent"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:fontFamily="monospace"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
                     android:background="@drawable/bg_jarvis_pill_button"
                     android:clickable="true"
                     android:focusable="true" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- ==================== VIEW 2: NEURAL AGENT MATRIX ==================== -->
+        <!-- ==================== VIEW 2: AGENTS ==================== -->
         <ScrollView
             android:id="@+id/panelAgentsView"
             android:layout_width="match_parent"
@@ -563,25 +573,44 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingBottom="16dp">
+                android:background="@drawable/bg_jarvis_card"
+                android:padding="18dp">
 
-                <!-- Agent 1: Dual-Brain AI Router -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Agents"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="18sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="What runs behind the shell"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter"
+                    android:layout_marginBottom="14dp" />
+
+                <!-- Agent 1: Dual-brain AI router -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:background="@drawable/bg_jarvis_action_card"
-                    android:padding="14dp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="12dp"
                     android:layout_marginBottom="8dp">
 
                     <TextView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
                         android:gravity="center"
                         android:text="🧠"
-                        android:textSize="20sp"
-                        android:background="@drawable/bg_jarvis_icon_square" />
+                        android:textSize="17sp"
+                        android:background="@drawable/bg_set_icon_tile" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -593,18 +622,20 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Dual-Brain AI Router"
+                            android:text="Dual-brain AI router"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                            android:textSize="14sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
 
                         <TextView
                             android:id="@+id/tvRouterAgentDetail"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Last provider used: —"
-                            android:textColor="?attr/themeTextSecondary"
-                            android:textSize="10.5sp"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/inter"
                             android:layout_marginTop="2dp" />
                     </LinearLayout>
                 </LinearLayout>
@@ -615,39 +646,42 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:background="@drawable/bg_jarvis_action_card"
-                    android:padding="14dp"
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="12dp"
                     android:layout_marginBottom="8dp">
 
                     <TextView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
                         android:gravity="center"
                         android:text="♿"
-                        android:textSize="20sp"
-                        android:background="@drawable/bg_jarvis_icon_square" />
+                        android:textSize="17sp"
+                        android:background="@drawable/bg_set_icon_tile" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical"
-                        android:layout_marginStart="12dp">
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="8dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Accessibility SuperCore"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                            android:textSize="14sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Autonomous touch injection &amp; humanized typing"
-                            android:textColor="?attr/themeTextSecondary"
-                            android:textSize="10.5sp"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/inter"
                             android:layout_marginTop="2dp" />
                     </LinearLayout>
 
@@ -657,31 +691,30 @@
                         android:layout_height="wrap_content"
                         android:text="—"
                         android:textColor="?attr/themeSuccess"
-                        android:textSize="10sp"
-                        android:fontFamily="monospace"
-                        android:textStyle="bold"
-                        android:background="#2000FF88"
-                        android:paddingHorizontal="8dp"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
+                        android:background="@drawable/bg_set_badge"
+                        android:paddingHorizontal="10dp"
                         android:paddingVertical="3dp" />
                 </LinearLayout>
 
-
-                <!-- Agent 4: God's Eye Recon -->
+                <!-- Agent 3: God's Eye recon -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:background="@drawable/bg_jarvis_action_card"
-                    android:padding="14dp">
+                    android:background="@drawable/bg_jarvis_row_item"
+                    android:padding="12dp">
 
                     <TextView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
                         android:gravity="center"
                         android:text="🛰️"
-                        android:textSize="20sp"
-                        android:background="@drawable/bg_jarvis_icon_square" />
+                        android:textSize="17sp"
+                        android:background="@drawable/bg_set_icon_tile" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -693,17 +726,19 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="God's Eye Geospatial Recon"
+                            android:text="God's Eye geospatial recon"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                            android:textSize="14sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Cesium 3D Globe, OpenSky flights &amp; live CCTV streams"
-                            android:textColor="?attr/themeTextSecondary"
-                            android:textSize="10.5sp"
+                            android:text="Cesium 3D globe, OpenSky flights &amp; live CCTV streams"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/inter"
                             android:layout_marginTop="2dp" />
                     </LinearLayout>
                 </LinearLayout>

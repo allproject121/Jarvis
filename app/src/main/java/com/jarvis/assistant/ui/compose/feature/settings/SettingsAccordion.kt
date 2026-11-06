@@ -49,6 +49,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.jarvis.assistant.ui.compose.components.CloudGlassCard
 import com.jarvis.assistant.ui.compose.theme.ledger
+import com.jarvis.assistant.ui.compose.designsystem.BentoChip
+import com.jarvis.assistant.ui.compose.designsystem.BentoIconPlate
+import com.jarvis.assistant.ui.compose.designsystem.BentoPillShape
+import com.jarvis.assistant.ui.compose.designsystem.BentoSectionHeader
+import com.jarvis.assistant.ui.compose.designsystem.bentoFieldColors
+import com.jarvis.assistant.ui.compose.designsystem.bentoTokens
 
 internal const val SETTINGS_ACCORDION_DURATION_MS = 220
 
@@ -156,13 +162,8 @@ internal fun SettingsSearchField(
             )
         },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = MaterialTheme.ledger.lampAmber,
-            unfocusedBorderColor = MaterialTheme.ledger.deskHairline,
-            focusedTextColor = MaterialTheme.ledger.deskPaper,
-            unfocusedTextColor = MaterialTheme.ledger.deskPaper,
-            cursorColor = MaterialTheme.ledger.lampAmber
-        )
+        shape = BentoPillShape,
+        colors = bentoFieldColors()
     )
 }
 
@@ -184,13 +185,7 @@ internal fun SettingsQuickActions(
         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(
-                text = "Quick actions",
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.ledger.deskPaper
-                )
-            )
+            BentoSectionHeader(title = "Quick actions", subtitle = "Jump straight to a page")
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -209,30 +204,7 @@ private fun QuickActionChip(
     label: String,
     onClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .clip(CircleShape)
-            .background(MaterialTheme.ledger.lampAmber.copy(alpha = 0.08f))
-            .border(1.dp, MaterialTheme.ledger.lampGlow.copy(alpha = 0.2f), CircleShape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.ledger.lampDeep,
-            modifier = Modifier.size(16.dp)
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.ledger.deskPaper
-            )
-        )
-    }
+    BentoChip(selected = false, onClick = onClick, leadingIcon = icon) { Text(label) }
 }
 
 @Composable
@@ -255,7 +227,7 @@ internal fun SettingsAccordionHeader(
 
     CloudGlassCard(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp)
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp)
     ) {
         Row(
             modifier = Modifier
@@ -269,18 +241,13 @@ internal fun SettingsAccordionHeader(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.ledger.lampDeep,
-                modifier = Modifier.size(22.dp)
-            )
+            BentoIconPlate(icon = icon)
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = group.title,
-                    style = MaterialTheme.typography.titleSmall.copy(
+                    style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.ledger.deskPaper
+                        color = bentoTokens().text
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -289,7 +256,7 @@ internal fun SettingsAccordionHeader(
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.ledger.deskInk
+                            color = bentoTokens().muted
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis

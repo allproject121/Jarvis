@@ -56,8 +56,15 @@ object GodsEyeStandaloneApi {
                 prefs.godsEyeGoogleApiKey.isNotBlank()
             ),
             KeyEntry(
+                "gemini", "GEMINI (JARVIS)",
+                "Jarvis voice on the globe (mic) and the HUD briefing summaries",
+                "https://aistudio.google.com/apikey",
+                listOf("GEMINI_API_KEY"), "free", false,
+                prefs.apiKey.isNotBlank()
+            ),
+            KeyEntry(
                 "openai", "OPENAI",
-                "Voice control and the HUD briefing summaries",
+                "OpenAI Realtime voice and HUD summaries when Gemini is not set",
                 "https://platform.openai.com/api-keys",
                 listOf("OPENAI_API_KEY"), "metered", false,
                 prefs.openAiApiKey.isNotBlank()
@@ -117,9 +124,7 @@ object GodsEyeStandaloneApi {
                 put("tier", entry.tier)
                 put("clientExposed", entry.clientExposed)
                 put("set", entry.isSet)
-                // 'external' = supplied outside this panel's own store. On
-                // Android every key lives in Jarvis settings, so the panel must
-                // never offer to rewrite one from inside the WebView.
+                // Every key lives in Jarvis settings; a saved one is shown as managed there.
                 put("managed", if (entry.isSet) "external" else JSONObject.NULL)
             })
         }
@@ -129,8 +134,9 @@ object GodsEyeStandaloneApi {
             put("setCount", entries.count { it.isSet })
             put("total", entries.size)
             put("store", "jarvis-settings")
-            put("readOnly", true)
-            put("hint", "Keys are managed in Jarvis > Settings > API Connections")
+            // Saving works through the POST bridge (jarvis-bridge.js -> GodsEyeBridgeApi.saveKeys).
+            put("readOnly", false)
+            put("hint", "Keys are saved into Jarvis settings (also in Settings > API Connections)")
         }.toString()
     }
 

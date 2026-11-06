@@ -45,6 +45,9 @@ import com.jarvis.assistant.ui.compose.theme.ledger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.jarvis.assistant.ui.compose.designsystem.BentoPillShape
+import com.jarvis.assistant.ui.compose.designsystem.bentoSecondaryBorder
+import com.jarvis.assistant.ui.compose.designsystem.bentoSecondaryButtonColors
 
 /**
  * "Engines" settings section (AndroLLM area A):
@@ -171,7 +174,7 @@ fun EnginesSettingsSection() {
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
-                OutlinedButton(
+                OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(),
                     enabled = liteRtEnabled && selectedModel != null && !busy,
                     onClick = {
                         busy = true
@@ -185,7 +188,7 @@ fun EnginesSettingsSection() {
                         }
                     }
                 ) { Text("Load") }
-                OutlinedButton(
+                OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(),
                     enabled = !busy && engines.isModelLoaded(),
                     onClick = {
                         busy = true
@@ -196,7 +199,7 @@ fun EnginesSettingsSection() {
                         }
                     }
                 ) { Text("Unload") }
-                OutlinedButton(
+                OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(),
                     enabled = liteRtEnabled && currentMode != AiModelMode.LOCAL_LITERT,
                     onClick = { setMode(AiModelMode.LOCAL_LITERT) }
                 ) { Text("Use for chat") }
@@ -217,7 +220,7 @@ fun EnginesSettingsSection() {
                 onClick = {}
             )
             if (currentMode == AiModelMode.LOCAL_LITERT || currentMode == AiModelMode.CLOUD_GATEWAY) {
-                OutlinedButton(
+                OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(),
                     onClick = { setMode(AiModelMode.AUTO_HYBRID) },
                     modifier = Modifier.padding(horizontal = 12.dp)
                 ) { Text("Restore Auto Hybrid") }
@@ -235,7 +238,7 @@ fun EnginesSettingsSection() {
             .padding(bottom = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        OutlinedButton(
+        OutlinedButton(shape = BentoPillShape, border = bentoSecondaryBorder(), colors = bentoSecondaryButtonColors(),
             enabled = gatewayEnabled && currentMode != AiModelMode.CLOUD_GATEWAY,
             onClick = { setMode(AiModelMode.CLOUD_GATEWAY) }
         ) { Text("Use cloud gateway for chat") }

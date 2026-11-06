@@ -65,6 +65,8 @@ import com.jarvis.assistant.background.JarvisConversationService
 import com.jarvis.assistant.ui.compose.components.CloudCapsuleButton
 import com.jarvis.assistant.ui.compose.components.CloudGlassCard
 import com.jarvis.assistant.ui.compose.theme.ledger
+import com.jarvis.assistant.ui.compose.designsystem.BentoSectionHeader
+import com.jarvis.assistant.ui.compose.designsystem.bentoTokens
 import com.jarvis.assistant.util.PermissionHelper
 import com.jarvis.assistant.voice.overlay.OverlayPermission
 import kotlinx.coroutines.Dispatchers
@@ -398,13 +400,14 @@ private fun VoiceChoiceDialog(
 
 @Composable
 private fun AndroCard(title: String, subtitle: String, content: @Composable () -> Unit) {
-    CloudGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 8.dp)) {
+    CloudGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(top = 18.dp, bottom = 8.dp, start = 4.dp, end = 4.dp)) {
         Column {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.ledger.deskPaper)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.ledger.deskInk)
-            }
-            HorizontalDivider(color = MaterialTheme.ledger.deskHairline)
+            BentoSectionHeader(
+                title = title,
+                subtitle = subtitle,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 10.dp)
+            )
+            HorizontalDivider(color = bentoTokens().border, modifier = Modifier.padding(horizontal = 12.dp))
             content()
         }
     }

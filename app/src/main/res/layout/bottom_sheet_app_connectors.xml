@@ -1,116 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento app connectors sheet (2026-11-05 bento-all): page title + live subtitle, search plate,
+     pill filter chips (selected = accent fill, set in AppConnectorsBottomSheet.setFilterMode),
+     pill actions, connector rows (built in code) as inner plates with 8dp gaps. -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/bg_jarvis_menu_glass"
-    android:paddingStart="20dp"
-    android:paddingEnd="20dp"
-    android:paddingTop="16dp"
+    android:background="@drawable/bg_bento_x_sheet"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="10dp"
     android:paddingBottom="24dp">
 
     <!-- Handle -->
     <View
-        android:layout_width="44dp"
+        android:layout_width="36dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:background="@drawable/bg_jarvis_row_item"
-        android:layout_marginBottom="14dp" />
+        android:background="@drawable/bg_bento_x_handle"
+        android:layout_marginBottom="18dp" />
 
     <!-- Header -->
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp">
+        android:layout_marginBottom="16dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <FrameLayout
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_jarvis_icon_square">
-
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_verified_badge"
-                    app:tint="?attr/themeAccent"
-                    android:contentDescription="Connectors" />
-            </FrameLayout>
-
-            <LinearLayout
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginStart="12dp">
+                android:text="App connectors"
+                android:textColor="?attr/themeTextPrimary"
+                android:textSize="26sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
+                android:letterSpacing="-0.02" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="UNIVERSAL APP CONNECTORS"
-                    android:textColor="?attr/themeTextPrimary"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.06"
-                    android:fontFamily="sans-serif-medium" />
-
-                <TextView
-                    android:id="@+id/tvConnectorsSubtitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Full phone app access &amp; autonomous deep control"
-                    android:textColor="?attr/themeTextMuted"
-                    android:textSize="11.5sp"
-                    android:fontFamily="sans-serif"
-                    android:layout_marginTop="1dp" />
-            </LinearLayout>
+            <TextView
+                android:id="@+id/tvConnectorsSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Full phone app access &amp; autonomous control"
+                android:textColor="?attr/themeTextMuted"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter" />
         </LinearLayout>
 
         <ImageButton
             android:id="@+id/btnCloseConnectors"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:background="@drawable/bg_jarvis_icon_square"
-            android:src="@drawable/ic_close"
-            android:padding="8dp"
-            app:tint="?attr/themeTextMuted"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_set_icon_btn"
+            android:src="@drawable/ic_set_x"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            app:tint="?attr/themeTextPrimary"
             android:contentDescription="Close" />
-    </RelativeLayout>
+    </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?attr/themeCardBorder"
-        android:layout_marginBottom="10dp" />
-
-    <!-- Search Bar -->
+    <!-- Search -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="48dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@drawable/bg_jarvis_card"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:layout_marginBottom="10dp">
+        android:background="@drawable/bg_bento_x_input"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
 
         <ImageView
             android:layout_width="16dp"
             android:layout_height="16dp"
-            android:src="@drawable/ic_search"
-            app:tint="?attr/themeAccent"
-            android:contentDescription="Search" />
+            android:src="@drawable/ic_set_search"
+            app:tint="?attr/themeTextMuted"
+            android:contentDescription="@null" />
 
         <EditText
             android:id="@+id/etSearchConnectors"
@@ -118,20 +93,23 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:background="@null"
-            android:hint="Search installed apps (e.g. Drive, WhatsApp, Files)..."
+            android:hint="Search apps (Drive, WhatsApp, Files…)"
             android:textColor="?attr/themeTextPrimary"
             android:textColorHint="?attr/themeTextMuted"
-            android:textSize="13sp"
+            android:textSize="14sp"
+            android:fontFamily="@font/inter"
+            android:importantForAutofill="no"
             android:inputType="text"
             android:maxLines="1" />
     </LinearLayout>
 
-    <!-- Filter Chips Row -->
+    <!-- Filter chips (backgrounds/text colours swapped in code) -->
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
         android:scrollbars="none"
-        android:layout_marginBottom="10dp">
+        android:overScrollMode="never">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -141,92 +119,130 @@
             <TextView
                 android:id="@+id/chipFilterAll"
                 android:layout_width="wrap_content"
-                android:layout_height="28dp"
-                android:text="ALL APPS"
-                android:textSize="11sp"
-                android:textStyle="bold"
+                android:layout_height="36dp"
+                android:text="All apps"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
                 android:gravity="center"
                 android:textColor="?attr/themeOnAccent"
-                android:background="@drawable/bg_jarvis_pill_active"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:layout_marginEnd="6dp" />
+                android:background="@drawable/bg_bento_x_chip_on"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginEnd="8dp" />
 
             <TextView
                 android:id="@+id/chipFilterConnected"
                 android:layout_width="wrap_content"
-                android:layout_height="28dp"
-                android:text="CONNECTED"
-                android:textSize="11sp"
+                android:layout_height="36dp"
+                android:text="Connected"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
                 android:gravity="center"
-                android:textColor="?attr/themeTextMuted"
-                android:background="@drawable/bg_themed2_pill_inactive"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:layout_marginEnd="6dp" />
+                android:textColor="?attr/themeTextSecondary"
+                android:background="@drawable/bg_set_chip"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginEnd="8dp" />
 
             <TextView
                 android:id="@+id/chipFilterDisconnected"
                 android:layout_width="wrap_content"
-                android:layout_height="28dp"
-                android:text="NOT CONNECTED (BASIC)"
-                android:textSize="11sp"
+                android:layout_height="36dp"
+                android:text="Basic"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:textFontWeight="600"
                 android:gravity="center"
-                android:textColor="?attr/themeTextMuted"
-                android:background="@drawable/bg_themed2_pill_inactive"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp" />
+                android:textColor="?attr/themeTextSecondary"
+                android:background="@drawable/bg_set_chip"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp" />
         </LinearLayout>
     </HorizontalScrollView>
 
-    <!-- Action Buttons Row: Connect All & Add External -->
+    <!-- Actions: Connect all (primary) + Add plugin (plate) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="12dp">
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/btnConnectAllApps"
             android:layout_width="0dp"
-            android:layout_height="38dp"
+            android:layout_height="44dp"
             android:layout_weight="1"
-            android:text="⚡ CONNECT ALL"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:background="@drawable/bg_jarvis_pill_button"
+            android:layout_marginEnd="5dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="Connect all"
+            android:textAllCaps="false"
+            android:textSize="14sp"
+            android:fontFamily="@font/inter"
+            android:textFontWeight="600"
             android:textColor="?attr/themeOnAccent"
-            android:layout_marginEnd="6dp" />
+            app:backgroundTint="?attr/themeAccentFill"
+            app:cornerRadius="22dp" />
 
         <Button
             android:id="@+id/btnAddExternalConnector"
             android:layout_width="0dp"
-            android:layout_height="38dp"
+            android:layout_height="44dp"
             android:layout_weight="1"
-            android:text="➕ ADD PLUGIN"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:background="@drawable/bg_jarvis_card"
+            android:layout_marginStart="5dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="Add plugin"
+            android:textAllCaps="false"
+            android:textSize="14sp"
+            android:fontFamily="@font/inter"
+            android:textFontWeight="600"
             android:textColor="?attr/themeTextPrimary"
-            android:layout_marginStart="6dp" />
+            app:backgroundTint="?attr/themeChipBg"
+            app:strokeColor="?attr/themePlateBorder"
+            app:strokeWidth="1dp"
+            app:cornerRadius="22dp" />
     </LinearLayout>
 
     <!-- Token-based cloud services (Notion, Linear, Todoist, GitLab, Drive, Vercel, Telegram, GitHub) -->
     <Button
         android:id="@+id/btnServiceConnectors"
         android:layout_width="match_parent"
-        android:layout_height="38dp"
-        android:text="🔗 SERVICE CONNECTORS (NOTION, DRIVE, TELEGRAM…)"
-        android:textSize="11sp"
-        android:textStyle="bold"
-        android:background="@drawable/bg_jarvis_card"
+        android:layout_height="48dp"
+        android:layout_marginTop="10dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:text="Service connectors · Notion, Drive, Telegram…"
+        android:textAllCaps="false"
+        android:textSize="14sp"
+        android:fontFamily="@font/inter"
+        android:textFontWeight="600"
         android:textColor="?attr/themeTextPrimary"
-        android:layout_marginBottom="12dp" />
+        android:maxLines="1"
+        android:ellipsize="end"
+        app:backgroundTint="?attr/themeChipBg"
+        app:strokeColor="?attr/themePlateBorder"
+        app:strokeWidth="1dp"
+        app:cornerRadius="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:layout_marginBottom="10dp"
+        android:text="Installed apps"
+        android:textColor="?attr/themeTextSecondary"
+        android:textSize="13sp"
+        android:fontFamily="@font/inter"
+        android:textFontWeight="600" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:maxHeight="440dp"
+        android:overScrollMode="never"
         android:scrollbars="none">
 
         <LinearLayout

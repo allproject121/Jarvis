@@ -46,17 +46,17 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.jarvis.assistant.ui.compose.theme.ledger
+import com.jarvis.assistant.ui.compose.designsystem.BentoFieldShape
+import com.jarvis.assistant.ui.compose.designsystem.BentoIconPlate
+import com.jarvis.assistant.ui.compose.designsystem.bentoFieldColors
+import com.jarvis.assistant.ui.compose.designsystem.bentoPrimaryButtonColors
+import com.jarvis.assistant.ui.compose.designsystem.bentoSliderColors
+import com.jarvis.assistant.ui.compose.designsystem.bentoSwitchColors
+import com.jarvis.assistant.ui.compose.designsystem.bentoTokens
 
 /** AndroLLM's monochrome switch palette. */
 @Composable
-internal fun settingsSwitchColors(): SwitchColors = SwitchDefaults.colors(
-    checkedThumbColor = MaterialTheme.ledger.inkOnLamp,
-    checkedTrackColor = MaterialTheme.ledger.lampAmber,
-    checkedBorderColor = Color.Transparent,
-    uncheckedThumbColor = MaterialTheme.ledger.deskInk,
-    uncheckedTrackColor = MaterialTheme.ledger.deskWalnutDeep,
-    uncheckedBorderColor = MaterialTheme.ledger.deskHairline
-)
+internal fun settingsSwitchColors(): SwitchColors = bentoSwitchColors()
 
 @Composable
 internal fun SettingRow(
@@ -76,12 +76,7 @@ internal fun SettingRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.ledger.lampDeep,
-            modifier = Modifier.size(20.dp)
-        )
+        BentoIconPlate(icon = icon, size = 36.dp, iconSize = 18.dp)
         Text(
             text = title,
             style = MaterialTheme.typography.bodyMedium.copy(
@@ -120,12 +115,7 @@ internal fun ToggleRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.ledger.lampDeep,
-            modifier = Modifier.size(20.dp)
-        )
+        BentoIconPlate(icon = icon, size = 36.dp, iconSize = 18.dp)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -166,7 +156,7 @@ internal fun SliderSetting(
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
             text = label(dragValue),
-            style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.ledger.deskInk)
+            style = MaterialTheme.typography.labelMedium.copy(color = bentoTokens().text2, fontWeight = FontWeight.Medium)
         )
         Slider(
             value = dragValue,
@@ -175,11 +165,7 @@ internal fun SliderSetting(
             valueRange = valueRange,
             steps = steps,
             modifier = Modifier.fillMaxWidth(),
-            colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.ledger.lampGlow,
-                activeTrackColor = MaterialTheme.ledger.lampAmber,
-                inactiveTrackColor = MaterialTheme.ledger.deskHairline
-            )
+            colors = bentoSliderColors()
         )
     }
 }
@@ -201,12 +187,7 @@ internal fun UnavailableRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Icon(
-            imageVector = Icons.Filled.Block,
-            contentDescription = null,
-            tint = MaterialTheme.ledger.deskInk,
-            modifier = Modifier.size(20.dp)
-        )
+        BentoIconPlate(icon = Icons.Filled.Block, size = 36.dp, iconSize = 18.dp, tint = bentoTokens().muted)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -304,6 +285,8 @@ internal fun TextInputDialog(
                     singleLine = true,
                     visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
                     keyboardOptions = if (secret) KeyboardOptions(keyboardType = KeyboardType.Password) else KeyboardOptions.Default,
+                    shape = BentoFieldShape,
+                    colors = bentoFieldColors(),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -312,9 +295,9 @@ internal fun TextInputDialog(
             Button(
                 onClick = { onSave(text.trim()) },
                 enabled = allowEmpty || text.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.ledger.lampAmber)
+                colors = bentoPrimaryButtonColors()
             ) {
-                Text("Save", color = MaterialTheme.ledger.inkOnLamp)
+                Text("Save")
             }
         },
         dismissButton = {

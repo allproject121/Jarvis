@@ -79,24 +79,21 @@ class HandsFreeActivity : AppCompatActivity() {
 
     private fun updateServiceStatus() {
         val isEnabled = PermissionHelper.isAccessibilityServiceEnabled(this)
+        // Dark Bento status pill (2026-11-05 bento-all): theme dot carries the state, label stays primary.
+        val tm = com.jarvis.assistant.util.ThemeManager
+        binding.tvAccessibilityStatus.setTextColor(tm.attrColor(this, R.attr.themeTextPrimary, ContextCompat.getColor(this, R.color.status_green)))
         if (isEnabled) {
             binding.dotAccessibilityStatus.backgroundTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(this, R.color.status_green)
+                tm.attrColor(this, R.attr.themeSuccess, ContextCompat.getColor(this, R.color.status_green))
             )
-            binding.tvAccessibilityStatus.text = "HANDS-FREE SERVICE: ACTIVE"
-            binding.tvAccessibilityStatus.setTextColor(
-                ContextCompat.getColor(this, R.color.status_green)
-            )
-            binding.btnToggleAccessibility.text = "Accessibility Service is Active"
+            binding.tvAccessibilityStatus.text = "Hands-free service active"
+            binding.btnToggleAccessibility.text = "Accessibility service is active"
         } else {
             binding.dotAccessibilityStatus.backgroundTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(this, R.color.status_red)
+                tm.attrColor(this, R.attr.themeDanger, ContextCompat.getColor(this, R.color.status_red))
             )
-            binding.tvAccessibilityStatus.text = "SERVICE DISABLED • TAP TO ENABLE"
-            binding.tvAccessibilityStatus.setTextColor(
-                ContextCompat.getColor(this, R.color.status_red)
-            )
-            binding.btnToggleAccessibility.text = "Enable Accessibility Service"
+            binding.tvAccessibilityStatus.text = "Service off · tap to enable"
+            binding.btnToggleAccessibility.text = "Enable accessibility service"
         }
     }
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark Bento selected chip / segmented pill (2026-11-05 bento-all).
+     Fill = ?attr/themeAccentFill; label MUST use ?attr/themeOnAccent. Idle twin = @drawable/bg_set_chip. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ripple_on_accent">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="999dp" />
+            <solid android:color="?attr/themeAccentFill" />
+        </shape>
+    </item>
+</ripple>

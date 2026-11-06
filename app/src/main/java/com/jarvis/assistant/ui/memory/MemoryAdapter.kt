@@ -30,7 +30,8 @@ class MemoryAdapter(
         fun bind(item: MemoryEntity) {
             binding.tvMemoryFact.text = item.rawText
             binding.tvMemoryDate.text = item.formattedDate
-            binding.tvMemoryCategory.text = item.category.uppercase()
+            // Bento pill label: sentence case, colour from theme status attrs (no neon/cyan)
+            binding.tvMemoryCategory.text = item.category.lowercase().replaceFirstChar { it.uppercase() }
 
             val context = binding.root.context
             val colorRes = when (item.category) {
@@ -40,12 +41,14 @@ class MemoryAdapter(
                 MemoryEntity.CATEGORY_CONTACTS -> R.color.status_green
                 else -> R.color.status_amber
             }
-            val color = if (item.category == MemoryEntity.CATEGORY_PREFERENCES) {
-                // Brand accent follows the active Jarvis theme
-                com.jarvis.assistant.util.ThemeManager.attrColor(context, R.attr.themeAccent, ContextCompat.getColor(context, colorRes))
-            } else {
-                ContextCompat.getColor(context, colorRes)
+            val attr = when (item.category) {
+                MemoryEntity.CATEGORY_PREFERENCES -> R.attr.themeAccent
+                MemoryEntity.CATEGORY_ROUTINES -> R.attr.themeInfo
+                MemoryEntity.CATEGORY_PERSONAL -> R.attr.themeAccent
+                MemoryEntity.CATEGORY_CONTACTS -> R.attr.themeSuccess
+                else -> R.attr.themeWarning
             }
+            val color = com.jarvis.assistant.util.ThemeManager.attrColor(context, attr, ContextCompat.getColor(context, colorRes))
             binding.tvMemoryCategory.setTextColor(color)
 
             binding.btnEditMemory.setOnClickListener { onEdit(item) }
