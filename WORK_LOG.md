@@ -684,3 +684,29 @@ ote likho ..., play song) executed in <1ms via deterministic quick rules.
   - Synchronized `Jarvis-Latest-Debug.apk` in project root and package folder.
   - Device wireless ADB port changed upon screen timeout; ready to install directly once screen is unlocked or via USB/`install_to_phone.bat`.
 - **Next Step Pointer**: [Step 4.10] - Connect Device & Perform In-App 1-Click Sovereign Brain Download Verification.
+
+---
+
+## [Step 4.10] - 2026-11-07 21:18:00 IST
+- **Task**: Live Physical Phone Wireless ADB Deployment & In-App UI Verification
+- **Status**: COMPLETED
+- **Files Read / Modified**:
+  - Device: `192.168.0.109:39491` (`iQOO Z7 Pro 5G` / `I2221`)
+  - `claude.work`
+  - `WORK_LOG.md`
+- **Code Integrity Check**: VERIFIED.
+- **Details & Output**:
+  - Discovered dynamic open wireless debugging port `39491` on `192.168.0.109` via threaded port scanner. Connected successfully via `adb connect 192.168.0.109:39491`.
+  - Pushed fresh 484MB APK to `/data/local/tmp/jarvis_update.apk` at 1.8 MB/s and executed `pm install -r -d -t` -> `Success` (`versionCode=150`, `versionName=1.9.4`, `lastUpdateTime=2026-11-07 21:11:37`). Cleaned temp APK.
+  - Launched `com.jarvis.assistant.ui.home.MainActivity` live and dumped UI hierarchies to verify:
+    1. **Dual-Brain Bento Card Fix**:
+       - False "Offline Ready" bug completely eliminated.
+       - Correctly displays `On-Device Brain: No GGUF Model` and `⬇ Tap to Download`.
+       - Shows compact 1-Click Download button `⬇ 1-Click Download Sovereign Brain (Qwen 2.5 1.5B · 940MB)`.
+       - Tapped button live: model selection dialog opens smoothly presenting all 6 curated models (Qwen3 4B, Qwen 2.5 0.5B, Qwen 2.5 1.5B, SmolLM2 1.7B, Llama 3.2 1B, DeepSeek R1 1.5B).
+    2. **Settings Screen Fixes**:
+       - Profile header is sleek and compact with `Roshan` title and `Jarvis operator · Primary user` subtitle.
+       - Tapped `Studio` ("Customize the look") bento shortcut card: opens `CustomizationStudioActivity` cleanly.
+       - Verified 3D Character Model Vault with STARK Core Orb, Hinata Hyuga, REDMAGIC Mora, and Apply & save button.
+- **Next Step Pointer**: [Step 4.11] - Download Curated Sovereign GGUF Model on Device & Run 100% Offline Inference Test.
+
