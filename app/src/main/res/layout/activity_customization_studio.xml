@@ -3092,6 +3092,49 @@
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:text="Dual-Brain AI card"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="14.5sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="500" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Cloud reasoning &amp; sovereign offline status"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="12sp"
+                                android:fontFamily="@font/inter"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchDualBrainCard"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="56dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="10dp"
+                        android:paddingBottom="10dp"
+                        android:layout_marginTop="8dp"
+                        android:tag="toggleRow"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="10dp"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
                                 android:text="Weather card"
                                 android:textColor="?attr/themeTextPrimary"
                                 android:textSize="14.5sp"

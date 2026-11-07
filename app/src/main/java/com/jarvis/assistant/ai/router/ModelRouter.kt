@@ -134,6 +134,9 @@ class ModelRouter private constructor(
         val mode = _currentMode.value
         val hasNet = isNetworkAvailable()
         val app = context.applicationContext as? com.jarvis.assistant.JarvisApp
+        val isGeminiEnabled = app?.preferences?.isGeminiEnabled ?: true
+        val isLocalBrainEnabled = app?.preferences?.isLocalBrainEnabled ?: true
+        val isOllamaEnabled = app?.preferences?.isOllamaEnabled ?: true
         val endpoint = app?.preferences?.customEndpoint?.ifBlank { DEFAULT_LOCAL_ENDPOINT } ?: DEFAULT_LOCAL_ENDPOINT
         val localModel = app?.preferences?.localHostModel?.ifBlank { DEFAULT_LOCAL_MODEL } ?: DEFAULT_LOCAL_MODEL
         val geminiKey = app?.preferences?.apiKey?.trim().orEmpty()
@@ -190,7 +193,7 @@ class ModelRouter private constructor(
             }
 
             AiModelMode.GEMINI_LIVE -> {
-                if (hasNet && geminiKey.isNotBlank()) {
+                if (isGeminiEnabled && hasNet && geminiKey.isNotBlank()) {
                     Log.i(TAG, "Routing text chat to Gemini REST Core")
                     geminiTextOrLocal(
                         providerName = "Gemini Flash (Online)",
@@ -198,15 +201,11 @@ class ModelRouter private constructor(
                         endpoint = endpoint, localModel = localModel, clean = clean, systemPrompt = systemPrompt,
                         memoryContext = memoryContext, chatHistory = chatHistory
                     ) { emit(it) }
-                } else if (!hasNet) {
-                    tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
-                } else if (isOfflineBrainFailoverEnabled()) {
-                    Log.i(TAG, "Gemini API key is blank -> Offline Brain failover")
-                    tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
                 } else {
-                    _lastActiveProviderName.value = "Gemini Live"
-                    _isOfflineFallbackActive.value = false
-                    emit("Sir, Gemini API Key is not configured in Settings. Please set your Gemini API Key or switch to Local Offline mode.")
+                    Log.i(TAG, "Gemini is disabled or offline. Routing to Local Brain.")
+                    _lastActiveProviderName.value = "Local Offline AI"
+                    _isOfflineFallbackActive.value = true
+                    localAiEngine.generateStreaming(clean, systemPrompt, memoryContext, chatHistory).collect { emit(it) }
                 }
             }
 
@@ -272,7 +271,7 @@ class ModelRouter private constructor(
                             tryLocalHostOrOffline(endpoint, localModel, clean, systemPrompt, memoryContext, chatHistory) { emit(it) }
                         }
                         .collect { emit(it) }
-                } else if (hasNet && geminiKey.isNotBlank()) {
+                } else if (isGeminiEnabled && hasNet && geminiKey.isNotBlank()) {
                     Log.i(TAG, "AUTO_HYBRID: Online network active -> Routing to Gemini Online")
                     geminiTextOrLocal(
                         providerName = "Gemini Flash (Online)",

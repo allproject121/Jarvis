@@ -259,19 +259,19 @@ class HomeFragment : Fragment() {
 
         binding.cardHomeMatrix.setOnClickListener {
             HudSoundManager.playTapSound()
-            com.jarvis.assistant.ui.bypasside.BypassIdeActivity.open(requireContext())
+            com.jarvis.assistant.codestudio.CodeStudioActivity.open(requireContext())
         }
         binding.cardHomeMatrix.setOnLongClickListener {
             HudSoundManager.playTapSound()
-            startActivity(Intent(requireContext(), com.jarvis.assistant.ui.matrix.JarvisMatrixActivity::class.java))
+            com.jarvis.assistant.ui.bypasside.BypassIdeActivity.open(requireContext())
             true
         }
 
         // Long-press to hide any card / widget directly from the home screen
+        setupCardHideOnLongClick(binding.cardDualBrainStatus, "Dual-Brain AI Card") { preferences.showDualBrainCard = false }
         setupCardHideOnLongClick(binding.cardWeather, "Weather Information") { preferences.showWeatherWidget = false }
         setupCardHideOnLongClick(binding.cardTelemetry, "Stark Telemetry HUD") { preferences.showTelemetryWidget = false }
         setupCardHideOnLongClick(binding.cardHomePocketTts, "PocketTTS Voice Card") { preferences.showPocketTtsCard = false }
-        setupCardHideOnLongClick(binding.cardHomeMatrix, "Matrix & Protocols Card") { preferences.showMatrixCard = false }
         setupCardHideOnLongClick(binding.btnScreenShareQuick, "Screen Share Button") { preferences.showScreenShareButton = false }
         setupCardHideOnLongClick(binding.btnSavedMemories, "Saved Memories Button") { preferences.showMemoriesButton = false }
         setupCardHideOnLongClick(binding.btnConversationLanguageQuick, "Language Selector") { preferences.showLanguageButton = false }
@@ -287,6 +287,7 @@ class HomeFragment : Fragment() {
             binding.btnTopCustomization,
             binding.btnTopSettings,
             binding.btnTopUpdates,
+            binding.cardDualBrainStatus,
             binding.cardWeather,
             binding.btnScreenShareQuick,
             binding.btnSavedMemories,
@@ -598,6 +599,7 @@ class HomeFragment : Fragment() {
             applyHomeScrollPadding(false)
             (activity as? MainActivity)?.setBottomDockVisibility(true, animated = false)
 
+            b.cardDualBrainStatus.visibility = if (preferences.showDualBrainCard) View.VISIBLE else View.GONE
             b.layoutStatusIndicator.visibility = if (preferences.showStatusIndicatorWidget) View.VISIBLE else View.GONE
             b.cardWeather.visibility = if (preferences.showWeatherWidget) View.VISIBLE else View.GONE
             b.cardTelemetry.visibility = if (preferences.showTelemetryWidget) View.VISIBLE else View.GONE
@@ -741,9 +743,9 @@ class HomeFragment : Fragment() {
             }
 
             val customLoadScript = if (is3DAvatar) {
-                "window.JarvisOrb.loadCustom3DModel(); window.JarvisOrb.loadCustomPhoto(); "
+                "if(window.JarvisOrb && window.JarvisOrb.loadCustom3DModel){ window.JarvisOrb.loadCustom3DModel(); } if(window.JarvisOrb && window.JarvisOrb.loadCustomPhoto){ window.JarvisOrb.loadCustomPhoto(); } "
             } else {
-                "window.JarvisOrb.switchToDefaultOrb(); "
+                "if(window.JarvisOrb && window.JarvisOrb.clearCustom3DModel){ window.JarvisOrb.clearCustom3DModel(); } "
             }
 
             b.orbWebView.evaluateJavascript(
@@ -1453,6 +1455,7 @@ class HomeFragment : Fragment() {
         }
 
         if (!hideCards) {
+            b.cardDualBrainStatus.visibility = if (preferences.showDualBrainCard) View.VISIBLE else View.GONE
             b.layoutStatusIndicator.visibility = if (preferences.showStatusIndicatorWidget) View.VISIBLE else View.GONE
             b.cardWeather.visibility = if (preferences.showWeatherWidget) View.VISIBLE else View.GONE
             b.cardTelemetry.visibility = if (preferences.showTelemetryWidget) View.VISIBLE else View.GONE
@@ -1531,6 +1534,11 @@ class HomeFragment : Fragment() {
 
 
     private fun setupDualBrainCard() {
+        binding.cardDualBrainStatus.setOnClickListener {
+            HudSoundManager.playTapSound()
+            startActivity(Intent(requireContext(), com.jarvis.assistant.ui.settings.ApiConnectionActivity::class.java))
+        }
+
         binding.btnQuickAiHub.setOnClickListener {
             HudSoundManager.playTapSound()
             startActivity(Intent(requireContext(), com.jarvis.assistant.ui.settings.ApiConnectionActivity::class.java))
@@ -1546,21 +1554,39 @@ class HomeFragment : Fragment() {
             startActivity(Intent(requireContext(), com.jarvis.assistant.ui.matrix.JarvisMatrixActivity::class.java))
         }
 
+        binding.tvBrainActiveBadge.setOnClickListener {
+            HudSoundManager.playTapSound()
+            startActivity(Intent(requireContext(), com.jarvis.assistant.ui.settings.ApiConnectionActivity::class.java))
+        }
+
         updateDualBrainStatusUi()
     }
 
     private fun updateDualBrainStatusUi() {
         if (_binding == null) return
-        val currentModel = preferences.aiModel.ifBlank { "Gemini 3.8 Live" }
+        var currentModel = preferences.aiModel.ifBlank { "Gemini 3.8 Live" }
+        // Clean up raw paths (e.g. models/gemini-3.1-flash-live-preview -> Gemini 3.1 Flash Live)
+        currentModel = currentModel.removePrefix("models/")
+            .replace("-preview", "")
+            .replace("-", " ")
+            .split(" ")
+            .joinToString(" ") { word -> word.replaceFirstChar { c -> c.uppercase() } }
         binding.tvPrimaryBrainModel.text = currentModel
 
         val execMode = preferences.aiExecutionMode
-        if (execMode == com.jarvis.assistant.ai.MultiModelAiRouter.MODE_ALL_TOGETHER) {
-            binding.tvBrainActiveBadge.text = "All models ensemble"
-            binding.tvPrimaryBrainStatus.text = "Parallel consensus mode"
+        val isGeminiOn = preferences.isGeminiEnabled
+        val selectedProvider = preferences.selectedAiProvider
+
+        if (!isGeminiOn || selectedProvider == com.jarvis.assistant.ai.MultiModelAiRouter.PROVIDER_ONDEVICE_LOCAL) {
+            binding.tvBrainActiveBadge.text = "100% On-Device"
+            binding.tvPrimaryBrainModel.text = "Local GGUF"
+            binding.tvPrimaryBrainStatus.text = "Active · Sovereign"
+        } else if (execMode == com.jarvis.assistant.ai.MultiModelAiRouter.MODE_ALL_TOGETHER) {
+            binding.tvBrainActiveBadge.text = "All Models Ensemble"
+            binding.tvPrimaryBrainStatus.text = "Parallel Consensus"
         } else {
-            binding.tvBrainActiveBadge.text = "Gemini Live + on-device"
-            binding.tvPrimaryBrainStatus.text = "Live · bidirectional WebSocket"
+            binding.tvBrainActiveBadge.text = "Dual-Brain Live"
+            binding.tvPrimaryBrainStatus.text = "Live · WebSocket"
         }
 
         val localMgr = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(requireContext(), viewLifecycleOwner.lifecycleScope)
@@ -1569,7 +1595,7 @@ class HomeFragment : Fragment() {
         val localName = localDesc?.name ?: "Qwen 2.5 (1.5B)"
         val isReady = localMgr.isModelReady(com.jarvis.assistant.ai.local.LocalAiConfig.MODEL_LLAMA_3_2_1B) || localDesc != null
         binding.tvLocalBrainModel.text = localName
-        binding.tvLocalBrainStatus.text = if (isReady) "Ready · offline fallback" else "Not downloaded · open AI setup"
+        binding.tvLocalBrainStatus.text = if (isReady) "Offline Ready" else "Download Model"
     }
 
 }

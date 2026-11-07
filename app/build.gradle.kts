@@ -28,7 +28,7 @@ android {
 
     defaultConfig {
         // Phones only (Jarvis' own jniLibs ship arm64-v8a + armeabi-v7a); drops emulator-only x86 libs.
-        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
+        ndk { abiFilters += listOf("arm64-v8a") }
         // whisper.cpp (AndroLLM offline speech-to-text)
         externalNativeBuild {
             cmake {

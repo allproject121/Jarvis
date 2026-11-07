@@ -82,9 +82,11 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_link_options(whisper PRIVATE -Wl,--gc-sections)
 endif()
 
-# ggml is bundled with whisper.cpp; consume its own CMake build.
-FetchContent_Declare(ggml SOURCE_DIR "${WHISPER_LIB_DIR}/ggml")
-FetchContent_MakeAvailable(ggml)
+# ggml is bundled with whisper.cpp; consume its own CMake build if not already provided.
+if(NOT TARGET ggml)
+    FetchContent_Declare(ggml SOURCE_DIR "${WHISPER_LIB_DIR}/ggml")
+    FetchContent_MakeAvailable(ggml)
+endif()
 if(NOT TARGET ggml)
     message(FATAL_ERROR "ggml CMake target not defined after FetchContent_MakeAvailable(ggml)")
 endif()

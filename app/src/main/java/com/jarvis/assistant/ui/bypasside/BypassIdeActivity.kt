@@ -472,7 +472,19 @@ class BypassIdeActivity : AppCompatActivity() {
                 openWhatsApp()
             }
             else -> {
-                appendLog("Unknown instruction '$cmd'. Type 'help' for tactical commands.")
+                // Auto-route general text queries and coding requests to AI
+                appendLog("🤖 Routing to AI engine: '$cmd'")
+                lifecycleScope.launch {
+                    try {
+                        val res = MultiModelAiRouter.execute(
+                            context = this@BypassIdeActivity,
+                            userPrompt = cmd
+                        )
+                        appendLog("💡 [${res.providerUsed.uppercase()}]:\n${res.finalText}")
+                    } catch (e: Exception) {
+                        appendLog("❌ AI Error: ${e.message}\nType 'help' for tactical commands.")
+                    }
+                }
             }
         }
     }

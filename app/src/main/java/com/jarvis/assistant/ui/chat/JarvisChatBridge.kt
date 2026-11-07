@@ -169,10 +169,11 @@ object JarvisChatBridge {
         val text = outgoing.trim()
         if (text.isEmpty()) return false
         val entry = repository.beginPendingSend(conversationId, text)
-        // The conversation service usually runs in standby (no Gemini Live session). A text sent
-        // there was silently dropped and the chat showed "Jarvis is replying…" forever. Without a
-        // live session the chat now answers through the text brain (Gemini text → offline model).
-        if (!(JarvisConversationService.isServiceRunning() && JarvisConversationService.isSessionOn.value)) {
+        val prefs = JarvisApp.instance.preferences
+        // When Gemini is disabled by the user or On-Device Local Brain is selected, or if Gemini Live is not running,
+        // answer directly through the text brain (On-Device Local Brain / ModelRouter).
+        val bypassLiveSession = !prefs.isGeminiEnabled || prefs.selectedAiProvider == com.jarvis.assistant.ai.MultiModelAiRouter.PROVIDER_ONDEVICE_LOCAL
+        if (bypassLiveSession || !(JarvisConversationService.isServiceRunning() && JarvisConversationService.isSessionOn.value)) {
             repository.lastSentConversationId = conversationId
             scope.launch(Dispatchers.IO) { answerWithTextBrain(entry, text) }
             return true
@@ -223,13 +224,19 @@ object JarvisChatBridge {
         val router = com.jarvis.assistant.ai.router.ModelRouter.getInstance(app, scope)
         val raw = StringBuilder()
         val reply = try {
-            val system = runCatching {
-                com.jarvis.assistant.util.PromptGenerator.generateSystemPrompt(
-                    personality = prefs.personality,
-                    userName = prefs.userName.ifBlank { "Roshan" },
-                    language = prefs.language
-                )
-            }.getOrDefault("")
+            val isLocalBrainActive = !prefs.isGeminiEnabled || 
+                prefs.selectedAiProvider == com.jarvis.assistant.ai.MultiModelAiRouter.PROVIDER_ONDEVICE_LOCAL
+            val system = if (isLocalBrainActive) {
+                "You are JARVIS, an autonomous on-device AI assistant created by Roshan Sir. Answer concisely and assist the user."
+            } else {
+                runCatching {
+                    com.jarvis.assistant.util.PromptGenerator.generateSystemPrompt(
+                        personality = prefs.personality,
+                        userName = prefs.userName.ifBlank { "Roshan" },
+                        language = prefs.language
+                    )
+                }.getOrDefault("")
+            }
             router.routeConversationalQuery(
                 userPrompt = text,
                 systemPrompt = system,

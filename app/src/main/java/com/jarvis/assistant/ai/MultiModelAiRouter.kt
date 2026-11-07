@@ -57,6 +57,7 @@ object MultiModelAiRouter {
     const val PROVIDER_GROK = "grok"
     const val PROVIDER_OPENROUTER = "openrouter"
     const val PROVIDER_LOCAL = "ollama"
+    const val PROVIDER_ONDEVICE_LOCAL = "ondevice_local"
     // Maya "Voice engine" presets (keys/models from maya_brain_secure / maya_brain_prefs).
     const val PROVIDER_GROQ = "groq"
     const val PROVIDER_MISTRAL = "mistral"
@@ -109,18 +110,29 @@ object MultiModelAiRouter {
         startTime: Long
     ): AiExecutionResult {
         val prefs = ((context.applicationContext as? JarvisApp) ?: JarvisApp.instance).preferences
-        val chosenProvider = prefs.selectedAiProvider
+        var chosenProvider = prefs.selectedAiProvider
+
+        // If Gemini is chosen but toggled OFF by user, route to On-Device Brain or Ollama
+        if (chosenProvider == PROVIDER_GEMINI && !prefs.isGeminiEnabled) {
+            chosenProvider = when {
+                prefs.isLocalBrainEnabled -> PROVIDER_ONDEVICE_LOCAL
+                prefs.isOllamaEnabled -> PROVIDER_LOCAL
+                prefs.openAiApiKey.isNotBlank() -> PROVIDER_OPENAI
+                else -> PROVIDER_ONDEVICE_LOCAL
+            }
+        }
 
         val answer = when (chosenProvider) {
+            PROVIDER_ONDEVICE_LOCAL -> callOnDeviceLocal(context, systemPrompt, userPrompt, temperature, maxTokens)
             PROVIDER_OPENAI -> callOpenAi(prefs.openAiApiKey, prefs.openAiModel.ifBlank { "gpt-4o" }, systemPrompt, userPrompt, temperature, maxTokens)
             PROVIDER_CLAUDE -> callClaude(prefs.claudeApiKey, prefs.claudeModel.ifBlank { "claude-3-5-sonnet-20241022" }, systemPrompt, userPrompt, temperature, maxTokens)
             PROVIDER_DEEPSEEK -> callDeepSeek(prefs.deepSeekApiKey, prefs.deepSeekModel.ifBlank { "deepseek-chat" }, systemPrompt, userPrompt, temperature, maxTokens)
             PROVIDER_GROK -> callGrok(prefs.grokApiKey, prefs.grokModel.ifBlank { "grok-2" }, systemPrompt, userPrompt, temperature, maxTokens)
             PROVIDER_OPENROUTER -> callOpenRouter(prefs.openRouterApiKey, prefs.openRouterModel.ifBlank { "auto" }, systemPrompt, userPrompt, temperature, maxTokens)
-            PROVIDER_LOCAL -> callLocalOllama(prefs.customEndpoint, prefs.localHostModel, systemPrompt, userPrompt)
+            PROVIDER_LOCAL -> if (prefs.isOllamaEnabled) callLocalOllama(prefs.customEndpoint, prefs.localHostModel, systemPrompt, userPrompt) else null
             PROVIDER_GROQ, PROVIDER_MISTRAL, PROVIDER_TOGETHER, PROVIDER_DEEPINFRA, PROVIDER_NVIDIA, PROVIDER_CUSTOM ->
                 callBrainPreset(context, chosenProvider, systemPrompt, userPrompt, temperature, maxTokens)
-            else -> callGemini(prefs.apiKey, prefs.aiModel, systemPrompt, userPrompt, temperature, maxTokens)
+            else -> if (prefs.isGeminiEnabled) callGemini(prefs.apiKey, prefs.aiModel, systemPrompt, userPrompt, temperature, maxTokens) else null
         }
 
         if (!answer.isNullOrBlank()) {
@@ -136,15 +148,23 @@ object MultiModelAiRouter {
 
         // Fallback Cascade if primary had no response
         Log.w(TAG, "Primary provider $chosenProvider returned null. Falling back to available models...")
-        val fallbackProviders = listOf(PROVIDER_GEMINI, PROVIDER_OPENAI, PROVIDER_DEEPSEEK, PROVIDER_CLAUDE, PROVIDER_LOCAL)
+        val fallbackProviders = mutableListOf<String>()
+        if (prefs.isLocalBrainEnabled) fallbackProviders.add(PROVIDER_ONDEVICE_LOCAL)
+        if (prefs.isGeminiEnabled) fallbackProviders.add(PROVIDER_GEMINI)
+        fallbackProviders.add(PROVIDER_OPENAI)
+        fallbackProviders.add(PROVIDER_DEEPSEEK)
+        fallbackProviders.add(PROVIDER_CLAUDE)
+        if (prefs.isOllamaEnabled) fallbackProviders.add(PROVIDER_LOCAL)
+
         for (provider in fallbackProviders) {
             if (provider == chosenProvider) continue
             val fbAns = when (provider) {
-                PROVIDER_GEMINI -> if (prefs.apiKey.isNotBlank()) callGemini(prefs.apiKey, prefs.aiModel, systemPrompt, userPrompt, temperature, maxTokens) else null
+                PROVIDER_ONDEVICE_LOCAL -> callOnDeviceLocal(context, systemPrompt, userPrompt, temperature, maxTokens)
+                PROVIDER_GEMINI -> if (prefs.isGeminiEnabled && prefs.apiKey.isNotBlank()) callGemini(prefs.apiKey, prefs.aiModel, systemPrompt, userPrompt, temperature, maxTokens) else null
                 PROVIDER_OPENAI -> if (prefs.openAiApiKey.isNotBlank()) callOpenAi(prefs.openAiApiKey, "gpt-4o-mini", systemPrompt, userPrompt, temperature, maxTokens) else null
                 PROVIDER_DEEPSEEK -> if (prefs.deepSeekApiKey.isNotBlank()) callDeepSeek(prefs.deepSeekApiKey, "deepseek-chat", systemPrompt, userPrompt, temperature, maxTokens) else null
                 PROVIDER_CLAUDE -> if (prefs.claudeApiKey.isNotBlank()) callClaude(prefs.claudeApiKey, "claude-3-5-haiku-20241022", systemPrompt, userPrompt, temperature, maxTokens) else null
-                PROVIDER_LOCAL -> if (prefs.customEndpoint.isNotBlank()) callLocalOllama(prefs.customEndpoint, prefs.localHostModel, systemPrompt, userPrompt) else null
+                PROVIDER_LOCAL -> if (prefs.isOllamaEnabled && prefs.customEndpoint.isNotBlank()) callLocalOllama(prefs.customEndpoint, prefs.localHostModel, systemPrompt, userPrompt) else null
                 else -> null
             }
 
@@ -613,7 +633,46 @@ object MultiModelAiRouter {
         )
     }
 
+    private suspend fun callOnDeviceLocal(
+        context: Context,
+        systemPrompt: String,
+        userPrompt: String,
+        temperature: Double,
+        maxTokens: Int
+    ): String? = withContext(Dispatchers.Default) {
+        try {
+            val brainEngine = com.jarvis.brain.LocalLlamaEngine.getInstance(context)
+            if (!brainEngine.isLoaded) {
+                brainEngine.load(com.jarvis.brain.LocalLlamaEngine.Config(maxTokens = maxTokens, temperature = temperature.toFloat()))
+            }
+            if (brainEngine.isLoaded) {
+                val safeExtra = if (systemPrompt.length > 300 || systemPrompt.contains("<tools>")) "" else systemPrompt
+                val fullPrompt = com.jarvis.brain.IntentPrompt.build(userPrompt, extraContext = safeExtra, modelName = brainEngine.activeModelName)
+                val raw = brainEngine.generate(fullPrompt, com.jarvis.brain.IntentPrompt.GRAMMAR)
+                if (raw.isNotBlank()) {
+                    val cmd = com.jarvis.brain.CommandParser.parse(raw)
+                    if (cmd != null) {
+                        val execResult = com.jarvis.brain.ActionExecutor(context).execute(cmd)
+                        return@withContext if (cmd.action == "answer") cmd.str("text") else execResult
+                    }
+                    return@withContext raw
+                }
+            }
+            val localAi = com.jarvis.assistant.ai.local.LocalAiEngine.getInstance(context, kotlinx.coroutines.CoroutineScope(Dispatchers.Default))
+            var fullResp = ""
+            val safeSystem = if (systemPrompt.length > 500 || systemPrompt.contains("<tools>")) "" else systemPrompt
+            localAi.generateStreaming(userPrompt, safeSystem).collect { chunk ->
+                fullResp += chunk
+            }
+            if (fullResp.isNotBlank()) fullResp else null
+        } catch (e: Exception) {
+            Log.e(TAG, "callOnDeviceLocal error: ${e.message}", e)
+            null
+        }
+    }
+
     fun getProviderDisplayName(providerKey: String): String = when (providerKey) {
+        PROVIDER_ONDEVICE_LOCAL -> "🧠 On-Device Jarvis Brain (Uncensored)"
         PROVIDER_GEMINI -> "Google Gemini"
         PROVIDER_OPENAI -> "OpenAI ChatGPT"
         PROVIDER_CLAUDE -> "Anthropic Claude"

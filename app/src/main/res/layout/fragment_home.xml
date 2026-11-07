@@ -192,6 +192,18 @@
                 </FrameLayout>
 
                 <ImageButton
+                    android:id="@+id/btnTopCustomization"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_nova_icon_button"
+                    android:src="@drawable/ic_settings_orb"
+                    android:padding="10dp"
+                    android:scaleType="fitCenter"
+                    app:tint="?attr/themeTextPrimary"
+                    android:contentDescription="Customization studio" />
+
+                <ImageButton
                     android:id="@+id/btnCustomizeHomeCards"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
@@ -234,16 +246,6 @@
                         app:tint="?attr/themeTextPrimary"
                         android:contentDescription="Matrix and protocols" />
 
-                    <ImageButton
-                        android:id="@+id/btnTopCustomization"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:background="@drawable/bg_nova_icon_button"
-                        android:src="@drawable/ic_settings_orb"
-                        android:padding="10dp"
-                        android:scaleType="fitCenter"
-                        app:tint="?attr/themeTextPrimary"
-                        android:contentDescription="Customization studio" />
 
                     <ImageButton
                         android:id="@+id/btnTopSettings"
@@ -407,15 +409,18 @@
                         android:fontFamily="@font/inter" />
                 </LinearLayout>
 
-                <!-- 3a. Dual-brain (wide tile: header, two inner plates, pill actions) -->
+                <!-- 3a. Dual-brain AI (Sleek Compact Bento Card) -->
                 <LinearLayout
                     android:id="@+id/cardDualBrainStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_nova_card"
-                    android:padding="20dp">
+                    android:padding="13dp"
+                    android:clickable="true"
+                    android:focusable="true">
 
+                    <!-- Header Row: Icon + Title/Subtitle + Active Mode Badge -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -423,86 +428,88 @@
                         android:gravity="center_vertical">
 
                         <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
                             android:background="@drawable/bg_jarvis_icon_square">
 
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_sparkle"
                                 app:tint="?attr/themeAccent"
                                 android:importantForAccessibility="no" />
                         </FrameLayout>
 
-                        <Space
+                        <LinearLayout
                             android:layout_width="0dp"
-                            android:layout_height="1dp"
-                            android:layout_weight="1" />
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Dual-Brain AI"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="15sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="600"
+                                android:letterSpacing="-0.01" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Cloud Reasoning · Offline Sovereign Fallback"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:fontFamily="@font/inter"
+                                android:singleLine="true"
+                                android:ellipsize="end" />
+                        </LinearLayout>
 
                         <TextView
                             android:id="@+id/tvBrainActiveBadge"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="8dp"
                             android:background="@drawable/bg_set_badge"
                             android:drawableStart="@drawable/bg_bento_dot"
-                            android:drawablePadding="7dp"
+                            android:drawablePadding="5dp"
                             android:gravity="center_vertical"
-                            android:paddingStart="11dp"
-                            android:paddingEnd="12dp"
-                            android:paddingTop="6dp"
-                            android:paddingBottom="6dp"
-                            android:text="GEMINI LIVE + ANDROLLM"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="9dp"
+                            android:paddingTop="3dp"
+                            android:paddingBottom="3dp"
+                            android:text="Dual-Brain Live"
                             android:textColor="?attr/themeTextSecondary"
-                            android:textSize="10.5sp"
+                            android:textSize="9.5sp"
                             android:letterSpacing="0.02"
                             android:fontFamily="@font/inter"
-                            android:textFontWeight="500"
+                            android:textFontWeight="600"
                             android:singleLine="true"
                             android:ellipsize="end" />
                     </LinearLayout>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
-                        android:text="Dual-brain AI"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="21sp"
-                        android:fontFamily="@font/inter"
-                        android:textFontWeight="600"
-                        android:letterSpacing="-0.015"
-                        android:includeFontPadding="false" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="Cloud reasoning with an on-device fallback."
-                        android:textColor="?attr/themeTextMuted"
-                        android:textSize="13sp"
-                        android:fontFamily="@font/inter"
-                        android:lineSpacingExtra="2dp" />
-
-                    <!-- Two nested plates side by side -->
+                    <!-- Two nested plates side by side (Cloud & On-Device) -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="10dp"
                         android:orientation="horizontal"
                         android:baselineAligned="false"
                         android:divider="@drawable/bg_bento_gap"
                         android:showDividers="middle">
 
+                        <!-- Plate 1: Cloud Primary -->
                         <LinearLayout
                             android:layout_width="0dp"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:background="@drawable/bg_jarvis_row_item"
-                            android:padding="14dp">
+                            android:padding="10dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -511,8 +518,8 @@
                                 android:gravity="center_vertical">
 
                                 <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
+                                    android:layout_width="14dp"
+                                    android:layout_height="14dp"
                                     android:src="@drawable/ic_weather_cloud"
                                     app:tint="?attr/themeAccent"
                                     android:importantForAccessibility="no" />
@@ -520,10 +527,10 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="6dp"
-                                    android:text="Cloud"
+                                    android:layout_marginStart="5dp"
+                                    android:text="Cloud Brain"
                                     android:textColor="?attr/themeTextMuted"
-                                    android:textSize="12sp"
+                                    android:textSize="11sp"
                                     android:fontFamily="@font/inter"
                                     android:textFontWeight="500" />
                             </LinearLayout>
@@ -532,10 +539,10 @@
                                 android:id="@+id/tvPrimaryBrainModel"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
-                                android:text="Gemini Live"
+                                android:layout_marginTop="4dp"
+                                android:text="Gemini 3.8 Live"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="15.5sp"
+                                android:textSize="13sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
                                 android:singleLine="true"
@@ -545,22 +552,23 @@
                                 android:id="@+id/tvPrimaryBrainStatus"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="Bidirectional WebSocket"
+                                android:layout_marginTop="2dp"
+                                android:text="Live WebSocket"
                                 android:textColor="?attr/themeTextMuted"
-                                android:textSize="12sp"
+                                android:textSize="10.5sp"
                                 android:fontFamily="@font/inter"
-                                android:maxLines="2"
+                                android:singleLine="true"
                                 android:ellipsize="end" />
                         </LinearLayout>
 
+                        <!-- Plate 2: On-Device Sovereign -->
                         <LinearLayout
                             android:layout_width="0dp"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:background="@drawable/bg_jarvis_row_item"
-                            android:padding="14dp">
+                            android:padding="10dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -569,8 +577,8 @@
                                 android:gravity="center_vertical">
 
                                 <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
+                                    android:layout_width="14dp"
+                                    android:layout_height="14dp"
                                     android:src="@drawable/ic_androllm_robot"
                                     app:tint="?attr/themeAccent"
                                     android:importantForAccessibility="no" />
@@ -578,10 +586,10 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="6dp"
-                                    android:text="On-device"
+                                    android:layout_marginStart="5dp"
+                                    android:text="On-Device Brain"
                                     android:textColor="?attr/themeTextMuted"
-                                    android:textSize="12sp"
+                                    android:textSize="11sp"
                                     android:fontFamily="@font/inter"
                                     android:textFontWeight="500" />
                             </LinearLayout>
@@ -590,10 +598,10 @@
                                 android:id="@+id/tvLocalBrainModel"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
-                                android:text="AndroLLM"
+                                android:layout_marginTop="4dp"
+                                android:text="Qwen 2.5 (1.5B)"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="15.5sp"
+                                android:textSize="13sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
                                 android:singleLine="true"
@@ -603,62 +611,62 @@
                                 android:id="@+id/tvLocalBrainStatus"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="On-device fallback ready"
+                                android:layout_marginTop="2dp"
+                                android:text="Offline Ready"
                                 android:textColor="?attr/themeTextMuted"
-                                android:textSize="12sp"
+                                android:textSize="10.5sp"
                                 android:fontFamily="@font/inter"
-                                android:maxLines="2"
+                                android:singleLine="true"
                                 android:ellipsize="end" />
                         </LinearLayout>
                     </LinearLayout>
 
-                    <!-- Pill actions: primary (accent fill) + two secondary plates -->
+                    <!-- Pill actions: Compact 34dp buttons -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="10dp"
                         android:orientation="horizontal">
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnQuickAiHub"
                             style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                             android:layout_width="0dp"
-                            android:layout_height="42dp"
+                            android:layout_height="34dp"
                             android:layout_weight="1"
                             android:minHeight="0dp"
                             android:minWidth="0dp"
                             android:insetTop="0dp"
                             android:insetBottom="0dp"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="6dp"
-                            android:text="AI setup"
+                            android:paddingStart="4dp"
+                            android:paddingEnd="4dp"
+                            android:text="AI Setup"
                             android:textAllCaps="false"
-                            android:textSize="13sp"
+                            android:textSize="12sp"
                             android:letterSpacing="0"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600"
                             android:textColor="?attr/themeOnAccent"
                             app:backgroundTint="?attr/themeAccentFill"
                             app:strokeWidth="0dp"
-                            app:cornerRadius="21dp" />
+                            app:cornerRadius="17dp" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnQuickMemoryHub"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="0dp"
-                            android:layout_height="42dp"
+                            android:layout_height="34dp"
                             android:layout_weight="1"
                             android:layout_marginStart="8dp"
                             android:minHeight="0dp"
                             android:minWidth="0dp"
                             android:insetTop="0dp"
                             android:insetBottom="0dp"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="6dp"
+                            android:paddingStart="4dp"
+                            android:paddingEnd="4dp"
                             android:text="Memory"
                             android:textAllCaps="false"
-                            android:textSize="13sp"
+                            android:textSize="12sp"
                             android:letterSpacing="0"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="500"
@@ -666,24 +674,24 @@
                             app:backgroundTint="?attr/themeChipBg"
                             app:strokeColor="?attr/themePlateBorder"
                             app:strokeWidth="1dp"
-                            app:cornerRadius="21dp" />
+                            app:cornerRadius="17dp" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnQuickMatrixHub"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="0dp"
-                            android:layout_height="42dp"
+                            android:layout_height="34dp"
                             android:layout_weight="1"
                             android:layout_marginStart="8dp"
                             android:minHeight="0dp"
                             android:minWidth="0dp"
                             android:insetTop="0dp"
                             android:insetBottom="0dp"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="6dp"
+                            android:paddingStart="4dp"
+                            android:paddingEnd="4dp"
                             android:text="Agents"
                             android:textAllCaps="false"
-                            android:textSize="13sp"
+                            android:textSize="12sp"
                             android:letterSpacing="0"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="500"
@@ -691,7 +699,7 @@
                             app:backgroundTint="?attr/themeChipBg"
                             app:strokeColor="?attr/themePlateBorder"
                             app:strokeWidth="1dp"
-                            app:cornerRadius="21dp" />
+                            app:cornerRadius="17dp" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -1520,7 +1528,7 @@
                             android:padding="18dp"
                             android:clickable="true"
                             android:focusable="true"
-                            android:contentDescription="Bypass IDE">
+                            android:contentDescription="Code Studio">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -1568,7 +1576,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="24dp"
-                                android:text="Bypass IDE"
+                                android:text="Code Studio"
                                 android:textColor="?attr/themeTextPrimary"
                                 android:textSize="18sp"
                                 android:fontFamily="@font/inter"
@@ -1581,7 +1589,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
-                                android:text="Shell &amp; agent studio"
+                                android:text="AI coding &amp; workspace"
                                 android:textColor="?attr/themeTextMuted"
                                 android:textSize="13sp"
                                 android:fontFamily="@font/inter"

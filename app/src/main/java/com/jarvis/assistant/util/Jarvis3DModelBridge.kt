@@ -62,12 +62,13 @@ class Jarvis3DModelBridge(private val context: Context) {
     @JavascriptInterface
     fun hasCustom3DModel(): Boolean {
         val currentEntity = JarvisApp.instance.preferences.orbEntityType
-        if (currentEntity == "orb") {
+        if (currentEntity == "orb" || currentEntity == "arc_reactor") {
             return false
         }
         return getResolvedModelFile() != null ||
                 (currentEntity == "hinata_anime" && try { context.assets.open("models/hinata.glb").close(); true } catch (_: Exception) { false }) ||
-                (currentEntity == "ai_girl" && try { context.assets.open("models/jett.glb").close(); true } catch (_: Exception) { false })
+                (currentEntity == "ai_girl" && try { context.assets.open("models/jett.glb").close(); true } catch (_: Exception) { false }) ||
+                (currentEntity == "mora_cyber" && try { context.assets.open("models/mora.glb").close(); true } catch (_: Exception) { false })
     }
 
     @JavascriptInterface
@@ -81,10 +82,19 @@ class Jarvis3DModelBridge(private val context: Context) {
         if (file != null && file.exists()) return file.length()
         return try {
             val currentEntity = JarvisApp.instance.preferences.orbEntityType
-            val assetPath = if (currentEntity == "ai_girl") "models/jett.glb" else "models/hinata.glb"
+            val assetPath = when (currentEntity) {
+                "ai_girl" -> "models/jett.glb"
+                "mora_cyber" -> "models/mora.glb"
+                else -> "models/hinata.glb"
+            }
             context.assets.openFd(assetPath).use { it.length }
         } catch (_: Exception) {
-            0L
+            when (JarvisApp.instance.preferences.orbEntityType) {
+                "hinata_anime" -> 11168028L
+                "mora_cyber" -> 4196116L
+                "ai_girl" -> 2991116L
+                else -> 0L
+            }
         }
     }
 

@@ -124,6 +124,9 @@ class AppPreferences(context: Context) {
         private const val KEY_OPENROUTER_API_KEY = "key_openrouter_api_key"
         private const val KEY_AI_EXECUTION_MODE = "key_ai_execution_mode"
         private const val KEY_SELECTED_AI_PROVIDER = "key_selected_ai_provider"
+        private const val KEY_GEMINI_ENABLED = "key_gemini_enabled"
+        private const val KEY_OLLAMA_ENABLED = "key_ollama_enabled"
+        private const val KEY_LOCAL_BRAIN_ENABLED = "key_local_brain_enabled"
         private const val KEY_SELECTED_MODEL_NAME = "key_selected_model_name"
         private const val KEY_OPENAI_MODEL = "key_openai_model"
         private const val KEY_CLAUDE_MODEL = "key_claude_model"
@@ -257,6 +260,18 @@ class AppPreferences(context: Context) {
     var selectedAiProvider: String
         get() = prefs.getString(KEY_SELECTED_AI_PROVIDER, "gemini") ?: "gemini"
         set(value) = prefs.edit().putString(KEY_SELECTED_AI_PROVIDER, value).apply()
+
+    var isGeminiEnabled: Boolean
+        get() = prefs.getBoolean(KEY_GEMINI_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_GEMINI_ENABLED, value).apply()
+
+    var isOllamaEnabled: Boolean
+        get() = prefs.getBoolean(KEY_OLLAMA_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(KEY_OLLAMA_ENABLED, value).apply()
+
+    var isLocalBrainEnabled: Boolean
+        get() = prefs.getBoolean(KEY_LOCAL_BRAIN_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_LOCAL_BRAIN_ENABLED, value).apply()
 
     var selectedModelName: String
         get() = prefs.getString(KEY_SELECTED_MODEL_NAME, "models/gemini-3.8-live") ?: "models/gemini-3.8-live"
@@ -590,6 +605,10 @@ class AppPreferences(context: Context) {
     var orbCompanionType: String
         get() = prefs.getString(KEY_ORB_COMPANION_TYPE, "orb") ?: "orb"
         set(value) = prefs.edit().putString(KEY_ORB_COMPANION_TYPE, value).apply()
+
+    var showDualBrainCard: Boolean
+        get() = prefs.getBoolean("key_show_home_dual_brain", true)
+        set(value) = prefs.edit().putBoolean("key_show_home_dual_brain", value).apply()
 
     var showWeatherWidget: Boolean
         get() = prefs.getBoolean(KEY_SHOW_WEATHER_WIDGET, true)

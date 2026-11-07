@@ -38,6 +38,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
     private var selectedResonance = "quantum"
     private var selectedPersona = "jarvis"
     private var selectedEntityType = "orb"
+    private var selectedVaultItemId = ""
     private var isOrbLoaded = false
     private var companionCount = 0
     private var companionType = "orb"
@@ -134,7 +135,10 @@ class CustomizationStudioActivity : AppCompatActivity() {
         container.removeAllViews()
 
         val items = com.jarvis.assistant.util.ModelVaultManager.getVaultItems(this)
-        val activeId = com.jarvis.assistant.util.ModelVaultManager.getActiveVaultItemId(this)
+        if (selectedVaultItemId.isBlank()) {
+            selectedVaultItemId = com.jarvis.assistant.util.ModelVaultManager.getActiveVaultItemId(this)
+        }
+        val activeId = selectedVaultItemId
         binding.tvVaultCountBadge.text = "${items.size} SLOTS"
 
         val inflater = layoutInflater
@@ -191,16 +195,15 @@ class CustomizationStudioActivity : AppCompatActivity() {
             cardView.setOnClickListener {
                 HudSoundManager.playTapSound()
                 hasUserChangedEntityInStudio = true
-                com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, item.id)
+                selectedVaultItemId = item.id
                 selectedEntityType = item.category
+                com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, item.id)
                 syncHomeCharacterSwitch(selectedEntityType)
                 updateEntityTypeUI(selectedEntityType)
                 populateVaultCardsUI()
                 refreshCustomMediaStatusUI()
                 applyPreviewOrbParams()
-                if (item.category == "mora_cyber") {
-                    startActivity(android.content.Intent(this@CustomizationStudioActivity, com.jarvis.assistant.ui.character.MoraCharacterActivity::class.java))
-                }
+                Toast.makeText(this@CustomizationStudioActivity, "${item.title} activated!", Toast.LENGTH_SHORT).show()
             }
 
             container.addView(cardView)
@@ -290,8 +293,8 @@ class CustomizationStudioActivity : AppCompatActivity() {
         selectedPreset = preferences.orbCorePreset
         selectedTheme = preferences.appTheme
         customColorHex = preferences.customThemeColor
-        // If device has mora_cyber for home, default Studio to "orb" so user can see & customize the live Core Orb!
-        selectedEntityType = if (preferences.orbEntityType == "mora_cyber") "orb" else preferences.orbEntityType
+        selectedEntityType = preferences.orbEntityType
+        selectedVaultItemId = com.jarvis.assistant.util.ModelVaultManager.getActiveVaultItemId(this)
         companionCount = preferences.orbCompanionCount
         companionType = preferences.orbCompanionType
 
@@ -339,6 +342,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
         binding.switchHideAllCards.isChecked = preferences.hideAllHomeCards
         syncHomeCharacterSwitch(preferences.orbEntityType)
         binding.switchStatusIndicatorWidget.isChecked = preferences.showStatusIndicatorWidget
+        binding.switchDualBrainCard.isChecked = preferences.showDualBrainCard
         binding.switchWeatherWidget.isChecked = preferences.showWeatherWidget
         binding.switchTelemetryWidget.isChecked = preferences.showTelemetryWidget
         binding.swHomeAiDashboard.isChecked = com.jarvis.assistant.androllm.HomeDashboardPrefs.isEnabled(this)
@@ -528,29 +532,32 @@ class CustomizationStudioActivity : AppCompatActivity() {
                 container.visibility = if (index == selectedIdx) View.VISIBLE else View.GONE
             }
 
-            // Browsing a tab only switches the live preview; the entity is written on Save.
-            // (setActiveVaultItemId writes orbEntityType at once, which used to flip the Home
-            // 3D character to the orb just by opening the Studio.)
             when (selectedIdx) {
                 0 -> {
                     selectedEntityType = "orb"
+                    selectedVaultItemId = com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ORB.id
+                    hasUserChangedEntityInStudio = true
+                    syncHomeCharacterSwitch("orb")
                     updateEntityTypeUI("orb")
-                    applyPreviewOrbParams()
+                    populateVaultCardsUI()
+                    binding.previewOrbWebView.evaluateJavascript("if(window.JarvisOrb){ window.JarvisOrb.setEntityType('orb'); }", null)
                 }
                 1 -> {
-                    val activeItem = com.jarvis.assistant.util.ModelVaultManager.getActiveVaultItem(this@CustomizationStudioActivity)
-                    selectedEntityType = if (activeItem.id == com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ORB.id || activeItem.id == com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ARC_REACTOR.id) {
-                        "ai_girl"
-                    } else {
-                        activeItem.category
-                    }
                     updateEntityTypeUI(selectedEntityType)
                     populateVaultCardsUI()
                     applyPreviewOrbParams()
                 }
                 2 -> {
                     selectedEntityType = "arc_reactor"
+                    selectedVaultItemId = com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ARC_REACTOR.id
+                    hasUserChangedEntityInStudio = true
+                    syncHomeCharacterSwitch("arc_reactor")
                     updateEntityTypeUI("arc_reactor")
+                    populateVaultCardsUI()
+                    binding.previewOrbWebView.evaluateJavascript("if(window.JarvisOrb){ window.JarvisOrb.setEntityType('arc_reactor'); }", null)
+                }
+                else -> {
+                    updateEntityTypeUI(selectedEntityType)
                     applyPreviewOrbParams()
                 }
             }
@@ -563,14 +570,22 @@ class CustomizationStudioActivity : AppCompatActivity() {
         binding.tabChipWidgets.setOnClickListener { selectTab(4) }
         binding.tabChipAudio.setOnClickListener { selectTab(5) }
 
-        val openHomeTab = intent?.getStringExtra(EXTRA_INITIAL_TAB) == TAB_HOME_SCREEN
-        val initTabIdx = if (openHomeTab) 4 else when (selectedEntityType) {
-            "hinata_anime", "ai_girl", "custom_3d" -> 1
-            "arc_reactor" -> 2
-            else -> 0
+        val requestedTab = intent?.getStringExtra(EXTRA_INITIAL_TAB)
+        val initTabIdx = when (requestedTab) {
+            TAB_HOME_SCREEN -> 4
+            TAB_LIVE_VAULT -> 1
+            TAB_CORE_ORB -> 0
+            TAB_ARC_REACTOR -> 2
+            TAB_THEME -> 3
+            TAB_AUDIO -> 5
+            else -> when (selectedEntityType) {
+                "hinata_anime", "ai_girl", "custom_3d", "mora_cyber" -> 1
+                "arc_reactor" -> 2
+                else -> 0
+            }
         }
         selectTab(initTabIdx, playAudio = false)
-        if (openHomeTab) {
+        if (requestedTab == TAB_HOME_SCREEN) {
             // Opened from Home / Stark menu "Customize": bring the Home screen tab into view.
             binding.scrollStudio.post { binding.scrollStudio.smoothScrollTo(0, binding.scrollStudioTabs.top) }
         }
@@ -793,18 +808,36 @@ class CustomizationStudioActivity : AppCompatActivity() {
 
         binding.btnPulseQuantum.setOnClickListener {
             HudSoundManager.playTapSound()
+            selectedEntityType = "arc_reactor"
+            selectedVaultItemId = com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ARC_REACTOR.id
+            hasUserChangedEntityInStudio = true
             selectedResonance = "quantum"
+            syncHomeCharacterSwitch("arc_reactor")
+            updateEntityTypeUI("arc_reactor")
             updateResonanceUI("quantum")
+            binding.previewOrbWebView.evaluateJavascript("if(window.JarvisOrb){ window.JarvisOrb.setEntityType('arc_reactor'); window.JarvisOrb.setResonanceMode('quantum'); }", null)
         }
         binding.btnPulseOverdrive.setOnClickListener {
             HudSoundManager.playTapSound()
+            selectedEntityType = "arc_reactor"
+            selectedVaultItemId = com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ARC_REACTOR.id
+            hasUserChangedEntityInStudio = true
             selectedResonance = "overdrive"
+            syncHomeCharacterSwitch("arc_reactor")
+            updateEntityTypeUI("arc_reactor")
             updateResonanceUI("overdrive")
+            binding.previewOrbWebView.evaluateJavascript("if(window.JarvisOrb){ window.JarvisOrb.setEntityType('arc_reactor'); window.JarvisOrb.setResonanceMode('overdrive'); }", null)
         }
         binding.btnPulseStealth.setOnClickListener {
             HudSoundManager.playTapSound()
+            selectedEntityType = "arc_reactor"
+            selectedVaultItemId = com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ARC_REACTOR.id
+            hasUserChangedEntityInStudio = true
             selectedResonance = "stealth"
+            syncHomeCharacterSwitch("arc_reactor")
+            updateEntityTypeUI("arc_reactor")
             updateResonanceUI("stealth")
+            binding.previewOrbWebView.evaluateJavascript("if(window.JarvisOrb){ window.JarvisOrb.setEntityType('arc_reactor'); window.JarvisOrb.setResonanceMode('stealth'); }", null)
         }
         binding.switchAudioReactiveOrb.setOnCheckedChangeListener { _, _ ->
             HudSoundManager.playTapSound()
@@ -816,6 +849,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             HudSoundManager.playTapSound()
             hasUserChangedEntityInStudio = true
             selectedEntityType = "orb"
+            selectedVaultItemId = com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ORB.id
             com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ORB.id)
             syncHomeCharacterSwitch("orb")
             updateEntityTypeUI("orb")
@@ -826,6 +860,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             HudSoundManager.playTapSound()
             hasUserChangedEntityInStudio = true
             selectedEntityType = "ai_girl"
+            selectedVaultItemId = com.jarvis.assistant.util.ModelVaultManager.BUILTIN_LIVE_COMPANION.id
             com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, com.jarvis.assistant.util.ModelVaultManager.BUILTIN_LIVE_COMPANION.id)
             syncHomeCharacterSwitch("ai_girl")
             updateEntityTypeUI("ai_girl")
@@ -836,6 +871,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
             HudSoundManager.playTapSound()
             hasUserChangedEntityInStudio = true
             selectedEntityType = "arc_reactor"
+            selectedVaultItemId = com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ARC_REACTOR.id
             com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ARC_REACTOR.id)
             syncHomeCharacterSwitch("arc_reactor")
             updateEntityTypeUI("arc_reactor")
@@ -994,6 +1030,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
     /** Every card switch on the Home screen tab (one control per pref; written on Save). */
     private fun homeCardSwitches(): List<SwitchCompat> = listOf(
         binding.switchStatusIndicatorWidget,
+        binding.switchDualBrainCard,
         binding.switchWeatherWidget,
         binding.switchTelemetryWidget,
         binding.swHomeAiDashboard,
@@ -1030,8 +1067,18 @@ class CustomizationStudioActivity : AppCompatActivity() {
             HudSoundManager.playTapSound()
             homeCharacterTouched = true
             hasUserChangedEntityInStudio = true
-            selectedEntityType = if (isChecked) "mora_cyber" else "orb"
+            if (isChecked) {
+                if (selectedEntityType == "orb" || selectedEntityType == "arc_reactor") {
+                    selectedEntityType = "hinata_anime"
+                    selectedVaultItemId = com.jarvis.assistant.util.ModelVaultManager.BUILTIN_HINATA_ANIME.id
+                }
+            } else {
+                selectedEntityType = "orb"
+                selectedVaultItemId = com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ORB.id
+            }
+            com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, selectedVaultItemId)
             updateEntityTypeUI(selectedEntityType)
+            populateVaultCardsUI()
             applyPreviewOrbParams()
         }
 
@@ -1252,19 +1299,16 @@ class CustomizationStudioActivity : AppCompatActivity() {
 
         binding.btnApplyAndSave.setOnClickListener {
             try {
-                // Home tab "3D character" switch flipped this session: it decides the Home entity.
-                if (homeCharacterTouched) {
-                    selectedEntityType = when {
-                        !binding.switchCharacter3d.isChecked -> "orb"
-                        selectedEntityType != "orb" && selectedEntityType != "arc_reactor" -> selectedEntityType
-                        else -> "mora_cyber"
-                    }
-                    hasUserChangedEntityInStudio = true
-                }
-                // Save Orb Settings & Entity Type
-                if (hasUserChangedEntityInStudio || preferences.orbEntityType != "mora_cyber") {
-                    preferences.userExplicitlyChoseEntity = true
-                    preferences.orbEntityType = selectedEntityType
+                // Save Orb Settings & Entity Type cleanly
+                preferences.userExplicitlyChoseEntity = true
+                preferences.orbEntityType = selectedEntityType
+                if (selectedEntityType == "orb") {
+                    com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ORB.id)
+                } else if (selectedEntityType == "arc_reactor") {
+                    com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, com.jarvis.assistant.util.ModelVaultManager.BUILTIN_ARC_REACTOR.id)
+                } else if (selectedVaultItemId.isNotBlank()) {
+                    com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, selectedVaultItemId)
+                } else {
                     val targetVaultItem = com.jarvis.assistant.util.ModelVaultManager.getVaultItems(this).find { it.category == selectedEntityType }
                     if (targetVaultItem != null) {
                         com.jarvis.assistant.util.ModelVaultManager.setActiveVaultItemId(this, targetVaultItem.id)
@@ -1299,6 +1343,7 @@ class CustomizationStudioActivity : AppCompatActivity() {
                 // Save Home screen tab (HomeFragment re-reads these in onResume)
                 preferences.hideAllHomeCards = binding.switchHideAllCards.isChecked
                 preferences.showStatusIndicatorWidget = binding.switchStatusIndicatorWidget.isChecked
+                preferences.showDualBrainCard = binding.switchDualBrainCard.isChecked
                 preferences.showWeatherWidget = binding.switchWeatherWidget.isChecked
                 preferences.showTelemetryWidget = binding.switchTelemetryWidget.isChecked
                 com.jarvis.assistant.androllm.HomeDashboardPrefs.setEnabled(this, binding.swHomeAiDashboard.isChecked)
@@ -1534,6 +1579,11 @@ class CustomizationStudioActivity : AppCompatActivity() {
         /** Intent extra: which tab to open on (currently only [TAB_HOME_SCREEN]). */
         const val EXTRA_INITIAL_TAB = "studio_initial_tab"
         const val TAB_HOME_SCREEN = "home_screen"
+        const val TAB_LIVE_VAULT = "live_ai"
+        const val TAB_CORE_ORB = "core_orb"
+        const val TAB_ARC_REACTOR = "arc_reactor"
+        const val TAB_THEME = "theme"
+        const val TAB_AUDIO = "audio"
 
         /** Studio opened on its Home screen tab (cards, 3D character, HUD size, compact stage). */
         fun homeScreenIntent(context: Context): Intent =

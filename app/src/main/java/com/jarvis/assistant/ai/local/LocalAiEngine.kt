@@ -115,15 +115,52 @@ class LocalAiEngine private constructor(
             return@flow
         }
 
-        // 2. Stream from native LocalPhoneProvider if ready or weights exist
+        // 2. Direct on-device Uncensored Brain (com.jarvis.brain.LocalLlamaEngine)
+        val brainEngine = com.jarvis.brain.LocalLlamaEngine.getInstance(context)
+        if (brainEngine.resolveModelFile() != null) {
+            if (!brainEngine.isLoaded) {
+                brainEngine.load()
+            }
+            if (brainEngine.isLoaded) {
+                try {
+                    // Filter out massive 74k cloud prompts to prevent context overflow on on-device LLMs
+                    val safeExtra = if (systemPrompt.length > 300 || systemPrompt.contains("<tools>")) "" else systemPrompt
+                    val prompt = com.jarvis.brain.IntentPrompt.build(cleanPrompt, extraContext = safeExtra, modelName = brainEngine.activeModelName)
+                    val raw = brainEngine.generate(prompt, com.jarvis.brain.IntentPrompt.grammarFor(cleanPrompt))
+                    val cmd = com.jarvis.brain.CommandParser.parse(raw)
+                    val reply = if (cmd != null) {
+                        val res = com.jarvis.brain.ActionExecutor(context).execute(cmd)
+                        if (cmd.action == "answer") cmd.str("text") else res
+                    } else raw
+
+                    if (reply.isNotBlank()) {
+                        emit(reply)
+                        val elapsed = System.currentTimeMillis() - startTime
+                        Log.i(TAG, "LocalLlamaEngine generation complete in ${elapsed}ms")
+                        _engineState.value = LocalEngineState.Ready
+                        return@flow
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "LocalLlamaEngine inference failed (${e.message}), falling back to LocalPhoneProvider")
+                }
+            }
+        }
+
+        // 3. Stream from native LocalPhoneProvider if ready or weights exist
         // Check the model the user actually selected (activeModelId), not the config default:
         // with e.g. Llama 3.2 downloaded but not Qwen, the default id wrongly reported "not installed".
         if (localPhoneProvider.isReady() || modelManager.resolveUsableModelId() != null) {
             var emittedAny = false
+            // Strip any giant cloud system prompt before feeding into LocalPhoneProvider
+            val safeLocalSystem = if (systemPrompt.length > 500 || systemPrompt.contains("<tools>")) {
+                "You are JARVIS, an autonomous on-device AI assistant created by Roshan Sir. Answer concisely and assist the user."
+            } else {
+                systemPrompt
+            }
             try {
                 localPhoneProvider.streamResponse(
                     prompt = cleanPrompt,
-                    systemPrompt = systemPrompt,
+                    systemPrompt = safeLocalSystem,
                     memoryContext = memoryContext,
                     chatHistory = chatHistory
                 ).collect { chunk ->
@@ -158,6 +195,16 @@ class LocalAiEngine private constructor(
     suspend fun tryDirectCommand(prompt: String): String? {
         val clean = prompt.trim()
         if (clean.isBlank() || clean.length > MAX_DIRECT_COMMAND_CHARS) return null
+
+        // Fast brain regex match (< 1ms, greetings, torch, battery, volume, whatsapp, app launcher)
+        com.jarvis.brain.CommandParser.quickMatch(clean)?.let { brainCmd ->
+            val reply = com.jarvis.brain.ActionExecutor(context).execute(brainCmd)
+            if (reply.isNotBlank()) {
+                Log.i(TAG, "Brain quickMatch direct command: ${brainCmd.action} -> $reply")
+                return reply
+            }
+        }
+
         val app = context.applicationContext as? com.jarvis.assistant.JarvisApp ?: return null
         val parsed = runCatching { com.jarvis.assistant.automation.command.CommandParser.parse(clean) }.getOrNull()
         val command = parsed?.command ?: return null

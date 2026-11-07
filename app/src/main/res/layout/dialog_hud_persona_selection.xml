@@ -70,6 +70,71 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- 3D Character & Model Vault Action Card -->
+            <LinearLayout
+                android:id="@+id/cardDialog3DCharacterVault"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:minHeight="64dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="14dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:background="@drawable/bg_bento_studio_plate_on"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="12dp">
+
+                <FrameLayout
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_set_icon_tile">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="🌸"
+                        android:textSize="20sp" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="3D Characters &amp; Models"
+                        android:textColor="?attr/themeAccent"
+                        android:textSize="15sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600" />
+
+                    <TextView
+                        android:id="@+id/tvDialogCurrent3DAvatar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Hinata · Mora · Arc Reactor · Custom 3D"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="12sp"
+                        android:fontFamily="@font/inter" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_set_chevron_right"
+                    app:tint="?attr/themeAccent"
+                    android:contentDescription="Open Studio" />
+            </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/cardDialogPersonaJarvis"
                 android:layout_width="match_parent"

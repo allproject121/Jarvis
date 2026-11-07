@@ -157,6 +157,168 @@
                     app:iconTint="?attr/themeOnAccent" />
             </LinearLayout>
 
+            <!-- Card 1.5: AI Engine Power & Autonomy Toggles (Master On/Off Switches) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_nova_card"
+                android:padding="20dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AI Engine Power &amp; Autonomy"
+                    android:textColor="?attr/themeTextPrimary"
+                    android:textSize="17sp"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="700"
+                    android:letterSpacing="-0.01" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="12dp"
+                    android:text="Enable or completely disable cloud and on-device model engines"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/inter" />
+
+                <!-- 1. Google Gemini Cloud API Switch -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="6dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="⚡ Google Gemini API (Cloud)"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:id="@+id/tvGeminiSwitchDesc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Cloud streaming (Subject to corporate safety policies)"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="11sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchGeminiEnabled"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?attr/themePlateBorder"
+                    android:layout_marginVertical="6dp" />
+
+                <!-- 2. PC Ollama / Local Host Switch -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="6dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="💻 PC Ollama (Local Host LAN/USB)"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:id="@+id/tvOllamaSwitchDesc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Inference on your PC via 127.0.0.1:11434"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="11sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchOllamaEnabled"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="false" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?attr/themePlateBorder"
+                    android:layout_marginVertical="6dp" />
+
+                <!-- 3. 100% On-Device Jarvis Brain Switch -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="6dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🧠 100% On-Device Jarvis Brain"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600" />
+
+                        <TextView
+                            android:id="@+id/tvLocalBrainSwitchDesc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ARM64 NEON C++ • 100% Offline • Uncensored Autonomous Thinking"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="11sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchLocalBrainEnabled"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true" />
+                </LinearLayout>
+            </LinearLayout>
+
             <!-- Card 2: Gemini API Key -->
             <TextView
                 android:layout_width="wrap_content"
@@ -524,8 +686,92 @@
                             android:textSize="13sp"
                             android:paddingVertical="4dp"
                             android:fontFamily="@font/inter" />
+
+                        <RadioButton
+                            android:id="@+id/rbProviderOnDeviceLocal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minHeight="44dp"
+                            android:text="🧠 100% On-Device Jarvis Brain (Uncensored Local Model)"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:paddingVertical="4dp"
+                            android:fontFamily="@font/inter" />
                     </RadioGroup>
                 </LinearLayout>
+            </LinearLayout>
+
+            <!-- Card 3.5: On-Device Uncensored Local Brain Status -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_nova_card"
+                android:padding="20dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="🧠 Local Brain (llama.cpp)"
+                        android:textColor="?attr/themeTextPrimary"
+                        android:textSize="17sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="700" />
+
+                    <TextView
+                        android:id="@+id/tvLocalBrainBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_set_badge"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="3dp"
+                        android:text="Ready · Q4_K_M"
+                        android:textColor="?attr/themeTextSecondary"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvLocalBrainPathSummary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Model: qwen2.5-1.5b-instruct-q4_k_m.gguf (ARM64 mmap)"
+                    android:textColor="?attr/themeTextMuted"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/inter" />
+
+                <TextView
+                    android:id="@+id/tvLocalBrainStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Status: 100% Offline • Zero Corporate Refusals"
+                    android:textColor="?attr/themeTextSecondary"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnTestLocalBrain"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="12dp"
+                    android:text="Test On-Device Brain (100% Local Inference)"
+                    android:fontFamily="@font/inter"
+                    android:textFontWeight="600"
+                    android:textSize="13sp"
+                    app:backgroundTint="?attr/themeAccentFill"
+                    app:cornerRadius="22dp" />
             </LinearLayout>
 
             <!-- Card 3.6: Additional AI Provider API Keys & Model Discovery -->

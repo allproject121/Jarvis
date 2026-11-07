@@ -1,4 +1,4 @@
-﻿package com.jarvis.assistant.ui.settings
+package com.jarvis.assistant.ui.settings
 
 import android.content.Intent
 import android.graphics.Color
@@ -181,7 +181,8 @@ class SettingsFragment : Fragment() {
         binding.tvCurrentAssistantName.text = "${preferences.assistantName} (${preferences.personality.capitalize(Locale.ROOT)}) • $directLabel"
         binding.tvVoiceEngineBadge.text = com.jarvis.assistant.ai.router.AiModelMode.fromString(preferences.aiModelMode).displayName
         binding.tvCurrentLanguage.text = preferences.language
-        binding.tvCurrentPersona.text = preferences.personality.capitalize(Locale.ROOT)
+        val active3dModel = try { com.jarvis.assistant.util.ModelVaultManager.getActiveVaultItem(requireContext()).title } catch (_: Throwable) { "Core Orb" }
+        binding.tvCurrentPersona.text = "${preferences.personality.capitalize(Locale.ROOT)} · Avatar: $active3dModel"
         binding.switchDirectAutonomousMode.isChecked = preferences.isDirectAutonomousMode
         binding.switchSilentMode.isChecked = preferences.isSilentExecutionMode
 
@@ -586,6 +587,18 @@ class SettingsFragment : Fragment() {
             .create()
 
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        val activeVaultTitle = try { com.jarvis.assistant.util.ModelVaultManager.getActiveVaultItem(requireContext()).title } catch (_: Throwable) { "Core Orb" }
+        dialogView.findViewById<android.widget.TextView>(R.id.tvDialogCurrent3DAvatar)?.text =
+            "Active: $activeVaultTitle · Tap to open 3D vault"
+        dialogView.findViewById<View>(R.id.cardDialog3DCharacterVault)?.setOnClickListener {
+            HudSoundManager.playTapSound()
+            dialog.dismiss()
+            startActivity(
+                Intent(requireContext(), CustomizationStudioActivity::class.java)
+                    .putExtra(CustomizationStudioActivity.EXTRA_INITIAL_TAB, CustomizationStudioActivity.TAB_LIVE_VAULT)
+            )
+        }
 
         val cardJarvis = dialogView.findViewById<View>(R.id.cardDialogPersonaJarvis)
         val cardFriday = dialogView.findViewById<View>(R.id.cardDialogPersonaFriday)

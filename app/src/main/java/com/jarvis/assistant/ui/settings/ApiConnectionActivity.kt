@@ -94,6 +94,11 @@ class ApiConnectionActivity : AppCompatActivity() {
             binding.layoutSingleProviderSelect.visibility = View.VISIBLE
         }
 
+        // Load AI Engine Power Switches
+        binding.switchGeminiEnabled.isChecked = preferences.isGeminiEnabled
+        binding.switchOllamaEnabled.isChecked = preferences.isOllamaEnabled
+        binding.switchLocalBrainEnabled.isChecked = preferences.isLocalBrainEnabled
+
         when (preferences.selectedAiProvider) {
             MultiModelAiRouter.PROVIDER_OPENAI -> binding.rbProviderOpenAi.isChecked = true
             MultiModelAiRouter.PROVIDER_CLAUDE -> binding.rbProviderClaude.isChecked = true
@@ -101,7 +106,21 @@ class ApiConnectionActivity : AppCompatActivity() {
             MultiModelAiRouter.PROVIDER_GROK -> binding.rbProviderGrok.isChecked = true
             MultiModelAiRouter.PROVIDER_OPENROUTER -> binding.rbProviderOpenRouter.isChecked = true
             MultiModelAiRouter.PROVIDER_LOCAL -> binding.rbProviderOllama.isChecked = true
+            MultiModelAiRouter.PROVIDER_ONDEVICE_LOCAL -> binding.rbProviderOnDeviceLocal.isChecked = true
             else -> binding.rbProviderGemini.isChecked = true
+        }
+
+        // Check local model file status
+        val modelFile = java.io.File(java.io.File(filesDir, "models"), "qwen2.5-1.5b-instruct-q4_k_m.gguf")
+        if (modelFile.exists()) {
+            val sizeMb = modelFile.length() shr 20
+            binding.tvLocalBrainBadge.text = "Loaded · ${sizeMb}MB"
+            binding.tvLocalBrainPathSummary.text = "Model: ${modelFile.name} (Ready in private storage)"
+            binding.tvLocalBrainStatus.text = "Status: 100% On-Device Active • Uncensored Autonomous Brain"
+        } else {
+            binding.tvLocalBrainBadge.text = "Pending"
+            binding.tvLocalBrainPathSummary.text = "Expected: ${modelFile.name}"
+            binding.tvLocalBrainStatus.text = "Status: Transfer GGUF model to filesDir/models/ via ADB or SD"
         }
 
         // Load Multi-Model API Keys
@@ -243,6 +262,28 @@ class ApiConnectionActivity : AppCompatActivity() {
                     Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
                 }
             }
+        }
+
+        binding.switchGeminiEnabled.setOnCheckedChangeListener { _, isChecked ->
+            preferences.isGeminiEnabled = isChecked
+            val stateText = if (isChecked) "Enabled (Cloud streaming active)" else "Disabled (Offline Mode Forced)"
+            Snackbar.make(binding.root, "Gemini Cloud API: $stateText", Snackbar.LENGTH_SHORT).show()
+        }
+
+        binding.switchOllamaEnabled.setOnCheckedChangeListener { _, isChecked ->
+            preferences.isOllamaEnabled = isChecked
+            val stateText = if (isChecked) "Enabled (LAN/USB inference active)" else "Disabled"
+            Snackbar.make(binding.root, "PC Ollama: $stateText", Snackbar.LENGTH_SHORT).show()
+        }
+
+        binding.switchLocalBrainEnabled.setOnCheckedChangeListener { _, isChecked ->
+            preferences.isLocalBrainEnabled = isChecked
+            val stateText = if (isChecked) "Enabled (Autonomous local engine active)" else "Disabled"
+            Snackbar.make(binding.root, "100% On-Device Brain: $stateText", Snackbar.LENGTH_SHORT).show()
+        }
+
+        binding.btnTestLocalBrain.setOnClickListener {
+            testLocalBrain()
         }
 
         binding.btnSaveConnection.setOnClickListener {
@@ -539,6 +580,44 @@ class ApiConnectionActivity : AppCompatActivity() {
         }
     }
 
+    private fun testLocalBrain() {
+        binding.btnTestLocalBrain.isEnabled = false
+        binding.tvLocalBrainStatus.text = "Initializing native ARM64 local engine..."
+        binding.tvLocalBrainStatus.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this@ApiConnectionActivity, R.attr.themeAccent, Color.parseColor("#38BDF8")))
+
+        lifecycleScope.launch {
+            val t0 = System.currentTimeMillis()
+            val result = withContext(Dispatchers.Default) {
+                try {
+                    val engine = com.jarvis.brain.LocalLlamaEngine.getInstance(this@ApiConnectionActivity)
+                    val loadRes = engine.load()
+                    if (loadRes is com.jarvis.brain.LocalLlamaEngine.LoadResult.Error) {
+                        return@withContext Pair(false, "Load Error: ${loadRes.reason}")
+                    }
+                    val prompt = com.jarvis.brain.IntentPrompt.build("system diagnosis", modelName = engine.activeModelName)
+                    val raw = engine.generate(prompt, com.jarvis.brain.IntentPrompt.GRAMMAR)
+                    val elapsed = System.currentTimeMillis() - t0
+                    Pair(true, "✅ On-Device Inference Ready (${elapsed}ms)!\nOutput: $raw")
+                } catch (e: Exception) {
+                    Pair(false, "❌ Error: ${e.message}")
+                }
+            }
+
+            withContext(Dispatchers.Main) {
+                binding.btnTestLocalBrain.isEnabled = true
+                binding.tvLocalBrainStatus.text = result.second
+                if (result.first) {
+                    binding.tvLocalBrainBadge.text = "Active · 100% Offline"
+                    binding.tvLocalBrainStatus.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this@ApiConnectionActivity, R.attr.themeSuccess, Color.parseColor("#22C55E")))
+                    Snackbar.make(binding.root, "Jarvis On-Device Brain is running smoothly!", Snackbar.LENGTH_LONG).show()
+                } else {
+                    binding.tvLocalBrainStatus.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this@ApiConnectionActivity, R.attr.themeDanger, Color.parseColor("#EF4444")))
+                    Snackbar.make(binding.root, result.second, Snackbar.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
     private fun testConnection(apiKey: String) {
         binding.btnTestConnection.isEnabled = false
         binding.tvPingResult.text = "Testing ping..."
@@ -601,6 +680,11 @@ class ApiConnectionActivity : AppCompatActivity() {
         preferences.customEndpoint = customEp
         preferences.localHostModel = localModel
 
+        // Save AI Engine Power Switches
+        preferences.isGeminiEnabled = binding.switchGeminiEnabled.isChecked
+        preferences.isOllamaEnabled = binding.switchOllamaEnabled.isChecked
+        preferences.isLocalBrainEnabled = binding.switchLocalBrainEnabled.isChecked
+
         // Save Multi-Model Execution Mode
         val executionMode = if (binding.rbModeAllTogether.isChecked) {
             MultiModelAiRouter.MODE_ALL_TOGETHER
@@ -617,6 +701,7 @@ class ApiConnectionActivity : AppCompatActivity() {
             binding.rbProviderGrok.id -> MultiModelAiRouter.PROVIDER_GROK
             binding.rbProviderOpenRouter.id -> MultiModelAiRouter.PROVIDER_OPENROUTER
             binding.rbProviderOllama.id -> MultiModelAiRouter.PROVIDER_LOCAL
+            binding.rbProviderOnDeviceLocal.id -> MultiModelAiRouter.PROVIDER_ONDEVICE_LOCAL
             else -> MultiModelAiRouter.PROVIDER_GEMINI
         }
         preferences.selectedAiProvider = selectedProvider

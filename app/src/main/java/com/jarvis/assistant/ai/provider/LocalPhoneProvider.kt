@@ -687,22 +687,28 @@ class LocalPhoneProvider private constructor(
         // ~3 characters per token is a conservative estimate for English/Hinglish with these tokenizers.
         val budgetTokens = (currentConfig.contextWindowLimit - currentConfig.maxTokens - 64).coerceAtLeast(256)
         val budgetChars = budgetTokens * 3
+        val cleanSystem = if (systemPrompt.length > 500 || systemPrompt.contains("<tools>")) {
+            "You are JARVIS, an autonomous on-device AI assistant created by Roshan Sir. Answer concisely and assist the user."
+        } else {
+            systemPrompt.ifBlank { "You are JARVIS, an autonomous on-device AI assistant created by Roshan Sir." }
+        }
+
         // The everyday tools stay first and unchanged (cached prefix); trimming drops the per-request
         // extras, memory and history before it ever drops them.
-        data class Attempt(val tools: List<JSONObject>, val extra: List<JSONObject>, val memoryChars: Int, val historyTurns: Int)
+        data class Attempt(val tools: List<JSONObject>, val extra: List<JSONObject>, val memoryChars: Int, val historyTurns: Int, val sysPrompt: String)
         val attempts = listOf(
-            Attempt(tools, extraTools, Int.MAX_VALUE, chatHistory.size),
-            Attempt(tools, extraTools.take(3), 1500, 4),
-            Attempt(tools, emptyList(), 600, 2),
-            Attempt(tools, emptyList(), 0, 0),
-            Attempt(emptyList(), emptyList(), 0, 0)
+            Attempt(tools, extraTools, Int.MAX_VALUE, chatHistory.size, cleanSystem),
+            Attempt(tools, extraTools.take(3), 1500, 4, cleanSystem),
+            Attempt(tools, emptyList(), 600, 2, cleanSystem.take(300)),
+            Attempt(tools, emptyList(), 0, 0, cleanSystem.take(150)),
+            Attempt(emptyList(), emptyList(), 0, 0, "You are JARVIS, an autonomous AI assistant.")
         )
         var prompt = ""
         for (attempt in attempts) {
             prompt = com.jarvis.assistant.ai.compat.ChatTemplateRenderer.render(
                 family = family,
                 cleanPrompt = cleanPrompt,
-                systemPrompt = systemPrompt,
+                systemPrompt = attempt.sysPrompt,
                 memoryContext = memoryContext.take(attempt.memoryChars),
                 chatHistory = chatHistory.takeLast(attempt.historyTurns),
                 tools = attempt.tools,
