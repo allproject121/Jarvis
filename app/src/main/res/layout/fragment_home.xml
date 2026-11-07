@@ -563,11 +563,14 @@
 
                         <!-- Plate 2: On-Device Sovereign -->
                         <LinearLayout
+                            android:id="@+id/plateOnDeviceBrain"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:background="@drawable/bg_jarvis_row_item"
+                            android:clickable="true"
+                            android:focusable="true"
                             android:padding="10dp">
 
                             <LinearLayout
@@ -618,6 +621,110 @@
                                 android:fontFamily="@font/inter"
                                 android:singleLine="true"
                                 android:ellipsize="end" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Quick 1-Click Sovereign Brain Download Button (Visible when model is missing) -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnQuickDownloadGguf"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:layout_marginTop="8dp"
+                        android:minHeight="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:text="⬇ Download Sovereign Brain (Qwen 2.5 1.5B · 940MB)"
+                        android:textAllCaps="false"
+                        android:textSize="12sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="600"
+                        android:textColor="?attr/themeOnAccent"
+                        app:backgroundTint="?attr/themeAccentFill"
+                        app:cornerRadius="18dp"
+                        android:visibility="gone" />
+
+                    <!-- Live In-Progress Download Layout for Local GGUF Model -->
+                    <LinearLayout
+                        android:id="@+id/layoutBrainDownload"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:padding="9dp"
+                        android:visibility="gone">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/tvBrainDownloadTitle"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Downloading Qwen 2.5 (1.5B)..."
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="12sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="600" />
+
+                            <TextView
+                                android:id="@+id/tvBrainDownloadProgressPercent"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0%"
+                                android:textColor="?attr/themeAccent"
+                                android:textSize="12sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="700" />
+                        </LinearLayout>
+
+                        <ProgressBar
+                            android:id="@+id/progressBrainDownload"
+                            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="6dp"
+                            android:layout_marginTop="6dp"
+                            android:max="100"
+                            android:progress="0"
+                            android:progressTint="?attr/themeAccent" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/tvBrainDownloadSpeedEta"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="0 MB / 940 MB · 0 MB/s"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="10.5sp"
+                                android:fontFamily="@font/inter" />
+
+                            <TextView
+                                android:id="@+id/btnCancelBrainDownload"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Cancel"
+                                android:textColor="?attr/themeDanger"
+                                android:textSize="11.5sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="600"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="4dp"
+                                android:paddingTop="2dp"
+                                android:paddingBottom="2dp"
+                                android:clickable="true"
+                                android:focusable="true" />
                         </LinearLayout>
                     </LinearLayout>
 

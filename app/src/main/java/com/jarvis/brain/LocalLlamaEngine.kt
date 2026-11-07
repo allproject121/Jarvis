@@ -51,15 +51,29 @@ class LocalLlamaEngine(context: Context) {
         // 1. Check preferred or config file name in priority directories
         val nameToCheck = preferredName ?: config.modelFileName
         if (nameToCheck.isNotBlank()) {
-            targets.add(File(modelDir(), nameToCheck))
             targets.add(File(localAiModelsDir(), nameToCheck))
+            targets.add(File(modelDir(), nameToCheck))
+            if (!nameToCheck.endsWith(".gguf", ignoreCase = true)) {
+                targets.add(File(localAiModelsDir(), "$nameToCheck.gguf"))
+                targets.add(File(modelDir(), "$nameToCheck.gguf"))
+            }
         }
 
-        // 2. Standard known models
+        // 2. Standard known models from LocalAiConfig and local storage
+        targets.add(File(localAiModelsDir(), "qwen-2.5-1.5b-instruct.gguf"))
+        targets.add(File(modelDir(), "qwen-2.5-1.5b-instruct.gguf"))
+        targets.add(File(localAiModelsDir(), "qwen2.5-1.5b-instruct-q4_k_m.gguf"))
         targets.add(File(modelDir(), "qwen2.5-1.5b-instruct-q4_k_m.gguf"))
+        targets.add(File(localAiModelsDir(), "qwen-2.5-0.5b-instruct.gguf"))
+        targets.add(File(modelDir(), "qwen-2.5-0.5b-instruct.gguf"))
         targets.add(File(localAiModelsDir(), "llama-3.2-1b-instruct.gguf"))
-        targets.add(File(localAiModelsDir(), "qwen3-4b-instruct-2507.gguf"))
         targets.add(File(modelDir(), "llama-3.2-1b-instruct.gguf"))
+        targets.add(File(localAiModelsDir(), "qwen3-4b-instruct-2507.gguf"))
+        targets.add(File(modelDir(), "qwen3-4b-instruct-2507.gguf"))
+        targets.add(File(localAiModelsDir(), "smollm2-1.7b-instruct.gguf"))
+        targets.add(File(modelDir(), "smollm2-1.7b-instruct.gguf"))
+        targets.add(File(localAiModelsDir(), "deepseek-r1-distill-qwen-1.5b.gguf"))
+        targets.add(File(modelDir(), "deepseek-r1-distill-qwen-1.5b.gguf"))
 
         for (target in targets) {
             if (target.exists() && isGguf(target)) {
@@ -69,13 +83,14 @@ class LocalLlamaEngine(context: Context) {
 
         // 3. Scan search directories for any valid .gguf
         val searchDirs = listOf(
-            modelDir(),
             localAiModelsDir(),
+            modelDir(),
             File(Environment.getExternalStorageDirectory(), "Download")
         )
 
         for (dir in searchDirs) {
             val found = dir.listFiles { _, name -> name.endsWith(".gguf", ignoreCase = true) }
+                ?.sortedByDescending { it.lastModified() }
                 ?.firstOrNull { isGguf(it) }
             if (found != null) return found
         }

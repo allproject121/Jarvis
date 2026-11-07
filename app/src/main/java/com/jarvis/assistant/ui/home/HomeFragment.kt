@@ -1539,6 +1539,30 @@ class HomeFragment : Fragment() {
             startActivity(Intent(requireContext(), com.jarvis.assistant.ui.settings.ApiConnectionActivity::class.java))
         }
 
+        binding.plateOnDeviceBrain.setOnClickListener {
+            HudSoundManager.playTapSound()
+            handleOnDeviceBrainClick()
+        }
+
+        binding.btnQuickDownloadGguf.setOnClickListener {
+            HudSoundManager.playTapSound()
+            showModelDownloadSelectionDialog()
+        }
+
+        binding.btnCancelBrainDownload.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val localMgr = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(requireContext(), viewLifecycleOwner.lifecycleScope)
+            val activeDownload = localMgr.downloads.value.values.firstOrNull {
+                it.status == com.jarvis.assistant.ai.local.LocalDownloadStatus.DOWNLOADING ||
+                it.status == com.jarvis.assistant.ai.local.LocalDownloadStatus.VERIFYING
+            }
+            if (activeDownload != null) {
+                localMgr.cancelDownload(activeDownload.modelId)
+                android.widget.Toast.makeText(requireContext(), "Download cancelled.", android.widget.Toast.LENGTH_SHORT).show()
+                updateDualBrainStatusUi()
+            }
+        }
+
         binding.btnQuickAiHub.setOnClickListener {
             HudSoundManager.playTapSound()
             startActivity(Intent(requireContext(), com.jarvis.assistant.ui.settings.ApiConnectionActivity::class.java))
@@ -1559,7 +1583,90 @@ class HomeFragment : Fragment() {
             startActivity(Intent(requireContext(), com.jarvis.assistant.ui.settings.ApiConnectionActivity::class.java))
         }
 
+        // Live flow observer for GGUF model downloads
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                val localMgr = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(requireContext(), viewLifecycleOwner.lifecycleScope)
+                localMgr.downloads.collect {
+                    updateDualBrainStatusUi()
+                }
+            }
+        }
+
         updateDualBrainStatusUi()
+    }
+
+    private fun handleOnDeviceBrainClick() {
+        val localMgr = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(requireContext(), viewLifecycleOwner.lifecycleScope)
+        val activeDownload = localMgr.downloads.value.values.firstOrNull {
+            it.status == com.jarvis.assistant.ai.local.LocalDownloadStatus.DOWNLOADING ||
+            it.status == com.jarvis.assistant.ai.local.LocalDownloadStatus.VERIFYING
+        }
+        if (activeDownload != null) {
+            android.widget.Toast.makeText(requireContext(), "Download in progress: ${activeDownload.progressPercent}%", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val resolved = com.jarvis.brain.LocalLlamaEngine.getInstance(requireContext()).resolveModelFile()
+        if (resolved != null && resolved.exists()) {
+            showModelOptionsDialog(resolved.name.removeSuffix(".gguf"))
+        } else {
+            showModelDownloadSelectionDialog()
+        }
+    }
+
+    private fun showModelOptionsDialog(modelName: String) {
+        val options = arrayOf("Test On-Device Inference", "Switch / Download Another Model", "Cancel")
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Sovereign Local Brain: $modelName")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> {
+                        startActivity(Intent(requireContext(), com.jarvis.assistant.ui.settings.ApiConnectionActivity::class.java))
+                    }
+                    1 -> {
+                        showModelDownloadSelectionDialog()
+                    }
+                }
+            }
+            .show()
+    }
+
+    private fun showModelDownloadSelectionDialog() {
+        val modelManager = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(requireContext(), viewLifecycleOwner.lifecycleScope)
+        val models = com.jarvis.assistant.ai.local.LocalAiConfig.AVAILABLE_MODELS
+        val modelItems = models.map { m ->
+            val ready = modelManager.isModelReady(m.id)
+            val status = if (ready) "✅ READY (Installed)" else "⬇️ Download (${m.formattedSize})"
+            "${m.name}\n$status"
+        }.toTypedArray()
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Select Sovereign Brain Model (llama.cpp)")
+            .setItems(modelItems) { _, which ->
+                val selectedModel = models[which]
+                val isReady = modelManager.isModelReady(selectedModel.id)
+                if (isReady) {
+                    modelManager.setActiveModel(selectedModel.id)
+                    android.widget.Toast.makeText(requireContext(), "${selectedModel.name} is active for on-device inference.", android.widget.Toast.LENGTH_SHORT).show()
+                    updateDualBrainStatusUi()
+                } else {
+                    com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Download ${selectedModel.name}")
+                        .setMessage("Download on-device GGUF weights (${selectedModel.formattedSize})?\n\n${selectedModel.description}\n\n• 100% Offline & Private\n• Native ARM64 NEON acceleration\n• Full phone control & WhatsApp offline")
+                        .setPositiveButton("Start Download") { _, _ ->
+                            HudSoundManager.playTapSound()
+                            modelManager.setActiveModel(selectedModel.id)
+                            modelManager.downloadModel(selectedModel.id)
+                            android.widget.Toast.makeText(requireContext(), "Starting download of ${selectedModel.name}…", android.widget.Toast.LENGTH_SHORT).show()
+                            updateDualBrainStatusUi()
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun updateDualBrainStatusUi() {
@@ -1590,12 +1697,43 @@ class HomeFragment : Fragment() {
         }
 
         val localMgr = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(requireContext(), viewLifecycleOwner.lifecycleScope)
-        val activeLocalId = localMgr.activeModelId.value
-        val localDesc = com.jarvis.assistant.ai.local.LocalAiConfig.AVAILABLE_MODELS.find { it.id == activeLocalId }
-        val localName = localDesc?.name ?: "Qwen 2.5 (1.5B)"
-        val isReady = localMgr.isModelReady(com.jarvis.assistant.ai.local.LocalAiConfig.MODEL_LLAMA_3_2_1B) || localDesc != null
-        binding.tvLocalBrainModel.text = localName
-        binding.tvLocalBrainStatus.text = if (isReady) "Offline Ready" else "Download Model"
+        val activeDownload = localMgr.downloads.value.values.firstOrNull {
+            it.status == com.jarvis.assistant.ai.local.LocalDownloadStatus.DOWNLOADING ||
+            it.status == com.jarvis.assistant.ai.local.LocalDownloadStatus.VERIFYING
+        }
+
+        if (activeDownload != null) {
+            val dDesc = com.jarvis.assistant.ai.local.LocalAiConfig.AVAILABLE_MODELS.find { it.id == activeDownload.modelId }
+            binding.layoutBrainDownload.visibility = View.VISIBLE
+            binding.btnQuickDownloadGguf.visibility = View.GONE
+            binding.tvBrainDownloadTitle.text = "Downloading ${dDesc?.name ?: activeDownload.modelId}..."
+            binding.tvBrainDownloadProgressPercent.text = "${activeDownload.progressPercent}%"
+            binding.progressBrainDownload.progress = activeDownload.progressPercent
+            val dMb = activeDownload.bytesDownloaded shr 20
+            val tMb = activeDownload.totalBytes shr 20
+            val speedMb = String.format(java.util.Locale.US, "%.1f MB/s", activeDownload.speedBytesPerSec / (1024 * 1024))
+            val eta = if (activeDownload.etaSeconds > 0) " · ETA: ${activeDownload.etaSeconds}s" else ""
+            binding.tvBrainDownloadSpeedEta.text = "$dMb MB / $tMb MB · $speedMb$eta"
+            binding.tvLocalBrainModel.text = dDesc?.name ?: activeDownload.modelId
+            binding.tvLocalBrainStatus.text = "Downloading (${activeDownload.progressPercent}%)"
+            return
+        }
+
+        binding.layoutBrainDownload.visibility = View.GONE
+
+        val resolved = com.jarvis.brain.LocalLlamaEngine.getInstance(requireContext()).resolveModelFile()
+        if (resolved != null && resolved.exists()) {
+            binding.btnQuickDownloadGguf.visibility = View.GONE
+            val cleanName = resolved.name.removeSuffix(".gguf")
+            val sizeMb = resolved.length() shr 20
+            binding.tvLocalBrainModel.text = cleanName
+            binding.tvLocalBrainStatus.text = "Ready · Sovereign (${sizeMb}MB)"
+        } else {
+            binding.btnQuickDownloadGguf.visibility = View.VISIBLE
+            binding.btnQuickDownloadGguf.text = "⬇ 1-Click Download Sovereign Brain (Qwen 2.5 1.5B · 940MB)"
+            binding.tvLocalBrainModel.text = "No GGUF Model"
+            binding.tvLocalBrainStatus.text = "⬇ Tap to Download"
+        }
     }
 
 }

@@ -463,7 +463,7 @@ class SettingsFragment : Fragment() {
 
         binding.btnSocialGithub1.setOnClickListener {
             try {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/tiwwtiroshan121")))
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/tiwariroshan121")))
             } catch (_: Exception) {}
         }
 
@@ -473,9 +473,19 @@ class SettingsFragment : Fragment() {
             } catch (_: Exception) {}
         }
 
+        binding.btnSocialGithub3.setOnClickListener {
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/allproject121")))
+            } catch (_: Exception) {}
+        }
+
+        binding.btnSocialYoutube.setOnClickListener {
+            Toast.makeText(requireContext(), "YouTube: Official channel link pending · Tracked in PENDING_WORK.md", Toast.LENGTH_SHORT).show()
+        }
+
         binding.tvFooterCredit.setOnClickListener {
             try {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/tiwwtiroshan121")))
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/tiwariroshan121")))
             } catch (_: Exception) {}
         }
     }

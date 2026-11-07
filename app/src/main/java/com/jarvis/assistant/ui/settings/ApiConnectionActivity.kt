@@ -11,7 +11,9 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.Snackbar
 import com.jarvis.assistant.JarvisApp
 import com.jarvis.assistant.R
@@ -19,6 +21,7 @@ import com.jarvis.assistant.ai.MultiModelAiRouter
 import com.jarvis.assistant.data.model.GeminiConstants
 import com.jarvis.assistant.data.preferences.AppPreferences
 import com.jarvis.assistant.databinding.ActivityApiConnectionBinding
+import com.jarvis.assistant.util.HudSoundManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -47,6 +50,16 @@ class ApiConnectionActivity : AppCompatActivity() {
         loadCurrentPreferences()
         setupListeners()
         setupModelDiscoveryListeners()
+
+        // Observe live GGUF downloads
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                val modelManager = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(this@ApiConnectionActivity, lifecycleScope)
+                modelManager.downloads.collect {
+                    refreshLocalBrainUi()
+                }
+            }
+        }
     }
 
     private fun setupUI() {
@@ -111,17 +124,7 @@ class ApiConnectionActivity : AppCompatActivity() {
         }
 
         // Check local model file status
-        val modelFile = java.io.File(java.io.File(filesDir, "models"), "qwen2.5-1.5b-instruct-q4_k_m.gguf")
-        if (modelFile.exists()) {
-            val sizeMb = modelFile.length() shr 20
-            binding.tvLocalBrainBadge.text = "Loaded · ${sizeMb}MB"
-            binding.tvLocalBrainPathSummary.text = "Model: ${modelFile.name} (Ready in private storage)"
-            binding.tvLocalBrainStatus.text = "Status: 100% On-Device Active • Uncensored Autonomous Brain"
-        } else {
-            binding.tvLocalBrainBadge.text = "Pending"
-            binding.tvLocalBrainPathSummary.text = "Expected: ${modelFile.name}"
-            binding.tvLocalBrainStatus.text = "Status: Transfer GGUF model to filesDir/models/ via ADB or SD"
-        }
+        refreshLocalBrainUi()
 
         // Load Multi-Model API Keys
         binding.etOpenAiApiKey.setText(preferences.openAiApiKey)
@@ -283,7 +286,27 @@ class ApiConnectionActivity : AppCompatActivity() {
         }
 
         binding.btnTestLocalBrain.setOnClickListener {
+            HudSoundManager.playTapSound()
             testLocalBrain()
+        }
+
+        binding.btnDownloadLocalBrain.setOnClickListener {
+            HudSoundManager.playTapSound()
+            showLocalModelManagerDialog()
+        }
+
+        binding.btnCancelLocalBrainDownload.setOnClickListener {
+            HudSoundManager.playTapSound()
+            val modelManager = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(this, lifecycleScope)
+            val activeDownload = modelManager.downloads.value.values.firstOrNull {
+                it.status == com.jarvis.assistant.ai.local.LocalDownloadStatus.DOWNLOADING ||
+                it.status == com.jarvis.assistant.ai.local.LocalDownloadStatus.VERIFYING
+            }
+            if (activeDownload != null) {
+                modelManager.cancelDownload(activeDownload.modelId)
+                Toast.makeText(this, "Download cancelled.", Toast.LENGTH_SHORT).show()
+                refreshLocalBrainUi()
+            }
         }
 
         binding.btnSaveConnection.setOnClickListener {
@@ -614,8 +637,95 @@ class ApiConnectionActivity : AppCompatActivity() {
                     binding.tvLocalBrainStatus.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this@ApiConnectionActivity, R.attr.themeDanger, Color.parseColor("#EF4444")))
                     Snackbar.make(binding.root, result.second, Snackbar.LENGTH_LONG).show()
                 }
+                refreshLocalBrainUi()
             }
         }
+    }
+
+    private fun refreshLocalBrainUi() {
+        val engine = com.jarvis.brain.LocalLlamaEngine.getInstance(this)
+        val resolved = engine.resolveModelFile()
+        val modelManager = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(this, lifecycleScope)
+        val activeId = modelManager.activeModelId.value
+        val descriptor = com.jarvis.assistant.ai.local.LocalAiConfig.AVAILABLE_MODELS.find { it.id == activeId }
+        val activeDownload = modelManager.downloads.value.values.firstOrNull {
+            it.status == com.jarvis.assistant.ai.local.LocalDownloadStatus.DOWNLOADING ||
+            it.status == com.jarvis.assistant.ai.local.LocalDownloadStatus.VERIFYING
+        }
+
+        if (activeDownload != null) {
+            val dDesc = com.jarvis.assistant.ai.local.LocalAiConfig.AVAILABLE_MODELS.find { it.id == activeDownload.modelId }
+            binding.layoutLocalBrainDownload.visibility = View.VISIBLE
+            binding.btnDownloadLocalBrain.visibility = View.GONE
+            binding.btnTestLocalBrain.visibility = View.GONE
+            binding.tvLocalBrainBadge.text = "Downloading · ${activeDownload.progressPercent}%"
+            binding.tvLocalBrainDownloadTitle.text = "Downloading ${dDesc?.name ?: activeDownload.modelId}..."
+            binding.tvLocalBrainDownloadPercent.text = "${activeDownload.progressPercent}%"
+            binding.progressLocalBrainDownload.progress = activeDownload.progressPercent
+            val dMb = activeDownload.bytesDownloaded shr 20
+            val tMb = activeDownload.totalBytes shr 20
+            val speedMb = String.format(java.util.Locale.US, "%.1f MB/s", activeDownload.speedBytesPerSec / (1024 * 1024))
+            val eta = if (activeDownload.etaSeconds > 0) " · ETA: ${activeDownload.etaSeconds}s" else ""
+            binding.tvLocalBrainDownloadDetails.text = "$dMb MB / $tMb MB · $speedMb$eta"
+            binding.tvLocalBrainPathSummary.text = "Downloading from Hugging Face"
+            binding.tvLocalBrainStatus.text = "Status: Downloading on-device model weights (${activeDownload.progressPercent}%)..."
+            binding.tvLocalBrainStatus.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this, R.attr.themeAccent, Color.parseColor("#38BDF8")))
+        } else if (resolved != null && resolved.exists()) {
+            val sizeMb = resolved.length() shr 20
+            binding.layoutLocalBrainDownload.visibility = View.GONE
+            binding.btnDownloadLocalBrain.visibility = View.GONE
+            binding.btnTestLocalBrain.visibility = View.VISIBLE
+            binding.btnTestLocalBrain.isEnabled = true
+            binding.tvLocalBrainBadge.text = "Ready · ${sizeMb}MB"
+            binding.tvLocalBrainPathSummary.text = "Model: ${resolved.name} (Ready in storage)"
+            binding.tvLocalBrainStatus.text = "Status: 100% On-Device Active · Uncensored Autonomous Brain"
+            binding.tvLocalBrainStatus.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this, R.attr.themeSuccess, Color.parseColor("#22C55E")))
+        } else {
+            binding.layoutLocalBrainDownload.visibility = View.GONE
+            binding.btnDownloadLocalBrain.visibility = View.VISIBLE
+            binding.btnTestLocalBrain.visibility = View.GONE
+            binding.tvLocalBrainBadge.text = "Not Installed"
+            binding.tvLocalBrainPathSummary.text = "No GGUF weights detected on device."
+            binding.tvLocalBrainStatus.text = "Status: Tap below to download 100% sovereign offline brain."
+            binding.tvLocalBrainStatus.setTextColor(com.jarvis.assistant.util.ThemeManager.attrColor(this, R.attr.themeTextSecondary, Color.parseColor("#94A3B8")))
+        }
+    }
+
+    private fun showLocalModelManagerDialog() {
+        val modelManager = com.jarvis.assistant.ai.local.LocalModelManager.getInstance(this, lifecycleScope)
+        val models = com.jarvis.assistant.ai.local.LocalAiConfig.AVAILABLE_MODELS
+        val modelItems = models.map { m ->
+            val ready = modelManager.isModelReady(m.id)
+            val status = if (ready) "✅ READY (Installed)" else "⬇️ Download (${m.formattedSize})"
+            "${m.name}\n$status"
+        }.toTypedArray()
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle("Select Sovereign Brain Model (llama.cpp)")
+            .setItems(modelItems) { _, which ->
+                val selectedModel = models[which]
+                val isReady = modelManager.isModelReady(selectedModel.id)
+                if (isReady) {
+                    modelManager.setActiveModel(selectedModel.id)
+                    Toast.makeText(this, "${selectedModel.name} is active.", Toast.LENGTH_SHORT).show()
+                    refreshLocalBrainUi()
+                } else {
+                    com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                        .setTitle("Download ${selectedModel.name}")
+                        .setMessage("Download on-device GGUF weights (${selectedModel.formattedSize})?\n\n${selectedModel.description}\n\n• 100% Offline & Private\n• Native ARM64 NEON acceleration\n• Full phone control & WhatsApp offline")
+                        .setPositiveButton("Start Download") { _, _ ->
+                            HudSoundManager.playTapSound()
+                            modelManager.setActiveModel(selectedModel.id)
+                            modelManager.downloadModel(selectedModel.id)
+                            Toast.makeText(this, "Starting download of ${selectedModel.name}…", Toast.LENGTH_SHORT).show()
+                            refreshLocalBrainUi()
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun testConnection(apiKey: String) {

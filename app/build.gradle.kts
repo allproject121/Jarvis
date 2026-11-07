@@ -43,8 +43,8 @@ android {
         applicationId = "com.jarvis.assistant"
         minSdk = 28
         targetSdk = 36
-        versionCode = 149
-        versionName = "1.9.3"
+        versionCode = 150
+        versionName = "1.9.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "DEVELOPER_NAME", buildConfigString(developerName.ifBlank { "Unverified developer" }))

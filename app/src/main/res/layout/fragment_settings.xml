@@ -130,143 +130,330 @@
                     android:fontFamily="@font/inter" />
             </LinearLayout>
 
-            <!-- ==================== PROFILE ==================== -->
+            <!-- ==================== PROFILE (COMPACT BENTO) ==================== -->
             <LinearLayout
                 android:id="@+id/cardProfile"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_set_card"
+                android:foreground="?attr/selectableItemBackground"
+                android:clipToOutline="true"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp">
+
+                <FrameLayout
+                    android:layout_width="40dp"
+                    android:layout_height="40dp">
+                    <TextView
+                        android:id="@+id/tvProfileInitials"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_set_avatar"
+                        android:gravity="center"
+                        android:text="R"
+                        android:textColor="?attr/themeOnAccent"
+                        android:textSize="17sp"
+                        android:fontFamily="@font/inter"
+                        android:textFontWeight="700" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="8dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/tvProfileName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            android:text="Roshan"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600"
+                            android:letterSpacing="-0.01" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:background="@drawable/bg_set_badge"
+                            android:paddingStart="6dp"
+                            android:paddingEnd="8dp"
+                            android:paddingTop="2dp"
+                            android:paddingBottom="2dp">
+                            <View
+                                android:layout_width="6dp"
+                                android:layout_height="6dp"
+                                android:background="@drawable/bg_bento_set_dot_success" />
+
+                            <TextView
+                                android:id="@+id/tvProfilePersonaChip"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="5dp"
+                                android:maxLines="1"
+                                android:text="ROSHAN MODE"
+                                android:textColor="?attr/themeTextSecondary"
+                                android:textSize="10sp"
+                                android:letterSpacing="0"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="600"
+                                android:maxWidth="130dp"
+                                android:ellipsize="end" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvProfileSubtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:text="Jarvis operator · Primary user"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/inter" />
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:background="@drawable/bg_bento_set_circle">
+                    <ImageView
+                        android:layout_width="13dp"
+                        android:layout_height="13dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_set_chevron_right"
+                        app:tint="?attr/themeTextSecondary"
+                        android:contentDescription="Edit name" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- ==================== LIVE DIAGNOSTICS (COMPACT TOP HUD) ==================== -->
+            <LinearLayout
+                android:id="@+id/cardTelemetryDashboard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:orientation="vertical"
                 android:background="@drawable/bg_set_card"
                 android:foreground="?attr/selectableItemBackground"
                 android:clipToOutline="true"
                 android:clickable="true"
                 android:focusable="true"
-                android:paddingStart="18dp"
-                android:paddingEnd="18dp"
-                android:paddingTop="18dp"
-                android:paddingBottom="18dp">
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
-                    <FrameLayout
-                        android:layout_width="56dp"
-                        android:layout_height="56dp">
-                        <TextView
-                            android:id="@+id/tvProfileInitials"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/bg_set_avatar"
-                            android:gravity="center"
-                            android:text="R"
-                            android:textColor="?attr/themeOnAccent"
-                            android:textSize="22sp"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="700" />
-                    </FrameLayout>
+                    <View
+                        android:layout_width="7dp"
+                        android:layout_height="7dp"
+                        android:background="@drawable/bg_set_dot" />
 
-                    <Space
-                        android:layout_width="0dp"
-                        android:layout_height="1dp"
-                        android:layout_weight="1" />
-
-                    <LinearLayout
+                    <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/bg_set_badge"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="12dp"
-                        android:paddingTop="6dp"
-                        android:paddingBottom="6dp">
-                        <View
-                            android:layout_width="7dp"
-                            android:layout_height="7dp"
-                            android:background="@drawable/bg_bento_set_dot_success" />
-
-                        <TextView
-                            android:id="@+id/tvProfilePersonaChip"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="7dp"
-                            android:maxLines="1"
-                            android:text="ROSHAN MODE"
-                            android:textColor="?attr/themeTextSecondary"
-                            android:textSize="12sp"
-                            android:letterSpacing="0"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="500"
-                            android:maxWidth="150dp"
-                            android:ellipsize="end" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
-                    android:orientation="vertical">
-                    <TextView
-                        android:id="@+id/tvProfileName"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:maxLines="1"
-                        android:ellipsize="end"
-                        android:text="Roshan"
+                        android:layout_marginStart="8dp"
+                        android:text="Live diagnostics"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="22sp"
-                        android:fontFamily="@font/inter"
-                        android:textFontWeight="600"
-                        android:letterSpacing="-0.01" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-                    <TextView
-                        android:id="@+id/tvProfileSubtitle"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:maxLines="1"
-                        android:ellipsize="end"
-                        android:text="Jarvis operator · Primary user"
-                        android:textColor="?attr/themeTextMuted"
                         android:textSize="13sp"
                         android:fontFamily="@font/inter"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="10dp" />
+                        android:textFontWeight="600" />
 
-                    <FrameLayout
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:background="@drawable/bg_bento_set_circle">
-                        <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_set_chevron_right"
-                            app:tint="?attr/themeTextSecondary"
-                            android:contentDescription="Edit name" />
-                    </FrameLayout>
+                    <TextView
+                        android:id="@+id/tvTelemetryThreadingProfile"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:text="Hardware cores &amp; inference threads"
+                        android:textColor="?attr/themeTextMuted"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/inter" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_set_badge"
+                        android:paddingHorizontal="7dp"
+                        android:paddingVertical="2dp"
+                        android:text="1 Hz"
+                        android:textColor="?attr/themeTextSecondary"
+                        android:textSize="10sp"
+                        android:fontFamily="@font/inter" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:baselineAligned="false">
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="6dp"
+                        android:paddingBottom="6dp">
+                        <TextView
+                            android:id="@+id/tvTelemetryTps"
+                            android:layout_width="match_parent"
+                            android:layout_height="24dp"
+                            android:maxLines="1"
+                            android:text="0.0"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600"
+                            android:gravity="start|center_vertical"
+                            android:letterSpacing="-0.02"
+                            android:autoSizeTextType="uniform"
+                            android:autoSizeMinTextSize="11sp"
+                            android:autoSizeMaxTextSize="18sp"
+                            android:autoSizeStepGranularity="1sp" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            android:text="Tokens / sec"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="10sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+
+                    <Space
+                        android:layout_width="6dp"
+                        android:layout_height="1dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="6dp"
+                        android:paddingBottom="6dp">
+                        <TextView
+                            android:id="@+id/tvTelemetryRam"
+                            android:layout_width="match_parent"
+                            android:layout_height="24dp"
+                            android:maxLines="1"
+                            android:text="--"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600"
+                            android:gravity="start|center_vertical"
+                            android:letterSpacing="-0.02"
+                            android:autoSizeTextType="uniform"
+                            android:autoSizeMinTextSize="11sp"
+                            android:autoSizeMaxTextSize="18sp"
+                            android:autoSizeStepGranularity="1sp" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            android:text="RAM used"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="10sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
+
+                    <Space
+                        android:layout_width="6dp"
+                        android:layout_height="1dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="6dp"
+                        android:paddingBottom="6dp">
+                        <TextView
+                            android:id="@+id/tvTelemetryTtft"
+                            android:layout_width="match_parent"
+                            android:layout_height="24dp"
+                            android:maxLines="1"
+                            android:text="--"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="600"
+                            android:gravity="start|center_vertical"
+                            android:letterSpacing="-0.02"
+                            android:autoSizeTextType="uniform"
+                            android:autoSizeMinTextSize="11sp"
+                            android:autoSizeMaxTextSize="18sp"
+                            android:autoSizeStepGranularity="1sp" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            android:text="First token"
+                            android:textColor="?attr/themeTextMuted"
+                            android:textSize="10sp"
+                            android:fontFamily="@font/inter" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Shortcuts: 2x2 bento tiles (icon plate + label + caption) -->
+            <!-- ==================== SHORTCUTS: 2x2 COMPACT BENTO ==================== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="8dp"
                 android:orientation="vertical">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="0dp"
                     android:orientation="horizontal"
                     android:baselineAligned="false">
                     <LinearLayout
@@ -280,20 +467,20 @@
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
                         android:clipToOutline="true"
-                        android:padding="16dp"
-                        android:minHeight="118dp">
+                        android:padding="10dp"
+                        android:minHeight="76dp">
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
                             <FrameLayout
-                                android:layout_width="44dp"
-                                android:layout_height="44dp"
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
                                 android:background="@drawable/bg_set_icon_tile">
                                 <ImageView
-                                    android:layout_width="22dp"
-                                    android:layout_height="22dp"
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_code_chip"
                                     app:tint="?attr/themeAccent"
@@ -306,12 +493,12 @@
                                 android:layout_weight="1" />
 
                             <FrameLayout
-                                android:layout_width="28dp"
-                                android:layout_height="28dp"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
                                 android:background="@drawable/bg_bento_set_circle">
                                 <ImageView
-                                    android:layout_width="14dp"
-                                    android:layout_height="14dp"
+                                    android:layout_width="11dp"
+                                    android:layout_height="11dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_set_chevron_right"
                                     app:tint="?attr/themeTextMuted"
@@ -322,29 +509,29 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="20dp"
+                            android:layout_marginTop="6dp"
                             android:maxLines="1"
                             android:ellipsize="end"
                             android:text="Super Core"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
+                            android:textSize="13sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
+                            android:layout_marginTop="1dp"
                             android:maxLines="1"
                             android:ellipsize="end"
                             android:text="System control"
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             android:fontFamily="@font/inter" />
                     </LinearLayout>
 
                     <Space
-                        android:layout_width="12dp"
+                        android:layout_width="8dp"
                         android:layout_height="1dp" />
 
                     <LinearLayout
@@ -358,20 +545,20 @@
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
                         android:clipToOutline="true"
-                        android:padding="16dp"
-                        android:minHeight="118dp">
+                        android:padding="10dp"
+                        android:minHeight="76dp">
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
                             <FrameLayout
-                                android:layout_width="44dp"
-                                android:layout_height="44dp"
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
                                 android:background="@drawable/bg_set_icon_tile">
                                 <ImageView
-                                    android:layout_width="22dp"
-                                    android:layout_height="22dp"
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_settings_protocols"
                                     app:tint="?attr/themeAccent"
@@ -384,12 +571,12 @@
                                 android:layout_weight="1" />
 
                             <FrameLayout
-                                android:layout_width="28dp"
-                                android:layout_height="28dp"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
                                 android:background="@drawable/bg_bento_set_circle">
                                 <ImageView
-                                    android:layout_width="14dp"
-                                    android:layout_height="14dp"
+                                    android:layout_width="11dp"
+                                    android:layout_height="11dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_set_chevron_right"
                                     app:tint="?attr/themeTextMuted"
@@ -400,24 +587,24 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="20dp"
+                            android:layout_marginTop="6dp"
                             android:maxLines="1"
                             android:ellipsize="end"
                             android:text="Agent Matrix"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
+                            android:textSize="13sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
+                            android:layout_marginTop="1dp"
                             android:maxLines="1"
                             android:ellipsize="end"
                             android:text="Tools &amp; agents"
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             android:fontFamily="@font/inter" />
                     </LinearLayout>
                 </LinearLayout>
@@ -425,7 +612,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal"
                     android:baselineAligned="false">
                     <LinearLayout
@@ -439,20 +626,20 @@
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
                         android:clipToOutline="true"
-                        android:padding="16dp"
-                        android:minHeight="118dp">
+                        android:padding="10dp"
+                        android:minHeight="76dp">
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
                             <FrameLayout
-                                android:layout_width="44dp"
-                                android:layout_height="44dp"
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
                                 android:background="@drawable/bg_set_icon_tile">
                                 <ImageView
-                                    android:layout_width="22dp"
-                                    android:layout_height="22dp"
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_settings_palette"
                                     app:tint="?attr/themeAccent"
@@ -465,12 +652,12 @@
                                 android:layout_weight="1" />
 
                             <FrameLayout
-                                android:layout_width="28dp"
-                                android:layout_height="28dp"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
                                 android:background="@drawable/bg_bento_set_circle">
                                 <ImageView
-                                    android:layout_width="14dp"
-                                    android:layout_height="14dp"
+                                    android:layout_width="11dp"
+                                    android:layout_height="11dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_set_chevron_right"
                                     app:tint="?attr/themeTextMuted"
@@ -481,29 +668,29 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="20dp"
+                            android:layout_marginTop="6dp"
                             android:maxLines="1"
                             android:ellipsize="end"
                             android:text="Studio"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
+                            android:textSize="13sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
+                            android:layout_marginTop="1dp"
                             android:maxLines="1"
                             android:ellipsize="end"
                             android:text="Customize the look"
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             android:fontFamily="@font/inter" />
                     </LinearLayout>
 
                     <Space
-                        android:layout_width="12dp"
+                        android:layout_width="8dp"
                         android:layout_height="1dp" />
 
                     <LinearLayout
@@ -517,20 +704,20 @@
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
                         android:clipToOutline="true"
-                        android:padding="16dp"
-                        android:minHeight="118dp">
+                        android:padding="10dp"
+                        android:minHeight="76dp">
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
                             <FrameLayout
-                                android:layout_width="44dp"
-                                android:layout_height="44dp"
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
                                 android:background="@drawable/bg_set_icon_tile">
                                 <ImageView
-                                    android:layout_width="22dp"
-                                    android:layout_height="22dp"
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_nav_gods_eye"
                                     app:tint="?attr/themeAccent"
@@ -543,12 +730,12 @@
                                 android:layout_weight="1" />
 
                             <FrameLayout
-                                android:layout_width="28dp"
-                                android:layout_height="28dp"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
                                 android:background="@drawable/bg_bento_set_circle">
                                 <ImageView
-                                    android:layout_width="14dp"
-                                    android:layout_height="14dp"
+                                    android:layout_width="11dp"
+                                    android:layout_height="11dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_set_chevron_right"
                                     app:tint="?attr/themeTextMuted"
@@ -559,24 +746,24 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="20dp"
+                            android:layout_marginTop="6dp"
                             android:maxLines="1"
                             android:ellipsize="end"
                             android:text="God's Eye"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
+                            android:textSize="13sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
+                            android:layout_marginTop="1dp"
                             android:maxLines="1"
                             android:ellipsize="end"
                             android:text="Globe console"
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             android:fontFamily="@font/inter" />
                     </LinearLayout>
                 </LinearLayout>
@@ -1465,200 +1652,6 @@
                             app:strokeColor="?attr/themeCardBorder"
                             app:strokeWidth="1dp"
                             app:cornerRadius="12dp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- Live on-device diagnostics (tap for details) -->
-            <LinearLayout
-                android:id="@+id/cardTelemetryDashboard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:orientation="vertical"
-                android:background="@drawable/bg_set_card"
-                android:foreground="?attr/selectableItemBackground"
-                android:clipToOutline="true"
-                android:clickable="true"
-                android:focusable="true"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:paddingTop="18dp"
-                android:paddingBottom="16dp">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-                    <View
-                        android:layout_width="8dp"
-                        android:layout_height="8dp"
-                        android:background="@drawable/bg_set_dot" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="10dp"
-                        android:text="Live diagnostics"
-                        android:textColor="?attr/themeTextPrimary"
-                        android:textSize="18sp"
-                        android:fontFamily="@font/inter"
-                        android:textFontWeight="600"
-                        android:letterSpacing="-0.01" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_set_badge"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="4dp"
-                        android:text="1 Hz"
-                        android:textColor="?attr/themeTextSecondary"
-                        android:textSize="11sp"
-                        android:fontFamily="@font/inter" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/tvTelemetryThreadingProfile"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:text="Detecting hardware cores &amp; inference threads..."
-                    android:textColor="?attr/themeTextMuted"
-                    android:textSize="13sp"
-                    android:fontFamily="@font/inter"
-                    android:paddingStart="18dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:orientation="horizontal"
-                    android:baselineAligned="false">
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_jarvis_row_item"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="10dp"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="12dp">
-                        <TextView
-                            android:id="@+id/tvTelemetryTps"
-                            android:layout_width="match_parent"
-                            android:layout_height="34dp"
-                            android:maxLines="1"
-                            android:text="0.0"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="26sp"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="600"
-                            android:gravity="start|center_vertical"
-                            android:letterSpacing="-0.02"
-                            android:autoSizeTextType="uniform"
-                            android:autoSizeMinTextSize="13sp"
-                            android:autoSizeMaxTextSize="26sp"
-                            android:autoSizeStepGranularity="1sp" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:maxLines="1"
-                            android:ellipsize="end"
-                            android:text="Tokens / sec"
-                            android:textColor="?attr/themeTextMuted"
-                            android:textSize="11sp"
-                            android:fontFamily="@font/inter" />
-                    </LinearLayout>
-
-                    <Space
-                        android:layout_width="8dp"
-                        android:layout_height="1dp" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_jarvis_row_item"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="10dp"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="12dp">
-                        <TextView
-                            android:id="@+id/tvTelemetryRam"
-                            android:layout_width="match_parent"
-                            android:layout_height="34dp"
-                            android:maxLines="1"
-                            android:text="--"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="26sp"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="600"
-                            android:gravity="start|center_vertical"
-                            android:letterSpacing="-0.02"
-                            android:autoSizeTextType="uniform"
-                            android:autoSizeMinTextSize="13sp"
-                            android:autoSizeMaxTextSize="26sp"
-                            android:autoSizeStepGranularity="1sp" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:maxLines="1"
-                            android:ellipsize="end"
-                            android:text="RAM used"
-                            android:textColor="?attr/themeTextMuted"
-                            android:textSize="11sp"
-                            android:fontFamily="@font/inter" />
-                    </LinearLayout>
-
-                    <Space
-                        android:layout_width="8dp"
-                        android:layout_height="1dp" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_jarvis_row_item"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="10dp"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="12dp">
-                        <TextView
-                            android:id="@+id/tvTelemetryTtft"
-                            android:layout_width="match_parent"
-                            android:layout_height="34dp"
-                            android:maxLines="1"
-                            android:text="--"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="26sp"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="600"
-                            android:gravity="start|center_vertical"
-                            android:letterSpacing="-0.02"
-                            android:autoSizeTextType="uniform"
-                            android:autoSizeMinTextSize="13sp"
-                            android:autoSizeMaxTextSize="26sp"
-                            android:autoSizeStepGranularity="1sp" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:maxLines="1"
-                            android:ellipsize="end"
-                            android:text="First token"
-                            android:textColor="?attr/themeTextMuted"
-                            android:textSize="11sp"
-                            android:fontFamily="@font/inter" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -3428,7 +3421,7 @@
                             android:minHeight="44dp"
                             android:insetTop="0dp"
                             android:insetBottom="0dp"
-                            android:text="GitHub: tiwwtiroshan121"
+                            android:text="GitHub: tiwariroshan121"
                             android:textAllCaps="false"
                             android:textColor="?attr/themeTextPrimary"
                             android:textSize="13sp"
@@ -3450,6 +3443,44 @@
                             android:text="GitHub: freeid2601-dotcom"
                             android:textAllCaps="false"
                             android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="500"
+                            app:strokeColor="?attr/themeCardBorder"
+                            app:strokeWidth="1dp"
+                            app:cornerRadius="12dp" />
+
+                        <Button
+                            android:id="@+id/btnSocialGithub3"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:minHeight="44dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:text="GitHub: allproject121"
+                            android:textAllCaps="false"
+                            android:textColor="?attr/themeTextPrimary"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter"
+                            android:textFontWeight="500"
+                            app:strokeColor="?attr/themeCardBorder"
+                            app:strokeWidth="1dp"
+                            app:cornerRadius="12dp" />
+
+                        <Button
+                            android:id="@+id/btnSocialYoutube"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:minHeight="44dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:text="YouTube: Roshan Official (Pending / Coming Soon)"
+                            android:textAllCaps="false"
+                            android:textColor="?attr/themeTextMuted"
                             android:textSize="13sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="500"

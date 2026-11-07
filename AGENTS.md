@@ -46,6 +46,17 @@ All AI agents (Antigravity, Claude, Cursor, Copilot, etc.) working on this repos
 ## 4. Multi-Location Sync
 
 - Every major step, architectural update, and guide must be synchronized across:
-  1. Project Root (`OFFLINE_BRAIN.md`, `claude.work`, `WORK_LOG.md`, `AGENTS.md`)
-  2. Brain Session Artifacts (`JARVIS_OFFLINE_AUTONOMOUS_BRAIN_SPEC.md`)
-  3. App Documentation (`docs/guides/OFFLINE_BRAIN.md`)
+  1. Project Root (`OFFLINE_BRAIN.md`, `PENDING_WORK.md`, `claude.work`, `WORK_LOG.md`, `AGENTS.md`)
+  2. Brain Session Artifacts (`JARVIS_OFFLINE_AUTONOMOUS_BRAIN_SPEC.md`, `JARVIS_PENDING_WORK_AND_ROADMAP.md`)
+  3. App Documentation (`docs/guides/OFFLINE_BRAIN.md`, `docs/guides/PENDING_WORK.md`)
+
+---
+
+## 5. Mandatory Pending Work & Ideas Auto-Preservation Protocol (`PENDING_WORK.md`)
+
+- **Mandatory Read on Start**: All AI agents (Antigravity, Claude, Cursor, Copilot, Codex, LLM, etc.) working on this repository MUST read `PENDING_WORK.md` alongside `claude.work` / `WORK_LOG.md` at the beginning of every session.
+- **Strict Immutability of Existing Ideas**: Existing pending ideas and backlog entries in `PENDING_WORK.md` MUST NOT be deleted, erased, or reduced without explicit, unambiguous user confirmation.
+- **Automatic Idea & Pending Task Auto-Save**:
+  1. Whenever the user suggests an idea, feature, or plan that is not implemented in the current turn (or deferred for future work), the agent MUST immediately log it into `PENDING_WORK.md`.
+  2. If the user mentions a plan or task and forgets how to implement it, or if the agent finishes a turn leaving any tasks or deferred items incomplete, the agent MUST automatically record and preserve them in `PENDING_WORK.md` before ending their turn.
+- **Proactive Future Recall**: In any future session or when asked by the user, the agent must inspect `PENDING_WORK.md` and proactively remind the user of their backlog, stored ideas, and pending implementations.
