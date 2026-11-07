@@ -708,5 +708,44 @@ ote likho ..., play song) executed in <1ms via deterministic quick rules.
        - Profile header is sleek and compact with `Roshan` title and `Jarvis operator · Primary user` subtitle.
        - Tapped `Studio` ("Customize the look") bento shortcut card: opens `CustomizationStudioActivity` cleanly.
        - Verified 3D Character Model Vault with STARK Core Orb, Hinata Hyuga, REDMAGIC Mora, and Apply & save button.
-- **Next Step Pointer**: [Step 4.11] - Download Curated Sovereign GGUF Model on Device & Run 100% Offline Inference Test.
+- **Next Step Pointer**: [Step 4.11] - Ultra-Compact Home & Settings Bento Layout, Live Diagnostics HUD & Direct Developer Directory.
+
+---
+
+## [Step 4.11] - 2026-11-07 21:40:00 IST
+- **Task**: Ultra-Compact Home Bento Elements, Compact Settings Profile & Telemetry HUD, and Direct Developer Directory Overhaul
+- **Status**: COMPLETED
+- **Files Read / Modified**:
+  - `app/src/main/res/layout/fragment_home.xml`
+  - `app/src/main/java/com/jarvis/assistant/ui/home/HomeFragment.kt`
+  - `app/src/main/res/layout/fragment_settings.xml`
+  - `app/src/main/java/com/jarvis/assistant/ui/settings/SettingsFragment.kt`
+  - `app/src/main/res/drawable/ic_social_linkedin.xml`
+  - `WORK_LOG.md`
+  - `claude.work`
+- **Code Integrity Check**: VERIFIED. All ViewBinding XML IDs preserved, syntax valid, drawables linked, and Kotlin click listeners with try-catch & fallback toasts verified.
+- **Details & Output**:
+  1. **Home Screen Element Compacting**:
+     - Reduced character orb container height from 440dp to 280dp, and dynamic `heroStageHeight()` screen fraction from 0.60f/0.48f to 0.38f/0.30f.
+     - Reduced Overview typography from 26sp to 17sp (subtitle 13.5sp -> 11sp).
+     - Compacted Weather Card: padding 20dp -> 11dp, condition 19sp -> 14sp, temperature 40sp -> 22sp.
+     - Compacted System Telemetry: 4 tiles padding 18dp -> 9dp, big number text 32sp -> 16sp, height 40dp -> 24dp.
+     - Compacted Quick Action cards: minHeight 136dp -> 74dp, padding 16dp -> 9dp, title 16sp -> 12sp.
+     - Protocols section title reduced from 18sp to 13sp.
+     - What's New plates: padding 14dp -> 8dp, chip 38dp -> 26dp, title 14.5sp -> 12sp.
+  2. **Settings Screen Profile & Bento Reduction**:
+     - Profile card (`cardProfile`) avatar reduced to 32dp (13sp initial), name text to 13.5sp, ROSHAN MODE badge to 9sp, subtitle to 10.5sp, and padding to 6dp.
+     - 4 Bento shortcut cards (`Super Core`, `Agent Matrix`, `Studio`, `God's Eye`): minHeight reduced from 76dp to 54dp, icon tile to 24dp, text to 11.5sp, padding to 8dp.
+     - Live Diagnostics HUD (`cardTelemetryDashboard`): padding reduced to 7dp, numbers to 14sp, height to 20dp, units to 8.5sp.
+  3. **About & Developer Directory Overhaul (Toggle Switch Eliminated)**:
+     - Eliminated `switchDeveloperLinks` toggle requirement; made developer channels directly visible and tap-accessible immediately without toggling.
+     - Beautiful Bento list styling (`bg_jarvis_row_item`) displaying all verified channels:
+       1. Contact Email: `tiwariroshan2601@gmail.com`
+       2. GitHub Primary: `tiwariroshan121` (`https://github.com/tiwariroshan121`)
+       3. GitHub Free ID: `freeid2601-dotcom` (`https://github.com/freeid2601-dotcom`)
+       4. GitHub Projects: `allproject121` (`https://github.com/allproject121`)
+       5. LinkedIn: `tiwariroshan121` (`https://www.linkedin.com/in/tiwariroshan121`)
+       6. Instagram: `@tiwariroshan121` (`https://instagram.com/tiwariroshan121`)
+       7. YouTube: `Roshan Official (Coming Soon · In Progress)`
+- **Next Step Pointer**: [Step 4.12] - Device Deployment & Visual Inspection.
 

@@ -464,23 +464,49 @@ class SettingsFragment : Fragment() {
         binding.btnSocialGithub1.setOnClickListener {
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/tiwariroshan121")))
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+                Toast.makeText(requireContext(), "GitHub: tiwariroshan121", Toast.LENGTH_SHORT).show()
+            }
         }
 
         binding.btnSocialGithub2.setOnClickListener {
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/freeid2601-dotcom")))
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+                Toast.makeText(requireContext(), "GitHub: freeid2601-dotcom", Toast.LENGTH_SHORT).show()
+            }
         }
 
         binding.btnSocialGithub3.setOnClickListener {
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/allproject121")))
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+                Toast.makeText(requireContext(), "GitHub: allproject121", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.btnSocialLinkedin.setOnClickListener {
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.linkedin.com/in/tiwariroshan121")))
+            } catch (_: Exception) {
+                Toast.makeText(requireContext(), "LinkedIn: tiwariroshan121", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.btnSocialInstagram.setOnClickListener {
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://instagram.com/tiwariroshan121")))
+            } catch (_: Exception) {
+                Toast.makeText(requireContext(), "Instagram: @tiwariroshan121", Toast.LENGTH_SHORT).show()
+            }
         }
 
         binding.btnSocialYoutube.setOnClickListener {
-            Toast.makeText(requireContext(), "YouTube: Official channel link pending · Tracked in PENDING_WORK.md", Toast.LENGTH_SHORT).show()
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/results?search_query=Roshan+Tiwari+Jarvis")))
+            } catch (_: Exception) {
+                Toast.makeText(requireContext(), "YouTube: Roshan Official (Coming Soon · In Progress)", Toast.LENGTH_LONG).show()
+            }
         }
 
         binding.tvFooterCredit.setOnClickListener {

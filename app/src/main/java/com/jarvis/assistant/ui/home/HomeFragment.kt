@@ -1299,7 +1299,7 @@ class HomeFragment : Fragment() {
     /** Character stage height: ~60% of the screen (48% when the "cinematic 50" option is on). */
     private fun heroStageHeight(): Int {
         val screenHeight = resources.displayMetrics.heightPixels
-        val fraction = if (preferences.isOrbCinematic50) 0.48f else 0.60f
+        val fraction = if (preferences.isOrbCinematic50) 0.30f else 0.38f
         return (screenHeight * fraction).toInt()
     }
 

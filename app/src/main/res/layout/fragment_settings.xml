@@ -130,12 +130,12 @@
                     android:fontFamily="@font/inter" />
             </LinearLayout>
 
-            <!-- ==================== PROFILE (COMPACT BENTO) ==================== -->
+            <!-- ==================== PROFILE (ULTRA-COMPACT BENTO) ==================== -->
             <LinearLayout
                 android:id="@+id/cardProfile"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/bg_set_card"
@@ -143,14 +143,14 @@
                 android:clipToOutline="true"
                 android:clickable="true"
                 android:focusable="true"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp">
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
 
                 <FrameLayout
-                    android:layout_width="40dp"
-                    android:layout_height="40dp">
+                    android:layout_width="32dp"
+                    android:layout_height="32dp">
                     <TextView
                         android:id="@+id/tvProfileInitials"
                         android:layout_width="match_parent"
@@ -159,7 +159,7 @@
                         android:gravity="center"
                         android:text="R"
                         android:textColor="?attr/themeOnAccent"
-                        android:textSize="17sp"
+                        android:textSize="13sp"
                         android:fontFamily="@font/inter"
                         android:textFontWeight="700" />
                 </FrameLayout>
@@ -168,8 +168,8 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="6dp"
                     android:orientation="vertical">
 
                     <LinearLayout
@@ -186,40 +186,39 @@
                             android:ellipsize="end"
                             android:text="Roshan"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="16sp"
+                            android:textSize="13.5sp"
                             android:fontFamily="@font/inter"
-                            android:textFontWeight="600"
-                            android:letterSpacing="-0.01" />
+                            android:textFontWeight="600" />
 
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
+                            android:layout_marginStart="6dp"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
                             android:background="@drawable/bg_set_badge"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="8dp"
-                            android:paddingTop="2dp"
-                            android:paddingBottom="2dp">
+                            android:paddingStart="5dp"
+                            android:paddingEnd="6dp"
+                            android:paddingTop="1.5dp"
+                            android:paddingBottom="1.5dp">
                             <View
-                                android:layout_width="6dp"
-                                android:layout_height="6dp"
+                                android:layout_width="5dp"
+                                android:layout_height="5dp"
                                 android:background="@drawable/bg_bento_set_dot_success" />
 
                             <TextView
                                 android:id="@+id/tvProfilePersonaChip"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="5dp"
+                                android:layout_marginStart="4dp"
                                 android:maxLines="1"
                                 android:text="ROSHAN MODE"
                                 android:textColor="?attr/themeTextSecondary"
-                                android:textSize="10sp"
+                                android:textSize="9sp"
                                 android:letterSpacing="0"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
-                                android:maxWidth="130dp"
+                                android:maxWidth="110dp"
                                 android:ellipsize="end" />
                         </LinearLayout>
                     </LinearLayout>
@@ -228,22 +227,22 @@
                         android:id="@+id/tvProfileSubtitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
+                        android:layout_marginTop="1dp"
                         android:maxLines="1"
                         android:ellipsize="end"
                         android:text="Jarvis operator · Primary user"
                         android:textColor="?attr/themeTextMuted"
-                        android:textSize="11sp"
+                        android:textSize="10.5sp"
                         android:fontFamily="@font/inter" />
                 </LinearLayout>
 
                 <FrameLayout
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
                     android:background="@drawable/bg_bento_set_circle">
                     <ImageView
-                        android:layout_width="13dp"
-                        android:layout_height="13dp"
+                        android:layout_width="11dp"
+                        android:layout_height="11dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_set_chevron_right"
                         app:tint="?attr/themeTextSecondary"
@@ -251,39 +250,39 @@
                 </FrameLayout>
             </LinearLayout>
 
-            <!-- ==================== LIVE DIAGNOSTICS (COMPACT TOP HUD) ==================== -->
+            <!-- ==================== LIVE DIAGNOSTICS (ULTRA-COMPACT HUD) ==================== -->
             <LinearLayout
                 android:id="@+id/cardTelemetryDashboard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="6dp"
                 android:orientation="vertical"
                 android:background="@drawable/bg_set_card"
                 android:foreground="?attr/selectableItemBackground"
                 android:clipToOutline="true"
                 android:clickable="true"
                 android:focusable="true"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp">
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
                     <View
-                        android:layout_width="7dp"
-                        android:layout_height="7dp"
+                        android:layout_width="6dp"
+                        android:layout_height="6dp"
                         android:background="@drawable/bg_set_dot" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="6dp"
                         android:text="Live diagnostics"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="13sp"
+                        android:textSize="11.5sp"
                         android:fontFamily="@font/inter"
                         android:textFontWeight="600" />
 
@@ -292,30 +291,30 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="6dp"
                         android:maxLines="1"
                         android:ellipsize="end"
                         android:text="Hardware cores &amp; inference threads"
                         android:textColor="?attr/themeTextMuted"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:fontFamily="@font/inter" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_set_badge"
-                        android:paddingHorizontal="7dp"
-                        android:paddingVertical="2dp"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="1.5dp"
                         android:text="1 Hz"
                         android:textColor="?attr/themeTextSecondary"
-                        android:textSize="10sp"
+                        android:textSize="9.5sp"
                         android:fontFamily="@font/inter" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="6dp"
                     android:orientation="horizontal"
                     android:baselineAligned="false">
                     <LinearLayout
@@ -324,25 +323,25 @@
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:background="@drawable/bg_jarvis_row_item"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="6dp"
-                        android:paddingBottom="6dp">
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp">
                         <TextView
                             android:id="@+id/tvTelemetryTps"
                             android:layout_width="match_parent"
-                            android:layout_height="24dp"
+                            android:layout_height="20dp"
                             android:maxLines="1"
                             android:text="0.0"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="18sp"
+                            android:textSize="14sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600"
                             android:gravity="start|center_vertical"
                             android:letterSpacing="-0.02"
                             android:autoSizeTextType="uniform"
-                            android:autoSizeMinTextSize="11sp"
-                            android:autoSizeMaxTextSize="18sp"
+                            android:autoSizeMinTextSize="10sp"
+                            android:autoSizeMaxTextSize="14sp"
                             android:autoSizeStepGranularity="1sp" />
 
                         <TextView
@@ -353,12 +352,12 @@
                             android:ellipsize="end"
                             android:text="Tokens / sec"
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="10sp"
+                            android:textSize="8.5sp"
                             android:fontFamily="@font/inter" />
                     </LinearLayout>
 
                     <Space
-                        android:layout_width="6dp"
+                        android:layout_width="5dp"
                         android:layout_height="1dp" />
 
                     <LinearLayout
@@ -367,25 +366,25 @@
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:background="@drawable/bg_jarvis_row_item"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="6dp"
-                        android:paddingBottom="6dp">
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp">
                         <TextView
                             android:id="@+id/tvTelemetryRam"
                             android:layout_width="match_parent"
-                            android:layout_height="24dp"
+                            android:layout_height="20dp"
                             android:maxLines="1"
                             android:text="--"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="18sp"
+                            android:textSize="14sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600"
                             android:gravity="start|center_vertical"
                             android:letterSpacing="-0.02"
                             android:autoSizeTextType="uniform"
-                            android:autoSizeMinTextSize="11sp"
-                            android:autoSizeMaxTextSize="18sp"
+                            android:autoSizeMinTextSize="10sp"
+                            android:autoSizeMaxTextSize="14sp"
                             android:autoSizeStepGranularity="1sp" />
 
                         <TextView
@@ -396,12 +395,12 @@
                             android:ellipsize="end"
                             android:text="RAM used"
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="10sp"
+                            android:textSize="8.5sp"
                             android:fontFamily="@font/inter" />
                     </LinearLayout>
 
                     <Space
-                        android:layout_width="6dp"
+                        android:layout_width="5dp"
                         android:layout_height="1dp" />
 
                     <LinearLayout
@@ -410,25 +409,25 @@
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:background="@drawable/bg_jarvis_row_item"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="6dp"
-                        android:paddingBottom="6dp">
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp">
                         <TextView
                             android:id="@+id/tvTelemetryTtft"
                             android:layout_width="match_parent"
-                            android:layout_height="24dp"
+                            android:layout_height="20dp"
                             android:maxLines="1"
                             android:text="--"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="18sp"
+                            android:textSize="14sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600"
                             android:gravity="start|center_vertical"
                             android:letterSpacing="-0.02"
                             android:autoSizeTextType="uniform"
-                            android:autoSizeMinTextSize="11sp"
-                            android:autoSizeMaxTextSize="18sp"
+                            android:autoSizeMinTextSize="10sp"
+                            android:autoSizeMaxTextSize="14sp"
                             android:autoSizeStepGranularity="1sp" />
 
                         <TextView
@@ -439,17 +438,17 @@
                             android:ellipsize="end"
                             android:text="First token"
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="10sp"
+                            android:textSize="8.5sp"
                             android:fontFamily="@font/inter" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- ==================== SHORTCUTS: 2x2 COMPACT BENTO ==================== -->
+            <!-- ==================== SHORTCUTS: 2x2 ULTRA-COMPACT BENTO ==================== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="6dp"
                 android:orientation="vertical">
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -467,20 +466,20 @@
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
                         android:clipToOutline="true"
-                        android:padding="10dp"
-                        android:minHeight="76dp">
+                        android:padding="8dp"
+                        android:minHeight="54dp">
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
                             <FrameLayout
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
                                 android:background="@drawable/bg_set_icon_tile">
                                 <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
+                                    android:layout_width="13dp"
+                                    android:layout_height="13dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_code_chip"
                                     app:tint="?attr/themeAccent"
@@ -493,12 +492,12 @@
                                 android:layout_weight="1" />
 
                             <FrameLayout
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
                                 android:background="@drawable/bg_bento_set_circle">
                                 <ImageView
-                                    android:layout_width="11dp"
-                                    android:layout_height="11dp"
+                                    android:layout_width="9dp"
+                                    android:layout_height="9dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_set_chevron_right"
                                     app:tint="?attr/themeTextMuted"
@@ -509,12 +508,12 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
+                            android:layout_marginTop="4dp"
                             android:maxLines="1"
                             android:ellipsize="end"
                             android:text="Super Core"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="13sp"
+                            android:textSize="11.5sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600" />
 
@@ -526,12 +525,12 @@
                             android:ellipsize="end"
                             android:text="System control"
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="11sp"
+                            android:textSize="9.5sp"
                             android:fontFamily="@font/inter" />
                     </LinearLayout>
 
                     <Space
-                        android:layout_width="8dp"
+                        android:layout_width="6dp"
                         android:layout_height="1dp" />
 
                     <LinearLayout
@@ -545,20 +544,20 @@
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
                         android:clipToOutline="true"
-                        android:padding="10dp"
-                        android:minHeight="76dp">
+                        android:padding="8dp"
+                        android:minHeight="54dp">
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
                             <FrameLayout
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
                                 android:background="@drawable/bg_set_icon_tile">
                                 <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
+                                    android:layout_width="13dp"
+                                    android:layout_height="13dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_settings_protocols"
                                     app:tint="?attr/themeAccent"
@@ -571,12 +570,12 @@
                                 android:layout_weight="1" />
 
                             <FrameLayout
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
                                 android:background="@drawable/bg_bento_set_circle">
                                 <ImageView
-                                    android:layout_width="11dp"
-                                    android:layout_height="11dp"
+                                    android:layout_width="9dp"
+                                    android:layout_height="9dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_set_chevron_right"
                                     app:tint="?attr/themeTextMuted"
@@ -587,12 +586,12 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
+                            android:layout_marginTop="4dp"
                             android:maxLines="1"
                             android:ellipsize="end"
                             android:text="Agent Matrix"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="13sp"
+                            android:textSize="11.5sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600" />
 
@@ -604,7 +603,7 @@
                             android:ellipsize="end"
                             android:text="Tools &amp; agents"
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="11sp"
+                            android:textSize="9.5sp"
                             android:fontFamily="@font/inter" />
                     </LinearLayout>
                 </LinearLayout>
@@ -612,7 +611,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="6dp"
                     android:orientation="horizontal"
                     android:baselineAligned="false">
                     <LinearLayout
@@ -626,20 +625,20 @@
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
                         android:clipToOutline="true"
-                        android:padding="10dp"
-                        android:minHeight="76dp">
+                        android:padding="8dp"
+                        android:minHeight="54dp">
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
                             <FrameLayout
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
                                 android:background="@drawable/bg_set_icon_tile">
                                 <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
+                                    android:layout_width="13dp"
+                                    android:layout_height="13dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_settings_palette"
                                     app:tint="?attr/themeAccent"
@@ -652,12 +651,12 @@
                                 android:layout_weight="1" />
 
                             <FrameLayout
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
                                 android:background="@drawable/bg_bento_set_circle">
                                 <ImageView
-                                    android:layout_width="11dp"
-                                    android:layout_height="11dp"
+                                    android:layout_width="9dp"
+                                    android:layout_height="9dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_set_chevron_right"
                                     app:tint="?attr/themeTextMuted"
@@ -668,12 +667,12 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
+                            android:layout_marginTop="4dp"
                             android:maxLines="1"
                             android:ellipsize="end"
                             android:text="Studio"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="13sp"
+                            android:textSize="11.5sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600" />
 
@@ -685,12 +684,12 @@
                             android:ellipsize="end"
                             android:text="Customize the look"
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="11sp"
+                            android:textSize="9.5sp"
                             android:fontFamily="@font/inter" />
                     </LinearLayout>
 
                     <Space
-                        android:layout_width="8dp"
+                        android:layout_width="6dp"
                         android:layout_height="1dp" />
 
                     <LinearLayout
@@ -704,20 +703,20 @@
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
                         android:clipToOutline="true"
-                        android:padding="10dp"
-                        android:minHeight="76dp">
+                        android:padding="8dp"
+                        android:minHeight="54dp">
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
                             <FrameLayout
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
                                 android:background="@drawable/bg_set_icon_tile">
                                 <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
+                                    android:layout_width="13dp"
+                                    android:layout_height="13dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_nav_gods_eye"
                                     app:tint="?attr/themeAccent"
@@ -730,12 +729,12 @@
                                 android:layout_weight="1" />
 
                             <FrameLayout
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
                                 android:background="@drawable/bg_bento_set_circle">
                                 <ImageView
-                                    android:layout_width="11dp"
-                                    android:layout_height="11dp"
+                                    android:layout_width="9dp"
+                                    android:layout_height="9dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/ic_set_chevron_right"
                                     app:tint="?attr/themeTextMuted"
@@ -746,12 +745,12 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
+                            android:layout_marginTop="4dp"
                             android:maxLines="1"
                             android:ellipsize="end"
                             android:text="God's Eye"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="13sp"
+                            android:textSize="11.5sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600" />
 
@@ -763,7 +762,7 @@
                             android:ellipsize="end"
                             android:text="Globe console"
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="11sp"
+                            android:textSize="9.5sp"
                             android:fontFamily="@font/inter" />
                     </LinearLayout>
                 </LinearLayout>
@@ -3220,25 +3219,26 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- ==================== ABOUT ==================== -->
+            <!-- ==================== ABOUT & DEVELOPER DIRECTORY ==================== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="@drawable/bg_set_card"
                 android:clipToOutline="true"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:paddingTop="18dp"
-                android:paddingBottom="14dp"
-                android:layout_marginTop="14dp">
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="14dp"
+                android:paddingBottom="12dp"
+                android:layout_marginTop="12dp">
+
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:paddingStart="2dp"
-                    android:text="About"
+                    android:text="About &amp; Developer Hub"
                     android:textColor="?attr/themeTextPrimary"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:fontFamily="@font/inter"
                     android:textFontWeight="600"
                     android:letterSpacing="-0.01" />
@@ -3246,35 +3246,35 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:layout_marginBottom="4dp"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="8dp"
                     android:paddingStart="2dp"
-                    android:text="Licences and creator links."
+                    android:text="Created by Roshan · Direct channels &amp; open-source repositories"
                     android:textColor="?attr/themeTextMuted"
-                    android:textSize="13sp"
+                    android:textSize="11.5sp"
                     android:fontFamily="@font/inter" />
 
+                <!-- Open Source Licences Row -->
                 <LinearLayout
                     android:id="@+id/rowMayaLicences"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minHeight="64dp"
+                    android:minHeight="50dp"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="14dp"
-                    android:paddingVertical="12dp"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingVertical="9dp"
                     android:background="@drawable/bg_jarvis_row_item"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:layout_marginTop="8dp">
+                    android:focusable="true">
                     <FrameLayout
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
                         android:background="@drawable/bg_set_icon_tile">
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_settings_book"
                             app:tint="?attr/themeAccent"
@@ -3285,212 +3285,482 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginStart="12dp"
-                        android:layout_marginEnd="10dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginEnd="8dp"
                         android:orientation="vertical">
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Open-source licences"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="15sp"
+                            android:textSize="13sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="500" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
+                            android:layout_marginTop="1dp"
                             android:text="Software and fonts bundled with Jarvis"
                             android:textColor="?attr/themeTextMuted"
-                            android:textSize="12sp"
+                            android:textSize="10.5sp"
                             android:fontFamily="@font/inter"
-                            android:maxLines="2"
+                            android:maxLines="1"
                             android:ellipsize="end" />
                     </LinearLayout>
 
                     <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
                         android:src="@drawable/ic_set_chevron_right"
                         app:tint="?attr/themeTextMuted"
                         android:contentDescription="Open" />
                 </LinearLayout>
 
+                <!-- Hidden toggle row and switch for backwards binding compatibility -->
                 <LinearLayout
+                    android:id="@+id/rowDeveloperLinksToggle"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:visibility="gone">
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchDeveloperLinks"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- DIRECT DEVELOPER CHANNELS (Directly visible, no toggle switch!) -->
+                <LinearLayout
+                    android:id="@+id/containerDeveloperLinks"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:orientation="vertical"
-                    android:background="@drawable/bg_jarvis_row_item"
-                    android:clipToOutline="true">
+                    android:layout_marginTop="8dp"
+                    android:visibility="visible">
+
+                    <!-- Email -->
                     <LinearLayout
-                        android:id="@+id/rowDeveloperLinksToggle"
+                        android:id="@+id/btnSocialEmail"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="64dp"
+                        android:minHeight="48dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="14dp"
-                        android:paddingVertical="12dp"
-                        android:background="?attr/selectableItemBackground"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="12dp"
+                        android:paddingVertical="8dp"
+                        android:background="@drawable/bg_jarvis_row_item"
                         android:clickable="true"
                         android:focusable="true">
                         <FrameLayout
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
                             android:background="@drawable/bg_set_icon_tile">
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
                                 android:layout_gravity="center"
-                                android:src="@drawable/ic_code_chip"
+                                android:src="@drawable/ic_social_email"
                                 app:tint="?attr/themeAccent"
-                                android:contentDescription="Developer &amp; creator links" />
+                                android:contentDescription="Email" />
                         </FrameLayout>
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="12dp"
-                            android:layout_marginEnd="10dp"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginEnd="8dp"
                             android:orientation="vertical">
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Developer &amp; creator links"
+                                android:text="Official Contact Email"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="15sp"
+                                android:textSize="12.5sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="500" />
-
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:text="Created by Roshan · open repositories"
+                                android:text="tiwariroshan2601@gmail.com"
                                 android:textColor="?attr/themeTextMuted"
-                                android:textSize="12sp"
-                                android:fontFamily="@font/inter"
-                                android:maxLines="2"
-                                android:ellipsize="end" />
+                                android:textSize="11sp"
+                                android:fontFamily="@font/inter" />
                         </LinearLayout>
 
-                        <com.google.android.material.materialswitch.MaterialSwitch
-                            android:id="@+id/switchDeveloperLinks"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:src="@drawable/ic_set_chevron_right"
+                            app:tint="?attr/themeTextMuted"
+                            android:contentDescription="Launch email" />
                     </LinearLayout>
 
+                    <!-- GitHub 1: tiwariroshan121 -->
                     <LinearLayout
-                        android:id="@+id/containerDeveloperLinks"
+                        android:id="@+id/btnSocialGithub1"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:paddingStart="60dp"
-                        android:paddingEnd="14dp"
-                        android:paddingBottom="12dp"
-                        android:visibility="gone">
-                        <Button
-                            android:id="@+id/btnSocialEmail"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:minHeight="44dp"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:text="Contact: tiwariroshan2601@gmail.com"
-                            android:textAllCaps="false"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="13sp"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="500"
-                            app:strokeColor="?attr/themeCardBorder"
-                            app:strokeWidth="1dp"
-                            app:cornerRadius="12dp" />
+                        android:minHeight="48dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="12dp"
+                        android:paddingVertical="8dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <FrameLayout
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:background="@drawable/bg_set_icon_tile">
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_social_github"
+                                app:tint="?attr/themeAccent"
+                                android:contentDescription="GitHub" />
+                        </FrameLayout>
 
-                        <Button
-                            android:id="@+id/btnSocialGithub1"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="match_parent"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:minHeight="44dp"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:text="GitHub: tiwariroshan121"
-                            android:textAllCaps="false"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="13sp"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="500"
-                            app:strokeColor="?attr/themeCardBorder"
-                            app:strokeWidth="1dp"
-                            app:cornerRadius="12dp" />
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginEnd="8dp"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="GitHub (Primary Profile)"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="12.5sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="500" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="github.com/tiwariroshan121"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:fontFamily="@font/inter" />
+                        </LinearLayout>
 
-                        <Button
-                            android:id="@+id/btnSocialGithub2"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:minHeight="44dp"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:text="GitHub: freeid2601-dotcom"
-                            android:textAllCaps="false"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="13sp"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="500"
-                            app:strokeColor="?attr/themeCardBorder"
-                            app:strokeWidth="1dp"
-                            app:cornerRadius="12dp" />
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:src="@drawable/ic_set_chevron_right"
+                            app:tint="?attr/themeTextMuted"
+                            android:contentDescription="Open GitHub" />
+                    </LinearLayout>
 
-                        <Button
-                            android:id="@+id/btnSocialGithub3"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:minHeight="44dp"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:text="GitHub: allproject121"
-                            android:textAllCaps="false"
-                            android:textColor="?attr/themeTextPrimary"
-                            android:textSize="13sp"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="500"
-                            app:strokeColor="?attr/themeCardBorder"
-                            app:strokeWidth="1dp"
-                            app:cornerRadius="12dp" />
+                    <!-- GitHub 2: freeid2601-dotcom -->
+                    <LinearLayout
+                        android:id="@+id/btnSocialGithub2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="12dp"
+                        android:paddingVertical="8dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <FrameLayout
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:background="@drawable/bg_set_icon_tile">
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_social_github"
+                                app:tint="?attr/themeAccent"
+                                android:contentDescription="GitHub Free ID" />
+                        </FrameLayout>
 
-                        <Button
-                            android:id="@+id/btnSocialYoutube"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="match_parent"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:minHeight="44dp"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:text="YouTube: Roshan Official (Pending / Coming Soon)"
-                            android:textAllCaps="false"
-                            android:textColor="?attr/themeTextMuted"
-                            android:textSize="13sp"
-                            android:fontFamily="@font/inter"
-                            android:textFontWeight="500"
-                            app:strokeColor="?attr/themeCardBorder"
-                            app:strokeWidth="1dp"
-                            app:cornerRadius="12dp" />
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginEnd="8dp"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="GitHub (Free ID)"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="12.5sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="500" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="github.com/freeid2601-dotcom"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:fontFamily="@font/inter" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:src="@drawable/ic_set_chevron_right"
+                            app:tint="?attr/themeTextMuted"
+                            android:contentDescription="Open GitHub Free ID" />
+                    </LinearLayout>
+
+                    <!-- GitHub 3: allproject121 -->
+                    <LinearLayout
+                        android:id="@+id/btnSocialGithub3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="12dp"
+                        android:paddingVertical="8dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <FrameLayout
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:background="@drawable/bg_set_icon_tile">
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_code_chip"
+                                app:tint="?attr/themeAccent"
+                                android:contentDescription="GitHub Projects" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginEnd="8dp"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="GitHub (All Projects &amp; Repos)"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="12.5sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="500" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="github.com/allproject121"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:fontFamily="@font/inter" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:src="@drawable/ic_set_chevron_right"
+                            app:tint="?attr/themeTextMuted"
+                            android:contentDescription="Open Projects" />
+                    </LinearLayout>
+
+                    <!-- LinkedIn -->
+                    <LinearLayout
+                        android:id="@+id/btnSocialLinkedin"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="12dp"
+                        android:paddingVertical="8dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <FrameLayout
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:background="@drawable/bg_set_icon_tile">
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_social_linkedin"
+                                app:tint="?attr/themeAccent"
+                                android:contentDescription="LinkedIn" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginEnd="8dp"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="LinkedIn Profile"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="12.5sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="500" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="linkedin.com/in/tiwariroshan121"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:fontFamily="@font/inter" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:src="@drawable/ic_set_chevron_right"
+                            app:tint="?attr/themeTextMuted"
+                            android:contentDescription="Open LinkedIn" />
+                    </LinearLayout>
+
+                    <!-- Instagram -->
+                    <LinearLayout
+                        android:id="@+id/btnSocialInstagram"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="12dp"
+                        android:paddingVertical="8dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <FrameLayout
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:background="@drawable/bg_set_icon_tile">
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_social_instagram"
+                                app:tint="?attr/themeAccent"
+                                android:contentDescription="Instagram" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginEnd="8dp"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Instagram Profile"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="12.5sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="500" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@tiwariroshan121"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:fontFamily="@font/inter" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:src="@drawable/ic_set_chevron_right"
+                            app:tint="?attr/themeTextMuted"
+                            android:contentDescription="Open Instagram" />
+                    </LinearLayout>
+
+                    <!-- YouTube (Official Channel · Coming Soon) -->
+                    <LinearLayout
+                        android:id="@+id/btnSocialYoutube"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="12dp"
+                        android:paddingVertical="8dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_jarvis_row_item"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <FrameLayout
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:background="@drawable/bg_set_icon_tile">
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_social_youtube"
+                                app:tint="?attr/themeAccent"
+                                android:contentDescription="YouTube" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginEnd="8dp"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="YouTube Official Channel"
+                                android:textColor="?attr/themeTextPrimary"
+                                android:textSize="12.5sp"
+                                android:fontFamily="@font/inter"
+                                android:textFontWeight="500" />
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Roshan Official (Coming Soon · In Progress)"
+                                android:textColor="?attr/themeTextMuted"
+                                android:textSize="11sp"
+                                android:fontFamily="@font/inter" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_set_badge"
+                            android:paddingHorizontal="7dp"
+                            android:paddingVertical="2dp"
+                            android:text="Soon"
+                            android:textColor="?attr/themeTextSecondary"
+                            android:textSize="9.5sp"
+                            android:fontFamily="@font/inter" />
                     </LinearLayout>
                 </LinearLayout>
-
-                <!-- Developer links (expanded by switchDeveloperLinks) -->
             </LinearLayout>
 
             <!-- Footer credit (tap handled in SettingsFragment) -->

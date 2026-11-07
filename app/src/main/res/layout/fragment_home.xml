@@ -266,7 +266,7 @@
             <FrameLayout
                 android:id="@+id/orbContainer"
                 android:layout_width="match_parent"
-                android:layout_height="440dp"
+                android:layout_height="280dp"
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="6dp">
 
@@ -393,10 +393,10 @@
                         android:layout_height="wrap_content"
                         android:text="Overview"
                         android:textColor="?attr/themeTextPrimary"
-                        android:textSize="26sp"
+                        android:textSize="17sp"
                         android:fontFamily="@font/inter"
                         android:textFontWeight="600"
-                        android:letterSpacing="-0.025"
+                        android:letterSpacing="-0.01"
                         android:includeFontPadding="false" />
 
                     <TextView
@@ -405,7 +405,7 @@
                         android:layout_marginTop="6dp"
                         android:text="Everything Jarvis is running right now"
                         android:textColor="?attr/themeTextMuted"
-                        android:textSize="13.5sp"
+                        android:textSize="11sp"
                         android:fontFamily="@font/inter" />
                 </LinearLayout>
 
@@ -496,7 +496,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
+                        android:layout_marginTop="4dp"
                         android:orientation="horizontal"
                         android:baselineAligned="false"
                         android:divider="@drawable/bg_bento_gap"
@@ -732,7 +732,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
+                        android:layout_marginTop="4dp"
                         android:orientation="horizontal">
 
                         <com.google.android.material.button.MaterialButton
@@ -817,7 +817,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_nova_card"
-                    android:padding="20dp"
+                    android:padding="11dp"
                     android:clickable="true"
                     android:focusable="true"
                     android:contentDescription="Weather, tap to refresh">
@@ -873,7 +873,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="8dp"
                         android:orientation="horizontal"
                         android:gravity="bottom"
                         android:baselineAligned="false">
@@ -891,7 +891,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Detecting location…"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="19sp"
+                                android:textSize="14sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
                                 android:letterSpacing="-0.01"
@@ -917,7 +917,7 @@
                             android:layout_height="wrap_content"
                             android:text="--°C"
                             android:textColor="?attr/themeTextPrimary"
-                            android:textSize="40sp"
+                            android:textSize="22sp"
                             android:fontFamily="@font/inter"
                             android:textFontWeight="600"
                             android:letterSpacing="-0.035"
@@ -979,7 +979,7 @@
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:background="@drawable/bg_nova_card"
-                            android:padding="18dp">
+                            android:padding="9dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -1015,12 +1015,12 @@
                             <TextView
                                 android:id="@+id/tvTelemetryBattery"
                                 android:layout_width="match_parent"
-                                android:layout_height="40dp"
-                                android:layout_marginTop="18dp"
+                                android:layout_height="24dp"
+                                android:layout_marginTop="6dp"
                                 android:gravity="start|center_vertical"
                                 android:text="--%"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="32sp"
+                                android:textSize="16sp"
                                 android:autoSizeTextType="uniform"
                                 android:autoSizeMinTextSize="16sp"
                                 android:autoSizeMaxTextSize="32sp"
@@ -1035,7 +1035,7 @@
                                 android:id="@+id/tvTelemetryBatteryState"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
+                                android:layout_marginTop="4dp"
                                 android:background="@drawable/bg_set_badge"
                                 android:drawableStart="@drawable/bg_bento_dot"
                                 android:drawablePadding="6dp"
@@ -1059,7 +1059,7 @@
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:background="@drawable/bg_nova_card"
-                            android:padding="18dp">
+                            android:padding="9dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -1095,12 +1095,12 @@
                             <TextView
                                 android:id="@+id/tvTelemetryRamPercent"
                                 android:layout_width="match_parent"
-                                android:layout_height="40dp"
-                                android:layout_marginTop="18dp"
+                                android:layout_height="24dp"
+                                android:layout_marginTop="6dp"
                                 android:gravity="start|center_vertical"
                                 android:text="--% load"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="32sp"
+                                android:textSize="16sp"
                                 android:autoSizeTextType="uniform"
                                 android:autoSizeMinTextSize="16sp"
                                 android:autoSizeMaxTextSize="32sp"
@@ -1115,7 +1115,7 @@
                                 android:id="@+id/tvTelemetryRam"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
+                                android:layout_marginTop="4dp"
                                 android:text="-- / -- GB"
                                 android:textColor="?attr/themeTextMuted"
                                 android:textSize="12.5sp"
@@ -1140,7 +1140,7 @@
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:background="@drawable/bg_nova_card"
-                            android:padding="18dp">
+                            android:padding="9dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -1176,12 +1176,12 @@
                             <TextView
                                 android:id="@+id/tvTelemetryNetwork"
                                 android:layout_width="match_parent"
-                                android:layout_height="40dp"
-                                android:layout_marginTop="18dp"
+                                android:layout_height="24dp"
+                                android:layout_marginTop="6dp"
                                 android:gravity="start|center_vertical"
                                 android:text="Wi-Fi"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="28sp"
+                                android:textSize="16sp"
                                 android:autoSizeTextType="uniform"
                                 android:autoSizeMinTextSize="16sp"
                                 android:autoSizeMaxTextSize="28sp"
@@ -1196,7 +1196,7 @@
                                 android:id="@+id/tvTelemetryNetworkStatus"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
+                                android:layout_marginTop="4dp"
                                 android:background="@drawable/bg_set_badge"
                                 android:drawableStart="@drawable/bg_bento_dot"
                                 android:drawablePadding="6dp"
@@ -1220,7 +1220,7 @@
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:background="@drawable/bg_nova_card"
-                            android:padding="18dp">
+                            android:padding="9dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -1256,12 +1256,12 @@
                             <TextView
                                 android:id="@+id/tvTelemetryUptime"
                                 android:layout_width="match_parent"
-                                android:layout_height="40dp"
-                                android:layout_marginTop="18dp"
+                                android:layout_height="24dp"
+                                android:layout_marginTop="6dp"
                                 android:gravity="start|center_vertical"
                                 android:text="Online"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="28sp"
+                                android:textSize="16sp"
                                 android:autoSizeTextType="uniform"
                                 android:autoSizeMinTextSize="16sp"
                                 android:autoSizeMaxTextSize="28sp"
@@ -1275,7 +1275,7 @@
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
+                                android:layout_marginTop="4dp"
                                 android:text="Since last boot"
                                 android:textColor="?attr/themeTextMuted"
                                 android:textSize="12.5sp"
@@ -1344,10 +1344,10 @@
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_weight="1"
-                            android:minHeight="136dp"
+                            android:minHeight="74dp"
                             android:orientation="vertical"
                             android:background="@drawable/bg_nova_card"
-                            android:padding="16dp"
+                            android:padding="9dp"
                             android:clickable="true"
                             android:focusable="true"
                             android:contentDescription="Start or stop screen sharing">
@@ -1369,10 +1369,10 @@
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="26dp"
+                                android:layout_marginTop="6dp"
                                 android:text="Screen"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="16sp"
+                                android:textSize="12sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
                                 android:letterSpacing="-0.01"
@@ -1397,10 +1397,10 @@
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_weight="1"
-                            android:minHeight="136dp"
+                            android:minHeight="74dp"
                             android:orientation="vertical"
                             android:background="@drawable/bg_nova_card"
-                            android:padding="16dp"
+                            android:padding="9dp"
                             android:clickable="true"
                             android:focusable="true"
                             android:contentDescription="Recall core memories">
@@ -1422,10 +1422,10 @@
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="26dp"
+                                android:layout_marginTop="6dp"
                                 android:text="Memories"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="16sp"
+                                android:textSize="12sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
                                 android:letterSpacing="-0.01"
@@ -1449,10 +1449,10 @@
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_weight="1"
-                            android:minHeight="136dp"
+                            android:minHeight="74dp"
                             android:orientation="vertical"
                             android:background="@drawable/bg_nova_card"
-                            android:padding="16dp"
+                            android:padding="9dp"
                             android:clickable="true"
                             android:focusable="true"
                             android:contentDescription="Choose conversation language">
@@ -1474,10 +1474,10 @@
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="26dp"
+                                android:layout_marginTop="6dp"
                                 android:text="Language"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="16sp"
+                                android:textSize="12sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
                                 android:letterSpacing="-0.01"
@@ -1553,7 +1553,7 @@
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:background="@drawable/bg_nova_card"
-                            android:padding="18dp"
+                            android:padding="9dp"
                             android:clickable="true"
                             android:focusable="true"
                             android:contentDescription="Neural voice">
@@ -1603,10 +1603,10 @@
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="24dp"
+                                android:layout_marginTop="6dp"
                                 android:text="Neural voice"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="18sp"
+                                android:textSize="13sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
                                 android:letterSpacing="-0.015"
@@ -1632,7 +1632,7 @@
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:background="@drawable/bg_nova_card"
-                            android:padding="18dp"
+                            android:padding="9dp"
                             android:clickable="true"
                             android:focusable="true"
                             android:contentDescription="Code Studio">
@@ -1682,10 +1682,10 @@
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="24dp"
+                                android:layout_marginTop="6dp"
                                 android:text="Code Studio"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="18sp"
+                                android:textSize="13sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600"
                                 android:letterSpacing="-0.015"
@@ -1711,10 +1711,10 @@
                     android:id="@+id/layoutUpdatesContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="4dp"
                     android:orientation="vertical"
                     android:background="@drawable/bg_nova_card"
-                    android:padding="18dp"
+                    android:padding="9dp"
                     android:divider="@drawable/bg_bento_gap"
                     android:showDividers="middle">
 
@@ -1780,13 +1780,13 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:background="@drawable/bg_jarvis_row_item"
-                        android:padding="14dp"
+                        android:padding="8dp"
                         android:clickable="true"
                         android:focusable="true">
 
                         <FrameLayout
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
                             android:background="@drawable/bg_nova_icon_chip">
 
                             <ImageView
@@ -1810,7 +1810,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Verified actions &amp; UI grounding"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="14.5sp"
+                                android:textSize="12sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600" />
 
@@ -1850,13 +1850,13 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:background="@drawable/bg_jarvis_row_item"
-                        android:padding="14dp"
+                        android:padding="8dp"
                         android:clickable="true"
                         android:focusable="true">
 
                         <FrameLayout
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
                             android:background="@drawable/bg_nova_icon_chip">
 
                             <ImageView
@@ -1880,7 +1880,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Gemini Live &amp; wake word"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="14.5sp"
+                                android:textSize="12sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600" />
 
@@ -1920,13 +1920,13 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:background="@drawable/bg_jarvis_row_item"
-                        android:padding="14dp"
+                        android:padding="8dp"
                         android:clickable="true"
                         android:focusable="true">
 
                         <FrameLayout
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
                             android:background="@drawable/bg_nova_icon_chip">
 
                             <ImageView
@@ -1950,7 +1950,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="God's Eye geospatial view"
                                 android:textColor="?attr/themeTextPrimary"
-                                android:textSize="14.5sp"
+                                android:textSize="12sp"
                                 android:fontFamily="@font/inter"
                                 android:textFontWeight="600" />
 
@@ -2047,7 +2047,7 @@
             android:id="@+id/tvLiveErrorMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="4dp"
             android:text="Google rejected the API key: 400 Bad Request. Please update your API key in Settings."
             android:textColor="?attr/themeTextPrimary"
             android:textSize="13sp"
